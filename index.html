@@ -3,107 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <title>Yash Operations Dashboard Hub</title>
-  <!-- Pre-compiled Premium Tailwind CSS Framework -->
+  <!-- Pre-compiled Utility CSS Stylesheet -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-    .glassmorphism { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
-    .conveyor-grid-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .conveyor-grid-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-    .active-stage-glow { border-color: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.15); }
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background-color: #f8fafc; 
+    }
+    /* Aesthetic micro-shadows & glassmorphism overlays */
+    .premium-card {
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-card:hover {
+      box-shadow: 0 12px 30px -4px rgba(148, 163, 184, 0.16);
+      transform: translateY(-2px);
+    }
+    .status-indicator {
+      width: 4px;
+      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    /* Custom scrollbar for horizontal pipeline overview */
+    .conveyor-row::-webkit-scrollbar {
+      height: 4px;
+    }
+    .conveyor-row::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
   </style>
 </head>
-<body class="pb-16 text-slate-800 antialiased">
+<body class="pb-24 text-slate-800 antialiased bg-slate-50">
 
-  <!-- FLOATING CUSTOM TOAST SYSTEM -->
-  <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-sm px-4 pointer-events-none space-y-3"></div>
+  <!-- TOAST ALERTS SYSTEM -->
+  <div id="toast-container" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-sm px-4 pointer-events-none space-y-3"></div>
 
   <!-- AUTH PORTAL -->
-  <div id="login-container" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 space-y-6 border border-slate-100 transition duration-300">
-      <div class="text-center">
-        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 font-black shadow-inner">YM</div>
+  <div id="login-container" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-8 space-y-8 shadow-2xl border border-slate-100">
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-bold text-lg mx-auto shadow-lg shadow-indigo-600/20">Y</div>
         <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Yash Marketing</h2>
-        <p class="text-xs text-slate-400 mt-1.5 font-medium">Operations Control Terminal</p>
+        <p class="text-xs text-slate-400 font-medium">Operations Control Terminal</p>
       </div>
       <div class="space-y-4">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Employee ID</label>
-          <input type="text" id="login-id" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="YM001">
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Employee ID</label>
+          <input type="text" id="login-id" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border outline-none focus:border-indigo-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="YM001">
         </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
-          <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="******">
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Password</label>
+          <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border outline-none focus:border-indigo-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="******">
         </div>
-        <button onclick="handleLogin()" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl transition duration-200 shadow-lg hover:shadow-blue-500/20 hover:from-blue-700 hover:to-indigo-700 transform active:scale-95">Authenticate System</button>
+        <button onclick="handleLogin()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition duration-200 shadow-lg shadow-indigo-600/10 transform active:scale-95">Authenticate Terminal</button>
       </div>
     </div>
   </div>
 
-  <!-- LIGHTBOX PREVIEW MODAL -->
-  <div id="lightbox-modal" onclick="closeLightbox()" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[200] p-4 cursor-zoom-out">
-    <img id="lightbox-img" class="max-w-full max-h-[85vh] rounded-xl shadow-2xl object-contain transition-all duration-300" src="" alt="Proof Preview">
+  <!-- CLIGHTBOX IMAGE PREVIEW MODAL -->
+  <div id="lightbox-modal" onclick="closeLightbox()" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-[200] p-4 cursor-zoom-out">
+    <img id="lightbox-img" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain transition-all" src="" alt="Proof Preview">
   </div>
 
   <!-- LOADER -->
-  <div id="global-loader" class="hidden fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-[150]">
-    <div class="bg-white px-6 py-5 rounded-3xl shadow-2xl flex flex-col items-center border border-slate-100">
-      <div class="animate-spin rounded-full h-8 w-8 border-3 border-blue-600 border-t-transparent"></div>
+  <div id="global-loader" class="hidden fixed inset-0 bg-slate-950/20 backdrop-blur-sm flex items-center justify-center z-[150]">
+    <div class="bg-white px-6 py-5 rounded-3xl shadow-xl flex flex-col items-center border border-slate-100">
+      <div class="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
       <p class="text-xs text-slate-500 mt-3 font-semibold tracking-wide">Syncing Process...</p>
     </div>
   </div>
 
   <!-- HEADER -->
-  <header class="bg-white border-b sticky top-0 z-40 px-5 py-4 flex justify-between items-center shadow-sm">
+  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center border-b border-slate-100">
     <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/10">YM</div>
+      <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-600/20">Y</div>
       <div>
-        <h1 class="font-extrabold text-slate-950 text-base leading-tight" id="header-user">Yash Operations</h1>
-        <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider" id="header-role">OPERATIONS TERMINAL</p>
+        <h1 class="font-extrabold text-slate-950 text-sm tracking-tight" id="header-user">Yash Operations</h1>
+        <p class="text-[9px] font-bold text-indigo-600 uppercase tracking-widest" id="header-role">OPERATIONS TERMINAL</p>
       </div>
     </div>
-    <button onclick="logout()" class="px-3.5 py-2 text-xs border border-red-100 text-red-600 rounded-xl bg-red-50 hover:bg-red-100 transition font-bold transform active:scale-95">Logout</button>
+    <button onclick="logout()" class="px-4 py-2 text-xs border border-red-100 text-red-600 rounded-xl bg-red-50 hover:bg-red-100 transition font-bold transform active:scale-95">Logout</button>
   </header>
 
-  <!-- MASTER VIEW CONTAINER -->
-  <main class="max-w-md mx-auto p-4 space-y-5">
+  <!-- MASTER VIEW STACKED -->
+  <main class="max-w-md mx-auto p-4 space-y-6">
 
-    <!-- 1. PIPELINE CONVEYOR GRID (Clickable 3x3 Premium Layout) -->
-    <section id="role-order-grid-box" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-50 pb-3">
-        <h3 class="font-extrabold text-slate-900 text-sm tracking-tight">📦 Conveyor Order Grid</h3>
-        <button onclick="loadPipelineCounts()" class="text-xs text-blue-600 font-bold hover:text-blue-700 transition">Refresh counts</button>
+    <!-- 1. DYNAMIC CONVEYOR KPI PANEL -->
+    <section class="space-y-3">
+      <div class="flex justify-between items-center px-1">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pipeline Grid</h3>
+        <button onclick="loadPipelineCounts()" class="text-xs text-indigo-600 font-bold hover:text-indigo-700">Refresh</button>
       </div>
-      <div id="pipeline-grid" class="grid grid-cols-3 gap-2.5">
-        <!-- Dynmically loaded 3x3 stage cards -->
-      </div>
+      <!-- 3x3 Non-scrollable layout -->
+      <div id="pipeline-grid" class="grid grid-cols-3 gap-3"></div>
     </section>
 
     <!-- 2. EXPANDABLE ACTIVE ORDERS QUEUE -->
-    <section id="role-order-list-box" class="space-y-4">
+    <section class="space-y-4">
       
-      <!-- Premium Filter Toolbar -->
+      <!-- Filter Toolbar -->
       <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-2">
         <div class="flex-1 relative">
-          <input type="text" id="order-search-input" oninput="searchOrders()" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold outline-none focus:border-blue-500 focus:bg-white transition" placeholder="Search ID or Dealer Name...">
+          <input type="text" id="order-search-input" oninput="searchOrders()" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500 focus:bg-white transition" placeholder="Search ID or Dealer Name...">
         </div>
-        <select id="order-date-filter" onchange="loadStageOrders('')" class="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-2 outline-none focus:border-blue-500 transition">
+        <select id="order-date-filter" onchange="loadStageOrders('')" class="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-2 outline-none focus:border-indigo-500 transition">
           <option value="All">All Active Dates</option>
           <option value="Today">Today</option>
           <option value="Yesterday">Yesterday</option>
           <option value="Month">This Month</option>
         </select>
-        <button onclick="loadStageOrders('')" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition">All</button>
+        <button onclick="loadStageOrders('')" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-xs font-bold transition">All</button>
       </div>
 
       <div class="flex justify-between items-center px-1">
-        <h3 class="font-extrabold text-slate-900 text-xs uppercase tracking-wider" id="orders-list-header">Active Operations Queue</h3>
+        <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest" id="orders-list-header">Active Operations Queue</h3>
       </div>
 
-      <div id="orders-cards-container" class="space-y-3">
-        <!-- Dynamic Premium Collapsible Cards populated here -->
-      </div>
+      <div id="orders-cards-container" class="space-y-3"></div>
     </section>
 
   </main>
@@ -116,7 +138,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbz6eqjH0qxnKmwdT9hyZnMab6cOwxab4OvSS8i-DspUhd24T1oYdZeDDlrCjqGJ6Z8_/exec";
 
     let userSession = null;
-    let areaDealerMap = {};
+    let loadedOrdersCache = []; 
     let activeStageSelected = "";
     let orderCardsPics = {}; // Base64 image cache mapped to rowNum
 
@@ -128,7 +150,7 @@
       }
     });
 
-    // CUSTOM FLOATING TOAST ENGINE
+    // CUSTOM FLOATING TOAST SYSTEM
     function showToast(message, type = "success") {
       const container = document.getElementById("toast-container");
       const toast = document.createElement("div");
@@ -148,12 +170,10 @@
       
       container.appendChild(toast);
       
-      // Animate In
       setTimeout(() => {
         toast.classList.remove("translate-y-2", "opacity-0");
       }, 50);
 
-      // Animate Out & Remove
       setTimeout(() => {
         toast.classList.add("translate-y-2", "opacity-0");
         setTimeout(() => toast.remove(), 300);
@@ -236,8 +256,8 @@
     }
 
     // MULTIPLE PHOTO CAPTURES ENGINE
-    function captureMultiPhoto(type) {
-      activeCaptureType = type;
+    function captureOrderStepPhoto(rowNum) {
+      activeCaptureType = "order-" + rowNum;
       const input = document.getElementById("multi-photo-raw-input");
       input.click();
     }
@@ -264,7 +284,7 @@
       container.innerHTML = "";
       (orderCardsPics[row] || []).forEach((b64, index) => {
         const wrap = document.createElement("div");
-        wrap.className = "relative w-12 h-12 border rounded-xl overflow-hidden shadow-sm";
+        wrap.className = "relative w-12 h-12 border border-slate-100 rounded-xl overflow-hidden shadow-sm";
         wrap.innerHTML = `
           <img src="${b64}" class="w-full h-full object-cover">
           <span onclick="deleteOrderThumbnail(${row}, ${index})" class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center cursor-pointer">✕</span>
@@ -293,10 +313,10 @@
             const card = document.createElement("button");
             card.onclick = () => loadStageOrders(step);
             card.id = "stage-card-" + step.replace(/\s+/g, '');
-            card.className = "conveyor-grid-card bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:border-blue-400";
+            card.className = "conveyor-grid-card bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:border-indigo-400";
             card.innerHTML = `
               <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate w-full">${step}</span>
-              <span class="text-base font-extrabold text-blue-600 mt-1">${count}</span>
+              <span class="text-base font-extrabold text-indigo-600 mt-1">${count}</span>
             `;
             grid.appendChild(card);
           });
@@ -318,8 +338,6 @@
     }
 
     // EXPANDABLE PREMIUM CARDS LIST
-    let loadedOrdersCache = []; // Global cache for instant real-time searching
-
     function loadStageOrders(stageName) {
       showLoader();
       activeStageSelected = stageName;
@@ -328,14 +346,13 @@
       
       callAPI_GET({ action: "getOrders", stage: stageName }, res => {
         hideLoader();
-        loadPipelineCounts(); // Refresh active stage glow
+        loadPipelineCounts(); 
         
         if (!res || !res.success || !res.orders || res.orders.length === 0) {
-          document.getElementById("orders-cards-container").innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 font-semibold">No active orders in this step.</div>`;
+          document.getElementById("orders-cards-container").innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-3xl text-xs text-slate-400 font-semibold shadow-sm">No active orders in this step.</div>`;
           return;
         }
 
-        // Force Descending order sorting (Latest DB Rows first)
         res.orders.sort((a, b) => b.rowNum - a.rowNum);
         loadedOrdersCache = res.orders;
 
@@ -372,282 +389,50 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 font-semibold">No active orders found.</div>`;
+        container.innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-3xl text-xs text-slate-400 font-semibold shadow-sm">No active orders found.</div>`;
         return;
       }
 
       filtered.forEach(o => {
         const card = document.createElement("div");
-        card.className = "bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden transition-all duration-200 mb-3 hover:shadow-md";
+        card.className = "premium-card rounded-3xl overflow-hidden relative";
         
         const uniqueCardId = "order-details-pane-" + o.rowNum;
         let orderValueCleaned = parseInt(o.OrderValue.toString().replace(/[^0-9]/g, '')) || 0;
 
+        // Custom indicator bar on the left based on active stage
+        const colorMap = {
+          "Received": "bg-indigo-500", "Balance Check": "bg-blue-500", "Call 1": "bg-purple-500",
+          "Processed": "bg-yellow-500", "Invoiced": "bg-pink-500", "Dispatched": "bg-indigo-600",
+          "Call 2": "bg-amber-500", "Delivered": "bg-green-500", "Final Call": "bg-emerald-600"
+        };
+        const activeBarCol = colorMap[o.CurrentStatus] || "bg-indigo-500";
+
+        // CARD HEADER (Extremely minimal: Strictly display only Dealer Name, Date, status, price)
         card.innerHTML = `
-          <!-- CARD HEADER (Only Dealer Name as requested) -->
-          <div onclick="toggleAccordion('${uniqueCardId}')" class="p-4 flex justify-between items-start cursor-pointer hover:bg-slate-50/50 transition">
-            <div class="space-y-1">
+          <div class="status-indicator ${activeBarCol}"></div>
+          <div onclick="toggleAccordion('${uniqueCardId}')" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/40 transition">
+            <div class="space-y-1 pl-2">
               <h4 class="font-extrabold text-slate-900 text-sm tracking-tight leading-tight">${o.DealerName}</h4>
-              <p class="text-[11px] font-bold text-slate-400">${o.Date} • ID: ${o.OrderID}</p>
+              <p class="text-[10px] font-bold text-slate-400">${o.Date} • ID: ${o.OrderID}</p>
             </div>
             <div class="text-right flex flex-col items-end gap-1.5">
-              <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 font-bold text-[9px] rounded-full uppercase tracking-wider">${o.CurrentStatus || "Received"}</span>
-              <span class="text-xs font-extrabold text-slate-800">₹${orderValueCleaned.toLocaleString()}</span>
+              <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-600 font-bold text-[9px] rounded-full uppercase tracking-wider">${o.CurrentStatus || "Received"}</span>
+              <span class="text-xs font-black text-slate-800">₹${orderValueCleaned.toLocaleString()}</span>
             </div>
           </div>
 
           <!-- COLLAPSED PANE (Accordion reveals all detailed specs) -->
-          <div id="${uniqueCardId}" class="hidden p-4 border-t border-slate-50 bg-slate-50/30 space-y-4 text-xs">
+          <div id="${uniqueCardId}" class="hidden p-5 border-t border-slate-100 bg-slate-50/20 space-y-5 text-xs">
             
             <!-- Itemized list with Photos -->
-            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-2">
-              <h5 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Ordered Products</h5>
-              <div class="divide-y divide-slate-50 text-slate-600">
+            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-2.5 shadow-sm">
+              <h5 class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider border-b border-slate-50 pb-2">Ordered Products</h5>
+              <div class="divide-y divide-slate-100 text-slate-600">
                 ${parseItemsStringWithPhotos(o.Items)}
               </div>
             </div>
 
             <!-- Dealer Details -->
-            <div class="grid grid-cols-2 gap-3 text-[10px] text-slate-500 bg-white p-4 border border-slate-100 rounded-2xl">
-              <p><strong>Dealer Area:</strong> ${o.DealerArea || "N/A"}</p>
-              <p><strong>Brought By:</strong> ${o.OrderBroughtBy || "Direct"}</p>
-            </div>
-
-            <!-- Compact Steps Tracker -->
-            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-3">
-              <div class="flex justify-between items-center border-b border-slate-50 pb-2">
-                <span class="text-[10px] font-bold text-slate-800 uppercase tracking-wide">Progress Tracker</span>
-                <button onclick="toggleAccordion('det-steps-${o.rowNum}')" class="text-[9px] text-blue-600 font-bold hover:underline">Hinglish Pipeline Checklist ▼</button>
-              </div>
-              
-              <!-- Collapsible detailed pipeline steps -->
-              <div id="det-steps-${o.rowNum}" class="hidden space-y-2 border-t pt-2 transition duration-200">
-                ${getProgressStepTracker(o.CurrentStatus, o)}
-              </div>
-            </div>
-
-            <!-- Steps proof file captures -->
-            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-3">
-              <h5 class="text-[10px] font-bold text-slate-800 uppercase tracking-wide text-blue-600">Action: Confirm ${getNextStepLabel(o.CurrentStatus)}</h5>
-              <p class="text-[10px] text-slate-400 font-medium">${getStepUploadInstruction(o.CurrentStatus)}</p>
-              <div class="flex flex-col gap-2">
-                <div class="flex flex-wrap gap-2" id="order-thumbnails-${o.rowNum}"></div>
-                <div class="flex gap-2">
-                  <button onclick="captureOrderStepPhoto(${o.rowNum})" class="px-3 py-1.5 bg-slate-100 border text-slate-700 font-bold rounded-xl text-[10px] transform active:scale-95">📸 Capture Step Photo</button>
-                  <button onclick="orderCardsPics[${o.rowNum}] = []; renderOrderCardThumbnails(${o.rowNum});" class="px-2 py-1 bg-red-50 text-red-600 font-bold rounded-xl text-[10px]">Clear</button>
-                </div>
-                <button onclick="submitOrderStateTransition(${o.rowNum}, '${o.CurrentStatus}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs mt-1 shadow-md shadow-blue-500/10">Submit State Transition</button>
-              </div>
-            </div>
-
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    // Instant Real-time search engine
-    function searchOrders() {
-      const searchVal = document.getElementById("order-search-input").value.toLowerCase().trim();
-      const dateFilter = document.getElementById("order-date-filter").value;
-      if (!searchVal) {
-        renderOrdersList(loadedOrdersCache, dateFilter);
-        return;
-      }
-      const filtered = loadedOrdersCache.filter(o => {
-        return o.OrderID.toLowerCase().includes(searchVal) || o.DealerName.toLowerCase().includes(searchVal);
-      });
-      renderOrdersList(filtered, dateFilter);
-    }
-
-    // Dynamic Product Category Icon/Avatar Mapper (Catalogue Simulation)
-    function getProductCategoryPhoto(name) {
-      const lower = name.toLowerCase();
-      if (lower.includes("airpod") || lower.includes("airdopes") || lower.includes("tws") || lower.includes("earphone") || lower.includes("pods")) {
-        return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=120&auto=format&fit=crop&q=60";
-      }
-      if (lower.includes("neckband") || lower.includes("muffs") || lower.includes("headphone")) {
-        return "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=120&auto=format&fit=crop&q=60";
-      }
-      if (lower.includes("power") || lower.includes("bank") || lower.includes("charger") || lower.includes("zap")) {
-        return "https://images.unsplash.com/photo-1609592424109-dd9892f1b17c?w=120&auto=format&fit=crop&q=60";
-      }
-      if (lower.includes("cable") || lower.includes("wire")) {
-        return "https://images.unsplash.com/photo-1558538337-a99425055386?w=120&auto=format&fit=crop&q=60";
-      }
-      if (lower.includes("sd") || lower.includes("memory") || lower.includes("card") || lower.includes("pen") || lower.includes("drive") || lower.includes("ssd")) {
-        return "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=120&auto=format&fit=crop&q=60";
-      }
-      return "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120&auto=format&fit=crop&q=60";
-    }
-
-    function parseItemsStringWithPhotos(itemsStr) {
-      if (!itemsStr) return `<div class="p-2 text-slate-400">No items specified.</div>`;
-      const parts = itemsStr.split('|');
-      let outHtml = "";
-      parts.forEach(p => {
-        const itemParts = p.split(/\s*[\*xX]\s*/);
-        const rawName = itemParts[0] ? itemParts[0].trim() : "Unknown Product";
-        const rawQty = itemParts[1] ? itemParts[1].trim().replace(/\D/g, '') : "1";
-        const qtyFormatted = (rawQty || "1") + " Pcs";
-        
-        // Correct placeholder parsing error "Pending"
-        const finalName = rawName.toLowerCase() === "pending" ? "boAt Airdopes 161" : rawName;
-        const matchedImg = getProductCategoryPhoto(finalName);
-
-        outHtml += `
-          <div class="py-2 flex justify-between items-center text-xs">
-            <div class="flex items-center space-x-3 w-3/4">
-              <img src="${matchedImg}" class="w-8 h-8 rounded-lg object-cover border shadow-sm flex-shrink-0" alt="Item preview">
-              <span class="font-medium text-slate-700 truncate">${finalName}</span>
-            </div>
-            <span class="px-2 py-0.5 bg-blue-50 text-blue-800 rounded font-black text-[10px] flex-shrink-0">${qtyFormatted}</span>
-          </div>
-        `;
-      });
-      return outHtml;
-    }
-
-    function getNextStepLabel(currentStatus) {
-      const statusFlow = [
-        "Received", "Balance Check", "Call 1", "Processed", 
-        "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"
-      ];
-      let normStatus = "Received";
-      if (currentStatus) {
-        let curLower = currentStatus.toString().toLowerCase().trim();
-        if (curLower === "pending" || curLower === "received") normStatus = "Received";
-        else {
-          let found = statusFlow.find(s => s.toLowerCase() === curLower);
-          if (found) normStatus = found;
-        }
-      }
-      const index = statusFlow.indexOf(normStatus);
-      if (index === -1 || index === statusFlow.length - 1) return "Flow Complete";
-      return statusFlow[index + 1];
-    }
-
-    function getStepUploadInstruction(currentStatus) {
-      const instructions = {
-        "Pending": "Tally ledger ka photo screenshot upload karein.",
-        "Received": "Tally ledger ka photo screenshot upload karein.",
-        "Balance Check": "Dealer ka Call 1 recording file upload karein.",
-        "Call 1": "Warehouse se stock nikalne ki photo proof upload karein.",
-        "Processed": "Tally invoice copy scan copy photo upload karein.",
-        "Invoiced": "Packed parcel boxes/carry bag ki photo upload karein.",
-        "Dispatched": "Out for delivery tracking call recording upload karein.",
-        "Call 2": "LR Receipt/Pauti or signed duplicate copy upload karein.",
-        "Delivered": "Feedback confirmation call recording file upload karein."
-      };
-      let normKey = "Received";
-      if (currentStatus) {
-        let curLower = currentStatus.toString().toLowerCase().trim();
-        if (curLower === "pending" || curLower === "received") normKey = "Received";
-        else {
-          let found = Object.keys(instructions).find(k => k.toLowerCase() === curLower);
-          if (found) normKey = found;
-        }
-      }
-      return instructions[normKey] || "All state pipeline procedures verified.";
-    }
-
-    function getProgressStepTracker(currentStatus) {
-      const statusFlow = [
-        "Received", "Balance Check", "Call 1", "Processed", 
-        "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"
-      ];
-      const stepInstructions = {
-        "Received": "Step 1: Order sheet me received ho chuka hai.",
-        "Balance Check": "Step 2: Balance Check: Tally screenshot required.",
-        "Call 1": "Step 3: Call 1: Order confirmation call recording saved in Col U.",
-        "Processed": "Step 4: Processed: Warehouse se stock photo upload karein.",
-        "Invoiced": "Step 5: Invoiced: printed copy scan copy upload mandatory hai.",
-        "Dispatched": "Step 6: Dispatched: packed box parcel visual photo required.",
-        "Call 2": "Step 7: Call 2: Delivery confirmation recording saved in Col V.",
-        "Delivered": "Step 8: Delivered: LR receipt / duplicate copy photo saved.",
-        "Final Call": "Step 9: Final Call: delivery feedback recording uploaded."
-      };
-
-      let normStatus = "Received";
-      if (currentStatus) {
-        let curLower = currentStatus.toString().toLowerCase().trim();
-        if (curLower === "pending" || curLower === "received") normStatus = "Received";
-        else {
-          let found = statusFlow.find(s => s.toLowerCase() === curLower);
-          if (found) normStatus = found;
-        }
-      }
-      const currentIndex = statusFlow.indexOf(normStatus);
-      let outHtml = "";
-      statusFlow.forEach((step, index) => {
-        let bgStyle = "bg-slate-100 text-slate-400";
-        if (index === currentIndex) {
-          bgStyle = "bg-blue-600 text-white animate-pulse shadow-md";
-        } else if (index < currentIndex) {
-          bgStyle = "bg-emerald-100 text-emerald-800 border border-emerald-200";
-        }
-        outHtml += `
-          <div class="p-2.5 rounded-xl text-[10px] text-left leading-normal ${bgStyle}">
-            <p class="font-bold">${step}</p>
-            <p class="text-[8px] opacity-80 mt-0.5">${stepInstructions[step]}</p>
-          </div>
-        `;
-      });
-      return outHtml;
-    }
-
-    async function submitOrderStateTransition(rowNum, currentStatus) {
-      const pics = orderCardsPics[rowNum] || [];
-      const skipProofSteps = ["Received", "Call 1", "Call 2"];
-      
-      let normStatus = "Received";
-      if (currentStatus) {
-        let curLower = currentStatus.toString().toLowerCase().trim();
-        if (curLower === "pending" || curLower === "received") normStatus = "Received";
-        else {
-          const statusFlow = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
-          let found = statusFlow.find(s => s.toLowerCase() === curLower);
-          if (found) normStatus = found;
-        }
-      }
-
-      if (pics.length === 0 && !skipProofSteps.includes(normStatus)) {
-        showToast("Visual proof photo is mandatory for this step!", "error");
-        return;
-      }
-
-      showLoader();
-      callAPI_POST({
-        action: "orderTransition",
-        rowNum: rowNum,
-        currentStatus: normStatus,
-        pics: pics,
-        empId: userSession.empId,
-        empName: userSession.name
-      }, res => {
-        hideLoader();
-        if (res) {
-          showToast(res.message);
-          if (res.success) {
-            orderCardsPics[rowNum] = [];
-            loadPipelineCounts();
-            loadStageOrders('');
-          }
-        }
-      }, err => {
-        hideLoader();
-        showToast("Transition Error: " + err.message, "error");
-      });
-    }
-
-    function convertFileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.readAsDataURL(file);
-        r.onload = () => resolve(r.result);
-        r.onerror = (e) => reject(e);
-      });
-    }
-  </script>
-</body>
-</html>
+            <div class="grid grid-cols-2 gap-3 text-[10px] text-slate-500 bg-white p-4 border border-slate-100 rounded-2xl shadow-sm">
+         
