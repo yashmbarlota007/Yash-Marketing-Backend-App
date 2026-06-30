@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING | BACKBONE SUPER-APP v10.1</title>
+    <title>YASH MARKETING | BACKBONE SUPER-APP v10.2</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -20,186 +19,174 @@
             background: rgba(255, 255, 255, 0.9); 
             backdrop-filter: blur(60px); 
             border: 2px solid #fff; 
-            border-radius: 1.5rem; 
+            border-radius: 1rem; 
         }
         @media (min-width: 768px) {
-            .glass-shards { border-radius: 3rem; }
-        }
-        @media (min-width: 1280px) {
-            .glass-shards { border-radius: 4rem; }
+            .glass-shards { border-radius: 2rem; }
         }
         
         .inner-vault { box-shadow: inset 0 6px 15px rgba(0,0,0,0.04); }
         
         /* SLA Bottleneck Pulse (Red Flag) */
         .bottleneck-pulse { border: 4px solid var(--danger) !important; animation: red-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1); }
-        @media (min-width: 768px) {
-            .bottleneck-pulse { border-width: 6px !important; }
-        }
-        @keyframes red-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); transform: scale(1); } 50% { transform: scale(1.02); } 100% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); transform: scale(1); } }
+        @keyframes red-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); transform: scale(1); } 50% { transform: scale(1.02); } 100% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); transform: scale(1); } }
 
-        .beauty-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .beauty-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .beauty-scroll::-webkit-scrollbar-thumb { background: var(--brand); border-radius: 100px; }
         
         .step-node { transition: all 0.5s ease; cursor: pointer; border: 4px solid #f1f5f9; }
-        .step-node.active { background: var(--brand) !important; color: #fff !important; transform: translateY(-15px) scale(1.15); box-shadow: 0 25px 50px -10px rgba(79, 70, 229, 0.5); border-color: #fff; }
+        .step-node.active { background: var(--brand) !important; color: #fff !important; transform: translateY(-15px) scale(1.15); border-color: #fff; }
         
         /* Component Visuals */
         .cat-image { width: 60px; height: 60px; object-fit: cover; border-radius: 1rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         @media (min-width: 768px) {
-            .cat-image { width: 100px; height: 100px; border-radius: 2rem; border-width: 3px; }
+            .cat-image { width: 100px; height: 100px; border-radius: 1.5rem; }
         }
         
-        .proof-frame { border-radius: 1.5rem; border: 4px solid #f8fafc; transition: 0.5s; overflow: hidden; }
-        .proof-frame:hover { transform: scale(1.03) rotate(1deg); box-shadow: 0 30px 60px -15px rgba(0,0,0,0.15); }
+        .proof-frame { border-radius: 1rem; border: 3px solid #f8fafc; transition: 0.5s; overflow: hidden; }
+        .proof-frame:hover { transform: scale(1.03) rotate(1deg); }
 
         /* Animation */
-        .slide-up-fade { animation: slideUpFade 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards; opacity: 0; }
-        @keyframes slideUpFade { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .slide-up-fade { animation: slideUpFade 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards; opacity: 0; }
+        @keyframes slideUpFade { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         #boot-loader { position: fixed; inset: 0; background: #fff; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-4 md:p-8 lg:p-14 min-h-screen">
+<body class="p-4 md:p-6 lg:p-10 min-h-screen">
 
     <!-- System Bootloader -->
     <div id="boot-loader">
         <div class="relative">
-            <div class="w-24 h-24 md:w-32 md:h-32 border-[8px] md:border-[12px] border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
-            <div class="absolute inset-0 flex items-center justify-center font-black text-xl md:text-2xl text-indigo-600 italic">V10</div>
+            <div class="w-16 h-16 border-[6px] border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
-        <h2 class="mt-8 md:mt-12 text-xs font-black tracking-[0.5em] text-slate-400 uppercase italic animate-pulse text-center px-4">Launching Yash Marketing Backend</h2>
+        <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Loading Yash Marketing Backbone</h2>
     </div>
 
     <div class="max-w-[2000px] mx-auto">
-        <!-- 1. NAVIGATION & METRICS HUD -->
-        <header class="flex flex-col xl:flex-row justify-between items-center mb-8 md:mb-16 p-6 md:p-12 lg:p-16 glass-shards shadow-2xl relative overflow-hidden group gap-6">
-            <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 relative z-10 text-center md:text-left w-full xl:w-auto">
-                <div class="p-5 bg-indigo-600 rounded-2xl md:rounded-[2.5rem] shadow-lg group-hover:scale-105 transition-all duration-700">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        
+        <!-- 1. COMPACT NAVBAR & HUD STATS -->
+        <header class="bg-white rounded-2xl shadow-md p-4 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <!-- Brand Title -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+                    <div class="p-2.5 bg-indigo-600 rounded-xl text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg md:text-xl font-black tracking-tight text-slate-900 uppercase italic">Yash Marketing <span class="text-indigo-600">Backbone</span></h1>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cloud Engine: Online</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Yash Marketing <span class="text-indigo-600">Backbone</span></h1>
-                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                        <span class="badge badge-primary font-black tracking-wider text-xs md:text-sm py-2 px-4 shadow-md uppercase italic border-none">LAUNCH READY v10.1</span>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
-                            <span class="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest italic">Cloud Engine: Online</span>
+
+                <!-- Inline Compact Stats & Refresh Button -->
+                <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
+                    <div class="flex gap-6 items-center">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">Orders</span>
+                            <p id="hud-total" class="text-xl md:text-2xl font-black text-indigo-700 italic leading-none mt-1">0</p>
+                        </div>
+                        <div class="h-6 w-px bg-slate-200"></div>
+                        <div>
+                            <span class="text-[10px] text-red-400 font-bold uppercase">SLA Breached</span>
+                            <p id="hud-late" class="text-xl md:text-2xl font-black text-red-500 italic leading-none mt-1">0</p>
                         </div>
                     </div>
+                    <button onclick="syncData()" class="btn btn-circle btn-sm bg-indigo-50 border-none hover:bg-indigo-100 shrink-0">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
                 </div>
             </div>
-
-            <div class="flex flex-col sm:flex-row items-center justify-between xl:justify-end gap-6 md:gap-12 relative z-10 w-full xl:w-auto mt-4 xl:mt-0">
-                <div class="flex gap-8 md:gap-16 justify-center w-full sm:w-auto">
-                    <div class="text-center">
-                        <p class="text-xs md:text-sm font-black text-slate-400 uppercase tracking-wider">Orders in Funnel</p>
-                        <p id="hud-total" class="text-4xl md:text-6xl lg:text-7xl font-black text-indigo-700 leading-none mt-2 tracking-tighter italic">0</p>
-                    </div>
-                    <div class="divider divider-horizontal mx-2 opacity-10"></div>
-                    <div class="text-center text-red-500">
-                        <p class="text-xs md:text-sm font-black text-red-400 uppercase tracking-wider">SLA Breached</p>
-                        <p id="hud-late" class="text-4xl md:text-6xl lg:text-7xl font-black leading-none mt-2 tracking-tighter italic">0</p>
-                    </div>
-                </div>
-                <button onclick="syncData()" class="btn btn-circle btn-lg h-16 w-16 md:h-20 md:w-20 lg:h-24 lg:w-24 bg-white border-none shadow-xl hover:bg-indigo-50 transition-all group shrink-0">
-                    <svg class="w-6 h-6 md:w-10 md:h-10 text-indigo-600 group-hover:rotate-180 transition-all duration-1000" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                </button>
-            </div>
-            <!-- Background Decoration -->
-            <div class="absolute -right-60 -top-60 w-[800px] h-[800px] bg-indigo-50 rounded-full blur-[180px] opacity-70 pointer-events-none"></div>
         </header>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
-            <!-- 2. ANALYTICAL RADAR: THE DRILL-DOWN BRAIN -->
-            <div class="xl:col-span-4 space-y-6 md:space-y-10">
-                <div class="card glass-shards shadow-2xl p-4 md:p-8 border-b-[15px] md:border-b-[25px] border-indigo-600 transition-all hover:translate-y-[-10px]">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest">Workload Radar Matrix</h2>
-                        <span class="badge badge-indigo font-bold text-[10px] p-2 animate-bounce shadow-md uppercase">Live Drill-Down</span>
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            
+            <!-- 2. ANALYTICAL BAR: DEPT COUNTERS (Staff-Friendly Replacement) -->
+            <div class="xl:col-span-4 space-y-6">
+                <div class="card bg-white shadow-md p-4 border-b-8 border-indigo-600">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider">Department Load Overview</h2>
+                        <span class="badge badge-indigo font-bold text-[10px] py-1 px-2 uppercase shadow-sm">Live Counters</span>
                     </div>
-                    <!-- Fixed chart wrapper with responsive dynamic height constraints -->
-                    <div class="relative w-full h-[320px] md:h-[450px]">
-                        <canvas id="radarChart"></canvas>
+                    
+                    <!-- Simpler readable Counter list -->
+                    <div id="dept-load-list" class="space-y-2 max-h-[300px] md:max-h-[450px] overflow-y-auto beauty-scroll pr-1">
+                        <!-- Instantly injected by script -->
                     </div>
-                    <div class="mt-6 p-4 bg-indigo-50/50 rounded-xl md:rounded-2xl text-center border-2 border-dashed border-indigo-100">
-                        <p class="text-xs md:text-sm font-black text-indigo-700 leading-relaxed uppercase tracking-wide italic">
-                            Select any department node on the radar above to filter the assembly line feed.
+                    
+                    <div class="mt-4 p-3 bg-indigo-50 rounded-xl text-center border border-dashed border-indigo-100">
+                        <p class="text-[11px] font-black text-indigo-700 leading-relaxed uppercase tracking-wide italic">
+                            Tap any stage to filter. Tap again to clear filter.
                         </p>
                     </div>
                 </div>
 
-                <!-- S-30 MIS DASHBOARD -->
-                <div class="bg-slate-900 rounded-2xl md:rounded-[2.5rem] lg:rounded-[3rem] p-6 md:p-10 text-white shadow-2xl relative overflow-hidden group">
+                <!-- S-30 MIS DASHBOARD (Compact Overlap Protection) -->
+                <div class="bg-slate-900 rounded-2xl p-4 text-white shadow-xl relative overflow-hidden group">
                     <div class="relative z-10">
-                        <h3 class="text-indigo-400 font-black text-sm md:text-lg tracking-widest mb-6 md:mb-10 uppercase italic flex items-center gap-2 font-bold">
-                            <span class="w-8 h-px bg-indigo-500"></span> S-30 MDO SCORECARD
+                        <h3 class="text-indigo-400 font-black text-[11px] tracking-wider mb-3 uppercase italic flex items-center gap-2">
+                            <span class="w-6 h-px bg-indigo-500"></span> S-30 MDO SCORECARD
                         </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
-                            <div class="bg-white/5 p-4 md:p-8 rounded-xl md:rounded-2xl border border-white/10 group-hover:bg-indigo-600 transition-all duration-700 text-center">
-                                <p class="text-[10px] md:text-xs uppercase text-slate-400 font-bold mb-2 tracking-wider">Operations Efficiency</p>
-                                <p class="text-3xl md:text-5xl lg:text-6xl font-black text-green-400 tracking-tighter">99.8%</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10 text-center">
+                                <p class="text-[9px] uppercase text-slate-400 font-bold mb-1">Operations</p>
+                                <p class="text-xl md:text-2xl font-black text-green-400">99.8%</p>
                             </div>
-                            <div class="bg-white/5 p-4 md:p-8 rounded-xl md:rounded-2xl border border-white/10 text-center">
-                                <p class="text-[10px] md:text-xs uppercase text-slate-400 font-bold mb-2 tracking-wider">Current Avg TAT</p>
-                                <p class="text-3xl md:text-5xl lg:text-6xl font-black text-indigo-300 tracking-tighter">38m</p>
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10 text-center">
+                                <p class="text-[9px] uppercase text-slate-400 font-bold mb-1">Avg TAT</p>
+                                <p class="text-xl md:text-2xl font-black text-indigo-300">38m</p>
                             </div>
                         </div>
                     </div>
-                    <div class="absolute -right-10 -bottom-10 text-[8rem] md:text-[12rem] lg:text-[18rem] font-black text-white/5 italic select-none leading-none pointer-events-none italic uppercase">MDO</div>
+                    <div class="absolute -right-6 -bottom-6 text-6xl font-black text-white/5 italic select-none pointer-events-none uppercase">MDO</div>
                 </div>
             </div>
 
-            <!-- 3. ASSEMBLY LINE: RECENT-FIRST DRILL-DOWN FEED -->
+            <!-- 3. ASSEMBLY LINE HUB -->
             <div class="xl:col-span-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-10 px-2 gap-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 px-2 gap-4">
                     <div class="flex items-center gap-3">
-                        <h2 id="line-title" class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-800 uppercase tracking-wide italic flex items-center gap-2 leading-none">
-                            <svg class="w-6 h-6 md:w-8 md:h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <h2 id="line-title" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-wide italic flex items-center gap-2 leading-none">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             Assembly Line Hub
                         </h2>
-                        <span id="filter-badge" class="hidden badge badge-primary font-black animate-pulse text-xs md:text-sm p-3 rounded-full shadow-lg uppercase italic">Filter Active</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs md:text-sm font-black text-slate-400 uppercase bg-white px-4 py-2 rounded-full shadow-md border-2 border-slate-50 italic shrink-0">
-                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-md"></div>
-                        Protocol: Recent First
+                        <span id="filter-badge" class="hidden badge badge-primary font-black animate-pulse text-xs p-2 rounded-full shadow-lg uppercase italic">Filter Active</span>
                     </div>
                 </div>
                 
-                <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[95vh] overflow-y-auto beauty-scroll pr-2 pb-24">
+                <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[95vh] overflow-y-auto beauty-scroll pr-2 pb-24">
                     <!-- Dynamic Order Cards -->
-                    <div id="sync-preloader" class="col-span-full py-24 md:py-48 text-center">
-                        <span class="loading loading-ring loading-lg text-indigo-600 mb-6 scale-[1.5] md:scale-[2]"></span>
-                        <p class="font-black tracking-widest uppercase text-xs md:text-sm text-slate-400 italic">Accessing Yash Marketing Cloud Hub...</p>
+                    <div id="sync-preloader" class="col-span-full py-16 text-center">
+                        <span class="loading loading-ring loading-lg text-indigo-600 mb-4"></span>
+                        <p class="font-black tracking-widest uppercase text-xs text-slate-400 italic">Accessing Yash Marketing Cloud Hub...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 4. THE ULTIMATE 9-STAGE PROCESS COMMAND MODAL (PREMIUM) -->
+    <!-- 4. PROCESS MODAL (ROBUST COMPACT) -->
     <dialog id="process_modal" class="modal modal-bottom sm:modal-middle backdrop-blur-3xl">
-        <div class="modal-box w-11/12 max-w-[1550px] bg-white p-0 rounded-2xl md:rounded-[3rem] shadow-3xl border-none">
+        <div class="modal-box w-11/12 max-w-[1550px] bg-white p-0 rounded-2xl shadow-3xl border-none">
             
             <!-- Modal Header -->
-            <div class="bg-indigo-600 p-6 md:p-10 text-white flex justify-between items-center relative overflow-hidden">
+            <div class="bg-indigo-600 p-5 text-white flex justify-between items-center relative overflow-hidden">
                 <div class="relative z-10 min-w-0">
-                    <h3 id="m-dealer" class="text-3xl md:text-5xl lg:text-7xl font-black italic tracking-tight uppercase leading-none mb-4 break-words">Dealer</h3>
-                    <div class="flex flex-wrap gap-4 items-center">
-                        <span id="m-id" class="text-xs md:text-sm font-black tracking-widest opacity-80 border-r border-white/20 pr-4 uppercase italic">ID: #000</span>
-                        <span id="m-area" class="text-xs md:text-sm font-black tracking-wide bg-white/20 px-3 py-1 rounded-full uppercase italic font-bold">REGION: GENERAL</span>
+                    <h3 id="m-dealer" class="text-2xl md:text-4xl font-black italic tracking-tight uppercase leading-none mb-3 break-words">Dealer</h3>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <span id="m-id" class="text-xs font-black tracking-wider opacity-80 border-r border-white/20 pr-3 uppercase italic">ID: #000</span>
+                        <span id="m-area" class="text-xs font-black tracking-wide bg-white/20 px-2 py-0.5 rounded-full uppercase italic">REGION: GENERAL</span>
                     </div>
                 </div>
                 <form method="dialog" class="relative z-10 shrink-0 ml-4">
-                    <button class="btn btn-circle btn-sm md:btn-lg btn-ghost text-white border-2 border-white/20 hover:rotate-90 transition-all duration-1000">✕</button>
+                    <button class="btn btn-circle btn-sm btn-ghost text-white border border-white/20 hover:rotate-90 transition-all duration-1000">✕</button>
                 </form>
-                <div class="absolute -right-80 -top-80 w-[90rem] h-[90rem] bg-white/10 rounded-full blur-[300px] pointer-events-none"></div>
             </div>
 
-            <div class="p-6 md:p-10">
-                <!-- FEATURE: 9-Stage Visual Track Tracker (Horizontal scrolling on mobile) -->
-                <div class="mb-8 md:mb-12 overflow-x-auto pb-4 max-w-full beauty-scroll">
-                    <ul id="timeline-track" class="steps steps-horizontal min-w-[900px] xl:w-full text-xs md:text-sm font-black uppercase tracking-tight">
+            <div class="p-5">
+                <!-- 9-Stage Visual Track (Mobile Swipe-able) -->
+                <div class="mb-6 overflow-x-auto pb-2 max-w-full beauty-scroll">
+                    <ul id="timeline-track" class="steps steps-horizontal min-w-[850px] w-full text-[11px] font-black uppercase tracking-tight">
                         <li class="step">Received</li>
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
@@ -212,61 +199,47 @@
                     </ul>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
-                    <!-- LEFT: Visual Item Pick-List (Col-5) -->
-                    <div class="lg:col-span-5 space-y-6">
-                        <div class="bg-slate-50 p-4 md:p-8 rounded-2xl border-4 border-slate-100 shadow-inner">
-                            <div class="flex justify-between items-center mb-6">
-                                <h4 class="text-lg md:text-2xl font-black text-indigo-600 uppercase tracking-wider flex items-center gap-2 italic leading-none">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                                    Item Pick-List
-                                </h4>
-                                <span class="badge badge-indigo font-bold text-xs p-3 shadow-md uppercase">Live Catalogue</span>
-                            </div>
-                            <div id="m-product-list" class="space-y-4 max-h-[400px] lg:max-h-[600px] overflow-y-auto beauty-scroll pr-2">
-                                <!-- Catalogue items injected here -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- LEFT: Pick-List -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-100 shadow-inner">
+                            <h4 class="text-md font-black text-indigo-600 uppercase mb-4 flex items-center gap-2">Item Pick-List</h4>
+                            <div id="m-product-list" class="space-y-3 max-h-[350px] overflow-y-auto beauty-scroll pr-1">
+                                <!-- Catalogue items injected dynamically -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- MIDDLE: System Sync Engine & Geotag (Col-4) -->
-                    <div class="lg:col-span-4 space-y-6 text-center">
-                        <div class="bg-indigo-50 p-6 md:p-8 rounded-2xl border-4 border-dashed border-indigo-200 shadow-xl">
-                            <div class="mb-6">
-                                <span id="m-stage-tag" class="text-xs md:text-sm font-black text-indigo-700 uppercase tracking-widest bg-white px-4 py-2 rounded-full shadow-md inline-block">
+                    <!-- MIDDLE: System Sync Engine -->
+                    <div class="lg:col-span-4 space-y-4 text-center">
+                        <div class="bg-indigo-50 p-4 rounded-xl border-2 border-dashed border-indigo-200 shadow-md">
+                            <div class="mb-4">
+                                <span id="m-stage-tag" class="text-xs font-black text-indigo-700 uppercase tracking-wider bg-white px-3 py-1.5 rounded-full shadow-sm inline-block">
                                     STAGE: LOADING
                                 </span>
                             </div>
                             
-                            <div id="m-media-control" class="space-y-4">
-                                <!-- Dynamic File Inputs -->
+                            <div id="m-media-control" class="space-y-3">
+                                <!-- Dynamic File/Capture Inputs -->
                             </div>
 
-                            <button id="m-sync-btn" onclick="executeSyncProtocol()" class="btn btn-primary w-full mt-6 h-12 md:h-16 rounded-full shadow-lg font-black text-lg tracking-wide italic">
+                            <button id="m-sync-btn" onclick="executeSyncProtocol()" class="btn btn-primary w-full mt-4 h-12 rounded-full shadow-md font-black italic">
                                 SYNC COMPLETE
                             </button>
-                            <div class="mt-6 flex flex-col items-center gap-2">
-                                <p class="text-xs md:text-sm text-slate-400 font-bold uppercase italic tracking-widest">Geo-Sync & Cloud Watermark ACTIVE</p>
-                                <div class="flex gap-2">
-                                    <div class="w-3 h-3 bg-indigo-200 rounded-full animate-bounce shadow-md"></div>
-                                    <div class="w-3 h-3 bg-indigo-400 rounded-full animate-bounce shadow-md" style="animation-delay: 0.2s"></div>
-                                    <div class="w-3 h-3 bg-indigo-600 rounded-full animate-bounce shadow-md" style="animation-delay: 0.4s"></div>
-                                </div>
-                            </div>
                         </div>
                         
-                        <div class="flex gap-4">
-                            <button onclick="handleSplitUI()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-12 text-sm italic shadow-md">SPLIT</button>
-                            <button class="btn btn-ghost bg-slate-100 text-slate-500 flex-1 rounded-full font-black h-12 text-sm italic shadow-md">AUDIT</button>
+                        <div class="flex gap-3">
+                            <button onclick="handleSplitUI()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SPLIT</button>
+                            <button class="btn btn-ghost bg-slate-100 text-slate-500 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">AUDIT</button>
                         </div>
                     </div>
 
-                    <!-- RIGHT: Historical Vault / Proof Stream (Col-3) -->
+                    <!-- RIGHT: Vault -->
                     <div class="lg:col-span-3">
-                        <div class="bg-white p-4 md:p-6 rounded-2xl border-4 border-slate-50 shadow-md min-h-[300px] lg:min-h-[500px]">
-                            <h4 class="text-md md:text-xl font-black text-slate-400 uppercase mb-6 tracking-widest italic text-center">Security Vault</h4>
-                            <div id="m-vault-feed" class="space-y-4 max-h-[300px] lg:max-h-[500px] overflow-y-auto beauty-scroll pr-2">
-                                <!-- Proofs & Audio Players Injected Here -->
+                        <div class="bg-white p-4 rounded-xl border-2 border-slate-50 shadow-sm min-h-[250px]">
+                            <h4 class="text-xs font-black text-slate-400 uppercase mb-4 tracking-wider text-center">Security Vault</h4>
+                            <div id="m-vault-feed" class="space-y-3 max-h-[250px] overflow-y-auto beauty-scroll pr-1">
+                                <!-- Vault content -->
                             </div>
                         </div>
                     </div>
@@ -277,18 +250,16 @@
 
     <script>
         /**
-         * v10.1 CORE BACKBONE ENGINE (LAUNCH-ULTIMATE WITH ACTIVE SAFE CHECKS)
+         * v10.2 LIVE ENGINE (ROBUST SAFE CHECKS ENABLED)
          * -------------------------------------------------------------
          */
         
-        // APPS SCRIPT URL (FROM RECENT DEPLOYMENT)
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
-        
         const PROTOCOL_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         
         let store_orders = [];
         let store_stock = [];
-        let engine_radar = null;
+        let activeFilterStage = null;
 
         // SAFE ACCESS WRAPPER UTILITIES (Never Crash Guarantee)
         const safe = {
@@ -303,12 +274,12 @@
             try {
                 await syncData();
             } catch(e) {
-                console.error("Init Error: ", e);
+                console.error("Initialization error:", e);
             } finally {
                 const loader = safe.el('boot-loader');
                 if(loader) {
                     loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 1000);
+                    setTimeout(() => loader.style.display = 'none', 500);
                 }
             }
         };
@@ -329,7 +300,7 @@
                 if (preloader) preloader.classList.add('hidden');
 
                 renderLineFeed(store_orders);
-                renderRadar(store_orders);
+                renderDeptLoadList(store_orders);
                 syncHeaderStats(store_orders);
                 
             } catch (e) {
@@ -337,10 +308,10 @@
                 const feed = safe.el('assembly-line');
                 if (feed) {
                     feed.innerHTML = `
-                        <div class="col-span-full p-8 md:p-12 bg-red-50 rounded-2xl border-4 border-red-200 text-center">
-                            <p class="text-red-600 font-black text-2xl md:text-4xl italic mb-4 uppercase">DATABASE SYNC ERROR</p>
-                            <p class="text-xs md:text-sm text-red-400 font-black uppercase tracking-widest leading-relaxed italic">DETAILS: ${e.message}</p>
-                            <button onclick="location.reload()" class="btn btn-error btn-md mt-6 rounded-full px-8 font-black shadow-md italic">RE-ESTABLISH LINK</button>
+                        <div class="col-span-full p-6 bg-red-50 rounded-2xl border-2 border-red-200 text-center">
+                            <p class="text-red-600 font-black text-xl italic mb-3 uppercase">DATABASE SYNC ERROR</p>
+                            <p class="text-xs text-red-400 font-black uppercase tracking-widest leading-relaxed italic">DETAILS: ${e.message}</p>
+                            <button onclick="location.reload()" class="btn btn-error btn-sm mt-4 rounded-full px-6 font-black shadow-md italic">RE-ESTABLISH LINK</button>
                         </div>`;
                 }
             }
@@ -349,6 +320,43 @@
         function syncHeaderStats(data) {
             safe.text('hud-total', data.length);
             safe.text('hud-late', data.filter(o => o.isLate).length);
+        }
+
+        // Render clean, visual stage load counters (Easy for Staff)
+        function renderDeptLoadList(data) {
+            const listContainer = safe.el('dept-load-list');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = PROTOCOL_STAGES.map(stage => {
+                const count = data.filter(o => {
+                    const s = (o.Current_Status !== undefined && o.Current_Status !== null) ? o.Current_Status.toString().trim() : "Received";
+                    return s.toLowerCase() === stage.toLowerCase();
+                }).length;
+
+                const isSelected = activeFilterStage === stage;
+                
+                return `
+                    <div onclick="toggleStageFilter('${stage}')" 
+                         class="flex justify-between items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.01]' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-100/70'}">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-2.5 h-2.5 rounded-full ${isSelected ? 'bg-white animate-pulse' : 'bg-indigo-500'}"></div>
+                            <span class="text-xs font-black uppercase tracking-wider">${stage}</span>
+                        </div>
+                        <span class="text-xs font-black py-0.5 px-2 rounded-full ${isSelected ? 'bg-white text-indigo-600' : 'bg-indigo-50 text-indigo-700'}">${count}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleStageFilter(stage) {
+            if (activeFilterStage === stage) {
+                activeFilterStage = null;
+                clearFilt();
+            } else {
+                activeFilterStage = stage;
+                drillDown(stage);
+            }
+            renderDeptLoadList(store_orders);
         }
 
         function renderLineFeed(data) {
@@ -370,21 +378,20 @@
                         }
                     }
                 } catch (de) {
-                    console.error("Date parsing error: ", de);
+                    console.error("Date formatting failed", de);
                 }
                 
-                // Pure Safe-Checks applied on template render
                 const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
                 
                 return `
-                    <div class="slide-up-fade card bg-white shadow-lg p-4 md:p-6 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer ${o.isLate ? 'bottleneck-pulse' : 'hover:scale-[1.02]'}" 
+                    <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer ${o.isLate ? 'bottleneck-pulse' : 'hover:scale-[1.02]'}" 
                          style="animation-delay: ${idx * 0.05}s"
                          onclick="openProcessModal('${safeOrderId}')">
                         
                         <div class="flex justify-between items-start mb-4 gap-2">
                             <div class="min-w-0">
                                 <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
-                                <h3 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
+                                <h3 class="text-lg font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
                             </div>
                             <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${o.Current_Status || 'Received'}</div>
                         </div>
@@ -413,25 +420,21 @@
             try {
                 if (!id) return;
                 
-                // Safe lookup converting values to string to prevent numeric type mismatches
-                const order = store_orders.find(o => o.Order_ID && o.Order_ID.toString() === id.toString());
-                if(!order) {
-                    console.warn("Order not found inside local engine store: ID " + id);
-                    return;
-                }
+                // Strict String casting comparison to bypass type mismatches
+                const order = store_orders.find(o => o.Order_ID && o.Order_ID.toString().trim() === id.toString().trim());
+                if(!order) return;
                 window.activeOrder = order;
 
                 safe.text('m-dealer', order.Dealer_Name || "N/A");
                 safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
                 safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
 
-                // Visual Catalogue Pick-List with Photo Mapping
+                // Visual Catalogue Pick-List
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     const items = order.Items ? order.Items.toString().split(',') : [];
                     catScroll.innerHTML = items.map(item => {
                         const query = item.trim().toLowerCase();
-                        // Safe check of stock index bounds to avoid runtime execution blocking
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
                         const img = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
                         return `
@@ -446,9 +449,11 @@
                     }).join('');
                 }
 
-                // Timeline Track Sync
-                const status = order.Current_Status || "Received";
-                const curIdx = PROTOCOL_STAGES.indexOf(status);
+                // Timeline steps alignment
+                const rawStatus = (order.Current_Status !== undefined && order.Current_Status !== null) ? order.Current_Status.toString() : "Received";
+                const status = rawStatus.trim();
+                const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
+                
                 const timelineSteps = document.querySelectorAll('#timeline-track .step');
                 if(timelineSteps && timelineSteps.length > 0) {
                     timelineSteps.forEach((s, i) => {
@@ -462,23 +467,23 @@
                     });
                 }
 
-                // Media System Switcher
+                // Media upload control switcher
                 const inputZone = safe.el('m-media-control');
                 safe.text('m-stage-tag', "STAGE: " + status.toUpperCase());
 
                 if (inputZone) {
-                    if (status === "Received") {
-                        inputZone.innerHTML = `<div class="py-6 px-4 bg-white rounded-2xl border border-indigo-100 shadow-inner"><p class="text-sm md:text-base font-black text-indigo-600 italic tracking-tight text-center leading-relaxed">ACKNOWLEDGMENT COMPLETE.<br>TRIGGER BALANCE CHECK.</p></div>`;
+                    if (status.toLowerCase() === "received") {
+                        inputZone.innerHTML = `<div class="py-6 px-4 bg-white rounded-2xl border border-indigo-100 shadow-inner"><p class="text-xs md:text-sm font-black text-indigo-600 italic tracking-tight text-center leading-relaxed">ACKNOWLEDGMENT COMPLETE.<br>TRIGGER BALANCE CHECK.</p></div>`;
                     } else {
-                        const isAudio = status.includes("Call");
+                        const isAudio = status.toLowerCase().includes("call");
                         inputZone.innerHTML = `
                             <div class="form-control w-full">
                                 <input type="file" id="m-file-input" 
                                     class="file-input file-input-bordered file-input-primary w-full rounded-xl shadow-md text-xs font-bold" 
                                     ${isAudio ? 'accept="audio/*"' : 'accept="image/*" capture="environment"'} 
                                     multiple />
-                                <p class="text-[10px] md:text-xs font-black text-slate-400 mt-2 uppercase tracking-widest italic text-center">
-                                    ${isAudio ? 'AUDIO CAPTURE MODE ACTIVE' : 'CAMERA OPTICS MODE ACTIVE'}
+                                <p class="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest italic text-center">
+                                    ${isAudio ? 'AUDIO CAPTURE ACTIVE' : 'CAMERA OPTICS ACTIVE'}
                                 </p>
                             </div>`;
                     }
@@ -490,8 +495,8 @@
                     modal.showModal();
                 }
             } catch (err) {
-                console.error("Modal Render Failed: ", err);
-                alert("Critical process load failed: " + err.message);
+                console.error("Process modal failed:", err);
+                alert("Critical error inside load engine: " + err.message);
             }
         }
 
@@ -518,21 +523,21 @@
                     contentCount++;
                     if(p.aud) {
                         vault.innerHTML += `
-                            <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
-                                <p class="text-xs font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l}</p>
+                            <div class="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100/80 shadow-inner">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l}</p>
                                 <audio controls class="w-full h-8 rounded-full border border-white"><source src="${val}"></audio>
                             </div>`;
                     } else {
                         vault.innerHTML += `
-                            <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
-                                <p class="text-xs font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l}</p>
-                                <img src="${val}" class="proof-frame w-full max-h-[150px] object-cover cursor-pointer" onclick="window.open('${val}')">
+                            <div class="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100/80 shadow-inner">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l}</p>
+                                <img src="${val}" class="proof-frame w-full max-h-[120px] object-cover cursor-pointer" onclick="window.open('${val}')">
                             </div>`;
                     }
                 }
             });
             if(contentCount === 0) {
-                vault.innerHTML = `<div class="py-12 text-center opacity-10 font-black uppercase text-xl tracking-widest italic">Vault Offline</div>`;
+                vault.innerHTML = `<div class="py-8 text-center opacity-10 font-black uppercase text-sm tracking-wider">No Proof Records</div>`;
             }
         }
 
@@ -541,7 +546,7 @@
             if(!btn) return;
             const order = window.activeOrder;
             if(!order) return;
-            const cur = order.Current_Status || "Received";
+            const cur = (order.Current_Status !== undefined && order.Current_Status !== null) ? order.Current_Status.toString() : "Received";
             const next = PROTOCOL_STAGES[PROTOCOL_STAGES.indexOf(cur) + 1];
 
             if(!next) {
@@ -550,7 +555,7 @@
             }
 
             btn.disabled = true;
-            btn.innerHTML = `<span class="loading loading-spinner text-white scale-[1.5] mr-2"></span> SYNCHRONIZING...`;
+            btn.innerHTML = `<span class="loading loading-spinner text-white scale-[1.2] mr-2"></span> SYNCHRONIZING...`;
 
             try {
                 const geo = await new Promise(r => {
@@ -608,68 +613,13 @@
             }
         }
 
-        // RADAR DRILL-DOWN ENGINE (Fully Responsive)
-        function renderRadar(data) {
-            const ctx = safe.el('radarChart');
-            if(!ctx) return;
-            
-            const counts = PROTOCOL_STAGES.map(s => data.filter(o => (o.Current_Status || "Received") === s).length);
-
-            if(engine_radar) {
-                try { engine_radar.destroy(); } catch(e) { console.error(e); }
-            }
-            
-            const isMobile = window.innerWidth < 768;
-
-            try {
-                engine_radar = new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: PROTOCOL_STAGES,
-                        datasets: [{
-                            label: 'Dept Load',
-                            data: counts,
-                            backgroundColor: 'rgba(79, 70, 229, 0.25)',
-                            borderColor: 'rgb(79, 70, 229)',
-                            borderWidth: isMobile ? 4 : 8,
-                            pointRadius: isMobile ? 8 : 12,
-                            pointBackgroundColor: 'rgb(79, 70, 229)',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: isMobile ? 3 : 5,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            r: {
-                                angleLines: { color: 'rgba(0,0,0,0.15)', lineWidth: isMobile ? 2 : 4 },
-                                grid: { color: 'rgba(0,0,0,0.1)', lineWidth: isMobile ? 1 : 2 },
-                                pointLabels: { font: { size: isMobile ? 10 : 14, weight: '700' }, color: '#334155' },
-                                ticks: { display: false }, 
-                                min: 0
-                            }
-                        },
-                        onClick: (e, items) => {
-                            if (items && items.length > 0) {
-                                drillDown(PROTOCOL_STAGES[items[0].index]);
-                            } else {
-                                clearFilt();
-                            }
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error("Chart Render Failed: ", err);
-            }
-        }
-
         function drillDown(s) {
             safe.text('line-title', "DEPARTMENT: " + s);
             safe.removeClass('filter-badge', 'hidden');
-            renderLineFeed(store_orders.filter(o => (o.Current_Status || "Received") === s));
+            renderLineFeed(store_orders.filter(o => {
+                const curSt = (o.Current_Status !== undefined && o.Current_Status !== null) ? o.Current_Status.toString() : "Received";
+                return curSt.toLowerCase() === s.toLowerCase();
+            }));
         }
 
         function clearFilt() {
@@ -686,3 +636,5 @@
         // Auto Sync every 5 minutes
         setInterval(syncData, 300000);
     </script>
+</body>
+</html>
