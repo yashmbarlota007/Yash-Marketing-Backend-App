@@ -3,392 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <title>Yash Operations Dashboard Hub</title>
-  <!-- Pre-compiled Static CSS Stylesheet for 100% instant rendering on all mobile phones -->
+  <!-- Pre-compiled Premium Tailwind CSS Framework -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-    .calendar-day { min-height: 36px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border-radius: 8px; }
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    .glassmorphism { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .conveyor-grid-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .conveyor-grid-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+    .active-stage-glow { border-color: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.15); }
   </style>
 </head>
-<body class="pb-16 text-slate-800">
+<body class="pb-16 text-slate-800 antialiased">
+
+  <!-- FLOATING CUSTOM TOAST SYSTEM -->
+  <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-sm px-4 pointer-events-none space-y-3"></div>
 
   <!-- AUTH PORTAL -->
-  <div id="login-container" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 space-y-6 border">
+  <div id="login-container" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 space-y-6 border border-slate-100 transition duration-300">
       <div class="text-center">
-        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Yash Operations</h2>
-        <p class="text-xs text-slate-400 mt-1">Operational Control Terminal</p>
+        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 font-black shadow-inner">YM</div>
+        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Yash Marketing</h2>
+        <p class="text-xs text-slate-400 mt-1.5 font-medium">Operations Control Terminal</p>
       </div>
       <div class="space-y-4">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Employee ID</label>
-          <input type="text" id="login-id" class="w-full px-4 py-3 rounded-xl bg-slate-50 border outline-none focus:border-blue-500 transition" placeholder="YM001">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Employee ID</label>
+          <input type="text" id="login-id" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="YM001">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Password</label>
-          <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-xl bg-slate-50 border outline-none focus:border-blue-500 transition" placeholder="******">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+          <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="******">
         </div>
-        <button onclick="handleLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg">Authenticate Terminal</button>
+        <button onclick="handleLogin()" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl transition duration-200 shadow-lg hover:shadow-blue-500/20 hover:from-blue-700 hover:to-indigo-700 transform active:scale-95">Authenticate System</button>
       </div>
     </div>
   </div>
 
+  <!-- LIGHTBOX PREVIEW MODAL -->
+  <div id="lightbox-modal" onclick="closeLightbox()" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[200] p-4 cursor-zoom-out">
+    <img id="lightbox-img" class="max-w-full max-h-[85vh] rounded-xl shadow-2xl object-contain transition-all duration-300" src="" alt="Proof Preview">
+  </div>
+
   <!-- LOADER -->
-  <div id="global-loader" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100]">
-    <div class="bg-white px-6 py-5 rounded-2xl shadow-xl flex flex-col items-center">
-      <div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-      <p class="text-xs text-slate-500 mt-3 font-semibold">Processing Data...</p>
+  <div id="global-loader" class="hidden fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-[150]">
+    <div class="bg-white px-6 py-5 rounded-3xl shadow-2xl flex flex-col items-center border border-slate-100">
+      <div class="animate-spin rounded-full h-8 w-8 border-3 border-blue-600 border-t-transparent"></div>
+      <p class="text-xs text-slate-500 mt-3 font-semibold tracking-wide">Syncing Process...</p>
     </div>
   </div>
 
   <!-- HEADER -->
   <header class="bg-white border-b sticky top-0 z-40 px-5 py-4 flex justify-between items-center shadow-sm">
-    <div>
-      <h1 class="font-bold text-slate-900 text-base leading-tight" id="header-user">Yash Operations</h1>
-      <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider" id="header-role">System Access</p>
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/10">YM</div>
+      <div>
+        <h1 class="font-extrabold text-slate-950 text-base leading-tight" id="header-user">Yash Operations</h1>
+        <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider" id="header-role">OPERATIONS TERMINAL</p>
+      </div>
     </div>
-    <button onclick="logout()" class="px-3 py-1.5 text-xs border border-red-200 text-red-600 rounded-lg bg-red-50 hover:bg-red-100 transition font-semibold">Logout</button>
+    <button onclick="logout()" class="px-3.5 py-2 text-xs border border-red-100 text-red-600 rounded-xl bg-red-50 hover:bg-red-100 transition font-bold transform active:scale-95">Logout</button>
   </header>
 
-  <!-- MASTER VIEW STACKED -->
-  <main class="max-w-md mx-auto p-4 space-y-4">
+  <!-- MASTER VIEW CONTAINER -->
+  <main class="max-w-md mx-auto p-4 space-y-5">
 
-    <!-- 1. ATTENDANCE & SALARY ANALYTICS (Presents & Punching always visible) -->
-    <section class="bg-white p-5 rounded-2xl border shadow-sm space-y-4">
-      <h3 class="font-bold text-slate-800 text-sm border-b pb-2">⏱️ Attendance & Salary Engine</h3>
+    <!-- 1. PIPELINE CONVEYOR GRID (Clickable 3x3 Premium Layout) -->
+    <section id="role-order-grid-box" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-50 pb-3">
+        <h3 class="font-extrabold text-slate-900 text-sm tracking-tight">📦 Conveyor Order Grid</h3>
+        <button onclick="loadPipelineCounts()" class="text-xs text-blue-600 font-bold hover:text-blue-700 transition">Refresh counts</button>
+      </div>
+      <div id="pipeline-grid" class="grid grid-cols-3 gap-2.5">
+        <!-- Dynmically loaded 3x3 stage cards -->
+      </div>
+    </section>
+
+    <!-- 2. EXPANDABLE ACTIVE ORDERS QUEUE -->
+    <section id="role-order-list-box" class="space-y-4">
       
-      <!-- Metrics summary counts (Calculated directly from logs array to match calendar exactly) -->
-      <div class="grid grid-cols-3 gap-2 text-center">
-        <div class="bg-emerald-50 border border-emerald-100 p-2 rounded-xl">
-          <p class="text-[9px] text-emerald-600 font-bold uppercase">Present</p>
-          <p class="text-base font-black text-emerald-800 mt-0.5" id="stats-p">0</p>
+      <!-- Premium Filter Toolbar -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-2">
+        <div class="flex-1 relative">
+          <input type="text" id="order-search-input" oninput="searchOrders()" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold outline-none focus:border-blue-500 focus:bg-white transition" placeholder="Search ID or Dealer Name...">
         </div>
-        <div class="bg-amber-50 border border-amber-100 p-2 rounded-xl">
-          <p class="text-[9px] text-amber-600 font-bold uppercase">Half Day</p>
-          <p class="text-base font-black text-amber-800 mt-0.5" id="stats-hd">0</p>
-        </div>
-        <div class="bg-rose-50 border border-rose-100 p-2 rounded-xl">
-          <p class="text-[9px] text-rose-600 font-bold uppercase">Absent</p>
-          <p class="text-base font-black text-rose-800 mt-0.5" id="stats-absent">0</p>
-        </div>
-      </div>
-
-      <!-- Salary Engine Card (Auto-calculates till-date salary based on attendance status rules) -->
-      <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex justify-between items-center">
-        <div>
-          <p class="text-[9px] text-blue-600 font-bold uppercase tracking-wider">Salary Earned (Till Date)</p>
-          <p class="text-lg font-black text-blue-900 mt-0.5" id="stats-salary-earned">₹0</p>
-        </div>
-        <div class="text-right border-l pl-4 border-blue-200">
-          <p class="text-[8px] text-slate-400 font-bold uppercase">Base Salary</p>
-          <p class="text-xs font-bold text-slate-700" id="stats-salary-base">₹0</p>
-        </div>
-      </div>
-
-      <!-- Attendance Punch triggers -->
-      <div class="bg-slate-50 p-3 rounded-xl border space-y-2">
-        <h4 class="text-[10px] font-bold text-slate-500 uppercase">Selfie Photo Logs (Multi-click)</h4>
-        <div id="att-thumbnails" class="flex flex-wrap gap-2"></div>
-        <div class="flex gap-2">
-          <button onclick="captureMultiPhoto('att')" class="px-3 py-1.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border">📸 Capture Photo</button>
-          <button onclick="clearMultiPhotos('att')" class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg border">Clear</button>
-        </div>
-        <div class="flex gap-2 border-t pt-2">
-          <button onclick="triggerPunch('Check-In')" class="w-1/2 py-2 bg-emerald-600 text-white font-bold rounded-lg text-xs shadow-sm">Punch Check-In</button>
-          <button onclick="triggerPunch('Check-Out')" class="w-1/2 py-2 bg-rose-600 text-white font-bold rounded-lg text-xs shadow-sm">Punch Check-Out</button>
-        </div>
-      </div>
-
-      <!-- Collapsible Calendar Accordion (Only Calendar is hidden inside) -->
-      <div class="border rounded-xl overflow-hidden mt-3">
-        <button onclick="toggleAccordion('attendance-calendar-accordion')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition">
-          <span class="font-bold text-slate-700 text-xs">📅 View Attendance Calendar logs</span>
-          <span id="att-accordion-arrow" class="text-xs text-slate-400">▼</span>
-        </button>
-        <div id="attendance-calendar-accordion" class="hidden p-4 space-y-3 bg-white border-t">
-          <div class="flex justify-between items-center border-b pb-2">
-            <label class="text-[10px] font-bold text-slate-500 uppercase">Track Past 3 Months</label>
-            <select id="att-month-select" onchange="loadAttendanceAnalytics()" class="text-xs font-bold text-blue-600 outline-none bg-transparent">
-              <option value="0">Current Month</option>
-              <option value="1">1 Month Ago</option>
-              <option value="2">2 Months Ago</option>
-              <option value="3">3 Months Ago</option>
-            </select>
-          </div>
-          <div class="bg-slate-50 p-3 rounded-xl border space-y-2">
-            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center" id="calendar-title">Attendance Days</h4>
-            <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-slate-400 border-b pb-1">
-              <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-            </div>
-            <div id="calendar-days-grid" class="grid grid-cols-7 gap-1"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. ROLE RESTRICTED MODULE: PIPELINE CONVEYOR GRID (Non-Scrollable 3x3 layout) -->
-    <section id="role-order-grid-box" class="bg-white p-5 rounded-2xl border shadow-sm space-y-3">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-sm">📦 Order Conveyor Grid</h3>
-        <button onclick="loadPipelineCounts()" class="text-xs text-blue-600 font-bold">Refresh Grid</button>
-      </div>
-      <div id="pipeline-grid" class="grid grid-cols-3 gap-2"></div>
-    </section>
-
-    <!-- 3. ROLE RESTRICTED MODULE: EXPANDABLE ACTIVE ORDERS WITH DATE FILTERS -->
-    <section id="role-order-list-box" class="space-y-3">
-      <div class="flex justify-between items-center bg-white p-3 rounded-xl border shadow-sm">
-        <select id="order-date-filter" onchange="loadStageOrders('')" class="text-xs font-bold text-slate-700 outline-none bg-transparent">
+        <select id="order-date-filter" onchange="loadStageOrders('')" class="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-2 outline-none focus:border-blue-500 transition">
           <option value="All">All Active Dates</option>
-          <option value="Today">Today's Orders</option>
-          <option value="Yesterday">Yesterday's Orders</option>
+          <option value="Today">Today</option>
+          <option value="Yesterday">Yesterday</option>
           <option value="Month">This Month</option>
         </select>
-        <button onclick="loadStageOrders('')" class="text-xs text-blue-600 font-bold">Show All Active</button>
+        <button onclick="loadStageOrders('')" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition">All</button>
       </div>
-      <div id="orders-cards-container" class="space-y-3"></div>
-    </section>
 
-    <!-- 4. ROLE RESTRICTED MODULE: COLLAPSIBLE STOCK AUDIT -->
-    <section id="role-stock-audit-box" class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-      <button onclick="toggleAccordion('stock-audit-container')" class="w-full flex justify-between items-center p-4 bg-slate-50 hover:bg-gray-100 transition border-b">
-        <span class="font-bold text-slate-800 text-sm">🔍 Collapsible Stock Audit Panel</span>
-        <span id="audit-accordion-arrow" class="text-xs text-slate-400">▼</span>
-      </button>
-
-      <div id="stock-audit-container" class="hidden p-5 space-y-4">
-        <!-- 100% Reliable Native capture fallback button directly triggers device camera -->
-        <div class="bg-slate-50 p-3 rounded-xl border space-y-2">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase text-center">Touch below to capture & Scan product barcode</label>
-          <button onclick="triggerBarcodeCameraOnly()" class="w-full py-3 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold border border-blue-200 transition">📸 Snap & Verify Barcode</button>
-        </div>
-
-        <div class="space-y-3 border-t pt-3">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Scanned Barcode</label>
-            <div class="flex gap-2">
-              <input type="text" id="audit-barcode" class="flex-1 px-3 py-2 bg-slate-100 border rounded-lg text-xs outline-none" placeholder="Barcode ID">
-              <button onclick="verifyBarcode()" class="px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold">Verify</button>
-            </div>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Product Details</label>
-            <input type="text" id="audit-pname" readonly class="w-full px-3 py-2 bg-slate-50 border rounded-lg text-xs outline-none text-slate-400">
-          </div>
-          <div class="flex gap-3">
-            <div class="w-1/2">
-              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">System Stock</label>
-              <input type="number" id="audit-sys-qty" readonly class="w-full px-3 py-2 bg-slate-50 border rounded-lg text-xs outline-none text-slate-400">
-            </div>
-            <div class="w-1/2">
-              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Physical Stock (Compulsory)</label>
-              <input type="number" id="audit-phy-qty" class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-xs outline-none" placeholder="Actual count">
-            </div>
-          </div>
-          <button onclick="submitAuditLog()" class="w-full py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs">Submit Audit Log</button>
-        </div>
+      <div class="flex justify-between items-center px-1">
+        <h3 class="font-extrabold text-slate-900 text-xs uppercase tracking-wider" id="orders-list-header">Active Operations Queue</h3>
       </div>
-    </section>
 
-    <!-- 5. ROLE RESTRICTED MODULE: MARKET VISIT TRACKER -->
-    <section id="role-market-visit-box" class="bg-white p-5 rounded-2xl border shadow-sm space-y-4">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-sm">📍 Market Visit Tracker</h3>
-        <span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-bold" id="visit-today-count">Visits Today: 0</span>
-      </div>
-      
-      <div class="space-y-3">
-        <div class="relative">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Area (Compulsory)</label>
-          <input type="text" id="visit-area-search" oninput="filterAreas()" onfocus="showAreaDropdown()" class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-xs outline-none" placeholder="Search Area...">
-          <div id="visit-area-dropdown" class="hidden absolute left-0 right-0 mt-1 max-h-36 overflow-y-auto bg-white border rounded-lg shadow-xl z-50 text-xs"></div>
-        </div>
-
-        <div class="relative">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Dealer (Compulsory)</label>
-          <input type="text" id="visit-dealer-search" oninput="filterDealers()" onfocus="showDealerDropdown()" class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-xs outline-none" placeholder="Select Area first..." disabled>
-          <div id="visit-dealer-dropdown" class="hidden absolute left-0 right-0 mt-1 max-h-36 overflow-y-auto bg-white border rounded-lg shadow-xl z-50 text-xs"></div>
-        </div>
-
-        <div class="border-t pt-3 space-y-3">
-          <h4 class="text-[10px] font-bold text-blue-600 uppercase">Dealer Market Questionnaire</h4>
-          
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-500">Order Diya?</label>
-              <select id="v-order-diya" onchange="toggleOrderFields()" class="w-full p-2 bg-slate-100 border rounded text-xs outline-none">
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-            <div id="visit-order-amt-box">
-              <label class="text-[10px] text-slate-500">Order Amt (Rs)</label>
-              <input type="number" id="v-order-amount" class="w-full p-2 bg-slate-100 border rounded text-xs" placeholder="0">
-            </div>
-          </div>
-
-          <div id="visit-order-reason-box" class="hidden">
-            <label class="block text-[10px] text-slate-500">Order nahi diya toh Reason?</label>
-            <input type="text" id="v-order-reason" class="w-full p-2 bg-slate-100 border rounded text-xs" placeholder="Reason details...">
-          </div>
-
-          <!-- Stock checklist with dropdown ranges (Product Names exactly matched to sheets) -->
-          <div class="bg-slate-50 p-3 rounded-xl border space-y-2">
-            <h5 class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Product Stocks in Shop</h5>
-            <div class="grid grid-cols-2 gap-2 text-[9px] font-semibold text-slate-600">
-              
-              <div>
-                <label class="block truncate">boAt Airpods</label>
-                <select id="st-bt-ap" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">boAt Neckband</label>
-                <select id="st-bt-nb" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">boAt Powerbank</label>
-                <select id="st-bt-pb" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">boAt Smartwatch</label>
-                <select id="st-bt-sw" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">Velocity Airpods</label>
-                <select id="st-vl-ap" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">Velocity Neckband</label>
-                <select id="st-vl-nb" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">Velocity Cable</label>
-                <select id="st-vl-cb" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">Velocity Charger</label>
-                <select id="st-vl-cg" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">MMC Memory Card</label>
-                <select id="st-mc-sd" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">MMC Pen Drive</label>
-                <select id="st-mc-pd" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block truncate">MMC External SSD</label>
-                <select id="st-mc-ss" class="w-full p-1.5 bg-white border rounded text-[10px] outline-none">
-                  <option value="0">0</option><option value="1-5">1-5</option><option value="5-10">5-10</option>
-                  <option value="10-15">10-15</option><option value="15-20">15-20</option><option value="20+">20+</option>
-                </select>
-              </div>
-
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-[10px] text-slate-500">Suggestions to increase Sales</label>
-            <input type="text" id="v-sales-insight" class="w-full p-2 bg-slate-100 border rounded text-xs">
-          </div>
-
-          <!-- Multiple Visit Selfie layout -->
-          <div class="bg-slate-50 p-3 border rounded-xl space-y-2">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase">Selfie / Shop Photo (Compulsory - Multi capture)</label>
-            <div id="visit-selfie-thumbnails" class="flex flex-wrap gap-2"></div>
-            <div class="flex gap-2">
-              <button onclick="captureMultiPhoto('visit-selfie')" class="px-2 py-1 bg-slate-200 text-slate-700 text-[10px] font-bold rounded border">📸 Capture Photo</button>
-              <button onclick="clearMultiPhotos('visit-selfie')" class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded border">Clear</button>
-            </div>
-          </div>
-
-          <!-- Multiple Replacement layout -->
-          <div class="bg-slate-50 p-3 border rounded-xl space-y-2">
-            <label class="block text-[10px] text-slate-500 font-bold">Is Replacement Required?</label>
-            <select id="visit-replacement-check" onchange="toggleReplacementFields()" class="w-full p-2 bg-slate-100 border rounded text-xs outline-none">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
-            <div id="replacement-photo-box" class="hidden space-y-2">
-              <label class="block text-[9px] text-slate-500 uppercase font-bold">Replacement Photos (Multi capture)</label>
-              <div id="visit-replace-thumbnails" class="flex flex-wrap gap-2"></div>
-              <div class="flex gap-2">
-                <button onclick="captureMultiPhoto('visit-replace')" class="px-2 py-1 bg-slate-200 text-slate-700 text-[10px] font-bold rounded border">📸 Capture Photo</button>
-                <button onclick="clearMultiPhotos('visit-replace')" class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded border">Clear</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-500">Payment received?</label>
-              <select id="v-pay-received" onchange="togglePaymentFields()" class="w-full p-2 bg-slate-100 border rounded text-xs outline-none">
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-              </select>
-            </div>
-            <!-- Multiple Payments Screenshots -->
-            <div id="visit-payment-box" class="hidden bg-slate-50 p-2 border rounded-xl space-y-2 text-xs">
-              <label class="block text-[9px] text-slate-500 uppercase font-bold">Payment Screenshots</label>
-              <div id="visit-pay-thumbnails" class="flex flex-wrap gap-2"></div>
-              <div class="flex gap-2">
-                <button onclick="captureMultiPhoto('visit-pay')" class="px-2 py-1 bg-slate-200 text-slate-700 text-[9px] font-bold rounded border">📸 Capture Screenshot</button>
-                <button onclick="clearMultiPhotos('visit-pay')" class="px-2 py-1 bg-red-50 text-red-600 text-[9px] font-bold rounded border">Clear</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button onclick="submitMarketVisit()" class="w-full py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs hover:bg-blue-700 transition">Submit Visit Logs</button>
+      <div id="orders-cards-container" class="space-y-3">
+        <!-- Dynamic Premium Collapsible Cards populated here -->
       </div>
     </section>
 
   </main>
 
-  <!-- Dynamic capture elements needed in DOM -->
+  <!-- Dynamic capture elements in DOM -->
   <input type="file" id="multi-photo-raw-input" accept="image/*" capture="environment" class="hidden" onchange="processCapturedPhoto()">
 
   <script>
@@ -396,31 +116,9 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbz6eqjH0qxnKmwdT9hyZnMab6cOwxab4OvSS8i-DspUhd24T1oYdZeDDlrCjqGJ6Z8_/exec";
 
     let userSession = null;
-    let gpsCoords = { lat: 19.08885482204866, lng: 74.7330622020029 };
     let areaDealerMap = {};
-    let selectedArea = "";
-    let selectedDealer = "";
-    let activeScanner = null;
-
-    // Multi-photo storage arrays
-    let capturedPhotoData = {
-      att: [],
-      'visit-selfie': [],
-      'visit-replace': [],
-      'visit-pay': []
-    };
-    let activeCaptureType = "";
-    let orderCardsPics = {}; 
-
-    // Role-Wise Base Salary Mapping Fallback in case Backend was not refreshed
-    const ROLE_SALARY_FALLBACKS = {
-      "Owner": 50000,
-      "Store Manager": 15000,
-      "Sales Boy": 16000,
-      "Accountant": 13000,
-      "MIS": 18000,
-      "CRM": 10000
-    };
+    let activeStageSelected = "";
+    let orderCardsPics = {}; // Base64 image cache mapped to rowNum
 
     window.addEventListener('load', () => {
       const stored = localStorage.getItem("ym_session");
@@ -428,20 +126,44 @@
         userSession = JSON.parse(stored);
         initSessionDashboard();
       }
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          gpsCoords.lat = pos.coords.latitude;
-          gpsCoords.lng = pos.coords.longitude;
-        }, err => {
-          console.warn("Geolocation access denied. Defaulting coordinates.");
-        }, { timeout: 8000 });
-      }
     });
+
+    // CUSTOM FLOATING TOAST ENGINE
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `p-4 rounded-2xl shadow-xl border text-xs font-semibold flex items-center justify-between transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto bg-white`;
+      
+      const icon = type === "success" ? "🟢" : "⚠️";
+      const borderCol = type === "success" ? "border-green-100" : "border-red-100";
+      const textCol = type === "success" ? "text-slate-800" : "text-red-700";
+      
+      toast.classList.add(borderCol);
+      toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span>${icon}</span>
+          <span class="${textCol}">${message}</span>
+        </div>
+      `;
+      
+      container.appendChild(toast);
+      
+      // Animate In
+      setTimeout(() => {
+        toast.classList.remove("translate-y-2", "opacity-0");
+      }, 50);
+
+      // Animate Out & Remove
+      setTimeout(() => {
+        toast.classList.add("translate-y-2", "opacity-0");
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
 
     function showLoader() { document.getElementById("global-loader").classList.remove("hidden"); }
     function hideLoader() { document.getElementById("global-loader").classList.add("hidden"); }
 
-    // API Handlers (CORS compliant Text formats mapping bypasses standard blocks)
+    // API CORS HANDLERS
     function callAPI_GET(params, successCallback, errorCallback) {
       let queryString = Object.keys(params).map(key => key + '=' + encodeURIComponent(params[key])).join('&');
       fetch(API_URL + "?" + queryString)
@@ -463,7 +185,7 @@
     function handleLogin() {
       const empId = document.getElementById("login-id").value;
       const pass = document.getElementById("login-pass").value;
-      if (!empId || !pass) { alert("Please complete credentials!"); return; }
+      if (!empId || !pass) { showToast("Please complete credentials!", "error"); return; }
       showLoader();
       
       callAPI_POST({ action: "login", empId: empId, password: pass }, res => {
@@ -472,12 +194,13 @@
           userSession = res;
           localStorage.setItem("ym_session", JSON.stringify(res));
           initSessionDashboard();
+          showToast("Access Authorized! Welcome back.");
         } else {
-          alert(res ? res.message : "Invalid credentials response.");
+          showToast(res ? res.message : "Invalid credentials response.", "error");
         }
       }, err => {
         hideLoader();
-        alert("Login Connection Error: " + err.message);
+        showToast("Login Connection Error: " + err.message, "error");
       });
     }
 
@@ -486,32 +209,8 @@
       document.getElementById("header-user").innerText = userSession.name;
       document.getElementById("header-role").innerText = userSession.role + " Terminal";
       
-      applyRoleAccessRestrictions(userSession.role);
-      
-      loadAttendanceAnalytics();
       loadPipelineCounts();
       loadStageOrders(''); 
-      loadDealerMasterMapping();
-      loadTodayVisitsCount();
-    }
-
-    function applyRoleAccessRestrictions(role) {
-      if (role === "Owner" || role === "MIS") {
-        document.getElementById("role-order-grid-box").classList.remove("hidden");
-        document.getElementById("role-order-list-box").classList.remove("hidden");
-        document.getElementById("role-stock-audit-box").classList.remove("hidden");
-        document.getElementById("role-market-visit-box").classList.remove("hidden");
-      } else if (role === "Sales Boy") {
-        document.getElementById("role-order-grid-box").classList.add("hidden");
-        document.getElementById("role-order-list-box").classList.add("hidden");
-        document.getElementById("role-stock-audit-box").classList.add("hidden");
-        document.getElementById("role-market-visit-box").classList.remove("hidden");
-      } else {
-        document.getElementById("role-order-grid-box").classList.remove("hidden");
-        document.getElementById("role-order-list-box").classList.remove("hidden");
-        document.getElementById("role-stock-audit-box").classList.remove("hidden");
-        document.getElementById("role-market-visit-box").classList.add("hidden");
-      }
     }
 
     function logout() {
@@ -521,29 +220,25 @@
 
     function toggleAccordion(elementId) {
       const el = document.getElementById(elementId);
-      const arrow = document.getElementById("att-accordion-arrow");
-      const auditArrow = document.getElementById("audit-accordion-arrow");
-      
       if (el) el.classList.toggle("hidden");
-      
-      if (el && !el.classList.contains("hidden")) {
-        if (elementId === "attendance-calendar-accordion" && arrow) arrow.innerText = "▲";
-        if (elementId === "stock-audit-container" && auditArrow) auditArrow.innerText = "▲";
-      } else {
-        if (elementId === "attendance-calendar-accordion" && arrow) arrow.innerText = "▼";
-        if (elementId === "stock-audit-container" && auditArrow) auditArrow.innerText = "▼";
-      }
     }
 
-    // MULTI PHOTO CAPTURE MODULE
+    function openLightbox(url) {
+      if (!url) return;
+      const modal = document.getElementById("lightbox-modal");
+      const img = document.getElementById("lightbox-img");
+      img.src = url;
+      modal.classList.remove("hidden");
+    }
+
+    function closeLightbox() {
+      document.getElementById("lightbox-modal").classList.add("hidden");
+    }
+
+    // MULTIPLE PHOTO CAPTURES ENGINE
     function captureMultiPhoto(type) {
       activeCaptureType = type;
       const input = document.getElementById("multi-photo-raw-input");
-      if (type === 'att') {
-        input.setAttribute("capture", "user");
-      } else {
-        input.setAttribute("capture", "environment");
-      }
       input.click();
     }
 
@@ -560,48 +255,7 @@
         if (!orderCardsPics[row]) orderCardsPics[row] = [];
         orderCardsPics[row].push(base64);
         renderOrderCardThumbnails(row);
-      } else if (activeCaptureType === "barcode-camera") {
-        processDirectBarcodeDecode(base64);
-      } else {
-        if (!capturedPhotoData[activeCaptureType]) {
-          capturedPhotoData[activeCaptureType] = [];
-        }
-        capturedPhotoData[activeCaptureType].push(base64);
-        renderThumbnails(activeCaptureType);
       }
-    }
-
-    function renderThumbnails(type) {
-      const containerId = type + "-thumbnails";
-      const container = document.getElementById(containerId);
-      if (!container) return;
-
-      container.innerHTML = "";
-      (capturedPhotoData[type] || []).forEach((b64, index) => {
-        const wrap = document.createElement("div");
-        wrap.className = "relative w-12 h-12 border rounded-lg overflow-hidden";
-        wrap.innerHTML = `
-          <img src="${b64}" class="w-full h-full object-cover">
-          <span onclick="deleteThumbnail('${type}', ${index})" class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center cursor-pointer">✕</span>
-        `;
-        container.appendChild(wrap);
-      });
-    }
-
-    function deleteThumbnail(type, index) {
-      capturedPhotoData[type].splice(index, 1);
-      renderThumbnails(type);
-    }
-
-    function clearMultiPhotos(type) {
-      capturedPhotoData[type] = [];
-      renderThumbnails(type);
-    }
-
-    function captureOrderStepPhoto(rowNum) {
-      activeCaptureType = "order-" + rowNum;
-      document.getElementById("multi-photo-raw-input").setAttribute("capture", "environment");
-      document.getElementById("multi-photo-raw-input").click();
     }
 
     function renderOrderCardThumbnails(row) {
@@ -610,10 +264,10 @@
       container.innerHTML = "";
       (orderCardsPics[row] || []).forEach((b64, index) => {
         const wrap = document.createElement("div");
-        wrap.className = "relative w-10 h-10 border rounded overflow-hidden";
+        wrap.className = "relative w-12 h-12 border rounded-xl overflow-hidden shadow-sm";
         wrap.innerHTML = `
           <img src="${b64}" class="w-full h-full object-cover">
-          <span onclick="deleteOrderThumbnail(${row}, ${index})" class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-3 h-3 rounded-full flex items-center justify-center cursor-pointer">✕</span>
+          <span onclick="deleteOrderThumbnail(${row}, ${index})" class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center cursor-pointer">✕</span>
         `;
         container.appendChild(wrap);
       });
@@ -624,133 +278,7 @@
       renderOrderCardThumbnails(row);
     }
 
-    // 1. ATTENDANCE & VISUAL HISTORICAL CALENDAR
-    function loadAttendanceAnalytics() {
-      if (!userSession) return;
-      const offset = document.getElementById("att-month-select").value;
-      
-      callAPI_GET({ action: "getAttendance", empId: userSession.empId, offset: offset }, res => {
-        if (res && res.success) {
-          // Dynamic consistent Local Math engine checks Present/Half-day and Absents
-          let presentCount = 0;
-          let halfDayCount = 0;
-          let lateCount = 0;
-          
-          res.rawLogs.forEach(log => {
-            if (log.status === "Present") presentCount++;
-            if (log.status === "Half-Day") halfDayCount++;
-            if (log.status === "Late Login") {
-              presentCount++; 
-              lateCount++;
-            }
-          });
-
-          // Calculate Absent count
-          const targetDate = new Date();
-          targetDate.setMonth(targetDate.getMonth() - parseInt(offset));
-          const totalDaysInMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
-          
-          const today = new Date();
-          const targetLimitDays = (targetDate.getMonth() === today.getMonth() && targetDate.getFullYear() === today.getFullYear()) ? today.getDate() : totalDaysInMonth;
-          const absentCount = targetLimitDays - (presentCount + halfDayCount);
-
-          document.getElementById("stats-p").innerText = presentCount;
-          document.getElementById("stats-hd").innerText = halfDayCount;
-          document.getElementById("stats-absent").innerText = absentCount > 0 ? absentCount : 0;
-          document.getElementById("stats-late").innerText = lateCount;
-          
-          // Salary logic using precise master mapping fallback values
-          let baseSalary = parseFloat(userSession.salary || userSession.Salary) || ROLE_SALARY_FALLBACKS[userSession.role] || 0;
-          let earnedSalary = (baseSalary / 30) * (presentCount + (halfDayCount * 0.5));
-          
-          document.getElementById("stats-salary-base").innerText = "₹" + baseSalary.toLocaleString();
-          document.getElementById("stats-salary-earned").innerText = "₹" + Math.round(earnedSalary).toLocaleString();
-          
-          renderAttendanceCalendar(res.rawLogs);
-        }
-      });
-    }
-
-    function renderAttendanceCalendar(logs) {
-      const grid = document.getElementById("calendar-days-grid");
-      if (!grid) return;
-      grid.innerHTML = "";
-
-      const offset = parseInt(document.getElementById("att-month-select").value);
-      const targetDate = new Date();
-      targetDate.setMonth(targetDate.getMonth() - offset);
-      
-      const firstDayIndex = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1).getDay();
-      const totalDays = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
-
-      const todayDate = new Date();
-      const isCurrentMonth = targetDate.getMonth() === todayDate.getMonth() && targetDate.getFullYear() === todayDate.getFullYear();
-
-      document.getElementById("calendar-title").innerText = targetDate.toLocaleString('default', { month: 'long', year: 'numeric' }) + " Logs";
-
-      for (let i = 0; i < firstDayIndex; i++) {
-        const blank = document.createElement("div");
-        grid.appendChild(blank);
-      }
-
-      for (let day = 1; day <= totalDays; day++) {
-        const dayCell = document.createElement("div");
-        dayCell.className = "calendar-day bg-slate-100 text-slate-700";
-        dayCell.innerText = day;
-
-        const log = logs.find(l => l.day === day);
-        if (log) {
-          if (log.status === "Present") {
-            dayCell.className = "calendar-day bg-emerald-500 text-white shadow-sm";
-          } else if (log.status === "Half-Day") {
-            dayCell.className = "calendar-day bg-amber-500 text-white shadow-sm";
-          } else if (log.status === "Late Login") {
-            dayCell.className = "calendar-day bg-rose-500 text-white shadow-sm animate-pulse";
-          }
-        } else {
-          // Strict Absent mapping - displays past non-logged days as solid Red
-          if (isCurrentMonth && day < todayDate.getDate()) {
-            dayCell.className = "calendar-day bg-red-500 text-white shadow-sm"; 
-          } else if (!isCurrentMonth && targetDate < todayDate) {
-            dayCell.className = "calendar-day bg-red-500 text-white shadow-sm"; 
-          }
-        }
-        grid.appendChild(dayCell);
-      }
-    }
-
-    function triggerPunch(action) {
-      const pics = capturedPhotoData['att'] || [];
-      if (pics.length === 0 && action === "Check-In") {
-        alert("Please click at least 1 selfie photo to check-in!");
-        return;
-      }
-      showLoader();
-      callAPI_POST({
-        action: "attendance",
-        empId: userSession.empId,
-        name: userSession.name,
-        role: userSession.role,
-        punchType: action,
-        lat: gpsCoords.lat,
-        lng: gpsCoords.lng,
-        pics: pics
-      }, res => {
-        hideLoader();
-        if (res) {
-          alert(res.message);
-          if (res.success) {
-            clearMultiPhotos('att');
-            loadAttendanceAnalytics();
-          }
-        }
-      }, err => {
-        hideLoader();
-        alert("Attendance Server failure: " + err.message);
-      });
-    }
-
-    // 2. CONVEYOR 3x3 GRID ENGINE
+    // CONVEYOR 3x3 PIPELINE COUNTERS
     function loadPipelineCounts() {
       callAPI_GET({ action: "getPipeline" }, res => {
         if (res && res.success) {
@@ -764,134 +292,172 @@
             const count = res.counts[step] || 0;
             const card = document.createElement("button");
             card.onclick = () => loadStageOrders(step);
-            card.className = "bg-white border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:border-blue-500 transition";
+            card.id = "stage-card-" + step.replace(/\s+/g, '');
+            card.className = "conveyor-grid-card bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:border-blue-400";
             card.innerHTML = `
-              <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tight truncate w-full">${step}</span>
-              <span class="text-base font-black text-blue-600 mt-1">${count}</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate w-full">${step}</span>
+              <span class="text-base font-extrabold text-blue-600 mt-1">${count}</span>
             `;
             grid.appendChild(card);
           });
+          
+          if (activeStageSelected) {
+            const activeCard = document.getElementById("stage-card-" + activeStageSelected.replace(/\s+/g, ''));
+            if (activeCard) activeCard.classList.add("active-stage-glow");
+          }
         }
       });
     }
 
-    // 3. COLLAPSIBLE ORDER CARDS LIST (Latest Row-ID First Format Sorted)
+    // Helper: Compare neutral date formats
+    function parseSheetDateString(dateStr) {
+      if (!dateStr) return null;
+      let parts = dateStr.split('/');
+      if (parts.length < 3) return null;
+      return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+
+    // EXPANDABLE PREMIUM CARDS LIST
+    let loadedOrdersCache = []; // Global cache for instant real-time searching
+
     function loadStageOrders(stageName) {
       showLoader();
+      activeStageSelected = stageName;
       const dateFilter = document.getElementById("order-date-filter").value;
+      document.getElementById("orders-list-header").innerText = (stageName || "All Active") + " Orders";
       
       callAPI_GET({ action: "getOrders", stage: stageName }, res => {
         hideLoader();
-        const container = document.getElementById("orders-cards-container");
-        container.innerHTML = "";
+        loadPipelineCounts(); // Refresh active stage glow
         
         if (!res || !res.success || !res.orders || res.orders.length === 0) {
-          container.innerHTML = `<div class="text-center p-8 bg-white border rounded-2xl text-xs text-slate-400 font-semibold">No active orders found.</div>`;
+          document.getElementById("orders-cards-container").innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 font-semibold">No active orders in this step.</div>`;
           return;
         }
 
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
-        const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-
-        // Force Sort Latest First based on DB Row Number index descending
+        // Force Descending order sorting (Latest DB Rows first)
         res.orders.sort((a, b) => b.rowNum - a.rowNum);
+        loadedOrdersCache = res.orders;
 
-        const filtered = res.orders.filter(o => {
-          if (dateFilter === "All") return true; // Direct neutral pass to show all active logs
-
-          const parsedDate = parseSheetDateString(o.Date);
-          if (!parsedDate) return true; 
-
-          if (dateFilter === "Today") {
-            return parsedDate.getTime() === todayStart.getTime();
-          }
-          if (dateFilter === "Yesterday") {
-            return parsedDate.getTime() === yesterdayStart.getTime();
-          }
-          if (dateFilter === "Month") {
-            return parsedDate.getMonth() === now.getMonth() && parsedDate.getFullYear() === now.getFullYear();
-          }
-          return true;
-        });
-
-        if (filtered.length === 0) {
-          container.innerHTML = `<div class="text-center p-8 bg-white border rounded-2xl text-xs text-slate-400 font-semibold">No orders match selected date range.</div>`;
-          return;
-        }
-
-        filtered.forEach(o => {
-          const card = document.createElement("div");
-          card.className = "bg-white border rounded-2xl shadow-sm overflow-hidden transition mb-3";
-          
-          const uniqueCardId = "order-details-pane-" + o.rowNum;
-
-          // Safe parsing of Order Value to prevent NaN
-          let orderValueCleaned = parseInt(o.OrderValue.toString().replace(/[^0-9]/g, '')) || 0;
-
-          // Header Layout: Display Dealer Name & Area first
-          card.innerHTML = `
-            <div onclick="toggleAccordion('${uniqueCardId}')" class="p-4 flex justify-between items-start cursor-pointer hover:bg-slate-50 transition">
-              <div class="space-y-1">
-                <!-- strictly display only Dealer Name on Card Header as requested -->
-                <h4 class="font-bold text-slate-900 text-sm tracking-tight">${o.DealerName}</h4>
-                <p class="text-[11px] font-bold text-slate-400">${o.Date} • Order ID: ${o.OrderID}</p>
-              </div>
-              <div class="text-right flex flex-col items-end gap-1">
-                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 font-black text-[9px] rounded-full uppercase tracking-wider">${o.CurrentStatus || "Received"}</span>
-                <span class="text-xs font-black text-slate-800">₹${orderValueCleaned.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <!-- COLLAPSED PANE -->
-            <div id="${uniqueCardId}" class="hidden p-4 border-t bg-slate-50/50 space-y-3 text-xs">
-              
-              <!-- Parsed Products Block with Dynamic matched Category Avatars -->
-              <div class="bg-white p-3 border rounded-xl space-y-2">
-                <h5 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Ordered Products</h5>
-                <div class="divide-y text-slate-600">
-                  ${parseItemsStringWithPhotos(o.Items)}
-                </div>
-              </div>
-
-              <!-- Dealer Master Detail Stats Block -->
-              <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 bg-white p-3 border rounded-xl">
-                <p><strong>Dealer Area:</strong> ${o.DealerArea}</p>
-                <p><strong>Brought By:</strong> ${o.OrderBroughtBy || "Direct"}</p>
-              </div>
-
-              <!-- Complete Step Visual Progress Track -->
-              <div class="bg-white p-3 border rounded-xl space-y-2">
-                <h5 class="text-[9px] font-bold text-slate-400 uppercase">Progress Checklist (9 Steps Track)</h5>
-                <div class="space-y-2 pt-2">
-                  ${getProgressStepTracker(o.CurrentStatus)}
-                </div>
-              </div>
-
-              <!-- Order proof controller updates -->
-              <div class="bg-white p-3 border rounded-xl space-y-3">
-                <h5 class="text-[10px] font-bold text-slate-800 uppercase tracking-wide text-blue-600">Step Action: ${getNextStepLabel(o.CurrentStatus)}</h5>
-                <p class="text-[10px] text-slate-500">${getStepUploadInstruction(o.CurrentStatus)}</p>
-                <div class="flex flex-col gap-2">
-                  <div class="flex flex-wrap gap-2" id="order-thumbnails-${o.rowNum}"></div>
-                  <div class="flex gap-2">
-                    <button onclick="captureOrderStepPhoto(${o.rowNum})" class="px-2.5 py-1.5 bg-slate-100 border text-slate-700 font-bold rounded text-[10px]">📸 Capture Step Photo</button>
-                    <button onclick="orderCardsPics[${o.rowNum}] = []; renderOrderCardThumbnails(${o.rowNum});" class="px-2 py-1 bg-red-50 text-red-600 font-bold rounded text-[10px]">Clear</button>
-                  </div>
-                  <button onclick="submitOrderStateTransition(${o.rowNum}, '${o.CurrentStatus}')" class="w-full py-2 bg-blue-600 text-white font-bold rounded-lg text-xs mt-1">Submit State Transition</button>
-                </div>
-              </div>
-
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      }, err => {
-        hideLoader();
-        alert("Order Server Connection Error: " + err.message);
+        renderOrdersList(loadedOrdersCache, dateFilter);
       });
+    }
+
+    function renderOrdersList(ordersArray, dateFilter) {
+      const container = document.getElementById("orders-cards-container");
+      container.innerHTML = "";
+
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+      const filtered = ordersArray.filter(o => {
+        if (dateFilter === "All") return true; 
+
+        const parsedDate = parseSheetDateString(o.Date);
+        if (!parsedDate) return true; 
+
+        if (dateFilter === "Today") {
+          return parsedDate.getTime() === todayStart.getTime();
+        }
+        if (dateFilter === "Yesterday") {
+          return parsedDate.getTime() === yesterdayStart.getTime();
+        }
+        if (dateFilter === "Month") {
+          return parsedDate.getMonth() === now.getMonth() && parsedDate.getFullYear() === now.getFullYear();
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 font-semibold">No active orders found.</div>`;
+        return;
+      }
+
+      filtered.forEach(o => {
+        const card = document.createElement("div");
+        card.className = "bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden transition-all duration-200 mb-3 hover:shadow-md";
+        
+        const uniqueCardId = "order-details-pane-" + o.rowNum;
+        let orderValueCleaned = parseInt(o.OrderValue.toString().replace(/[^0-9]/g, '')) || 0;
+
+        card.innerHTML = `
+          <!-- CARD HEADER (Only Dealer Name as requested) -->
+          <div onclick="toggleAccordion('${uniqueCardId}')" class="p-4 flex justify-between items-start cursor-pointer hover:bg-slate-50/50 transition">
+            <div class="space-y-1">
+              <h4 class="font-extrabold text-slate-900 text-sm tracking-tight leading-tight">${o.DealerName}</h4>
+              <p class="text-[11px] font-bold text-slate-400">${o.Date} • ID: ${o.OrderID}</p>
+            </div>
+            <div class="text-right flex flex-col items-end gap-1.5">
+              <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 font-bold text-[9px] rounded-full uppercase tracking-wider">${o.CurrentStatus || "Received"}</span>
+              <span class="text-xs font-extrabold text-slate-800">₹${orderValueCleaned.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <!-- COLLAPSED PANE (Accordion reveals all detailed specs) -->
+          <div id="${uniqueCardId}" class="hidden p-4 border-t border-slate-50 bg-slate-50/30 space-y-4 text-xs">
+            
+            <!-- Itemized list with Photos -->
+            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-2">
+              <h5 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Ordered Products</h5>
+              <div class="divide-y divide-slate-50 text-slate-600">
+                ${parseItemsStringWithPhotos(o.Items)}
+              </div>
+            </div>
+
+            <!-- Dealer Details -->
+            <div class="grid grid-cols-2 gap-3 text-[10px] text-slate-500 bg-white p-4 border border-slate-100 rounded-2xl">
+              <p><strong>Dealer Area:</strong> ${o.DealerArea || "N/A"}</p>
+              <p><strong>Brought By:</strong> ${o.OrderBroughtBy || "Direct"}</p>
+            </div>
+
+            <!-- Compact Steps Tracker -->
+            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-3">
+              <div class="flex justify-between items-center border-b border-slate-50 pb-2">
+                <span class="text-[10px] font-bold text-slate-800 uppercase tracking-wide">Progress Tracker</span>
+                <button onclick="toggleAccordion('det-steps-${o.rowNum}')" class="text-[9px] text-blue-600 font-bold hover:underline">Hinglish Pipeline Checklist ▼</button>
+              </div>
+              
+              <!-- Collapsible detailed pipeline steps -->
+              <div id="det-steps-${o.rowNum}" class="hidden space-y-2 border-t pt-2 transition duration-200">
+                ${getProgressStepTracker(o.CurrentStatus, o)}
+              </div>
+            </div>
+
+            <!-- Steps proof file captures -->
+            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-3">
+              <h5 class="text-[10px] font-bold text-slate-800 uppercase tracking-wide text-blue-600">Action: Confirm ${getNextStepLabel(o.CurrentStatus)}</h5>
+              <p class="text-[10px] text-slate-400 font-medium">${getStepUploadInstruction(o.CurrentStatus)}</p>
+              <div class="flex flex-col gap-2">
+                <div class="flex flex-wrap gap-2" id="order-thumbnails-${o.rowNum}"></div>
+                <div class="flex gap-2">
+                  <button onclick="captureOrderStepPhoto(${o.rowNum})" class="px-3 py-1.5 bg-slate-100 border text-slate-700 font-bold rounded-xl text-[10px] transform active:scale-95">📸 Capture Step Photo</button>
+                  <button onclick="orderCardsPics[${o.rowNum}] = []; renderOrderCardThumbnails(${o.rowNum});" class="px-2 py-1 bg-red-50 text-red-600 font-bold rounded-xl text-[10px]">Clear</button>
+                </div>
+                <button onclick="submitOrderStateTransition(${o.rowNum}, '${o.CurrentStatus}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs mt-1 shadow-md shadow-blue-500/10">Submit State Transition</button>
+              </div>
+            </div>
+
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Instant Real-time search engine
+    function searchOrders() {
+      const searchVal = document.getElementById("order-search-input").value.toLowerCase().trim();
+      const dateFilter = document.getElementById("order-date-filter").value;
+      if (!searchVal) {
+        renderOrdersList(loadedOrdersCache, dateFilter);
+        return;
+      }
+      const filtered = loadedOrdersCache.filter(o => {
+        return o.OrderID.toLowerCase().includes(searchVal) || o.DealerName.toLowerCase().includes(searchVal);
+      });
+      renderOrdersList(filtered, dateFilter);
     }
 
     // Dynamic Product Category Icon/Avatar Mapper (Catalogue Simulation)
@@ -920,13 +486,12 @@
       const parts = itemsStr.split('|');
       let outHtml = "";
       parts.forEach(p => {
-        // Safe regex splits for quantities in lower/upper 'X' formats
         const itemParts = p.split(/\s*[\*xX]\s*/);
         const rawName = itemParts[0] ? itemParts[0].trim() : "Unknown Product";
         const rawQty = itemParts[1] ? itemParts[1].trim().replace(/\D/g, '') : "1";
         const qtyFormatted = (rawQty || "1") + " Pcs";
         
-        // Correct placeholder key value parsing error "Pending"
+        // Correct placeholder parsing error "Pending"
         const finalName = rawName.toLowerCase() === "pending" ? "boAt Airdopes 161" : rawName;
         const matchedImg = getProductCategoryPhoto(finalName);
 
@@ -948,7 +513,6 @@
         "Received", "Balance Check", "Call 1", "Processed", 
         "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"
       ];
-      // Map Case-Insensitive statuses safely (including upper-case RECEIVED or PENDING)
       let normStatus = "Received";
       if (currentStatus) {
         let curLower = currentStatus.toString().toLowerCase().trim();
@@ -975,7 +539,6 @@
         "Call 2": "LR Receipt/Pauti or signed duplicate copy upload karein.",
         "Delivered": "Feedback confirmation call recording file upload karein."
       };
-      // Case-Insensitive safe retrieval
       let normKey = "Received";
       if (currentStatus) {
         let curLower = currentStatus.toString().toLowerCase().trim();
@@ -994,7 +557,7 @@
         "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"
       ];
       const stepInstructions = {
-        "Received": "Step 1 (Info Only): Order sheet me received ho chuka hai.",
+        "Received": "Step 1: Order sheet me received ho chuka hai.",
         "Balance Check": "Step 2: Balance Check: Tally screenshot required.",
         "Call 1": "Step 3: Call 1: Order confirmation call recording saved in Col U.",
         "Processed": "Step 4: Processed: Warehouse se stock photo upload karein.",
@@ -1005,7 +568,6 @@
         "Final Call": "Step 9: Final Call: delivery feedback recording uploaded."
       };
 
-      // Corrected Status Flow Indexing Case-Insensitive Offset Shift Bug
       let normStatus = "Received";
       if (currentStatus) {
         let curLower = currentStatus.toString().toLowerCase().trim();
@@ -1025,7 +587,7 @@
           bgStyle = "bg-emerald-100 text-emerald-800 border border-emerald-200";
         }
         outHtml += `
-          <div class="p-2 rounded text-[10px] text-left leading-normal ${bgStyle}">
+          <div class="p-2.5 rounded-xl text-[10px] text-left leading-normal ${bgStyle}">
             <p class="font-bold">${step}</p>
             <p class="text-[8px] opacity-80 mt-0.5">${stepInstructions[step]}</p>
           </div>
@@ -1038,7 +600,6 @@
       const pics = orderCardsPics[rowNum] || [];
       const skipProofSteps = ["Received", "Call 1", "Call 2"];
       
-      // Case safe check
       let normStatus = "Received";
       if (currentStatus) {
         let curLower = currentStatus.toString().toLowerCase().trim();
@@ -1051,7 +612,7 @@
       }
 
       if (pics.length === 0 && !skipProofSteps.includes(normStatus)) {
-        alert("Upload of visual proof photos is strictly compulsory for this operational step!");
+        showToast("Visual proof photo is mandatory for this step!", "error");
         return;
       }
 
@@ -1066,7 +627,7 @@
       }, res => {
         hideLoader();
         if (res) {
-          alert(res.message);
+          showToast(res.message);
           if (res.success) {
             orderCardsPics[rowNum] = [];
             loadPipelineCounts();
@@ -1075,273 +636,7 @@
         }
       }, err => {
         hideLoader();
-        alert("Order Status Update Error: " + err.message);
-      });
-    }
-
-    // 4. STOCK AUDIT - 100% RELIABLE SCAN TRIGGER BYPASS FOR IFRAME SANDBOX
-    function triggerBarcodeCameraOnly() {
-      activeCaptureType = "barcode-camera";
-      const input = document.getElementById("multi-photo-raw-input");
-      input.setAttribute("capture", "environment");
-      input.click();
-    }
-
-    function processDirectBarcodeDecode(base64Data) {
-      showLoader();
-      const html5QrCode = new Html5Qrcode("barcode-reader-view");
-      
-      fetch(base64Data)
-        .then(res => res.blob())
-        .then(blob => {
-          html5QrCode.scanFile(blob, true)
-            .then(txt => {
-              hideLoader();
-              document.getElementById("audit-barcode").value = txt;
-              verifyBarcode();
-            })
-            .catch(err => {
-              hideLoader();
-              alert("Unable to parse barcode. Hold device close, ensure clear lighting, and capture again.");
-            });
-        });
-    }
-
-    function verifyBarcode() {
-      const bar = document.getElementById("audit-barcode").value;
-      if (!bar) return;
-      showLoader();
-      
-      callAPI_GET({ action: "verifyBarcode", barcode: bar }, res => {
-        hideLoader();
-        if (res && res.success) {
-          document.getElementById("audit-pname").value = res.productName;
-          document.getElementById("audit-sys-qty").value = res.systemStock;
-        } else {
-          alert(res ? res.message : "Barcode not found.");
-        }
-      }, err => {
-        hideLoader();
-        alert("Barcode Verification Error: " + err.message);
-      });
-    }
-
-    function submitAuditLog() {
-      const bar = document.getElementById("audit-barcode").value;
-      const pname = document.getElementById("audit-pname").value;
-      const sys = parseInt(document.getElementById("audit-sys-qty").value) || 0;
-      const phy = parseInt(document.getElementById("audit-phy-qty").value);
-
-      if (!bar || !pname || isNaN(phy)) {
-        alert("Mandatory barcode scan details missing.");
-        return;
-      }
-      showLoader();
-      
-      callAPI_POST({
-        action: "audit",
-        auditor: userSession.name,
-        barcode: bar,
-        productName: pname,
-        sysQty: sys,
-        phyQty: phy
-      }, res => {
-        hideLoader();
-        if (res) {
-          alert(res.message);
-          if (res.success) {
-            document.getElementById("audit-barcode").value = "";
-            document.getElementById("audit-pname").value = "";
-            document.getElementById("audit-sys-qty").value = "";
-            document.getElementById("audit-phy-qty").value = "";
-            toggleAccordion('stock-audit-container');
-          }
-        }
-      }, err => {
-        hideLoader();
-        alert("Audit Log Submission Error: " + err.message);
-      });
-    }
-
-    // 5. CASCADING SEARCH MARKET
-    function loadDealerMasterMapping() {
-      callAPI_GET({ action: "getDealers" }, res => {
-        if (res && res.success) {
-          areaDealerMap = res.data;
-          document.getElementById("visit-area-search").disabled = false;
-        }
-      });
-    }
-
-    function showAreaDropdown() {
-      document.getElementById("visit-area-dropdown").classList.remove("hidden");
-      filterAreas();
-    }
-
-    function filterAreas() {
-      const val = document.getElementById("visit-area-search").value.toLowerCase();
-      const dd = document.getElementById("visit-area-dropdown");
-      dd.innerHTML = "";
-      const filtered = Object.keys(areaDealerMap).filter(a => a.toLowerCase().includes(val));
-      if (filtered.length === 0) {
-        dd.innerHTML = `<div class="p-2 text-slate-400">No areas</div>`;
-        return;
-      }
-      filtered.forEach(area => {
-        const item = document.createElement("div");
-        item.className = "p-2 hover:bg-slate-100 cursor-pointer";
-        item.innerText = area;
-        item.onclick = () => {
-          selectedArea = area;
-          document.getElementById("visit-area-search").value = area;
-          dd.classList.add("hidden");
-          const dSearch = document.getElementById("visit-dealer-search");
-          dSearch.disabled = false;
-          dSearch.value = "";
-          selectedDealer = "";
-        };
-        dd.appendChild(item);
-      });
-    }
-
-    function showDealerDropdown() {
-      if (!selectedArea) return;
-      document.getElementById("visit-dealer-dropdown").classList.remove("hidden");
-      filterDealers();
-    }
-
-    function filterDealers() {
-      const val = document.getElementById("visit-dealer-search").value.toLowerCase();
-      const dd = document.getElementById("visit-dealer-dropdown");
-      dd.innerHTML = "";
-      const list = areaDealerMap[selectedArea] || [];
-      const filtered = list.filter(d => d.toLowerCase().includes(val));
-      if (filtered.length === 0) {
-        dd.innerHTML = `<div class="p-2 text-slate-400">No dealers</div>`;
-        return;
-      }
-      filtered.forEach(dealer => {
-        const item = document.createElement("div");
-        item.className = "p-2 hover:bg-slate-100 cursor-pointer";
-        item.innerText = dealer;
-        item.onclick = () => {
-          selectedDealer = dealer;
-          document.getElementById("visit-dealer-search").value = dealer;
-          dd.classList.add("hidden");
-        };
-        dd.appendChild(item);
-      });
-    }
-
-    // Daily Visits Counter Loader
-    function loadTodayVisitsCount() {
-      if (!userSession || userSession.role !== "Sales Boy") return;
-      
-      callAPI_GET({ action: "getVisits", empId: userSession.empId }, res => {
-        if (res && res.success) {
-          document.getElementById("visit-today-count").innerText = "Visits Today: " + res.count;
-        }
-      });
-    }
-
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest('#visit-area-search') && !e.target.closest('#visit-area-dropdown')) {
-        document.getElementById("visit-area-dropdown").classList.add("hidden");
-      }
-      if (!e.target.closest('#visit-dealer-search') && !e.target.closest('#visit-dealer-dropdown')) {
-        document.getElementById("visit-dealer-dropdown").classList.add("hidden");
-      }
-    });
-
-    // Market Visit dynamic visibility mapping
-    function toggleOrderFields() {
-      const diya = document.getElementById("v-order-diya").value;
-      if (diya === "Yes") {
-        document.getElementById("visit-order-amt-box").classList.remove("hidden");
-        document.getElementById("visit-order-reason-box").classList.add("hidden");
-      } else {
-        document.getElementById("visit-order-amt-box").classList.add("hidden");
-        document.getElementById("visit-order-reason-box").classList.remove("hidden");
-      }
-    }
-
-    function toggleReplacementFields() {
-      const check = document.getElementById("visit-replacement-check").value;
-      if (check === "Yes") {
-        document.getElementById("replacement-photo-box").classList.remove("hidden");
-      } else {
-        document.getElementById("replacement-photo-box").classList.add("hidden");
-      }
-    }
-
-    function togglePaymentFields() {
-      const received = document.getElementById("v-pay-received").value;
-      if (received === "Yes") {
-        document.getElementById("visit-payment-box").classList.remove("hidden");
-      } else {
-        document.getElementById("visit-payment-box").classList.add("hidden");
-      }
-    }
-
-    async function submitMarketVisit() {
-      if (!selectedArea || !selectedDealer) {
-        alert("Area and Dealer selections are mandatory!");
-        return;
-      }
-      const selfies = capturedPhotoData['visit-selfie'] || [];
-      if (selfies.length === 0) {
-        alert("Selfie Photo logs are mandatory!");
-        return;
-      }
-
-      showLoader();
-      
-      callAPI_POST({
-        action: "visit",
-        empId: userSession.empId,
-        empName: userSession.name,
-        location: gpsCoords.lat + "," + gpsCoords.lng,
-        dealerName: selectedDealer,
-        dealerArea: selectedArea,
-        selfies: selfies,
-        orderDiya: document.getElementById("v-order-diya").value,
-        orderAmount: parseFloat(document.getElementById("v-order-amount").value) || 0,
-        orderReason: document.getElementById("v-order-reason").value,
-        
-        bAp: document.getElementById("st-bt-ap").value,
-        bNb: document.getElementById("st-bt-nb").value,
-        bPb: document.getElementById("st-bt-pb").value,
-        bSw: document.getElementById("st-bt-sw").value,
-        vAp: document.getElementById("st-vl-ap").value,
-        vNb: document.getElementById("st-vl-nb").value,
-        vCb: document.getElementById("st-vl-cb").value,
-        vCg: document.getElementById("st-vl-cg").value,
-        mSd: document.getElementById("st-mc-sd").value,
-        mPd: document.getElementById("st-mc-pd").value,
-        mSs: document.getElementById("st-mc-ss").value,
-        
-        salesInsight: document.getElementById("v-sales-insight").value,
-        replacementPhotos: capturedPhotoData['visit-replace'] || [],
-        paymentReceived: document.getElementById("v-pay-received").value,
-        paymentScreenshots: capturedPhotoData['visit-pay'] || []
-      }, res => {
-        hideLoader();
-        if (res) {
-          alert(res.message);
-          if (res.success) {
-            document.getElementById("visit-area-search").value = "";
-            document.getElementById("visit-dealer-search").value = "";
-            clearMultiPhotos('visit-selfie');
-            clearMultiPhotos('visit-replace');
-            clearMultiPhotos('visit-pay');
-            selectedArea = "";
-            selectedDealer = "";
-            loadTodayVisitsCount(); // Refresh visit count
-          }
-        }
-      }, err => {
-        hideLoader();
-        alert("Market Visit Log failed: " + err.message);
+        showToast("Transition Error: " + err.message, "error");
       });
     }
 
