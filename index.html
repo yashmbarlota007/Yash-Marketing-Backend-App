@@ -297,22 +297,27 @@
                 store_orders = data.orders; 
                 store_stock = data.catalogue;
                 
+                // FIX: Hide/Remove preloader safely BEFORE rendering line feed
+                const preloader = document.getElementById('sync-preloader');
+                if (preloader) {
+                    preloader.classList.add('hidden');
+                }
+                
                 renderLineFeed(store_orders);
                 renderRadar(store_orders);
                 syncHeaderStats(store_orders);
                 
-                document.getElementById('sync-preloader').classList.add('hidden');
             } catch (e) {
                 console.error(e);
+                // Modified to show actual Javascript/API error message for easier debugging
                 document.getElementById('assembly-line').innerHTML = `
                     <div class="col-span-full p-48 bg-red-50 rounded-[10rem] border-[12px] border-red-200 text-center">
                         <p class="text-red-600 font-black text-7xl italic mb-16 uppercase tracking-tighter scale-110 underline decoration-red-200 decoration-[10px]">DATABASE SYNC ERROR</p>
-                        <p class="text-[24px] text-red-400 font-black uppercase tracking-[0.6em] leading-[2.5] italic">AUTH DENIED: Ensure Apps Script is Deployed as 'Anyone' & authorized manually via 'testConnection'.</p>
+                        <p class="text-[24px] text-red-400 font-black uppercase tracking-[0.6em] leading-[2.5] italic">DETAILS: ${e.message}</p>
                         <button onclick="location.reload()" class="btn btn-error btn-lg mt-24 rounded-full px-32 font-black h-48 text-4xl shadow-3xl italic">RE-ESTABLISH LINK</button>
                     </div>`;
             }
         }
-
         function syncHeaderStats(data) {
             document.getElementById('hud-total').innerText = data.length;
             document.getElementById('hud-late').innerText = data.filter(o => o.isLate).length;
