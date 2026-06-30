@@ -335,8 +335,8 @@
 
     <script>
         /**
-         * v11.0 WORKSPACE ENGINE (ERP EDITION WITH GEOLOCTION ATTENDANCE & DYNAMIC SHORT CHECKS)
-         * ---------------------------------------------------------------------------------
+         * v11.0 ERP SYSTEM WORKSPACE ENGINE (CRASH-PROOF SECURE MULTI-SPLIT & DIRECT IMAGE PARSER)
+         * -----------------------------------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
@@ -457,12 +457,6 @@
                 store_staff = data.staff || [];
                 store_attendance = data.attendance || [];
                 
-                const loader = safe.el('boot-loader');
-                if (loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }
-                
                 // Keep session alive if stored locally
                 const savedUser = localStorage.getItem("backbone_current_user");
                 if (savedUser) {
@@ -472,6 +466,13 @@
             } catch (err) {
                 console.error("Fetch Fail:", err);
                 alert("Database load failed. Incognito mode allow karein.");
+            } finally {
+                // Ensure loader hides in all conditions to prevent infinite loading screen
+                const loader = safe.el('boot-loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
             }
         }
 
