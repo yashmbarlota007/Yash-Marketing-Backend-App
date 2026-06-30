@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING | BACKBONE SUPER-APP v10.3</title>
+    <title>YASH MARKETING | BACKBONE SUPER-APP v10.4</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,37 +14,34 @@
         :root { --brand: #4f46e5; --danger: #ef4444; --bg: #f3f6f9; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: #1e293b; overflow-x: hidden; }
         
-        /* Premium Responsive Aesthetic Tokens */
         .glass-shards { 
             background: rgba(255, 255, 255, 0.9); 
             backdrop-filter: blur(60px); 
             border: 2px solid #fff; 
             border-radius: 1rem; 
         }
-        @media (min-width: 768px) {
-            .glass-shards { border-radius: 2rem; }
+
+        /* Rail Ki Patri Theme Styles */
+        .railway-line {
+            position: absolute;
+            left: 5%;
+            right: 5%;
+            height: 12px;
+            background: repeating-linear-gradient(90deg, #475569, #475569 8px, #64748b 8px, #64748b 16px);
+            border-radius: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
         }
         
-        /* Conveyor Belt Loop Ticker Effect */
-        .conveyor-track {
-            background: #1e293b;
-            border: 4px solid #334155;
-            border-radius: 1.5rem;
-            position: relative;
-            box-shadow: inset 0 4px 12px rgba(0,0,0,0.4);
+        .railway-station {
+            transition: all 0.3s ease;
+            z-index: 10;
         }
-        
-        /* Gear Spins */
-        @keyframes gear-spin-left {
-            0% { transform: translateY(-50%) rotate(0deg); }
-            100% { transform: translateY(-50%) rotate(360deg); }
+        .railway-station:hover {
+            transform: scale(1.1);
         }
-        @keyframes gear-spin-right {
-            0% { transform: translateY(-50%) rotate(0deg); }
-            100% { transform: translateY(-50%) rotate(-360deg); }
-        }
-        .gear-left { animation: gear-spin-left 4s linear infinite; }
-        .gear-right { animation: gear-spin-right 4s linear infinite; }
 
         .beauty-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .beauty-scroll::-webkit-scrollbar-thumb { background: var(--brand); border-radius: 100px; }
@@ -52,11 +49,11 @@
         /* Component Visuals */
         .cat-image { width: 60px; height: 60px; object-fit: cover; border-radius: 1rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         @media (min-width: 768px) {
-            .cat-image { width: 100px; height: 100px; border-radius: 1.5rem; }
+            .cat-image { width: 90px; height: 90px; border-radius: 1.5rem; }
         }
         
-        .proof-frame { border-radius: 1rem; border: 3px solid #f8fafc; transition: 0.5s; overflow: hidden; }
-        .proof-frame:hover { transform: scale(1.03) rotate(1deg); }
+        .proof-frame { border-radius: 0.8rem; border: 2px solid #e2e8f0; transition: 0.4s; overflow: hidden; }
+        .proof-frame:hover { transform: scale(1.05); }
 
         /* Animation */
         .slide-up-fade { animation: slideUpFade 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards; opacity: 0; }
@@ -91,7 +88,7 @@
                     </div>
                 </div>
 
-                <!-- Inline Compact Stats & Refresh Button -->
+                <!-- Compact Stats & Refresh Button -->
                 <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
                     <div class="flex gap-6 items-center">
                         <div>
@@ -108,28 +105,26 @@
 
         <div class="grid grid-cols-1 gap-6">
             
-            <!-- 2. ANALYTICAL BAR: ORDER STAGE REVIEW (Conveyor Belt Animation Ticker) -->
-            <div class="card bg-white shadow-md p-4 border-b-8 border-indigo-600 relative overflow-hidden">
+            <!-- 2. RAIL KI PATRI - ORDER STAGE REVIEW (No Scroll, All Stages Visible) -->
+            <div class="card bg-slate-900 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider">Order Stage Review (Kaam Ka Live Status)</h2>
-                    <span class="badge badge-indigo font-bold text-[10px] py-1 px-2 uppercase shadow-sm">Live Ticker</span>
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-wider">Order Stage Review (Rail Ki Patri Flow)</h2>
+                    <span class="badge badge-primary font-bold text-[10px] py-1 px-2 uppercase shadow-sm">All Stages Live</span>
                 </div>
                 
-                <!-- Conveyor Belt Industrial Wrapper -->
-                <div class="conveyor-track relative w-full overflow-hidden p-4">
-                    <!-- Spinning Gears representation -->
-                    <div class="gear-left absolute left-2 top-1/2 -translate-y-1/2 text-slate-600 opacity-65 text-xl select-none pointer-events-none">⚙️</div>
-                    <div class="gear-right absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 opacity-65 text-xl select-none pointer-events-none">⚙️</div>
+                <!-- Straight Train Track -->
+                <div class="relative w-full overflow-x-auto beauty-scroll py-8 px-2">
+                    <div class="railway-line"></div>
                     
-                    <!-- Scrolling conveyor cards -->
-                    <div id="dept-load-list" class="flex gap-4 overflow-x-auto beauty-scroll py-2 px-8 relative z-10 select-none">
-                        <!-- Instantly injected by script -->
+                    <!-- 9 Stations on Track -->
+                    <div id="rail-track" class="flex justify-between items-center w-full min-w-[1000px] relative z-10 px-6">
+                        <!-- Stations injected dynamically by JS -->
                     </div>
                 </div>
                 
-                <div class="mt-4 p-3 bg-indigo-50 rounded-xl text-center border border-dashed border-indigo-100">
-                    <p class="text-[11px] font-black text-indigo-700 leading-relaxed uppercase tracking-wide italic">
-                        Kisi bhi stage par click karke orders check karein. Dobara click karke filter clear karein.
+                <div class="mt-4 p-3 bg-white/5 rounded-xl text-center border border-dashed border-white/10">
+                    <p class="text-[11px] font-black text-slate-400 leading-relaxed uppercase tracking-wide italic">
+                        Patri ke kisi bhi station par click karke orders filter karein. Dobara click karne par saare orders wapas dikhenge.
                     </p>
                 </div>
             </div>
@@ -140,7 +135,7 @@
                     <div class="flex items-center gap-3">
                         <h2 id="line-title" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-wide italic flex items-center gap-2 leading-none">
                             <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            Kaam Ki Assembly Line (Received Date Ke Hisab Se)
+                            Kaam Ki Assembly Line (Received Date Ke Hisab Se Arranged)
                         </h2>
                         <span id="filter-badge" class="hidden badge badge-primary font-black animate-pulse text-xs p-2 rounded-full shadow-lg uppercase italic">Filter Chalu Hai</span>
                     </div>
@@ -157,7 +152,7 @@
         </div>
     </div>
 
-    <!-- 4. PROCESS MODAL (ROBUST COMPACT - perfectly centered) -->
+    <!-- 4. PROCESS MODAL (ROBUST COMPACT - perfectly centered modal-middle) -->
     <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
         <div class="modal-box w-11/12 max-w-[950px] bg-white p-0 rounded-2xl shadow-3xl border-none my-auto mx-auto overflow-y-auto max-h-[90vh] beauty-scroll">
             
@@ -178,7 +173,7 @@
             <div class="p-5">
                 <!-- 8-Stage Visual Track (Stacked vertically on mobile, horizontal on desktop) -->
                 <div class="mb-6 max-w-full">
-                    <ul id="timeline-track" class="steps steps-vertical md:steps-horizontal w-full text-[11px] font-black uppercase tracking-tight gap-1">
+                    <ul id="timeline-track" class="steps steps-vertical md:steps-horizontal w-full text-[11px] font-black uppercase tracking-tight gap-4 md:gap-1">
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
                         <li class="step">Processed</li>
@@ -190,9 +185,9 @@
                     </ul>
                 </div>
 
-                <!-- Live Stage Explanation (Staff-friendly Hinglish Guidance) -->
-                <div class="mb-6 p-4 bg-indigo-50 border-2 border-dashed border-indigo-100 rounded-xl text-left">
-                    <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">📢 Staff Guide (Kya Kaam Karna Hai):</p>
+                <!-- Live Stage Explanation (Staff Hinglish Guidance) -->
+                <div class="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-left">
+                    <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">📢 Staff Guide (Aapko Kya Karna Hai):</p>
                     <p id="m-step-explanation" class="text-sm font-medium text-indigo-900 leading-relaxed">Stage load ho rahi hai...</p>
                 </div>
 
@@ -201,7 +196,7 @@
                     <div class="lg:col-span-6 space-y-4">
                         <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-100 shadow-inner">
                             <h4 class="text-sm font-black text-indigo-600 uppercase mb-4 flex items-center gap-2">Saaman Ki List (Sahi Saaman Chunein)</h4>
-                            <div id="m-product-list" class="space-y-3 max-h-[350px] overflow-y-auto beauty-scroll pr-1">
+                            <div id="m-product-list" class="space-y-3 max-h-[400px] overflow-y-auto beauty-scroll pr-1">
                                 <!-- Catalogue items injected dynamically -->
                             </div>
                         </div>
@@ -228,14 +223,6 @@
                         <div class="flex gap-3">
                             <button onclick="handleSplitUI()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SPLIT (Order Alag Karein)</button>
                         </div>
-
-                        <!-- Security Vault Stream (Proofs are direct previewable images or audio players) -->
-                        <div class="bg-white p-4 rounded-xl border-2 border-slate-50 shadow-sm text-left">
-                            <h4 class="text-xs font-black text-slate-400 uppercase mb-3 tracking-wider text-center">Pehele Ke Uploaded Proofs (Security Vault)</h4>
-                            <div id="m-vault-feed" class="space-y-3 max-h-[250px] overflow-y-auto beauty-scroll pr-1">
-                                <!-- Vault content previews -->
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -244,32 +231,33 @@
 
     <script>
         /**
-         * v10.3 LIVE ENGINE (ROBUST SAFE CHECKS & MULTI-IMAGE CONVEYOR LOAD)
+         * v10.4 LIVE ENGINE (ROBUST SAFE CHECKS & MULTI-IMAGE ALIGNMENT)
          * -------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
         
-        // Active steps workflow definition - Balance check is step 1. Received is start node.
+        // Modal visual list (Bypasses Received)
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         
-        // Dynamic Hinglish explanations loaded on user-viewport for staff help
+        // Full Railway Track list on Main Page (9 stations)
+        const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
+
         const STAGE_EXPLANATIONS = {
-            "Balance Check": "💳 <b>Balance Check Stage:</b> Customer ka payment check karein aur receipt/proof ki photo load karein. Photo dalna mandatory hai!",
-            "Call 1": "📞 <b>Call 1 Stage:</b> Customer ko call karke order confirm karein aur recording ki audio file (.mp3) upload karein. Audio compulsory hai!",
-            "Processed": "📦 <b>Processed Stage:</b> Warehouse se maal pack hone ke baad pack hue saaman ka photo click karke upload karein. Photo mandatory hai!",
-            "Invoiced": "📄 <b>Invoiced Stage:</b> Bill/Invoice ki clear photo click karke upload karein. Bill photo mandatory hai!",
-            "Dispatched": "🚛 <b>Dispatched Stage:</b> Transport par parcel loading karte waqt box ka photo click karke upload karein. Photo mandatory hai!",
-            "Call 2": "🔊 <b>Call 2 Stage:</b> Dispatch confirm karne ke liye call karein aur call recording audio file yahan upload karein. Audio compulsory hai!",
-            "Delivered": "✅ <b>Delivered Stage:</b> Customer se sign liya hua receipt pauti photo click karke upload karein. Photo mandatory hai!",
-            "Final Call": "⭐ <b>Final Call Stage:</b> Customer feedback call record karein aur call audio file yahan upload karein. Audio compulsory hai!"
+            "Balance Check": "💳 <b>Balance Check Stage:</b> Customer ka payment balance sheet check karein aur receipt/proof ki photo click karke upload karein. Photo lagana mandatory hai!",
+            "Call 1": "📞 <b>Call 1 Stage:</b> Customer ko call lagakar order confirm karein aur recording ki audio file (.mp3) upload karein. Audio compulsory hai!",
+            "Processed": "📦 <b>Processed Stage:</b> Warehouse se saaman packing complete hone par pack hue box ka photo click karke upload karein. Photo mandatory hai!",
+            "Invoiced": "📄 <b>Invoiced Stage:</b> Order ka bill ya invoice generate karein aur bill ki photo click karke upload karein. Bill photo mandatory hai!",
+            "Dispatched": "🚛 <b>Dispatched Stage:</b> Transport par box charhate waqt loading box ka photo click karke upload karein. Photo mandatory hai!",
+            "Call 2": "🔊 <b>Call 2 Stage:</b> Dispatch confirm karne ke liye aur tracking dene ke liye call recording audio file yahan upload karein. Audio compulsory hai!",
+            "Delivered": "✅ <b>Delivered Stage:</b> Customer se sign liya hua receipt challan (Pauti photo) click karke upload karein. Photo mandatory hai!",
+            "Final Call": "⭐ <b>Final Call Stage:</b> Delivery complete hone par customer feedback call audio file yahan upload karein. Audio compulsory hai!"
         };
 
         let store_orders = [];
         let store_stock = [];
         let activeFilterStage = null;
 
-        // SAFE ACCESS WRAPPER UTILITIES (Never Crash Guarantee)
         const safe = {
             el: (id) => document.getElementById(id),
             text: (id, val) => { const el = safe.el(id); if (el) el.innerText = val; },
@@ -277,6 +265,26 @@
             addClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.add(cls); },
             removeClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.remove(cls); }
         };
+
+        // Utility to convert Google Drive Sharing links to Direct raw image files
+        function getDirectDriveUrl(url) {
+            if (!url) return "https://via.placeholder.com/150?text=📦";
+            const sUrl = url.toString().trim();
+            if (sUrl.includes("drive.google.com")) {
+                let id = "";
+                const dMatch = sUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (dMatch) {
+                    id = dMatch[1];
+                } else {
+                    const idMatch = sUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                    if (idMatch) id = idMatch[1];
+                }
+                if (id) {
+                    return `https://docs.google.com/uc?export=download&id=${id}`;
+                }
+            }
+            return sUrl;
+        }
 
         window.onload = async () => {
             try {
@@ -308,7 +316,7 @@
                 if (preloader) preloader.classList.add('hidden');
 
                 renderLineFeed(store_orders);
-                renderDeptLoadList(store_orders);
+                renderRailTrack(store_orders);
                 syncHeaderStats(store_orders);
                 
             } catch (e) {
@@ -329,12 +337,12 @@
             safe.text('hud-total', data.length);
         }
 
-        // Render clean conveyor belt stage widgets
-        function renderDeptLoadList(data) {
-            const listContainer = safe.el('dept-load-list');
+        // Render clean, non-scrollable railway track stations (Rail Ki Patri Flow)
+        function renderRailTrack(data) {
+            const listContainer = safe.el('rail-track');
             if (!listContainer) return;
 
-            listContainer.innerHTML = PROTOCOL_STAGES.map(stage => {
+            listContainer.innerHTML = RAILWAY_STAGES.map(stage => {
                 const count = data.filter(o => {
                     let curStatus = "Received";
                     if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
@@ -349,12 +357,12 @@
                 
                 return `
                     <div onclick="toggleStageFilter('${stage}')" 
-                         class="flex justify-between items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer shrink-0 min-w-[150px] shadow-md ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-750 text-white hover:bg-slate-700 border-slate-600'}">
-                        <div class="flex items-center gap-2">
-                            <span>📦</span>
-                            <span class="text-xs font-black uppercase tracking-wider">${stage}</span>
+                         class="railway-station flex flex-col items-center gap-2 cursor-pointer">
+                        <!-- Station count bubble representing train stop -->
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-4 transition-all ${isSelected ? 'bg-indigo-600 text-white border-white scale-110 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600'}">
+                            ${count}
                         </div>
-                        <span class="text-xs font-black py-0.5 px-2 rounded-full ${isSelected ? 'bg-white text-indigo-600' : 'bg-indigo-600 text-white'}">${count}</span>
+                        <span class="text-[9px] md:text-xs font-black uppercase tracking-wider text-slate-400 text-center">${stage}</span>
                     </div>
                 `;
             }).join('');
@@ -368,10 +376,10 @@
                 activeFilterStage = stage;
                 drillDown(stage);
             }
-            renderDeptLoadList(store_orders);
+            renderRailTrack(store_orders);
         }
 
-        // Strictly group by Received Date (Col A)
+        // Strictly group by Received Date (Col A) - Row IDs preserve sequence with no card jump
         function renderLineFeed(data) {
             const feed = safe.el('assembly-line');
             if(!feed) return;
@@ -392,7 +400,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error("Date parsing failed: ", e);
+                    console.error("Error parsing date: ", e);
                 }
 
                 if (!groups[dateKey]) {
@@ -401,12 +409,12 @@
                 groups[dateKey].push(o);
             });
 
-            let htmlString = "";
+            let html = "";
             Object.keys(groups).forEach(dateKey => {
-                htmlString += `
-                    <div class="col-span-full mt-4 mb-2">
-                        <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 py-1.5 px-3 rounded-xl w-fit">
-                            <span class="text-xs md:text-sm font-black text-indigo-700 uppercase tracking-wide">📅 Received Date: ${dateKey}</span>
+                html += `
+                    <div class="col-span-full mt-4 mb-1">
+                        <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 py-1 px-3 rounded-xl w-fit">
+                            <span class="text-xs md:text-sm font-black text-indigo-700 uppercase tracking-wide">📅 Order Milna Ka Date: ${dateKey}</span>
                             <span class="badge badge-primary font-black text-xs px-2 rounded-md">${groups[dateKey].length} Orders</span>
                         </div>
                     </div>
@@ -429,8 +437,9 @@
                     
                     const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
                     
-                    htmlString += `
-                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer hover:scale-[1.02]" 
+                    html += `
+                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer ${o.isLate ? 'bottleneck-pulse' : 'hover:scale-[1.01]'}" 
+                             style="animation-delay: 0.05s"
                              onclick="openProcessModal('${safeOrderId}')">
                             
                             <div class="flex justify-between items-start mb-4 gap-2">
@@ -472,7 +481,7 @@
                 safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
                 safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
 
-                // Visual Catalogue quantity mapping split by comma or pipe safely
+                // Visual Catalogue Pick-List with parsed Google Drive URLs to prevent blank boxes
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     const itemString = (order.Items || order.SLA_Start_Time || "").toString();
@@ -492,14 +501,18 @@
                         
                         const query = name.toLowerCase();
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
-                        const img = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
+                        const rawImgUrl = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
+                        
+                        // Parse direct image link to display on browser standard img tag
+                        const cleanImgUrl = getDirectDriveUrl(rawImgUrl);
+                        
                         return `
                             <div class="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group">
-                                <img src="${img}" class="cat-image shadow-md transition-transform" onerror="this.src='https://via.placeholder.com/150?text=📦'">
+                                <img src="${cleanImgUrl}" class="cat-image shadow-md transition-transform" onerror="this.src='https://via.placeholder.com/150?text=📦'">
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-black text-slate-800 uppercase italic truncate leading-tight">${name}</p>
                                     <div class="flex justify-between items-center mt-2 gap-2">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty Ordered:</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ordered Qty:</span>
                                         <span class="badge badge-primary font-black text-xs px-2.5 rounded-md">${qty}</span>
                                     </div>
                                 </div>
@@ -508,7 +521,7 @@
                     }).join('');
                 }
 
-                // Timeline stages mapping omitting Received
+                // Timeline alignment
                 let rawStatus = "Received";
                 if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
                     rawStatus = order.Dealer_Area.toString().trim();
@@ -519,24 +532,72 @@
                 const status = rawStatus;
                 const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
                 
+                // Direct Inline Proof Thumbnails and Audio elements inside vertical timeline list
                 const timelineSteps = document.querySelectorAll('#timeline-track .step');
                 if(timelineSteps && timelineSteps.length > 0) {
                     timelineSteps.forEach((s, i) => {
+                        const stageName = PROTOCOL_STAGES[i];
                         s.classList.toggle('step-primary', i <= curIdx);
-                        s.innerText = PROTOCOL_STAGES[i] || '';
+                        
+                        const mapping = {
+                            "Balance Check": "Balance_Proof",
+                            "Call 1": "Call_1_Audio",
+                            "Processed": "Stock_Proof",
+                            "Invoiced": "Invoice_Proof",
+                            "Dispatched": "Box_Proof",
+                            "Call 2": "Call_2_Audio",
+                            "Delivered": "Pauti_Photo",
+                            "Final Call": "Final_Audio"
+                        };
+                        
+                        const valKey = mapping[stageName];
+                        const fileVal = valKey ? order[valKey] : null;
+                        
+                        let proofHtml = "";
+                        if (fileVal && fileVal.toString().includes('http')) {
+                            const urls = fileVal.toString().split('\n');
+                            const isAudio = stageName.toLowerCase().includes("call");
+                            
+                            proofHtml = `<div class="mt-2 flex flex-wrap gap-2 justify-start items-center">`;
+                            urls.forEach((u, uIdx) => {
+                                const cleanUrl = getDirectDriveUrl(u.trim());
+                                if (isAudio) {
+                                    proofHtml += `
+                                        <div class="p-1 bg-slate-50 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
+                                            <audio controls class="h-8 max-w-[200px] rounded-full"><source src="${cleanUrl}"></audio>
+                                        </div>`;
+                                } else {
+                                    proofHtml += `
+                                        <div class="relative group">
+                                            <img src="${cleanUrl}" class="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform" 
+                                                 onclick="window.open('${cleanUrl}', '_blank')" 
+                                                 onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                                        </div>`;
+                                }
+                            });
+                            proofHtml += `</div>`;
+                        }
+
+                        // Inject inline step preview next to name
+                        s.innerHTML = `
+                            <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-2 p-2 rounded-xl bg-slate-50/50 border border-slate-100/60">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-800">${stageName}</span>
+                                ${proofHtml}
+                            </div>
+                        `;
+
                         if(i === curIdx) {
-                            s.classList.add('font-black', 'text-indigo-600');
+                            s.classList.add('font-black');
                         } else {
-                            s.classList.remove('font-black', 'text-indigo-600');
+                            s.classList.remove('font-black');
                         }
                     });
                 }
 
-                // Load Stage Explanation
+                // Load Hinglish explanation guidance
                 const explText = STAGE_EXPLANATIONS[status] || "💳 <b>Next Step Balance Check:</b> Click complete to initialize process.";
                 safe.html('m-step-explanation', explText);
 
-                // Media upload control switcher with multi-file support
                 const inputZone = safe.el('m-media-control');
                 const safeStatusString = (status && typeof status.toUpperCase === 'function') ? status.toUpperCase() : "RECEIVED";
                 safe.text('m-stage-tag', "STAGE: " + safeStatusString);
@@ -559,7 +620,6 @@
                     }
                 }
 
-                refreshVault(order);
                 const modal = safe.el('process_modal');
                 if (modal && typeof modal.showModal === 'function') {
                     modal.showModal();
@@ -567,53 +627,6 @@
             } catch (err) {
                 console.error("Process modal failed:", err);
                 alert("Critical process load failed: " + err.message);
-            }
-        }
-
-        function refreshVault(order) {
-            const vault = safe.el('m-vault-feed');
-            if(!vault) return;
-            
-            vault.innerHTML = "";
-            const mapping = [
-                {k: 'Balance_Proof', l: 'Balance Check'},
-                {k: 'Call_1_Audio', l: 'Conf. Call', aud: true},
-                {k: 'Stock_Proof', l: 'Stock Pick Proof'},
-                {k: 'Invoice_Proof', l: 'Invoiced Record'},
-                {k: 'Box_Proof', l: 'Packaging Proof'},
-                {k: 'Call_2_Audio', l: 'Dispatch Call', aud: true},
-                {k: 'Pauti_Photo', l: 'Pauti Record'},
-                {k: 'Final_Audio', l: 'Feedback Call', aud: true}
-            ];
-
-            let contentCount = 0;
-            mapping.forEach(p => {
-                const val = order[p.k];
-                if(val && val.toString().includes('http')) {
-                    // Split urls if multiple exist (newline joined)
-                    const urls = val.toString().split('\n');
-                    urls.forEach((urlItem, idx) => {
-                        const u = urlItem.trim();
-                        if(!u) return;
-                        contentCount++;
-                        if(p.aud) {
-                            vault.innerHTML += `
-                                <div class="space-y-2 bg-slate-550 p-2.5 rounded-xl border border-slate-100 shadow-inner text-left">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l} (Audio ${idx+1})</p>
-                                    <audio controls class="w-full h-8 rounded-full border border-white"><source src="${u}"></audio>
-                                </div>`;
-                        } else {
-                            vault.innerHTML += `
-                                <div class="space-y-2 bg-slate-550 p-2.5 rounded-xl border border-slate-100 shadow-inner text-left">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l} (Photo ${idx+1})</p>
-                                    <img src="${u}" class="proof-frame w-full max-h-[150px] object-cover cursor-pointer" onclick="window.open('${u}')">
-                                </div>`;
-                        }
-                    });
-                }
-            });
-            if(contentCount === 0) {
-                vault.innerHTML = `<div class="py-8 text-center opacity-10 font-black uppercase text-sm tracking-wider">No Proof Records</div>`;
             }
         }
 
@@ -639,28 +652,28 @@
                 return;
             }
 
-            // CRITICAL MEDIA VALIDATION RULES (Photo/Audio compulsion checks)
+            // CRITICAL VALIDATION: Validate mandatory photos vs audio uploads
             const fIn = safe.el('m-file-input');
-            const isAudioStep = cur.toLowerCase().includes("call");
-            
+            const isAudioStage = cur.toLowerCase().includes("call");
+
             if (cur.toLowerCase() !== "received") {
                 if (!fIn || !fIn.files || fIn.files.length === 0) {
-                    if (isAudioStep) {
-                        alert("⚠️ KRIPYA AUDIO RECORDING CHUNEIN! Is call stage par audio file upload karna mandatory hai.");
+                    if (isAudioStage) {
+                        alert("⚠️ RUKIEIN! Recording file chuna mandatory hai! Kripya pehle .mp3 recording select karein.");
                     } else {
-                        alert("⚠️ KRIPYA PHOTO UPLOAD KAREIN! Is stage par proof image upload karna compulsory hai.");
+                        alert("⚠️ RUKIEIN! Proof Photo upload karna compulsory hai! Kripya pehle camera se photo click karein.");
                     }
                     return;
                 }
                 
-                // Mime validation
-                const fileObj = fIn.files[0];
-                if (isAudioStep && !fileObj.type.includes("audio")) {
-                    alert("⚠️ INVALID FILE: Kripya audio file (.mp3/audio clip) hi select karein.");
+                // Mime validations
+                const selectedFile = fIn.files[0];
+                if (isAudioStage && !selectedFile.type.includes("audio")) {
+                    alert("⚠️ SYSTEM ERROR: Kripya audio (.mp3) call recording file hi select karein.");
                     return;
                 }
-                if (!isAudioStep && !fileObj.type.includes("image")) {
-                    alert("⚠️ INVALID FILE: Kripya photo (image file) hi select karein.");
+                if (!isAudioStage && !selectedFile.type.includes("image")) {
+                    alert("⚠️ SYSTEM ERROR: Kripya valid proof photo click karein.");
                     return;
                 }
             }
@@ -681,7 +694,6 @@
                     }
                 });
                 
-                // Multi-files base64 array generator
                 let filesArray = [];
                 if (fIn && fIn.files && fIn.files.length > 0) {
                     for(let i=0; i < fIn.files.length; i++) {
@@ -748,8 +760,8 @@
         }
 
         function handleSplitUI() { 
-            const p = prompt("Product Name for Split/Backorder:"); 
-            if(p) alert("PROTOCOL TRIGGERED: " + p); 
+            const p = prompt("Split/Backorder karne ke liye Product Name likhein:"); 
+            if(p) alert("SUCCESS: Split task triggered for: " + p); 
         }
 
         // Auto Sync every 5 minutes
