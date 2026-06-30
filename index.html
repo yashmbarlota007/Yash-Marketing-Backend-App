@@ -1,440 +1,148 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Yash Operations Dashboard Hub</title>
-  <!-- Pre-compiled Utility CSS Stylesheet -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { 
-      font-family: 'Plus Jakarta Sans', sans-serif; 
-      background-color: #f8fafc; 
-    }
-    /* Aesthetic micro-shadows & glassmorphism overlays */
-    .premium-card {
-      background: #ffffff;
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .premium-card:hover {
-      box-shadow: 0 12px 30px -4px rgba(148, 163, 184, 0.16);
-      transform: translateY(-2px);
-    }
-    .status-indicator {
-      width: 4px;
-      height: 100%;
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
-    /* Custom scrollbar for horizontal pipeline overview */
-    .conveyor-row::-webkit-scrollbar {
-      height: 4px;
-    }
-    .conveyor-row::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
+    .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 1rem; }
+    .stage-red { border-left: 5px solid #ef4444; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
   </style>
 </head>
-<body class="pb-24 text-slate-800 antialiased bg-slate-50">
+<body class="bg-slate-50 min-h-screen">
 
-  <!-- TOAST ALERTS SYSTEM -->
-  <div id="toast-container" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-sm px-4 pointer-events-none space-y-3"></div>
-
-  <!-- AUTH PORTAL -->
-  <div id="login-container" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-8 space-y-8 shadow-2xl border border-slate-100">
-      <div class="text-center space-y-2">
-        <div class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-bold text-lg mx-auto shadow-lg shadow-indigo-600/20">Y</div>
-        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Yash Marketing</h2>
-        <p class="text-xs text-slate-400 font-medium">Operations Control Terminal</p>
-      </div>
-      <div class="space-y-4">
-        <div class="space-y-1">
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Employee ID</label>
-          <input type="text" id="login-id" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border outline-none focus:border-indigo-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="YM001">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Password</label>
-          <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border outline-none focus:border-indigo-500 focus:bg-white transition duration-200 text-sm font-semibold" placeholder="******">
-        </div>
-        <button onclick="handleLogin()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition duration-200 shadow-lg shadow-indigo-600/10 transform active:scale-95">Authenticate Terminal</button>
-      </div>
-    </div>
+  <!-- Header -->
+  <div class="navbar bg-white shadow-sm px-6">
+    <div class="flex-1 text-2xl font-bold text-indigo-600">DISTRO-PRO <span class="text-xs badge badge-ghost text-slate-400">v2.0</span></div>
+    <div class="flex-none"><div class="avatar online"><div class="w-10 rounded-full"><img src="https://ui-avatars.com/api/?name=Staff" /></div></div></div>
   </div>
 
-  <!-- CLIGHTBOX IMAGE PREVIEW MODAL -->
-  <div id="lightbox-modal" onclick="closeLightbox()" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-[200] p-4 cursor-zoom-out">
-    <img id="lightbox-img" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain transition-all" src="" alt="Proof Preview">
-  </div>
+  <div class="p-6 max-w-7xl mx-auto">
+    <!-- 1. Interactive Radar Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="col-span-1 glass-card p-6 shadow-lg border border-indigo-50">
+        <h3 class="font-bold text-slate-700 mb-4 uppercase tracking-wider text-sm">Office Ops Radar</h3>
+        <canvas id="opsRadar"></canvas>
+      </div>
 
-  <!-- LOADER -->
-  <div id="global-loader" class="hidden fixed inset-0 bg-slate-950/20 backdrop-blur-sm flex items-center justify-center z-[150]">
-    <div class="bg-white px-6 py-5 rounded-3xl shadow-xl flex flex-col items-center border border-slate-100">
-      <div class="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
-      <p class="text-xs text-slate-500 mt-3 font-semibold tracking-wide">Syncing Process...</p>
-    </div>
-  </div>
-
-  <!-- HEADER -->
-  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center border-b border-slate-100">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-600/20">Y</div>
-      <div>
-        <h1 class="font-extrabold text-slate-950 text-sm tracking-tight" id="header-user">Yash Operations</h1>
-        <p class="text-[9px] font-bold text-indigo-600 uppercase tracking-widest" id="header-role">OPERATIONS TERMINAL</p>
+      <!-- Drill-Down Feed Section -->
+      <div class="col-span-2 glass-card p-6 shadow-lg overflow-y-auto max-h-[400px]">
+        <h3 class="font-bold text-slate-700 mb-4 uppercase tracking-wider text-sm">Live Assembly Line</h3>
+        <div id="drillDownFeed" class="space-y-3">
+           <!-- Dynamic Cards will be injected here -->
+           <p class="text-slate-400 italic">Click a stage on radar to view bottlenecks...</p>
+        </div>
       </div>
     </div>
-    <button onclick="logout()" class="px-4 py-2 text-xs border border-red-100 text-red-600 rounded-xl bg-red-50 hover:bg-red-100 transition font-bold transform active:scale-95">Logout</button>
-  </header>
 
-  <!-- MASTER VIEW STACKED -->
-  <main class="max-w-md mx-auto p-4 space-y-6">
-
-    <!-- 1. DYNAMIC CONVEYOR KPI PANEL -->
-    <section class="space-y-3">
-      <div class="flex justify-between items-center px-1">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pipeline Grid</h3>
-        <button onclick="loadPipelineCounts()" class="text-xs text-indigo-600 font-bold hover:text-indigo-700">Refresh</button>
-      </div>
-      <!-- 3x3 Non-scrollable layout -->
-      <div id="pipeline-grid" class="grid grid-cols-3 gap-3"></div>
-    </section>
-
-    <!-- 2. EXPANDABLE ACTIVE ORDERS QUEUE -->
-    <section class="space-y-4">
-      
-      <!-- Filter Toolbar -->
-      <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-2">
-        <div class="flex-1 relative">
-          <input type="text" id="order-search-input" oninput="searchOrders()" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500 focus:bg-white transition" placeholder="Search ID or Dealer Name...">
-        </div>
-        <select id="order-date-filter" onchange="loadStageOrders('')" class="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-2 outline-none focus:border-indigo-500 transition">
-          <option value="All">All Active Dates</option>
-          <option value="Today">Today</option>
-          <option value="Yesterday">Yesterday</option>
-          <option value="Month">This Month</option>
-        </select>
-        <button onclick="loadStageOrders('')" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-xs font-bold transition">All</button>
-      </div>
-
-      <div class="flex justify-between items-center px-1">
-        <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest" id="orders-list-header">Active Operations Queue</h3>
-      </div>
-
-      <div id="orders-cards-container" class="space-y-3"></div>
-    </section>
-
-  </main>
-
-  <!-- Dynamic capture elements in DOM -->
-  <input type="file" id="multi-photo-raw-input" accept="image/*" capture="environment" class="hidden" onchange="processCapturedPhoto()">
-
-  <script>
-    // Live Decoupled Apps Script Backend Endpoint URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbz6eqjH0qxnKmwdT9hyZnMab6cOwxab4OvSS8i-DspUhd24T1oYdZeDDlrCjqGJ6Z8_/exec";
-
-    let userSession = null;
-    let loadedOrdersCache = []; 
-    let activeStageSelected = "";
-    let orderCardsPics = {}; // Base64 image cache mapped to rowNum
-
-    window.addEventListener('load', () => {
-      const stored = localStorage.getItem("ym_session");
-      if (stored) {
-        userSession = JSON.parse(stored);
-        initSessionDashboard();
-      }
-    });
-
-    // CUSTOM FLOATING TOAST SYSTEM
-    function showToast(message, type = "success") {
-      const container = document.getElementById("toast-container");
-      const toast = document.createElement("div");
-      toast.className = `p-4 rounded-2xl shadow-xl border text-xs font-semibold flex items-center justify-between transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto bg-white`;
-      
-      const icon = type === "success" ? "🟢" : "⚠️";
-      const borderCol = type === "success" ? "border-green-100" : "border-red-100";
-      const textCol = type === "success" ? "text-slate-800" : "text-red-700";
-      
-      toast.classList.add(borderCol);
-      toast.innerHTML = `
-        <div class="flex items-center space-x-2">
-          <span>${icon}</span>
-          <span class="${textCol}">${message}</span>
-        </div>
-      `;
-      
-      container.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.classList.remove("translate-y-2", "opacity-0");
-      }, 50);
-
-      setTimeout(() => {
-        toast.classList.add("translate-y-2", "opacity-0");
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    function showLoader() { document.getElementById("global-loader").classList.remove("hidden"); }
-    function hideLoader() { document.getElementById("global-loader").classList.add("hidden"); }
-
-    // API CORS HANDLERS
-    function callAPI_GET(params, successCallback, errorCallback) {
-      let queryString = Object.keys(params).map(key => key + '=' + encodeURIComponent(params[key])).join('&');
-      fetch(API_URL + "?" + queryString)
-        .then(res => res.json())
-        .then(data => successCallback(data))
-        .catch(err => { if(errorCallback) errorCallback(err); else console.error(err); });
-    }
-
-    function callAPI_POST(payload, successCallback, errorCallback) {
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => successCallback(data))
-      .catch(err => { if(errorCallback) errorCallback(err); else console.error(err); });
-    }
-
-    function handleLogin() {
-      const empId = document.getElementById("login-id").value;
-      const pass = document.getElementById("login-pass").value;
-      if (!empId || !pass) { showToast("Please complete credentials!", "error"); return; }
-      showLoader();
-      
-      callAPI_POST({ action: "login", empId: empId, password: pass }, res => {
-        hideLoader();
-        if (res && res.success) {
-          userSession = res;
-          localStorage.setItem("ym_session", JSON.stringify(res));
-          initSessionDashboard();
-          showToast("Access Authorized! Welcome back.");
-        } else {
-          showToast(res ? res.message : "Invalid credentials response.", "error");
-        }
-      }, err => {
-        hideLoader();
-        showToast("Login Connection Error: " + err.message, "error");
-      });
-    }
-
-    function initSessionDashboard() {
-      document.getElementById("login-container").classList.add("hidden");
-      document.getElementById("header-user").innerText = userSession.name;
-      document.getElementById("header-role").innerText = userSession.role + " Terminal";
-      
-      loadPipelineCounts();
-      loadStageOrders(''); 
-    }
-
-    function logout() {
-      localStorage.removeItem("ym_session");
-      document.getElementById("login-container").classList.remove("hidden");
-    }
-
-    function toggleAccordion(elementId) {
-      const el = document.getElementById(elementId);
-      if (el) el.classList.toggle("hidden");
-    }
-
-    function openLightbox(url) {
-      if (!url) return;
-      const modal = document.getElementById("lightbox-modal");
-      const img = document.getElementById("lightbox-img");
-      img.src = url;
-      modal.classList.remove("hidden");
-    }
-
-    function closeLightbox() {
-      document.getElementById("lightbox-modal").classList.add("hidden");
-    }
-
-    // MULTIPLE PHOTO CAPTURES ENGINE
-    function captureOrderStepPhoto(rowNum) {
-      activeCaptureType = "order-" + rowNum;
-      const input = document.getElementById("multi-photo-raw-input");
-      input.click();
-    }
-
-    async function processCapturedPhoto() {
-      const file = document.getElementById("multi-photo-raw-input").files[0];
-      if (!file || !activeCaptureType) return;
-
-      showLoader();
-      const base64 = await convertFileToBase64(file);
-      hideLoader();
-
-      if (activeCaptureType.startsWith("order-")) {
-        const row = activeCaptureType.split("-")[1];
-        if (!orderCardsPics[row]) orderCardsPics[row] = [];
-        orderCardsPics[row].push(base64);
-        renderOrderCardThumbnails(row);
-      }
-    }
-
-    function renderOrderCardThumbnails(row) {
-      const container = document.getElementById("order-thumbnails-" + row);
-      if (!container) return;
-      container.innerHTML = "";
-      (orderCardsPics[row] || []).forEach((b64, index) => {
-        const wrap = document.createElement("div");
-        wrap.className = "relative w-12 h-12 border border-slate-100 rounded-xl overflow-hidden shadow-sm";
-        wrap.innerHTML = `
-          <img src="${b64}" class="w-full h-full object-cover">
-          <span onclick="deleteOrderThumbnail(${row}, ${index})" class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center cursor-pointer">✕</span>
-        `;
-        container.appendChild(wrap);
-      });
-    }
-
-    function deleteOrderThumbnail(row, index) {
-      orderCardsPics[row].splice(index, 1);
-      renderOrderCardThumbnails(row);
-    }
-
-    // CONVEYOR 3x3 PIPELINE COUNTERS
-    function loadPipelineCounts() {
-      callAPI_GET({ action: "getPipeline" }, res => {
-        if (res && res.success) {
-          const grid = document.getElementById("pipeline-grid");
-          grid.innerHTML = "";
-          const statusFlow = [
-            "Received", "Balance Check", "Call 1", "Processed", 
-            "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"
-          ];
-          statusFlow.forEach(step => {
-            const count = res.counts[step] || 0;
-            const card = document.createElement("button");
-            card.onclick = () => loadStageOrders(step);
-            card.id = "stage-card-" + step.replace(/\s+/g, '');
-            card.className = "conveyor-grid-card bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:border-indigo-400";
-            card.innerHTML = `
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate w-full">${step}</span>
-              <span class="text-base font-extrabold text-indigo-600 mt-1">${count}</span>
-            `;
-            grid.appendChild(card);
-          });
-          
-          if (activeStageSelected) {
-            const activeCard = document.getElementById("stage-card-" + activeStageSelected.replace(/\s+/g, ''));
-            if (activeCard) activeCard.classList.add("active-stage-glow");
-          }
-        }
-      });
-    }
-
-    // Helper: Compare neutral date formats
-    function parseSheetDateString(dateStr) {
-      if (!dateStr) return null;
-      let parts = dateStr.split('/');
-      if (parts.length < 3) return null;
-      return new Date(parts[2], parts[1] - 1, parts[0]);
-    }
-
-    // EXPANDABLE PREMIUM CARDS LIST
-    function loadStageOrders(stageName) {
-      showLoader();
-      activeStageSelected = stageName;
-      const dateFilter = document.getElementById("order-date-filter").value;
-      document.getElementById("orders-list-header").innerText = (stageName || "All Active") + " Orders";
-      
-      callAPI_GET({ action: "getOrders", stage: stageName }, res => {
-        hideLoader();
-        loadPipelineCounts(); 
+    <!-- 2. Step Counter & Process Modal -->
+    <dialog id="processModal" class="modal">
+      <div class="modal-box w-11/22 max-w-5xl">
+        <h3 id="modalOrderTitle" class="font-bold text-lg">Process Order #12345</h3>
+        <div class="divider"></div>
         
-        if (!res || !res.success || !res.orders || res.orders.length === 0) {
-          document.getElementById("orders-cards-container").innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-3xl text-xs text-slate-400 font-semibold shadow-sm">No active orders in this step.</div>`;
-          return;
-        }
+        <!-- 9-Stage Timeline -->
+        <ul class="steps steps-vertical lg:steps-horizontal w-full text-xs">
+          <li class="step step-primary">Received</li>
+          <li class="step">Balance</li>
+          <li class="step">Call 1</li>
+          <li class="step">Processed</li>
+          <li class="step">Invoiced</li>
+          <li class="step">Dispatched</li>
+          <li class="step">Call 2</li>
+          <li class="step">Delivered</li>
+          <li class="step">Final Call</li>
+        </ul>
 
-        res.orders.sort((a, b) => b.rowNum - a.rowNum);
-        loadedOrdersCache = res.orders;
-
-        renderOrdersList(loadedOrdersCache, dateFilter);
-      });
-    }
-
-    function renderOrdersList(ordersArray, dateFilter) {
-      const container = document.getElementById("orders-cards-container");
-      container.innerHTML = "";
-
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-
-      const filtered = ordersArray.filter(o => {
-        if (dateFilter === "All") return true; 
-
-        const parsedDate = parseSheetDateString(o.Date);
-        if (!parsedDate) return true; 
-
-        if (dateFilter === "Today") {
-          return parsedDate.getTime() === todayStart.getTime();
-        }
-        if (dateFilter === "Yesterday") {
-          return parsedDate.getTime() === yesterdayStart.getTime();
-        }
-        if (dateFilter === "Month") {
-          return parsedDate.getMonth() === now.getMonth() && parsedDate.getFullYear() === now.getFullYear();
-        }
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center p-8 bg-white border border-slate-100 rounded-3xl text-xs text-slate-400 font-semibold shadow-sm">No active orders found.</div>`;
-        return;
-      }
-
-      filtered.forEach(o => {
-        const card = document.createElement("div");
-        card.className = "premium-card rounded-3xl overflow-hidden relative";
-        
-        const uniqueCardId = "order-details-pane-" + o.rowNum;
-        let orderValueCleaned = parseInt(o.OrderValue.toString().replace(/[^0-9]/g, '')) || 0;
-
-        // Custom indicator bar on the left based on active stage
-        const colorMap = {
-          "Received": "bg-indigo-500", "Balance Check": "bg-blue-500", "Call 1": "bg-purple-500",
-          "Processed": "bg-yellow-500", "Invoiced": "bg-pink-500", "Dispatched": "bg-indigo-600",
-          "Call 2": "bg-amber-500", "Delivered": "bg-green-500", "Final Call": "bg-emerald-600"
-        };
-        const activeBarCol = colorMap[o.CurrentStatus] || "bg-indigo-500";
-
-        // CARD HEADER (Extremely minimal: Strictly display only Dealer Name, Date, status, price)
-        card.innerHTML = `
-          <div class="status-indicator ${activeBarCol}"></div>
-          <div onclick="toggleAccordion('${uniqueCardId}')" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/40 transition">
-            <div class="space-y-1 pl-2">
-              <h4 class="font-extrabold text-slate-900 text-sm tracking-tight leading-tight">${o.DealerName}</h4>
-              <p class="text-[10px] font-bold text-slate-400">${o.Date} • ID: ${o.OrderID}</p>
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Left: Action Area -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
+            <h4 class="font-semibold mb-2">Upload Proof (Mandatory)</h4>
+            <div id="fileInputContainer">
+              <!-- Dynamically changes between Camera and Audio based on Step -->
+              <input type="file" id="proofInput" class="file-input file-input-bordered file-input-primary w-full" capture="environment" accept="image/*" multiple>
             </div>
-            <div class="text-right flex flex-col items-end gap-1.5">
-              <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-600 font-bold text-[9px] rounded-full uppercase tracking-wider">${o.CurrentStatus || "Received"}</span>
-              <span class="text-xs font-black text-slate-800">₹${orderValueCleaned.toLocaleString()}</span>
+            <button onclick="submitStep()" class="btn btn-primary w-full mt-4">Complete Step & Sync</button>
+          </div>
+          
+          <!-- Right: Visual Checks -->
+          <div class="bg-slate-50 p-4 rounded-xl overflow-y-auto max-h-60">
+            <h4 class="font-semibold mb-2">Previous Proofs</h4>
+            <div id="proofGallery" class="grid grid-cols-2 gap-2">
+              <!-- Images and Audio Players will render here -->
             </div>
           </div>
+        </div>
+      </div>
+    </dialog>
+  </div>
 
-          <!-- COLLAPSED PANE (Accordion reveals all detailed specs) -->
-          <div id="${uniqueCardId}" class="hidden p-5 border-t border-slate-100 bg-slate-50/20 space-y-5 text-xs">
-            
-            <!-- Itemized list with Photos -->
-            <div class="bg-white p-4 border border-slate-100 rounded-2xl space-y-2.5 shadow-sm">
-              <h5 class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider border-b border-slate-50 pb-2">Ordered Products</h5>
-              <div class="divide-y divide-slate-100 text-slate-600">
-                ${parseItemsStringWithPhotos(o.Items)}
-              </div>
-            </div>
+<script>
+// --- CORE LOGIC ---
 
-            <!-- Dealer Details -->
-            <div class="grid grid-cols-2 gap-3 text-[10px] text-slate-500 bg-white p-4 border border-slate-100 rounded-2xl shadow-sm">
-         git add index.html
-git commit -m "Updated premium operations UI"
-git push origin main
+// 1. Radar Initialization
+const ctx = document.getElementById('opsRadar');
+new Chart(ctx, {
+  type: 'radar',
+  data: {
+    labels: ['Received', 'Balance', 'Call 1', 'Stock', 'Invoice', 'Dispatch', 'Call 2', 'Delivered', 'Feedback'],
+    datasets: [{
+      label: 'Orders in Queue',
+      data: [12, 19, 3, 5, 2, 3, 7, 10, 5],
+      fill: true,
+      backgroundColor: 'rgba(79, 70, 229, 0.2)',
+      borderColor: 'rgb(79, 70, 229)',
+      pointBackgroundColor: 'rgb(79, 70, 229)',
+    }]
+  },
+  options: {
+    onClick: (e, elements) => {
+      if (elements.length > 0) {
+        const index = elements[0].index;
+        showDrillDown(index);
+      }
+    }
+  }
+});
+
+// 2. Handle File Type Logic (Image vs Audio)
+function updateFileInput(stage) {
+  const container = document.getElementById('fileInputContainer');
+  const input = document.getElementById('proofInput');
+  
+  if (['Call 1', 'Call 2', 'Final Call'].includes(stage)) {
+    input.setAttribute('accept', 'audio/*');
+    input.removeAttribute('capture');
+  } else {
+    input.setAttribute('accept', 'image/*');
+    input.setAttribute('capture', 'environment');
+  }
+}
+
+// 3. Geotagging
+function getGeoLocation() {
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      resolve(`${pos.coords.latitude}, ${pos.coords.longitude}`);
+    });
+  });
+}
+
+// 4. Drill Down Visualization
+function showDrillDown(stageIndex) {
+  const feed = document.getElementById('drillDownFeed');
+  // Sample Data Injection
+  feed.innerHTML = `
+    <div class="flex items-center justify-between p-4 bg-white border rounded-lg shadow-sm ${Math.random() > 0.5 ? 'stage-red' : ''}">
+      <div>
+        <div class="font-bold">#ORD-9921 - Ramesh Traders</div>
+        <div class="text-xs text-slate-400">Waiting for 3 hours 20 mins</div>
+      </div>
+      <button onclick="processModal.showModal(); updateFileInput('Call 1');" class="btn btn-sm btn-outline btn-primary">Process</button>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
