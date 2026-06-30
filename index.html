@@ -1,108 +1,347 @@
-<!-- ... (Pichle Head section ke styles same rahenge) ... -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yash Marketing | Ops Super-App</title>
+    <!-- CSS Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+        .red-pulse { animation: pulse-red 2s infinite; border: 2.5px solid #ff4d4d !important; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(255, 77, 77, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .step-active { font-weight: 800 !important; color: #4f46e5 !important; }
+    </style>
+</head>
+<body class="p-3 lg:p-8">
 
-<script>
-    const API_URL = "APNA_APPS_SCRIPT_URL_YAHAN_DALEIN";
-    let allOrders = [];
-    const stages = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
+    <div class="max-w-[1600px] mx-auto">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 px-2">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl font-black tracking-tighter text-slate-900">YASH MARKETING <span class="text-indigo-600 italic">BACKEND</span></h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">S-30 Operations Management System</p>
+            </div>
+            <div class="flex gap-4 items-center">
+                <div class="stats glass shadow-xl rounded-2xl border border-white">
+                    <div class="stat py-2 px-6">
+                        <div class="stat-title text-[10px] uppercase font-black text-indigo-500 tracking-wider">Live Pipeline</div>
+                        <div id="count-total" class="stat-value text-2xl">0</div>
+                    </div>
+                </div>
+                <button onclick="fetchData()" class="btn btn-circle btn-ghost bg-white shadow-md hover:rotate-180 transition-all duration-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                </button>
+            </div>
+        </header>
 
-    async function fetchData() {
-        const response = await fetch(API_URL);
-        allOrders = await response.json();
-        renderUI(allOrders);
-        updateRadar(allOrders);
-    }
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Panel: Analytical Radar -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="card glass shadow-2xl p-6 border-b-8 border-indigo-600 transition-all">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">Workload Radar</h2>
+                        <span class="badge badge-sm badge-ghost opacity-50">Drill-Down Active</span>
+                    </div>
+                    <canvas id="radarChart" height="320"></canvas>
+                </div>
+                <!-- Mini Stats / SLA Box -->
+                <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-indigo-400 font-black text-xs uppercase tracking-widest mb-2">Efficiency Alert</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Orders highlighted in <span class="text-red-400 font-bold">RED</span> have exceeded the 2-hour standard processing time.</p>
+                    </div>
+                    <div class="absolute -right-4 -bottom-4 opacity-10 font-black text-6xl italic">S-30</div>
+                </div>
+            </div>
 
-    function renderUI(orders) {
-        const container = document.getElementById('assembly-line');
-        container.innerHTML = orders.map(o => {
-            // Date Format: DD/MM/YY
-            const dateObj = new Date(o.Date);
-            const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth()+1}/${dateObj.getFullYear().toString().slice(-2)}`;
-            
-            return `
-                <div class="card glass shadow-md p-4 border-l-4 border-indigo-600 cursor-pointer hover:bg-white/50" onclick="openProcessModal('${o.Order_ID}')">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-[10px] font-bold text-indigo-400">#${o.Order_ID}</span>
-                            <h3 class="font-bold text-slate-800">${o.Dealer_Name}</h3>
-                            <p class="text-[11px] text-slate-500 line-clamp-1">${o.Items || 'No items'}</p>
+            <!-- Right Panel: The Assembly Line -->
+            <div class="lg:col-span-8">
+                <div class="flex justify-between items-center mb-6 px-2">
+                    <div class="flex items-center gap-3">
+                        <h2 id="feed-title" class="text-sm font-black text-slate-600 uppercase tracking-widest italic">Recent Orders</h2>
+                        <span id="filter-indicator" class="hidden badge badge-primary badge-sm animate-bounce font-bold tracking-tighter">Filtered</span>
+                    </div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase">Sort: Recent First</div>
+                </div>
+                
+                <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-5 max-h-[75vh] overflow-y-auto custom-scrollbar pr-3">
+                    <!-- Cards will be dynamically injected here -->
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-20">
+                        <span class="loading loading-spinner loading-lg mb-4"></span>
+                        <p class="font-bold tracking-widest uppercase text-xs">Connecting to Google Sheet...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9-Stage Process Super Modal -->
+    <dialog id="process_modal" class="modal modal-bottom sm:modal-middle backdrop-blur-md">
+        <div class="modal-box w-11/12 max-w-5xl bg-white/95 p-0 overflow-hidden rounded-[2.5rem] shadow-3xl">
+            <!-- Modal Header -->
+            <div class="bg-indigo-600 p-8 text-white flex justify-between items-center relative">
+                <div>
+                    <h3 id="m-dealer" class="text-3xl font-black italic tracking-tighter uppercase leading-none">Dealer Name</h3>
+                    <p id="m-id" class="text-[10px] opacity-80 font-black tracking-[0.4em] mt-2"></p>
+                </div>
+                <form method="dialog"><button class="btn btn-sm btn-circle btn-ghost text-white border-white/20 hover:rotate-90 transition-all">✕</button></form>
+            </div>
+
+            <div class="p-8">
+                <!-- 9-Stage Timeline Flow -->
+                <div class="mb-10 overflow-x-auto pb-6 scroll-smooth">
+                    <ul id="timeline-steps" class="steps steps-horizontal w-full text-[9px] font-black uppercase tracking-tighter">
+                        <li class="step" data-content="1">Received</li>
+                        <li class="step" data-content="2">Balance</li>
+                        <li class="step" data-content="3">Call 1</li>
+                        <li class="step" data-content="4">Stock</li>
+                        <li class="step" data-content="5">Invoice</li>
+                        <li class="step" data-content="6">Dispatch</li>
+                        <li class="step" data-content="7">Call 2</li>
+                        <li class="step" data-content="8">Delivered</li>
+                        <li class="step" data-content="9">Final</li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <!-- Left: Stock Details & Action -->
+                    <div class="space-y-6">
+                        <div id="stock-details" class="bg-indigo-50/50 p-6 rounded-3xl border-2 border-indigo-100/50">
+                            <h4 class="text-[10px] font-black text-indigo-600 uppercase mb-3 tracking-widest">Active Order Items</h4>
+                            <div id="items-list" class="text-sm font-bold text-slate-700 whitespace-pre-line leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                <!-- Items injected here -->
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <div class="badge badge-sm badge-primary">${o.Current_Status || 'Received'}</div>
-                            <div class="text-[10px] font-bold text-slate-400 mt-2">${formattedDate}</div>
+
+                        <div class="bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
+                            <label class="block text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest">Mandatory Step Proof</label>
+                            <div id="input-container">
+                                <!-- Input changes dynamically Image vs Audio -->
+                            </div>
+                            <button id="submit-btn" onclick="submitProgress()" class="btn btn-primary w-full mt-6 shadow-xl shadow-indigo-200 rounded-2xl h-14 font-black">
+                                Complete Step & Sync
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right: Audit & Proof Viewer -->
+                    <div class="bg-slate-50 p-6 rounded-3xl min-h-[300px] border border-slate-100">
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Verification Gallery</h4>
+                            <span class="badge badge-outline badge-xs opacity-50">Logs</span>
+                        </div>
+                        <div id="proof-viewer" class="grid grid-cols-2 gap-4">
+                            <!-- Existing Proofs and Audio Players render here -->
+                        </div>
+                        <div id="split-section" class="mt-8 pt-8 border-t border-slate-200 flex gap-3">
+                            <button class="btn btn-ghost btn-sm bg-orange-50 text-orange-600 rounded-xl flex-1 font-bold">Split Order</button>
+                            <button class="btn btn-ghost btn-sm bg-slate-200 text-slate-500 rounded-xl flex-1 font-bold">History</button>
                         </div>
                     </div>
                 </div>
-            `;
-        }).join('');
-    }
-
-    function openProcessModal(id) {
-        const order = allOrders.find(o => o.Order_ID === id);
-        document.getElementById('m-dealer').innerText = order.Dealer_Name;
-        document.getElementById('m-id').innerText = "ID: " + order.Order_ID;
-        
-        // --- NEW: Display Stock Items in Modal ---
-        const proofViewer = document.getElementById('proof-viewer');
-        proofViewer.innerHTML = `
-            <div class="col-span-2 bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                <h4 class="text-[10px] font-bold text-indigo-600 uppercase mb-2">Order Items (Pick-List)</h4>
-                <div class="text-sm font-bold text-slate-700 whitespace-pre-line">
-                    ${order.Items ? order.Items.split('|').join('\n') : 'No items listed'}
-                </div>
             </div>
-        `;
+        </div>
+    </dialog>
 
-        // Update Steps UI
-        const currentStageIdx = stages.indexOf(order.Current_Status || "Received");
-        const steps = document.querySelectorAll('.step');
-        steps.forEach((s, idx) => {
-            if(idx <= currentStageIdx) s.classList.add('step-primary');
-            else s.classList.remove('step-primary');
+    <script>
+        // API URL (Replace with your actual Apps Script URL)
+        const API_URL = "https://script.google.com/macros/s/AKfycbwYyE_N0W2Nf_0p96F9i_Z4W5XoN9g5V4m3G6pY/exec"; // EXAMPLE URL
+        
+        let allOrders = [];
+        const stages = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
+
+        // Initialization
+        window.onload = fetchData;
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const rawData = await response.json();
+                
+                // Sorting: Recent Date First
+                allOrders = rawData.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+                
+                renderUI(allOrders);
+                updateRadar(allOrders);
+            } catch (e) {
+                console.error("Fetch Error:", e);
+                document.getElementById('assembly-line').innerHTML = `<div class="col-span-full text-center text-red-500 p-10 font-bold">Error connecting to Google Sheets. Check API_URL.</div>`;
+            }
+        }
+
+        function renderUI(orders) {
+            document.getElementById('count-total').innerText = orders.length;
+            const container = document.getElementById('assembly-line');
+            
+            container.innerHTML = orders.map(o => {
+                // Formatting Date: DD/MM/YY
+                const d = new Date(o.Date);
+                const formattedDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear().toString().slice(-2)}`;
+                
+                // SLA Check (> 2 hours)
+                const startTime = new Date(o.SLA_Start_Time || o.Date);
+                const isLate = (new Date() - startTime) / (1000 * 60 * 60) > 2;
+
+                return `
+                    <div class="card glass hover:shadow-2xl transition-all duration-300 cursor-pointer border-t-4 border-indigo-600 p-5 ${isLate ? 'red-pulse' : 'hover:scale-[1.02]'}" 
+                         onclick="openProcessModal('${o.Order_ID}')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-[9px] font-black text-indigo-500 tracking-widest uppercase">#${o.Order_ID}</span>
+                                <h3 class="font-extrabold text-slate-800 text-lg leading-tight mt-1 truncate w-40">${o.Dealer_Name}</h3>
+                            </div>
+                            <div class="badge badge-neutral text-[9px] font-black px-2 py-3 rounded-md italic uppercase tracking-tighter">${o.Current_Status || 'Received'}</div>
+                        </div>
+                        <div class="text-[11px] font-bold text-slate-400 line-clamp-1 mb-4 italic">
+                            ${o.Items || 'Stock list pending...'}
+                        </div>
+                        <div class="flex justify-between items-center border-t pt-4 border-slate-100">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">${o.Dealer_Area || 'No Area'}</span>
+                            <span class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${formattedDate}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openProcessModal(id) {
+            const order = allOrders.find(o => o.Order_ID === id);
+            window.activeOrder = order;
+            
+            document.getElementById('m-dealer').innerText = order.Dealer_Name;
+            document.getElementById('m-id').innerText = "TRACKING ID: " + order.Order_ID;
+            document.getElementById('items-list').innerText = order.Items || "No items recorded in sheet.";
+
+            // Reset & Fill Timeline
+            const currentIdx = stages.indexOf(order.Current_Status || "Received");
+            const stepLis = document.getElementById('timeline-steps').children;
+            [...stepLis].forEach((li, i) => {
+                li.classList.toggle('step-primary', i <= currentIdx);
+            });
+
+            // Logic: Received is only a starter step
+            const inputContainer = document.getElementById('input-container');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (order.Current_Status === "" || order.Current_Status === "Received") {
+                inputContainer.innerHTML = `<div class="text-sm font-bold text-indigo-600 py-4 italic">Confirm order received and start Balance Check? No upload required for this step.</div>`;
+            } else {
+                // Toggle between Audio for Call stages and Image for Proof stages
+                const isCallStage = order.Current_Status.includes("Call");
+                inputContainer.innerHTML = `
+                    <input type="file" id="proof-file" 
+                        class="file-input file-input-bordered file-input-primary w-full shadow-sm rounded-xl" 
+                        ${isCallStage ? 'accept="audio/*"' : 'accept="image/*" capture="environment"'} 
+                        multiple />
+                `;
+            }
+            
+            renderPreviousProofs(order);
+            process_modal.showModal();
+        }
+
+        function renderPreviousProofs(order) {
+            const container = document.getElementById('proof-viewer');
+            container.innerHTML = "";
+            // Simple logic: Display existing links if they exist in sheet
+            const proofKeys = ['Balance_Photo', 'Stock_Photo', 'Invoice_Photo', 'Box_Photo', 'Pauti_Photo'];
+            proofKeys.forEach(k => {
+                if(order[k] && order[k].includes('http')) {
+                    container.innerHTML += `<img src="${order[k]}" class="w-full h-20 object-cover rounded-xl border border-slate-200" onclick="window.open('${order[k]}')">`;
+                }
+            });
+        }
+
+        async function submitProgress() {
+            const btn = document.getElementById('submit-btn');
+            const currentStatus = window.activeOrder.Current_Status || "Received";
+            const nextIdx = stages.indexOf(currentStatus) + 1;
+
+            if (nextIdx >= stages.length) return alert("Order already delivered!");
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="loading loading-spinner"></span> Syncing to Sheet...`;
+
+            const payload = {
+                orderId: window.activeOrder.Order_ID,
+                currentStage: currentStatus,
+                nextStage: stages[nextIdx]
+            };
+
+            try {
+                // API Call (POST request should be handled in Code.gs)
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                alert("Order updated to: " + stages[nextIdx]);
+                process_modal.close();
+                fetchData();
+            } catch (e) {
+                alert("Network error. Could not sync.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Complete Step & Sync";
+            }
+        }
+
+        // Radar Chart Logic
+        const ctx = document.getElementById('radarChart');
+        const radar = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: stages,
+                datasets: [{
+                    label: 'Load',
+                    data: stages.map(() => 0),
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderColor: 'rgb(79, 70, 229)',
+                    pointBackgroundColor: 'rgb(79, 70, 229)',
+                    borderWidth: 3,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                scales: { r: { grid: { color: '#e2e8f0' }, angleLines: { color: '#e2e8f0' }, ticks: { display: false }, min: 0 } },
+                plugins: { legend: { display: false } },
+                onClick: (e, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        filterByStage(stages[idx]);
+                    } else {
+                        resetFilter();
+                    }
+                }
+            }
         });
 
-        // Toggle Input based on stage
-        const input = document.getElementById('media-upload');
-        if(order.Current_Status === "Received") {
-            // Received par upload ki zarurat nahi, sirf button daba ke aage badho
-            document.getElementById('input-container').innerHTML = "<p class='text-sm italic text-slate-400'>Order Received. Click below to start Balance Check.</p>";
-        } else {
-            document.getElementById('input-container').innerHTML = `<input type="file" id="media-upload" class="file-input file-input-bordered file-input-primary w-full shadow-sm" ${order.Current_Status.includes('Call') ? 'accept="audio/*"' : 'accept="image/*" capture="environment"'} />`;
+        function updateRadar(data) {
+            const counts = stages.map(s => data.filter(o => (o.Current_Status || "Received") === s).length);
+            radar.data.datasets[0].data = counts;
+            radar.update();
         }
 
-        window.currentOrderId = id;
-        window.currentStatus = order.Current_Status || "Received";
-        process_modal.showModal();
-    }
-
-    async function submitStep() {
-        const nextIdx = stages.indexOf(window.currentStatus) + 1;
-        if(nextIdx >= stages.length) return alert("Order already completed!");
-
-        const btn = event.target;
-        btn.innerText = "Syncing...";
-        btn.disabled = true;
-
-        const payload = {
-            orderId: window.currentOrderId,
-            currentStage: window.currentStatus,
-            nextStage: stages[nextIdx],
-            fileUrl: "Link_will_appear_here" // Base64 logic can be added later
-        };
-
-        try {
-            await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            alert("Step Completed!");
-            fetchData();
-            process_modal.close();
-        } catch(e) {
-            alert("Error syncing. Try again.");
-        } finally {
-            btn.innerText = "Submit Progress & Sync";
-            btn.disabled = false;
+        function filterByStage(stage) {
+            document.getElementById('feed-title').innerText = "Dept: " + stage;
+            document.getElementById('filter-indicator').classList.remove('hidden');
+            const filtered = allOrders.filter(o => (o.Current_Status || "Received") === stage);
+            renderUI(filtered);
         }
-    }
-</script>
+
+        function resetFilter() {
+            document.getElementById('feed-title').innerText = "Recent Orders";
+            document.getElementById('filter-indicator').classList.add('hidden');
+            renderUI(allOrders);
+        }
+
+    </script>
+</body>
+</html>
