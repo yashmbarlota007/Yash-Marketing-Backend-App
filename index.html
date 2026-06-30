@@ -73,7 +73,7 @@
         <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Loading Yash Marketing Backbone</h2>
     </div>
 
-    <!-- 1. LOGIN SCREEN PANEL (Strict Role verification) -->
+    <!-- 1. LOGIN SCREEN PANEL (Strict Role verification with Fallback Bypass) -->
     <div id="login-screen" class="max-w-[450px] mx-auto mt-12 bg-white rounded-2xl shadow-xl p-6 border-t-8 border-indigo-600">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white mb-3">
@@ -86,7 +86,7 @@
         <div class="space-y-4">
             <div class="form-control">
                 <label class="label"><span class="label-text text-xs font-black text-slate-500">Staff ID (Username)</span></label>
-                <input type="text" id="login-username" placeholder="E.g. staff_id" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800" />
+                <input type="text" id="login-username" placeholder="E.g. owner / sales / staff" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800" />
             </div>
             <div class="form-control">
                 <label class="label"><span class="label-text text-xs font-black text-slate-500">Aapka Secret PIN</span></label>
@@ -335,8 +335,8 @@
 
     <script>
         /**
-         * v11.0 ERP SYSTEM WORKSPACE ENGINE (CRASH-PROOF SECURE MULTI-SPLIT & DIRECT IMAGE PARSER)
-         * -----------------------------------------------------------------------------------------
+         * v11.0 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
+         * ---------------------------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
@@ -389,7 +389,7 @@
                     if (idMatch) id = idMatch[1];
                 }
                 if (id) {
-                    return `https://docs.google.com/uc?export=download&id=${id}`;
+                    return `https://lh3.googleusercontent.com/d/${id}`;
                 }
             }
             return sUrl;
@@ -476,6 +476,8 @@
             }
         }
 
+        syncData();
+
         function handleLogin() {
             const uid = safe.el('login-username').value.trim();
             const pin = safe.el('login-pin').value.trim();
@@ -485,21 +487,55 @@
                 return;
             }
 
-            const staffRow = store_staff.find(row => row[0].toString().trim() === uid && row[1].toString().trim() === pin);
+            // EMERGENCY BYPASS TEST LOGINS (Bina database dependency ke login karne ke liye)
+            if (uid.toLowerCase() === "owner" && pin === "1234") {
+                currentUser = {
+                    uid: "owner",
+                    name: "Yash Barlota (Malik)",
+                    role: "Owner",
+                    salary: 50000,
+                    photo: "https://via.placeholder.com/150?text=Yash+Barlota",
+                    doc: "#"
+                };
+            } else if (uid.toLowerCase() === "sales" && pin === "1234") {
+                currentUser = {
+                    uid: "sales",
+                    name: "Rohan (Sales Staff)",
+                    role: "Sales Staff",
+                    salary: 20000,
+                    photo: "https://via.placeholder.com/150?text=Rohan+Sales",
+                    doc: "#"
+                };
+            } else if (uid.toLowerCase() === "staff" && pin === "1234") {
+                currentUser = {
+                    uid: "staff",
+                    name: "Office Operator",
+                    role: "Back Office Staff",
+                    salary: 15000,
+                    photo: "https://via.placeholder.com/150?text=Backoffice",
+                    doc: "#"
+                };
+            } else {
+                // Verify with Google Sheet database ("Staff Master" tab)
+                if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
+                    const staffRow = store_staff.find(row => row[0] && row[0].toString().trim().toLowerCase() === uid.toLowerCase() && row[1] && row[1].toString().trim() === pin);
+                    if (staffRow) {
+                        currentUser = {
+                            uid: staffRow[0].toString().trim(),
+                            name: staffRow[2].toString().trim(),
+                            role: staffRow[3].toString().trim(),
+                            salary: parseFloat(staffRow[4]) || 15000,
+                            photo: getDirectDriveUrl(staffRow[5]),
+                            doc: getDirectDriveUrl(staffRow[6])
+                        };
+                    }
+                }
+            }
             
-            if (!staffRow) {
+            if (!currentUser) {
                 alert("🚫 AUTH DENIED: ID ya PIN galat hai.");
                 return;
             }
-
-            currentUser = {
-                uid: staffRow[0].toString().trim(),
-                name: staffRow[2].toString().trim(),
-                role: staffRow[3].toString().trim(),
-                salary: parseFloat(staffRow[4]) || 15000,
-                photo: getDirectDriveUrl(staffRow[5]),
-                doc: getDirectDriveUrl(staffRow[6])
-            };
 
             localStorage.setItem("backbone_current_user", JSON.stringify(currentUser));
             showWorkspace();
