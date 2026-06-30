@@ -1,147 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="light">
 <head>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 1rem; }
-    .stage-red { border-left: 5px solid #ef4444; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-  </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+        .red-flag { border: 2px solid #ff4d4d; animation: glow 1.5s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 5px #ff4d4d; } to { box-shadow: 0 0 20px #ff4d4d; } }
+        .step-active { color: #570df8 !important; font-weight: bold; }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-[#f8fafc] min-h-screen">
 
-  <!-- Header -->
-  <div class="navbar bg-white shadow-sm px-6">
-    <div class="flex-1 text-2xl font-bold text-indigo-600">DISTRO-PRO <span class="text-xs badge badge-ghost text-slate-400">v2.0</span></div>
-    <div class="flex-none"><div class="avatar online"><div class="w-10 rounded-full"><img src="https://ui-avatars.com/api/?name=Staff" /></div></div></div>
-  </div>
-
-  <div class="p-6 max-w-7xl mx-auto">
-    <!-- 1. Interactive Radar Section -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="col-span-1 glass-card p-6 shadow-lg border border-indigo-50">
-        <h3 class="font-bold text-slate-700 mb-4 uppercase tracking-wider text-sm">Office Ops Radar</h3>
-        <canvas id="opsRadar"></canvas>
-      </div>
-
-      <!-- Drill-Down Feed Section -->
-      <div class="col-span-2 glass-card p-6 shadow-lg overflow-y-auto max-h-[400px]">
-        <h3 class="font-bold text-slate-700 mb-4 uppercase tracking-wider text-sm">Live Assembly Line</h3>
-        <div id="drillDownFeed" class="space-y-3">
-           <!-- Dynamic Cards will be injected here -->
-           <p class="text-slate-400 italic">Click a stage on radar to view bottlenecks...</p>
+    <!-- Premium Navbar -->
+    <div class="navbar glass-panel sticky top-0 z-50 px-8 shadow-sm">
+        <div class="flex-1">
+            <h1 class="text-xl font-black tracking-tighter text-indigo-700">YASH <span class="text-slate-500 font-light">MARKETING OPS</span></h1>
         </div>
-      </div>
+        <div class="flex-none gap-2">
+            <div class="badge badge-outline badge-primary">S-30 LIVE</div>
+        </div>
     </div>
 
-    <!-- 2. Step Counter & Process Modal -->
-    <dialog id="processModal" class="modal">
-      <div class="modal-box w-11/22 max-w-5xl">
-        <h3 id="modalOrderTitle" class="font-bold text-lg">Process Order #12345</h3>
-        <div class="divider"></div>
-        
-        <!-- 9-Stage Timeline -->
-        <ul class="steps steps-vertical lg:steps-horizontal w-full text-xs">
-          <li class="step step-primary">Received</li>
-          <li class="step">Balance</li>
-          <li class="step">Call 1</li>
-          <li class="step">Processed</li>
-          <li class="step">Invoiced</li>
-          <li class="step">Dispatched</li>
-          <li class="step">Call 2</li>
-          <li class="step">Delivered</li>
-          <li class="step">Final Call</li>
-        </ul>
+    <main class="p-6 max-w-[1400px] mx-auto">
+        <!-- TOP SECTION: RADAR & STATS -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- 1. Interactive Radar -->
+            <div class="lg:col-span-4 card glass-panel shadow-xl p-4">
+                <h2 class="text-sm font-bold text-slate-400 mb-4 uppercase">Ops Workload Radar</h2>
+                <canvas id="radarChart" height="300"></canvas>
+            </div>
 
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Left: Action Area -->
-          <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
-            <h4 class="font-semibold mb-2">Upload Proof (Mandatory)</h4>
-            <div id="fileInputContainer">
-              <!-- Dynamically changes between Camera and Audio based on Step -->
-              <input type="file" id="proofInput" class="file-input file-input-bordered file-input-primary w-full" capture="environment" accept="image/*" multiple>
+            <!-- 2. Assembly Line Drill-down -->
+            <div class="lg:col-span-8 card glass-panel shadow-xl overflow-hidden">
+                <div class="bg-indigo-600 p-4 flex justify-between items-center">
+                    <h2 class="text-white font-bold" id="stageTitle">Live Feed: All Departments</h2>
+                    <span class="badge badge-ghost text-white" id="countBadge">0 Orders</span>
+                </div>
+                <div class="p-4 space-y-4 overflow-y-auto max-h-[400px]" id="orderFeed">
+                    <!-- Orders will be injected here via JS -->
+                    <div class="animate-pulse text-center p-10 text-slate-400 font-medium">Loading Real-time Data...</div>
+                </div>
             </div>
-            <button onclick="submitStep()" class="btn btn-primary w-full mt-4">Complete Step & Sync</button>
-          </div>
-          
-          <!-- Right: Visual Checks -->
-          <div class="bg-slate-50 p-4 rounded-xl overflow-y-auto max-h-60">
-            <h4 class="font-semibold mb-2">Previous Proofs</h4>
-            <div id="proofGallery" class="grid grid-cols-2 gap-2">
-              <!-- Images and Audio Players will render here -->
-            </div>
-          </div>
         </div>
-      </div>
-    </dialog>
-  </div>
+
+        <!-- 3. Dynamic Process Modal -->
+        <dialog id="processModal" class="modal modal-bottom sm:modal-middle">
+          <div class="modal-box w-11/12 max-w-4xl bg-white">
+            <form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form>
+            
+            <h3 class="font-bold text-2xl text-slate-800 mb-2" id="modalDealer">Dealer Name</h3>
+            <div class="flex gap-2 mb-6"><div class="badge badge-primary" id="modalOrderId">#ORD-101</div></div>
+
+            <!-- 9-Stage Timeline Integration -->
+            <ul class="steps steps-vertical lg:steps-horizontal w-full text-xs mb-8 overflow-x-auto">
+              <li class="step step-primary" data-content="✓">Received</li>
+              <li class="step" id="st-balance">Balance</li>
+              <li class="step" id="st-call1">Call 1</li>
+              <li class="step" id="st-processed">Processed</li>
+              <li class="step" id="st-invoice">Invoiced</li>
+              <li class="step" id="st-dispatch">Dispatch</li>
+              <li class="step" id="st-call2">Call 2</li>
+              <li class="step" id="st-delivered">Delivered</li>
+              <li class="step" id="st-final">Final Call</li>
+            </ul>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-2xl">
+                <!-- Action Side -->
+                <div id="actionArea">
+                    <label class="label"><span class="label-text font-bold">Upload Mandatory Proof</span></label>
+                    <div id="mediaToggle">
+                        <!-- JS changes this between Camera and Audio File -->
+                        <input type="file" id="mainInput" class="file-input file-input-bordered file-input-primary w-full" />
+                    </div>
+                    
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="handleUpload()" class="btn btn-primary flex-1">Complete Stage</button>
+                        <button onclick="triggerSplit()" class="btn btn-outline btn-warning">Split Order</button>
+                    </div>
+                </div>
+
+                <!-- Proof Viewer Side -->
+                <div class="border-l pl-6">
+                    <label class="label"><span class="label-text font-bold text-indigo-600">Audit History & Proofs</span></label>
+                    <div id="proofContainer" class="grid grid-cols-2 gap-2 h-48 overflow-y-auto">
+                        <!-- Existing images/audio players appear here -->
+                    </div>
+                </div>
+            </div>
+          </div>
+        </dialog>
+    </main>
 
 <script>
-// --- CORE LOGIC ---
+// Logic for Radar Click & Filter
+const ctx = document.getElementById('radarChart');
+const stages = ['Received', 'Balance', 'Call 1', 'Processed', 'Invoiced', 'Dispatched', 'Call 2', 'Delivered', 'Final Call'];
 
-// 1. Radar Initialization
-const ctx = document.getElementById('opsRadar');
-new Chart(ctx, {
-  type: 'radar',
-  data: {
-    labels: ['Received', 'Balance', 'Call 1', 'Stock', 'Invoice', 'Dispatch', 'Call 2', 'Delivered', 'Feedback'],
-    datasets: [{
-      label: 'Orders in Queue',
-      data: [12, 19, 3, 5, 2, 3, 7, 10, 5],
-      fill: true,
-      backgroundColor: 'rgba(79, 70, 229, 0.2)',
-      borderColor: 'rgb(79, 70, 229)',
-      pointBackgroundColor: 'rgb(79, 70, 229)',
-    }]
-  },
-  options: {
-    onClick: (e, elements) => {
-      if (elements.length > 0) {
-        const index = elements[0].index;
-        showDrillDown(index);
-      }
+const chart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+        labels: stages,
+        datasets: [{
+            label: 'Orders',
+            data: [10, 5, 2, 8, 3, 4, 6, 9, 2],
+            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+            borderColor: 'rgb(79, 70, 229)',
+            pointRadius: 5
+        }]
+    },
+    options: {
+        onClick: (e, elements) => {
+            if(elements.length > 0) {
+                const index = elements[0].index;
+                filterOrdersByStage(stages[index]);
+            }
+        }
     }
-  }
 });
 
-// 2. Handle File Type Logic (Image vs Audio)
-function updateFileInput(stage) {
-  const container = document.getElementById('fileInputContainer');
-  const input = document.getElementById('proofInput');
-  
-  if (['Call 1', 'Call 2', 'Final Call'].includes(stage)) {
-    input.setAttribute('accept', 'audio/*');
-    input.removeAttribute('capture');
-  } else {
-    input.setAttribute('accept', 'image/*');
-    input.setAttribute('capture', 'environment');
-  }
+// Function to toggle Image vs Audio
+function updateInputType(stage) {
+    const input = document.getElementById('mainInput');
+    if(stage.includes('Call')) {
+        input.accept = "audio/*";
+        input.removeAttribute('capture');
+    } else {
+        input.accept = "image/*";
+        input.setAttribute('capture', 'environment');
+    }
 }
 
-// 3. Geotagging
-function getGeoLocation() {
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      resolve(`${pos.coords.latitude}, ${pos.coords.longitude}`);
-    });
-  });
-}
-
-// 4. Drill Down Visualization
-function showDrillDown(stageIndex) {
-  const feed = document.getElementById('drillDownFeed');
-  // Sample Data Injection
-  feed.innerHTML = `
-    <div class="flex items-center justify-between p-4 bg-white border rounded-lg shadow-sm ${Math.random() > 0.5 ? 'stage-red' : ''}">
-      <div>
-        <div class="font-bold">#ORD-9921 - Ramesh Traders</div>
-        <div class="text-xs text-slate-400">Waiting for 3 hours 20 mins</div>
-      </div>
-      <button onclick="processModal.showModal(); updateFileInput('Call 1');" class="btn btn-sm btn-outline btn-primary">Process</button>
-    </div>
-  `;
+// Function to handle Split Order Modal
+function triggerSplit() {
+    let items = prompt("Enter items to separate (comma separated):");
+    if(items) {
+        google.script.run.withSuccessHandler(() => alert("Order Split!")).splitOrder(currentOrderId, items);
+    }
 }
 </script>
 </body>
