@@ -335,7 +335,7 @@
 
     <script>
         /**
-         * v11.0 WORKSPACE ENGINE (SELF-HEALING ERP ENGINE - NO FIREBASE ERROR!)
+         * v11.0 WORKSPACE ENGINE (CRASH-PROOF SELF-HEALING ERP FOR STAFF)
          * ---------------------------------------------------------------------
          */
         
@@ -359,7 +359,7 @@
         let store_staff = [];
         let store_attendance = [];
         let currentUser = null;
-        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Ahmednagar headquarter location
+        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Headquarter coordinates
         
         let activeFilterStage = null;
         let activeDateFilter = "all";
@@ -480,7 +480,7 @@
 
         function handleLogin() {
             try {
-                const uid = safe.el('login-username').value.trim();
+                const uid = safe.el('login-username').value.trim().toLowerCase();
                 const pin = safe.el('login-pin').value.trim();
                 
                 if(!uid || !pin) {
@@ -488,8 +488,8 @@
                     return;
                 }
 
-                // EMERGENCY BYPASS TEST LOGINS (Bina database dependency ke login karne ke liye)
-                if (uid.toLowerCase() === "owner" && pin === "1234") {
+                // 1. EMERGENCY BYPASS LOGINS (Google Sheet blank hone par bhi kaam karega)
+                if (uid === "owner" && pin === "1234") {
                     currentUser = {
                         uid: "owner",
                         name: "Yash Barlota (Malik)",
@@ -498,7 +498,7 @@
                         photo: "https://via.placeholder.com/150?text=Yash+Barlota",
                         doc: "#"
                     };
-                } else if (uid.toLowerCase() === "sales" && pin === "1234") {
+                } else if (uid === "sales" && pin === "1234") {
                     currentUser = {
                         uid: "sales",
                         name: "Rohan (Sales Staff)",
@@ -507,7 +507,7 @@
                         photo: "https://via.placeholder.com/150?text=Rohan+Sales",
                         doc: "#"
                     };
-                } else if (uid.toLowerCase() === "staff" && pin === "1234") {
+                } else if (uid === "staff" && pin === "1234") {
                     currentUser = {
                         uid: "staff",
                         name: "Office Operator",
@@ -517,7 +517,7 @@
                         doc: "#"
                     };
                 } else {
-                    // Match with Google Sheet database ("Staff Master" tab) using self-healing dynamic column matching
+                    // 2. SELF-HEALING GOOGLE SHEET "Staff Master" LOGIN
                     if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
                         const headers = store_staff[0];
                         const rows = store_staff.slice(1);
@@ -534,7 +534,18 @@
                             if (val.includes("doc") || val.includes("aadhar") || val.includes("pan") || val.includes("file")) docCol = i;
                         });
 
-                        const staffRow = rows.find(row => row[idCol] && row[idCol].toString().trim().toLowerCase() === uid.toLowerCase() && row[pinCol] && row[pinCol].toString().trim() === pin);
+                        const staffRow = rows.find(row => {
+                            if (!row[idCol] || !row[pinCol]) return false;
+                            
+                            // Convert ID to clean string
+                            const sheetId = row[idCol].toString().trim().toLowerCase();
+                            
+                            // Strict Fix: Convert numeric Sheet PIN (like 1234.0) to clean string (like 1234)
+                            const sheetPin = row[pinCol].toString().trim().replace(/\.0$/, '');
+                            
+                            return sheetId === uid && sheetPin === pin;
+                        });
+
                         if (staffRow) {
                             currentUser = {
                                 uid: staffRow[idCol].toString().trim(),
@@ -549,7 +560,7 @@
                 }
                 
                 if (!currentUser) {
-                    alert("🚫 AUTH DENIED: ID ya PIN galat hai.");
+                    alert("🚫 AUTH DENIED: Sahi ID aur PIN enter karein.");
                     return;
                 }
 
@@ -557,7 +568,7 @@
                 showWorkspace();
             } catch(e) {
                 console.error("Login Error: ", e);
-                alert("Login Error: " + e.message);
+                alert("Login System Error: " + e.message);
             }
         }
 
