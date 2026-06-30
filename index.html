@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING | BACKBONE SUPER-APP v10.4</title>
+    <title>YASH MARKETING | BACKBONE SUPER-APP v10.5</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,18 +21,18 @@
             border-radius: 1rem; 
         }
 
-        /* Rail Ki Patri Theme Styles */
+        /* Rail Ki Patri Theme Styles (Horizontal Align, No Scroll) */
         .railway-line {
             position: absolute;
-            left: 5%;
-            right: 5%;
-            height: 12px;
-            background: repeating-linear-gradient(90deg, #475569, #475569 8px, #64748b 8px, #64748b 16px);
-            border-radius: 6px;
+            left: 2%;
+            right: 2%;
+            height: 8px;
+            background: repeating-linear-gradient(90deg, #475569, #475569 8px, #334155 8px, #334155 16px);
+            border-radius: 4px;
             top: 50%;
             transform: translateY(-50%);
             z-index: 0;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .railway-station {
@@ -40,7 +40,7 @@
             z-index: 10;
         }
         .railway-station:hover {
-            transform: scale(1.1);
+            transform: scale(1.08);
         }
 
         .beauty-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -49,7 +49,7 @@
         /* Component Visuals */
         .cat-image { width: 60px; height: 60px; object-fit: cover; border-radius: 1rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         @media (min-width: 768px) {
-            .cat-image { width: 90px; height: 90px; border-radius: 1.5rem; }
+            .cat-image { width: 80px; height: 80px; border-radius: 1.2rem; }
         }
         
         .proof-frame { border-radius: 0.8rem; border: 2px solid #e2e8f0; transition: 0.4s; overflow: hidden; }
@@ -88,11 +88,11 @@
                     </div>
                 </div>
 
-                <!-- Inline Compact Stats & Refresh Button -->
+                <!-- Compact Stats & Refresh Button -->
                 <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
                     <div class="flex gap-6 items-center">
                         <div>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Orders</span>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">Kul Chal Rahe Orders</span>
                             <p id="hud-total" class="text-xl md:text-2xl font-black text-indigo-700 italic leading-none mt-1">0</p>
                         </div>
                     </div>
@@ -103,39 +103,35 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 gap-6">
             
-            <!-- 2. ANALYTICAL BAR: DEPT COUNTERS -->
-            <div class="xl:col-span-4 space-y-6">
-                <div class="card bg-white shadow-md p-4 border-b-8 border-indigo-600">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xs md:text-sm font-black text-slate-500 uppercase tracking-wider">Order Stage Review</h2>
-                        <span class="badge badge-indigo font-bold text-[10px] py-1 px-2 uppercase shadow-sm">Live Ginti</span>
-                    </div>
+            <!-- 2. RAIL KI PATRI - ORDER STAGE REVIEW (No Scroll, 9 Stations) -->
+            <div class="card bg-slate-900 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-wider">Order Stage Review (Rail Ki Patri Flow)</h2>
+                    <span class="badge badge-primary font-bold text-[10px] py-1 px-2 uppercase shadow-sm">All Stages Live</span>
+                </div>
+                
+                <!-- Straight Train Track -->
+                <div class="relative w-full py-4 px-2">
+                    <div class="railway-line"></div>
                     
-                    <!-- Conveyor Belt Animation (No Scroll) -->
-                    <div class="relative bg-slate-950 p-4 rounded-xl border-4 border-slate-800 shadow-inner overflow-hidden mb-2">
-                        <!-- Roller Gears -->
-                        <div class="gear-left absolute left-2 top-1/2 -translate-y-1/2 text-slate-700 opacity-60 text-lg select-none pointer-events-none">⚙️</div>
-                        <div class="gear-right absolute right-2 top-1/2 -translate-y-1/2 text-slate-700 opacity-60 text-lg select-none pointer-events-none">⚙️</div>
-                        
-                        <!-- Patri Content -->
-                        <div id="dept-load-list" class="flex gap-3 overflow-x-auto beauty-scroll py-2 px-6 relative z-10 select-none">
-                            <!-- Injected dynamically -->
-                        </div>
+                    <!-- 9 Stations in a row (Grid ensures no scrolling) -->
+                    <div id="rail-track" class="grid grid-cols-9 gap-1 relative z-10 text-center w-full">
+                        <!-- Stations injected dynamically by JS -->
                     </div>
-                    
-                    <div class="mt-4 p-3 bg-indigo-50 rounded-xl text-center border border-dashed border-indigo-100">
-                        <p class="text-[11px] font-black text-indigo-700 leading-relaxed uppercase tracking-wide italic">
-                            Kisi bhi stage par tap karke filter karein. Clear karne ke liye usi par fir se tap karein.
-                        </p>
-                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-white/5 rounded-xl text-center border border-dashed border-white/10">
+                    <p class="text-[11px] font-black text-slate-400 leading-relaxed uppercase tracking-wide italic">
+                        Patri ke kisi bhi station par click karke orders filter karein. Clear karne ke liye usi par fir se click karein.
+                    </p>
                 </div>
             </div>
 
             <!-- 3. ASSEMBLY LINE HUB -->
-            <div class="xl:col-span-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 px-2 gap-4">
+            <div class="space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2 gap-4">
                     <div class="flex items-center gap-3">
                         <h2 id="line-title" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-wide italic flex items-center gap-2 leading-none">
                             <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
@@ -175,9 +171,9 @@
             </div>
 
             <div class="p-5">
-                <!-- 8-Stage Visual Track (Stacked vertically on mobile, horizontal on desktop) -->
+                <!-- 8-Stage Visual Track with Inline Explanations and Image Previews -->
                 <div class="mb-6 max-w-full">
-                    <ul id="timeline-track" class="steps steps-vertical md:steps-horizontal w-full text-[11px] font-black uppercase tracking-tight gap-4 md:gap-1">
+                    <ul id="timeline-track" class="steps steps-vertical w-full text-xs font-black uppercase tracking-tight gap-4">
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
                         <li class="step">Processed</li>
@@ -187,12 +183,6 @@
                         <li class="step">Delivered</li>
                         <li class="step">Final Call</li>
                     </ul>
-                </div>
-
-                <!-- Live Stage Explanation (Staff Hinglish Guidance) -->
-                <div class="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-left">
-                    <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">📢 Staff Guide (Aapko Kya Karna Hai):</p>
-                    <p id="m-step-explanation" class="text-sm font-medium text-indigo-900 leading-relaxed">Stage load ho rahi hai...</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -260,8 +250,8 @@
 
     <script>
         /**
-         * v10.4 LIVE ENGINE (ROBUST SAFE CHECKS & MULTI-IMAGE ALIGNMENT)
-         * -------------------------------------------------------------
+         * v10.5 LIVE ENGINE (FIXED RAILWAY ALIGNMENT & INLINE TIMELINE PROOFS)
+         * -----------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
@@ -273,14 +263,14 @@
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
         const STAGE_EXPLANATIONS = {
-            "Balance Check": "💳 <b>Balance Check Stage:</b> Customer ka payment balance check karein aur receipt/proof ki photo click karke upload karein. Photo lagana mandatory hai!",
-            "Call 1": "📞 <b>Call 1 Stage:</b> Customer ko call lagakar order confirm karein aur recording ki audio file (.mp3) upload karein. Audio compulsory hai!",
-            "Processed": "📦 <b>Processed Stage:</b> Warehouse se saaman packing complete hone par pack hue box ka photo click karke upload karein. Photo mandatory hai!",
-            "Invoiced": "📄 <b>Invoiced Stage:</b> Order ka bill ya invoice generate karein aur bill ki photo click karke upload karein. Bill photo mandatory hai!",
-            "Dispatched": "🚛 <b>Dispatched Stage:</b> Transport par box charhate waqt loading box ka photo click karke upload karein. Photo mandatory hai!",
-            "Call 2": "🔊 <b>Call 2 Stage:</b> Dispatch confirm karne ke liye aur tracking dene ke liye call recording audio file yahan upload karein. Audio compulsory hai!",
-            "Delivered": "✅ <b>Delivered Stage:</b> Customer se sign liya hua receipt challan (Pauti photo) click karke upload karein. Photo mandatory hai!",
-            "Final Call": "⭐ <b>Final Call Stage:</b> Delivery complete hone par customer feedback call audio file yahan upload karein. Audio compulsory hai!"
+            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance check karke proof/receipt ki photo load karein.",
+            "Call 1": "📞 <b>Call 1:</b> Customer ko call karke order double-check confirm karein aur recording file (.mp3) upload karein.",
+            "Processed": "📦 <b>Processed:</b> Warehouse se saaman packed hone ke baad packing box ka clear photo upload karein.",
+            "Invoiced": "📄 <b>Invoiced:</b> Generate kiye gaye bill/invoice ki photo khinch kar yahan load karein.",
+            "Dispatched": "🚛 <b>Dispatched:</b> Transport gaadi par maal load karte waqt parcel ki photo click karke upload karein.",
+            "Call 2": "🔊 <b>Call 2:</b> Tracking details dene ke liye call karein aur call recording (.mp3) file load karein.",
+            "Delivered": "✅ <b>Delivered:</b> Customer se sign kiya hua delivery challan (Pauti Photo) click karke upload karein.",
+            "Final Call": "⭐ <b>Final Call:</b> Customer feedback call recording file yahan upload karke process close karein."
         };
 
         let store_orders = [];
@@ -295,7 +285,7 @@
             removeClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.remove(cls); }
         };
 
-        // Utility to convert Google Drive Sharing links to Direct raw image files
+        // Convert HTML Drive viewer URLs to raw download links
         function getDirectDriveUrl(url) {
             if (!url) return "https://via.placeholder.com/150?text=📦";
             const sUrl = url.toString().trim();
@@ -340,12 +330,11 @@
                 store_orders = data.orders || []; 
                 store_stock = data.catalogue || [];
                 
-                // Hide preloader safely before rendering feeds
                 const preloader = safe.el('sync-preloader');
                 if (preloader) preloader.classList.add('hidden');
 
                 renderLineFeed(store_orders);
-                renderRailTrack(store_orders);
+                renderRailTrack(store_orders); // Corrected function name to prevent ReferenceError
                 syncHeaderStats(store_orders);
                 
             } catch (e) {
@@ -366,7 +355,7 @@
             safe.text('hud-total', data.length);
         }
 
-        // Render clean, non-scrollable railway track stations (Rail Ki Patri Flow)
+        // Rail ki Patri renderer (grid ensures no horizontal scrolling on mobile viewports)
         function renderRailTrack(data) {
             const listContainer = safe.el('rail-track');
             if (!listContainer) return;
@@ -386,12 +375,11 @@
                 
                 return `
                     <div onclick="toggleStageFilter('${stage}')" 
-                         class="railway-station flex flex-col items-center gap-2 cursor-pointer">
-                        <!-- Station count bubble representing train stop -->
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-4 transition-all ${isSelected ? 'bg-indigo-600 text-white border-white scale-110 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600'}">
+                         class="railway-station flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-[10px] md:text-sm border-2 md:border-4 transition-all ${isSelected ? 'bg-indigo-600 text-white border-white scale-110 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600'}">
                             ${count}
                         </div>
-                        <span class="text-[9px] md:text-xs font-black uppercase tracking-wider text-slate-400 text-center">${stage}</span>
+                        <span class="text-[7px] md:text-[10px] font-black uppercase tracking-tight text-slate-400 text-center leading-none mt-1">${stage.split(' ')[0]}</span>
                     </div>
                 `;
             }).join('');
@@ -408,7 +396,7 @@
             renderRailTrack(store_orders);
         }
 
-        // Strictly group by Received Date (Col A) - Row IDs preserve sequence with no card jump
+        // Group strictly by original Col A date - Row IDs preserve chronological placement
         function renderLineFeed(data) {
             const feed = safe.el('assembly-line');
             if(!feed) return;
@@ -429,7 +417,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error("Error parsing date: ", e);
+                    console.error("Date parse fail:", e);
                 }
 
                 if (!groups[dateKey]) {
@@ -467,7 +455,7 @@
                     const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
                     
                     htmlString += `
-                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer hover:scale-[1.01]" 
+                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer ${o.isLate ? 'bottleneck-pulse' : 'hover:scale-[1.01]'}" 
                              onclick="openProcessModal('${safeOrderId}')">
                             
                             <div class="flex justify-between items-start mb-4 gap-2">
@@ -509,7 +497,7 @@
                 safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
                 safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
 
-                // Dynamic parsed items array (Saves globally for SPLIT dropdown operations)
+                // Dynamic parsed items split by comma or pipe safely
                 const itemString = (order.Items || order.SLA_Start_Time || "").toString();
                 const rawItems = itemString.includes('|') ? itemString.split('|') : itemString.split(',');
                 
@@ -532,7 +520,7 @@
                 const splitZone = safe.el('m-split-zone');
                 if (splitZone) splitZone.classList.add('hidden');
 
-                // Visual Catalogue Pick-List with parsed Google Drive URLs to prevent blank boxes
+                // Visual Catalogue Pick-List (Google Drive links are automatically converted to direct raw images)
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     catScroll.innerHTML = parsedItemsList.map(item => {
@@ -540,7 +528,7 @@
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
                         const rawImgUrl = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
                         
-                        // Parse direct image link to display on browser standard img tag
+                        // Parse direct image link to display on browser natively
                         const cleanImgUrl = getDirectDriveUrl(rawImgUrl);
                         
                         return `
@@ -549,7 +537,7 @@
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-black text-slate-800 uppercase italic truncate leading-tight">${item.name}</p>
                                     <div class="flex justify-between items-center mt-2 gap-2">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty Ordered:</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ordered Qty:</span>
                                         <span class="badge badge-primary font-black text-xs px-2.5 rounded-md">${item.qty}</span>
                                     </div>
                                 </div>
@@ -558,7 +546,7 @@
                     }).join('');
                 }
 
-                // Timeline stages mapping omitting Received
+                // Timeline alignment with "Received" bypass
                 let rawStatus = "Received";
                 if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
                     rawStatus = order.Dealer_Area.toString().trim();
@@ -569,7 +557,7 @@
                 const status = rawStatus;
                 const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
                 
-                // Direct Inline Proof Thumbnails and Audio elements inside vertical timeline list
+                // Direct Inline Proof Thumbnails and Audio elements inside vertical timeline list with explanations
                 const timelineSteps = document.querySelectorAll('#timeline-track .step');
                 if(timelineSteps && timelineSteps.length > 0) {
                     timelineSteps.forEach((s, i) => {
@@ -600,7 +588,7 @@
                                 const cleanUrl = getDirectDriveUrl(u.trim());
                                 if (isAudio) {
                                     proofHtml += `
-                                        <div class="p-1 bg-slate-550 rounded-lg border border-slate-600 shadow-sm flex items-center gap-1">
+                                        <div class="p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
                                             <audio controls class="h-8 max-w-[200px] rounded-full"><source src="${cleanUrl}"></audio>
                                         </div>`;
                                 } else {
@@ -615,11 +603,17 @@
                             proofHtml += `</div>`;
                         }
 
-                        // Inject inline step preview next to name
+                        // Get step-by-step description for staff help
+                        const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
+
+                        // Inject inline step preview next to name with instructions below
                         s.innerHTML = `
-                            <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100/60">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-800">${stageName}</span>
-                                ${proofHtml}
+                            <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-left">
+                                <div class="flex justify-between items-center gap-2">
+                                    <span class="text-xs font-black uppercase tracking-wider text-slate-800">${stageName}</span>
+                                    ${proofHtml}
+                                </div>
+                                <p class="text-[11px] text-slate-500 font-medium leading-relaxed bg-white p-2 rounded-lg border border-slate-100/50 mt-1">${rawExplanation}</p>
                             </div>
                         `;
 
@@ -631,7 +625,7 @@
                     });
                 }
 
-                // Load Hinglish explanation guidance
+                // Load active stage guide text
                 const explText = STAGE_EXPLANATIONS[status] || "💳 <b>Next Step Balance Check:</b> Click complete to initialize process.";
                 safe.html('m-step-explanation', explText);
 
@@ -655,6 +649,11 @@
                                 </p>
                             </div>`;
                     }
+                }
+
+                const modal = safe.el('process_modal');
+                if (modal && typeof modal.showModal === 'function') {
+                    modal.showModal();
                 }
             } catch (err) {
                 console.error("Process modal failed:", err);
@@ -767,8 +766,8 @@
                 alert("Split trigger failure: " + err.message);
                 console.error(err);
             } finally {
-                btn.disabled = false;
-                btn.innerText = "CONFIRM SPLIT (Naya Split Order Banayein)";
+                splitBtn.disabled = false;
+                splitBtn.innerText = "CONFIRM SPLIT (Naya Split Order Banayein)";
             }
         }
 
