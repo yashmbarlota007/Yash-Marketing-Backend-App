@@ -21,18 +21,29 @@
             border-radius: 1rem; 
         }
 
-        /* Rail Ki Patri Theme Styles (Horizontal Align, No Scroll) */
+        /* Responsive Rail ki Patri Line Layout */
         .railway-line {
             position: absolute;
-            left: 2%;
-            right: 2%;
-            height: 8px;
-            background: repeating-linear-gradient(90deg, #475569, #475569 8px, #334155 8px, #334155 16px);
+            left: 50%;
+            width: 8px;
+            top: 4%;
+            bottom: 4%;
+            background: repeating-linear-gradient(180deg, #475569, #475569 8px, #334155 8px, #334155 16px);
             border-radius: 4px;
-            top: 50%;
-            transform: translateY(-50%);
+            transform: translateX(-50%);
             z-index: 0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.3);
+        }
+        @media (min-width: 768px) {
+            .railway-line {
+                left: 4%;
+                right: 4%;
+                width: auto;
+                height: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: repeating-linear-gradient(90deg, #475569, #475569 8px, #334155 8px, #334155 16px);
+            }
         }
         
         .railway-station {
@@ -47,9 +58,9 @@
         .beauty-scroll::-webkit-scrollbar-thumb { background: var(--brand); border-radius: 100px; }
         
         /* Component Visuals */
-        .cat-image { width: 60px; height: 60px; object-fit: cover; border-radius: 1rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .cat-image { width: 55px; height: 60px; object-fit: cover; border-radius: 0.8rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         @media (min-width: 768px) {
-            .cat-image { width: 80px; height: 80px; border-radius: 1.2rem; }
+            .cat-image { width: 75px; height: 80px; border-radius: 1.2rem; }
         }
         
         .proof-frame { border-radius: 0.8rem; border: 2px solid #e2e8f0; transition: 0.4s; overflow: hidden; }
@@ -69,7 +80,7 @@
         <div class="relative">
             <div class="w-16 h-16 border-[6px] border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
-        <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Loading Yash Marketing Backbone</h2>
+        <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Kaam Shuru Ho Raha Hai...</h2>
     </div>
 
     <div class="max-w-[2000px] mx-auto">
@@ -84,11 +95,11 @@
                     </div>
                     <div>
                         <h1 class="text-lg md:text-xl font-black tracking-tight text-slate-900 uppercase italic">Yash Marketing <span class="text-indigo-600">Backbone</span></h1>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cloud Engine: Online</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Kaam Shuru Karein!</p>
                     </div>
                 </div>
 
-                <!-- Compact Stats & Refresh Button -->
+                <!-- Inline Compact Stats & Refresh Button -->
                 <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
                     <div class="flex gap-6 items-center">
                         <div>
@@ -105,19 +116,18 @@
 
         <div class="grid grid-cols-1 gap-6">
             
-            <!-- 2. RAIL KI PATRI - ORDER STAGE REVIEW (No Scroll, 9 Stations) -->
+            <!-- 2. RAIL KI PATRI - ORDER STAGE REVIEW (Vertical on Mobile, Horizontal on Desktop) -->
             <div class="card bg-slate-900 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xs font-black text-slate-400 uppercase tracking-wider">Order Stage Review (Rail Ki Patri Flow)</h2>
                     <span class="badge badge-primary font-bold text-[10px] py-1 px-2 uppercase shadow-sm">All Stages Live</span>
                 </div>
                 
-                <!-- Straight Train Track -->
-                <div class="relative w-full py-4 px-2">
+                <!-- Rail track responsive wrapper -->
+                <div class="relative w-full py-6 px-2 min-h-[380px] md:min-h-[100px] flex items-center">
                     <div class="railway-line"></div>
                     
-                    <!-- 9 Stations in a row (Grid ensures no scrolling) -->
-                    <div id="rail-track" class="grid grid-cols-9 gap-1 relative z-10 text-center w-full">
+                    <div id="rail-track" class="flex flex-col md:flex-row justify-between items-stretch md:items-center w-full relative z-10 gap-4 md:gap-1 px-4">
                         <!-- Stations injected dynamically by JS -->
                     </div>
                 </div>
@@ -131,6 +141,16 @@
 
             <!-- 3. ASSEMBLY LINE HUB -->
             <div class="space-y-4">
+                
+                <!-- Time Filter & Split Only Buttons -->
+                <div class="flex flex-wrap gap-2 px-2">
+                    <button onclick="setDateFilter('all')" id="df-all" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-indigo-600 text-white border-none px-3">Saare Orders</button>
+                    <button onclick="setDateFilter('today')" id="df-today" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Aaj Ke</button>
+                    <button onclick="setDateFilter('week')" id="df-week" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Is Hafte Ke</button>
+                    <button onclick="setDateFilter('month')" id="df-month" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Is Mahine Ke</button>
+                    <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">✂️ Split Orders Only</button>
+                </div>
+
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2 gap-4">
                     <div class="flex items-center gap-3">
                         <h2 id="line-title" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-wide italic flex items-center gap-2 leading-none">
@@ -171,9 +191,9 @@
             </div>
 
             <div class="p-5">
-                <!-- 8-Stage Visual Track with Inline Explanations and Image Previews -->
+                <!-- 8-Stage Visual Track (Stacked vertically on mobile, horizontal on desktop) -->
                 <div class="mb-6 max-w-full">
-                    <ul id="timeline-track" class="steps steps-vertical w-full text-xs font-black uppercase tracking-tight gap-4">
+                    <ul id="timeline-track" class="steps steps-vertical md:steps-horizontal w-full text-[11px] font-black uppercase tracking-tight gap-4 md:gap-1">
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
                         <li class="step">Processed</li>
@@ -183,6 +203,12 @@
                         <li class="step">Delivered</li>
                         <li class="step">Final Call</li>
                     </ul>
+                </div>
+
+                <!-- Live Stage Explanation (Staff Hinglish Guidance) -->
+                <div class="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-left">
+                    <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">📢 Staff Guide (Aapko Kya Karna Hai):</p>
+                    <p id="m-step-explanation" class="text-sm font-medium text-indigo-900 leading-relaxed">Stage load ho rahi hai...</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -216,30 +242,21 @@
                         
                         <!-- Toggle Button for Split panel -->
                         <div class="flex gap-3">
-                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SPLIT (Order Alag Karein)</button>
+                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SPLIT (Shortage Saaman Alag Karein)</button>
                         </div>
 
-                        <!-- SPLIT ORDER PANEL (Interactive drop-down) -->
-                        <div id="m-split-zone" class="hidden bg-orange-50 border-2 border-orange-200 p-4 rounded-xl text-left space-y-3">
-                            <p class="text-xs font-black text-orange-700 uppercase tracking-wider">✂️ Split Order Engine (Yahan Se Items Alag Karein)</p>
+                        <!-- INTERACTIVE MULTI-PRODUCT SPLIT ORDER PANEL -->
+                        <div id="m-split-zone" class="hidden bg-orange-50 border-2 border-orange-250 p-4 rounded-xl text-left space-y-3 shadow-inner">
+                            <p class="text-xs font-black text-orange-700 uppercase tracking-wider">✂️ Split Order Panel (Shortage Items Chunein)</p>
+                            <p class="text-[11px] text-slate-500 font-medium">Jo items warehouse mein abhi short hain, unhe check karein aur unki shortage quantity dalein. Unka ek naya Received split order ban jayega, aur original bacha hua order isi stage par aage badhega.</p>
                             
-                            <div class="form-control w-full">
-                                <label class="label py-1"><span class="label-text font-bold text-slate-600 text-xs">Konsa Item Alag Karna Hai?</span></label>
-                                <select id="m-split-item-select" onchange="updateSplitMaxQty()" class="select select-bordered select-sm w-full rounded-lg text-xs font-bold bg-white text-slate-800">
-                                    <!-- Options populated dynamically by JS -->
-                                </select>
+                            <!-- Dynamic Multi-item Selection List -->
+                            <div id="m-split-items-list" class="space-y-3">
+                                <!-- Options injected dynamically -->
                             </div>
                             
-                            <div class="form-control w-full">
-                                <label class="label py-1">
-                                    <span class="label-text font-bold text-slate-600 text-xs">Kitni Quantity Alag Karni Hai?</span>
-                                    <span id="m-split-max-label" class="label-text-alt text-[10px] font-black text-orange-600 uppercase">Max Qty: 0</span>
-                                </label>
-                                <input type="number" id="m-split-qty-input" min="1" value="1" class="input input-bordered input-sm w-full rounded-lg font-bold text-xs bg-white text-slate-800" />
-                            </div>
-                            
-                            <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-sm btn-warning w-full rounded-full font-black text-xs uppercase shadow-sm">
-                                CONFIRM SPLIT (Naya Split Order Banayein)
+                            <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-sm btn-warning w-full rounded-full font-black text-xs uppercase shadow-md mt-2">
+                                CONFIRM SPLIT (Shortage Alag Karein)
                             </button>
                         </div>
                     </div>
@@ -250,22 +267,22 @@
 
     <script>
         /**
-         * v10.5 LIVE ENGINE (FIXED RAILWAY ALIGNMENT & INLINE TIMELINE PROOFS)
+         * v10.5 LIVE ENGINE (FIXED CONVEYOR PATRI & INTERACTIVE MULTI-SPLIT)
          * -----------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
         
-        // Modal visual list (Bypasses Received)
+        // Modal step sequence
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         
-        // Full Railway Track list on Main Page (9 stations)
+        // Full Rail Track sequence (9 stations)
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
         const STAGE_EXPLANATIONS = {
-            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance check karke proof/receipt ki photo load karein.",
-            "Call 1": "📞 <b>Call 1:</b> Customer ko call karke order double-check confirm karein aur recording file (.mp3) upload karein.",
-            "Processed": "📦 <b>Processed:</b> Warehouse se saaman packed hone ke baad packing box ka clear photo upload karein.",
+            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance sheet check karein aur receipt/proof ki photo load karein.",
+            "Call 1": "📞 <b>Call 1:</b> Customer ko call karke order confirm karein aur recording file (.mp3) upload karein.",
+            "Processed": "📦 <b>Processed:</b> Warehouse se saaman packed hone ke baad packing box ka photo upload karein.",
             "Invoiced": "📄 <b>Invoiced:</b> Generate kiye gaye bill/invoice ki photo khinch kar yahan load karein.",
             "Dispatched": "🚛 <b>Dispatched:</b> Transport gaadi par maal load karte waqt parcel ki photo click karke upload karein.",
             "Call 2": "🔊 <b>Call 2:</b> Tracking details dene ke liye call karein aur call recording (.mp3) file load karein.",
@@ -276,6 +293,8 @@
         let store_orders = [];
         let store_stock = [];
         let activeFilterStage = null;
+        let activeDateFilter = "all";
+        let activeSplitOnlyFilter = false;
 
         const safe = {
             el: (id) => document.getElementById(id),
@@ -285,7 +304,7 @@
             removeClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.remove(cls); }
         };
 
-        // Convert HTML Drive viewer URLs to raw download links
+        // Convert HTML Drive viewer URLs to lh3 engine direct raw image links (Instant Display)
         function getDirectDriveUrl(url) {
             if (!url) return "https://via.placeholder.com/150?text=📦";
             const sUrl = url.toString().trim();
@@ -299,7 +318,7 @@
                     if (idMatch) id = idMatch[1];
                 }
                 if (id) {
-                    return `https://docs.google.com/uc?export=download&id=${id}`;
+                    return `https://lh3.googleusercontent.com/d/${id}`;
                 }
             }
             return sUrl;
@@ -333,8 +352,8 @@
                 const preloader = safe.el('sync-preloader');
                 if (preloader) preloader.classList.add('hidden');
 
-                renderLineFeed(store_orders);
-                renderRailTrack(store_orders); // Corrected function name to prevent ReferenceError
+                applyFilters();
+                renderRailTrack(store_orders); // Corrected function name called reliably on load
                 syncHeaderStats(store_orders);
                 
             } catch (e) {
@@ -355,7 +374,7 @@
             safe.text('hud-total', data.length);
         }
 
-        // Rail ki Patri renderer (grid ensures no horizontal scrolling on mobile viewports)
+        // Rail ki Patri renderer (Vertical Metroline Map on Mobile, Horizontal Train Line on Desktop)
         function renderRailTrack(data) {
             const listContainer = safe.el('rail-track');
             if (!listContainer) return;
@@ -375,11 +394,13 @@
                 
                 return `
                     <div onclick="toggleStageFilter('${stage}')" 
-                         class="railway-station flex flex-col items-center gap-1 cursor-pointer">
-                        <div class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-[10px] md:text-sm border-2 md:border-4 transition-all ${isSelected ? 'bg-indigo-600 text-white border-white scale-110 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600'}">
-                            ${count}
+                         class="railway-station flex flex-row md:flex-col items-center justify-between md:justify-center w-full gap-2 p-2 rounded-xl transition-all cursor-pointer ${isSelected ? 'bg-indigo-600 text-white border-2 border-white' : 'bg-slate-800 text-slate-300'}">
+                        <div class="flex items-center gap-2 md:flex-col md:gap-1 w-full md:w-auto">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-2 transition-all shrink-0 ${isSelected ? 'bg-white text-indigo-600 border-white shadow-md' : 'bg-slate-900 text-slate-200 border-slate-700'}">
+                                ${count}
+                            </div>
+                            <span class="text-[10px] md:text-xs font-black uppercase tracking-wider text-left md:text-center shrink-0 truncate">${stage}</span>
                         </div>
-                        <span class="text-[7px] md:text-[10px] font-black uppercase tracking-tight text-slate-400 text-center leading-none mt-1">${stage.split(' ')[0]}</span>
                     </div>
                 `;
             }).join('');
@@ -388,15 +409,94 @@
         function toggleStageFilter(stage) {
             if (activeFilterStage === stage) {
                 activeFilterStage = null;
-                clearFilt();
             } else {
                 activeFilterStage = stage;
-                drillDown(stage);
             }
             renderRailTrack(store_orders);
+            applyFilters();
         }
 
-        // Group strictly by original Col A date - Row IDs preserve chronological placement
+        // Date-wise Week-wise Month-wise Multi Filter Action Engine
+        function setDateFilter(filterType) {
+            activeDateFilter = filterType;
+            const types = ["all", "today", "week", "month"];
+            types.forEach(t => {
+                const btn = safe.el("df-" + t);
+                if (btn) {
+                    if (t === filterType) {
+                        btn.classList.add("bg-indigo-600", "text-white");
+                        btn.classList.remove("bg-white", "text-slate-650");
+                    } else {
+                        btn.classList.remove("bg-indigo-600", "text-white");
+                        btn.classList.add("bg-white", "text-slate-650");
+                    }
+                }
+            });
+            applyFilters();
+        }
+
+        function toggleSplitFilter() {
+            activeSplitOnlyFilter = !activeSplitOnlyFilter;
+            const btn = safe.el("df-split");
+            if (btn) {
+                if (activeSplitOnlyFilter) {
+                    btn.classList.add("bg-orange-500", "text-white");
+                    btn.classList.remove("bg-white", "text-slate-650");
+                } else {
+                    btn.classList.remove("bg-orange-500", "text-white");
+                    btn.classList.add("bg-white", "text-slate-650");
+                }
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = [...store_orders];
+
+            // Filter 1: Stage Filter
+            if (activeFilterStage) {
+                filtered = filtered.filter(o => {
+                    let curSt = "Received";
+                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
+                        curSt = o.Dealer_Area.toString().trim();
+                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                        curSt = o.Current_Status.toString().trim();
+                    }
+                    return curSt.toLowerCase() === activeFilterStage.toLowerCase();
+                });
+            }
+
+            // Filter 2: Split Orders Filter
+            if (activeSplitOnlyFilter) {
+                filtered = filtered.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SPLIT"));
+            }
+
+            // Filter 3: Chronological Time Range filter
+            if (activeDateFilter !== "all") {
+                const now = new Date();
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                
+                filtered = filtered.filter(o => {
+                    if (!o.Date) return false;
+                    const orderDate = new Date(o.Date).getTime();
+                    
+                    if (activeDateFilter === "today") {
+                        return orderDate >= todayStart;
+                    } else if (activeDateFilter === "week") {
+                        const oneWeekAgo = todayStart - (7 * 24 * 60 * 60 * 1000);
+                        return orderDate >= oneWeekAgo;
+                    } else if (activeDateFilter === "month") {
+                        const oneMonthAgo = todayStart - (30 * 24 * 60 * 60 * 1000);
+                        return orderDate >= oneMonthAgo;
+                    }
+                    return true;
+                });
+            }
+
+            renderLineFeed(filtered);
+        }
+
+        // Render card feed grouped strictly by Row indices (Prevents shifting positions completely)
         function renderLineFeed(data) {
             const feed = safe.el('assembly-line');
             if(!feed) return;
@@ -417,7 +517,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error("Date parse fail:", e);
+                    console.error("Date formatting failed:", e);
                 }
 
                 if (!groups[dateKey]) {
@@ -454,13 +554,20 @@
                     
                     const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
                     
+                    // Display highly visible warning tag for split orders
+                    const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SPLIT");
+                    const splitBadge = isSplit ? `<span class="badge badge-warning font-black text-[9px] px-2 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">✂️ SHORTAGE SPLIT</span>` : '';
+
                     htmlString += `
-                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer ${o.isLate ? 'bottleneck-pulse' : 'hover:scale-[1.01]'}" 
+                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer hover:scale-[1.01]" 
                              onclick="openProcessModal('${safeOrderId}')">
                             
                             <div class="flex justify-between items-start mb-4 gap-2">
                                 <div class="min-w-0">
-                                    <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
+                                        ${splitBadge}
+                                    </div>
                                     <h3 class="text-lg font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
                                 </div>
                                 <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${curStatus}</div>
@@ -520,7 +627,7 @@
                 const splitZone = safe.el('m-split-zone');
                 if (splitZone) splitZone.classList.add('hidden');
 
-                // Visual Catalogue Pick-List (Google Drive links are automatically converted to direct raw images)
+                // Visual Catalogue Pick-List with converted direct Drive image URLs
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     catScroll.innerHTML = parsedItemsList.map(item => {
@@ -528,7 +635,7 @@
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
                         const rawImgUrl = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
                         
-                        // Parse direct image link to display on browser natively
+                        // Parse direct image link to display natively in Chrome browser client
                         const cleanImgUrl = getDirectDriveUrl(rawImgUrl);
                         
                         return `
@@ -537,7 +644,7 @@
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-black text-slate-800 uppercase italic truncate leading-tight">${item.name}</p>
                                     <div class="flex justify-between items-center mt-2 gap-2">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ordered Qty:</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty Ordered:</span>
                                         <span class="badge badge-primary font-black text-xs px-2.5 rounded-md">${item.qty}</span>
                                     </div>
                                 </div>
@@ -546,7 +653,7 @@
                     }).join('');
                 }
 
-                // Timeline alignment with "Received" bypass
+                // Timeline alignment
                 let rawStatus = "Received";
                 if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
                     rawStatus = order.Dealer_Area.toString().trim();
@@ -603,12 +710,11 @@
                             proofHtml += `</div>`;
                         }
 
-                        // Get step-by-step description for staff help
                         const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
 
-                        // Inject inline step preview next to name with instructions below
+                        // Inject inline step preview next to name
                         s.innerHTML = `
-                            <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-left">
+                            <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100/60 text-left">
                                 <div class="flex justify-between items-center gap-2">
                                     <span class="text-xs font-black uppercase tracking-wider text-slate-800">${stageName}</span>
                                     ${proofHtml}
@@ -642,7 +748,7 @@
                             <div class="form-control w-full">
                                 <input type="file" id="m-file-input" 
                                     class="file-input file-input-bordered file-input-primary w-full rounded-xl shadow-md text-xs font-bold bg-white text-slate-800" 
-                                    ${isAudio ? 'accept="audio/*"' : 'accept="image/*" capture="environment" multiple'} 
+                                    ${isAudio ? 'accept="audio/*"' : 'accept="image/*" multiple'} 
                                      />
                                 <p class="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest italic text-center">
                                     ${isAudio ? 'AUDIO FILE (.MP3) MANDATORY' : 'PHOTOS MANDATORY (MULTIPLE ALLOWED)'}
@@ -661,82 +767,102 @@
             }
         }
 
-        // Toggle Split Section inside Modal
+        // Toggle Split Section inside Modal with multi-item selection grid
         function toggleSplitZone() {
             const zone = safe.el('m-split-zone');
             if(!zone) return;
             zone.classList.toggle('hidden');
 
-            const select = safe.el('m-split-item-select');
-            if(select && window.activeOrderItems) {
-                select.innerHTML = window.activeOrderItems.map(item => {
-                    return `<option value="${item.name}">${item.name}</option>`;
+            const listContainer = safe.el('m-split-items-list');
+            if(listContainer && window.activeOrderItems) {
+                listContainer.innerHTML = window.activeOrderItems.map((item, idx) => {
+                    return `
+                        <div class="flex items-center justify-between gap-4 p-2 bg-white rounded-lg border border-slate-200">
+                            <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
+                                <input type="checkbox" id="split-chk-${idx}" class="checkbox checkbox-warning checkbox-sm rounded" onchange="toggleSplitInput(${idx})" />
+                                <span class="text-xs font-bold text-slate-800 truncate">${item.name}</span>
+                            </label>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[10px] font-bold text-slate-400">Qty:</span>
+                                <input type="number" id="split-qty-${idx}" min="1" max="${item.qty}" value="1" disabled 
+                                       class="input input-bordered input-xs w-16 text-center font-black bg-slate-100" />
+                                <span class="text-[10px] font-black text-slate-400">/ ${item.qty}</span>
+                            </div>
+                        </div>
+                    `;
                 }).join('');
-                updateSplitMaxQty();
             }
         }
 
-        // Auto update max limit when drop-down selection changes
-        function updateSplitMaxQty() {
-            const select = safe.el('m-split-item-select');
-            const qtyInput = safe.el('m-split-qty-input');
-            const maxLabel = safe.el('m-split-max-label');
-            if(!select || !qtyInput || !maxLabel || !window.activeOrderItems) return;
-
-            const selectedName = select.value;
-            const matched = window.activeOrderItems.find(i => i.name === selectedName);
-            const maxQty = matched ? matched.qty : 1;
-
-            qtyInput.max = maxQty;
-            qtyInput.value = 1;
-            maxLabel.innerText = "Max Qty: " + maxQty;
+        function toggleSplitInput(idx) {
+            const chk = safe.el(`split-chk-${idx}`);
+            const qty = safe.el(`split-qty-${idx}`);
+            if (chk && qty) {
+                qty.disabled = !chk.checked;
+                if (chk.checked) {
+                    qty.classList.remove('bg-slate-100');
+                    qty.classList.add('bg-white');
+                } else {
+                    qty.classList.add('bg-slate-100');
+                    qty.classList.remove('bg-white');
+                }
+            }
         }
 
         async function confirmAndExecuteSplit() {
             const order = window.activeOrder;
-            const select = safe.el('m-split-item-select');
-            const qtyInput = safe.el('m-split-qty-input');
             const splitBtn = safe.el('m-split-submit-btn');
 
-            if(!order || !select || !qtyInput || !splitBtn) return;
+            if(!order || !splitBtn || !window.activeOrderItems) return;
 
-            const selectedItem = select.value;
-            const splitQty = parseInt(qtyInput.value, 10);
-            const matched = window.activeOrderItems.find(i => i.name === selectedItem);
-            const maxAvailable = matched ? matched.qty : 1;
+            let splitItemsList = [];
+            let remainingItemsList = [];
+            let hasSelection = false;
+            let fullSplitAttempt = true;
 
-            if (isNaN(splitQty) || splitQty <= 0) {
-                alert("⚠️ ERROR: Kripya sahi quantity chunein.");
-                return;
-            }
-            if (splitQty > maxAvailable) {
-                alert("⚠️ ERROR: Aap max quantity " + maxAvailable + " se zyada split nahi kar sakte!");
-                return;
-            }
+            for (let i = 0; i < window.activeOrderItems.length; i++) {
+                const item = window.activeOrderItems[i];
+                const chk = safe.el(`split-chk-${i}`);
+                const qtyInput = safe.el(`split-qty-${i}`);
 
-            if (!confirm(`Kya aap sach mein ${selectedItem} ke ${splitQty} items alag (split) karke naya order banana chahte hain?`)) {
-                return;
-            }
+                if (chk && chk.checked && qtyInput) {
+                    hasSelection = true;
+                    const splitQty = parseInt(qtyInput.value, 10);
+                    
+                    if (isNaN(splitQty) || splitQty <= 0 || splitQty > item.qty) {
+                        alert(`⚠️ ERROR: Kripya ${item.name} ki quantity sahi se select karein.`);
+                        return;
+                    }
 
-            // Calculate split strings
-            let updatedOriginalItems = [];
-            let splitItems = [];
-
-            window.activeOrderItems.forEach(item => {
-                if (item.name === selectedItem) {
+                    splitItemsList.push(`${item.name} x${splitQty}`);
                     const remaining = item.qty - splitQty;
                     if (remaining > 0) {
-                        updatedOriginalItems.push(`${item.name} x${remaining}`);
+                        remainingItemsList.push(`${item.name} x${remaining}`);
+                        fullSplitAttempt = false; // Original order still retains some quantity
                     }
-                    splitItems.push(`${item.name} x${splitQty}`);
                 } else {
-                    updatedOriginalItems.push(`${item.name} x${item.qty}`);
+                    remainingItemsList.push(`${item.name} x${item.qty}`);
+                    fullSplitAttempt = false; // This item wasn't split at all
                 }
-            });
+            }
 
-            const originalItemsString = updatedOriginalItems.join(' | ');
-            const splitItemsString = splitItems.join(' | ');
+            if (!hasSelection) {
+                alert("⚠️ ERROR: Kripya split karne ke liye kam-se-kam ek product select karein.");
+                return;
+            }
+
+            if (fullSplitAttempt) {
+                alert("⚠️ ERROR: Poora order split nahi kiya ja sakta! Kripya original order mein kam-se-kam 1 quantity rehne dein.");
+                return;
+            }
+
+            const splitItemsString = splitItemsList.join(' | ');
+            const originalItemsString = remainingItemsList.join(' | ');
             const splitOrderId = `${order.Order_ID}-SPLIT`;
+
+            if (!confirm(`Kya aap sach mein in selected shortage items ko alag (split) karke naya backorder #${splitOrderId} banana chahte hain?`)) {
+                return;
+            }
 
             splitBtn.disabled = true;
             splitBtn.innerText = "SPLITTING ORDER...";
@@ -755,19 +881,19 @@
 
                 const data = await res.json();
                 if (data && data.status === "success") {
-                    alert("✂️ REPLICATION SUCCESSFUL! Naya split order ban gaya hai: #" + splitOrderId);
+                    alert("✂️ REPLICATION SUCCESSFUL! Shortage items ka naya split order ban gaya hai: #" + splitOrderId);
                     const modal = safe.el('process_modal');
                     if (modal && typeof modal.close === 'function') modal.close();
                     await syncData();
                 } else {
-                    throw new Error(data ? data.message : "Split execution failed on database.");
+                    throw new Error(data ? data.message : "Split execution failed.");
                 }
             } catch (err) {
                 alert("Split trigger failure: " + err.message);
                 console.error(err);
             } finally {
                 splitBtn.disabled = false;
-                splitBtn.innerText = "CONFIRM SPLIT (Naya Split Order Banayein)";
+                splitBtn.innerText = "CONFIRM SPLIT (Shortage Alag Karein)";
             }
         }
 
