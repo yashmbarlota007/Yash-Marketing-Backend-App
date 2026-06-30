@@ -1,145 +1,123 @@
 <!DOCTYPE html>
-<html data-theme="light">
+<html lang="en">
 <head>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
-        .red-flag { border: 2px solid #ff4d4d; animation: glow 1.5s infinite alternate; }
-        @keyframes glow { from { box-shadow: 0 0 5px #ff4d4d; } to { box-shadow: 0 0 20px #ff4d4d; } }
-        .step-active { color: #570df8 !important; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Yash Marketing Backend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); }
+    .radar-container { max-height: 350px; }
+  </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen">
+<body class="bg-slate-100 min-h-screen p-4 md:p-10">
 
-    <!-- Premium Navbar -->
-    <div class="navbar glass-panel sticky top-0 z-50 px-8 shadow-sm">
-        <div class="flex-1">
-            <h1 class="text-xl font-black tracking-tighter text-indigo-700">YASH <span class="text-slate-500 font-light">MARKETING OPS</span></h1>
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+      <div>
+        <h1 class="text-4xl font-black text-indigo-900 italic tracking-tighter">YASH MARKETING</h1>
+        <p class="text-slate-500 font-bold tracking-widest text-xs uppercase">Distribution Super-App (Backend)</p>
+      </div>
+      <div class="stats glass shadow-xl rounded-2xl border border-white">
+        <div class="stat p-4">
+          <div class="stat-title text-indigo-400 font-bold">Total Orders</div>
+          <div id="total-count" class="stat-value text-3xl">0</div>
         </div>
-        <div class="flex-none gap-2">
-            <div class="badge badge-outline badge-primary">S-30 LIVE</div>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Radar Section -->
+      <div class="lg:col-span-4 card glass shadow-2xl p-6 border border-white/50">
+        <h2 class="text-sm font-black text-slate-400 mb-6 uppercase tracking-widest">Office Ops Radar</h2>
+        <div class="radar-container">
+            <canvas id="radarChart"></canvas>
         </div>
+      </div>
+
+      <!-- Assembly Line Section -->
+      <div class="lg:col-span-8 space-y-4">
+        <div class="flex justify-between items-center px-4">
+            <h2 id="stage-title" class="font-bold text-slate-600">All Live Orders</h2>
+            <button onclick="fetchData()" class="btn btn-sm btn-ghost text-indigo-600">Sync Now</button>
+        </div>
+        <div id="assembly-line" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            <!-- Order Cards will be injected here -->
+            <div class="text-center py-20"><span class="loading loading-ring loading-lg text-indigo-600"></span></div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <main class="p-6 max-w-[1400px] mx-auto">
-        <!-- TOP SECTION: RADAR & STATS -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- 1. Interactive Radar -->
-            <div class="lg:col-span-4 card glass-panel shadow-xl p-4">
-                <h2 class="text-sm font-bold text-slate-400 mb-4 uppercase">Ops Workload Radar</h2>
-                <canvas id="radarChart" height="300"></canvas>
+  <script>
+    // APNA APPS SCRIPT URL YAHAN DALEIN
+    const API_URL = "YOUR_APPS_SCRIPT_URL_HERE"; 
+    
+    let allOrders = [];
+    const stages = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
+
+    async function fetchData() {
+      try {
+        const response = await fetch(API_URL);
+        allOrders = await response.json();
+        updateUI(allOrders);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    }
+
+    function updateUI(data) {
+      document.getElementById('total-count').innerText = data.length;
+      renderCards(data);
+      updateRadar(data);
+    }
+
+    function renderCards(data) {
+      const container = document.getElementById('assembly-line');
+      container.innerHTML = data.map(order => `
+        <div class="card glass hover:shadow-2xl transition-all border-l-8 ${order.isLate ? 'border-red-500' : 'border-indigo-500'} p-5 cursor-pointer">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="text-[10px] font-bold text-indigo-400">#${order.Order_ID}</span>
+              <h3 class="text-lg font-bold text-slate-800">${order.Dealer_Name}</h3>
+              <p class="text-xs text-slate-500 font-medium">${order.Items || 'Stock Processing...'}</p>
             </div>
-
-            <!-- 2. Assembly Line Drill-down -->
-            <div class="lg:col-span-8 card glass-panel shadow-xl overflow-hidden">
-                <div class="bg-indigo-600 p-4 flex justify-between items-center">
-                    <h2 class="text-white font-bold" id="stageTitle">Live Feed: All Departments</h2>
-                    <span class="badge badge-ghost text-white" id="countBadge">0 Orders</span>
-                </div>
-                <div class="p-4 space-y-4 overflow-y-auto max-h-[400px]" id="orderFeed">
-                    <!-- Orders will be injected here via JS -->
-                    <div class="animate-pulse text-center p-10 text-slate-400 font-medium">Loading Real-time Data...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Dynamic Process Modal -->
-        <dialog id="processModal" class="modal modal-bottom sm:modal-middle">
-          <div class="modal-box w-11/12 max-w-4xl bg-white">
-            <form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form>
-            
-            <h3 class="font-bold text-2xl text-slate-800 mb-2" id="modalDealer">Dealer Name</h3>
-            <div class="flex gap-2 mb-6"><div class="badge badge-primary" id="modalOrderId">#ORD-101</div></div>
-
-            <!-- 9-Stage Timeline Integration -->
-            <ul class="steps steps-vertical lg:steps-horizontal w-full text-xs mb-8 overflow-x-auto">
-              <li class="step step-primary" data-content="✓">Received</li>
-              <li class="step" id="st-balance">Balance</li>
-              <li class="step" id="st-call1">Call 1</li>
-              <li class="step" id="st-processed">Processed</li>
-              <li class="step" id="st-invoice">Invoiced</li>
-              <li class="step" id="st-dispatch">Dispatch</li>
-              <li class="step" id="st-call2">Call 2</li>
-              <li class="step" id="st-delivered">Delivered</li>
-              <li class="step" id="st-final">Final Call</li>
-            </ul>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-2xl">
-                <!-- Action Side -->
-                <div id="actionArea">
-                    <label class="label"><span class="label-text font-bold">Upload Mandatory Proof</span></label>
-                    <div id="mediaToggle">
-                        <!-- JS changes this between Camera and Audio File -->
-                        <input type="file" id="mainInput" class="file-input file-input-bordered file-input-primary w-full" />
-                    </div>
-                    
-                    <div class="mt-4 flex gap-2">
-                        <button onclick="handleUpload()" class="btn btn-primary flex-1">Complete Stage</button>
-                        <button onclick="triggerSplit()" class="btn btn-outline btn-warning">Split Order</button>
-                    </div>
-                </div>
-
-                <!-- Proof Viewer Side -->
-                <div class="border-l pl-6">
-                    <label class="label"><span class="label-text font-bold text-indigo-600">Audit History & Proofs</span></label>
-                    <div id="proofContainer" class="grid grid-cols-2 gap-2 h-48 overflow-y-auto">
-                        <!-- Existing images/audio players appear here -->
-                    </div>
-                </div>
+            <div class="text-right">
+              <div class="badge badge-indigo text-white p-3 font-bold">${order.Current_Status || 'Received'}</div>
+              <p class="text-[10px] text-slate-400 mt-2 font-bold">${new Date(order.Date).toLocaleDateString()}</p>
             </div>
           </div>
-        </dialog>
-    </main>
+        </div>
+      `).join('');
+    }
 
-<script>
-// Logic for Radar Click & Filter
-const ctx = document.getElementById('radarChart');
-const stages = ['Received', 'Balance', 'Call 1', 'Processed', 'Invoiced', 'Dispatched', 'Call 2', 'Delivered', 'Final Call'];
-
-const chart = new Chart(ctx, {
-    type: 'radar',
-    data: {
-        labels: stages,
-        datasets: [{
-            label: 'Orders',
-            data: [10, 5, 2, 8, 3, 4, 6, 9, 2],
-            backgroundColor: 'rgba(79, 70, 229, 0.2)',
-            borderColor: 'rgb(79, 70, 229)',
-            pointRadius: 5
-        }]
-    },
-    options: {
-        onClick: (e, elements) => {
-            if(elements.length > 0) {
-                const index = elements[0].index;
-                filterOrdersByStage(stages[index]);
-            }
+    // Chart logic setup
+    const ctx = document.getElementById('radarChart');
+    const chart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: stages,
+            datasets: [{
+                label: 'Orders in Dept',
+                data: [0,0,0,0,0,0,0,0,0],
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                borderColor: 'rgb(99, 102, 241)',
+                pointBackgroundColor: 'rgb(99, 102, 241)',
+            }]
         }
-    }
-});
+    });
 
-// Function to toggle Image vs Audio
-function updateInputType(stage) {
-    const input = document.getElementById('mainInput');
-    if(stage.includes('Call')) {
-        input.accept = "audio/*";
-        input.removeAttribute('capture');
-    } else {
-        input.accept = "image/*";
-        input.setAttribute('capture', 'environment');
+    function updateRadar(data) {
+      const counts = stages.map(s => data.filter(o => o.Current_Status === s).length);
+      chart.data.datasets[0].data = counts;
+      chart.update();
     }
-}
 
-// Function to handle Split Order Modal
-function triggerSplit() {
-    let items = prompt("Enter items to separate (comma separated):");
-    if(items) {
-        google.script.run.withSuccessHandler(() => alert("Order Split!")).splitOrder(currentOrderId, items);
-    }
-}
-</script>
+    // Auto-load
+    fetchData();
+    setInterval(fetchData, 30000); // 30 seconds auto-refresh
+  </script>
 </body>
 </html>
