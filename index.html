@@ -21,7 +21,7 @@
             border-radius: 1rem; 
         }
 
-        /* 3x3 Double Folded Rail Track (Compact, No Scroll, Perfect Alignment) */
+        /* 3x3 Double Folded Rail Track (Perfect Fitting on Mobile) */
         .railway-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -335,8 +335,8 @@
 
     <script>
         /**
-         * v11.0 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
-         * ---------------------------------------------------------------------------------
+         * v11.0 WORKSPACE ENGINE (SELF-HEALING ERP ENGINE - NO FIREBASE ERROR!)
+         * ---------------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
@@ -359,7 +359,7 @@
         let store_staff = [];
         let store_attendance = [];
         let currentUser = null;
-        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Standard Ahmednagar regional office coordinate
+        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Ahmednagar headquarter location
         
         let activeFilterStage = null;
         let activeDateFilter = "all";
@@ -389,7 +389,7 @@
                     if (idMatch) id = idMatch[1];
                 }
                 if (id) {
-                    return `https://lh3.googleusercontent.com/d/${id}`;
+                    return `https://docs.google.com/uc?export=download&id=${id}`;
                 }
             }
             return sUrl;
@@ -479,66 +479,86 @@
         syncData();
 
         function handleLogin() {
-            const uid = safe.el('login-username').value.trim();
-            const pin = safe.el('login-pin').value.trim();
-            
-            if(!uid || !pin) {
-                alert("Kripya ID aur PIN enter karein.");
-                return;
-            }
+            try {
+                const uid = safe.el('login-username').value.trim();
+                const pin = safe.el('login-pin').value.trim();
+                
+                if(!uid || !pin) {
+                    alert("Kripya ID aur PIN enter karein.");
+                    return;
+                }
 
-            // EMERGENCY BYPASS TEST LOGINS (Bina database dependency ke login karne ke liye)
-            if (uid.toLowerCase() === "owner" && pin === "1234") {
-                currentUser = {
-                    uid: "owner",
-                    name: "Yash Barlota (Malik)",
-                    role: "Owner",
-                    salary: 50000,
-                    photo: "https://via.placeholder.com/150?text=Yash+Barlota",
-                    doc: "#"
-                };
-            } else if (uid.toLowerCase() === "sales" && pin === "1234") {
-                currentUser = {
-                    uid: "sales",
-                    name: "Rohan (Sales Staff)",
-                    role: "Sales Staff",
-                    salary: 20000,
-                    photo: "https://via.placeholder.com/150?text=Rohan+Sales",
-                    doc: "#"
-                };
-            } else if (uid.toLowerCase() === "staff" && pin === "1234") {
-                currentUser = {
-                    uid: "staff",
-                    name: "Office Operator",
-                    role: "Back Office Staff",
-                    salary: 15000,
-                    photo: "https://via.placeholder.com/150?text=Backoffice",
-                    doc: "#"
-                };
-            } else {
-                // Verify with Google Sheet database ("Staff Master" tab)
-                if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
-                    const staffRow = store_staff.find(row => row[0] && row[0].toString().trim().toLowerCase() === uid.toLowerCase() && row[1] && row[1].toString().trim() === pin);
-                    if (staffRow) {
-                        currentUser = {
-                            uid: staffRow[0].toString().trim(),
-                            name: staffRow[2].toString().trim(),
-                            role: staffRow[3].toString().trim(),
-                            salary: parseFloat(staffRow[4]) || 15000,
-                            photo: getDirectDriveUrl(staffRow[5]),
-                            doc: getDirectDriveUrl(staffRow[6])
-                        };
+                // EMERGENCY BYPASS TEST LOGINS (Bina database dependency ke login karne ke liye)
+                if (uid.toLowerCase() === "owner" && pin === "1234") {
+                    currentUser = {
+                        uid: "owner",
+                        name: "Yash Barlota (Malik)",
+                        role: "Owner",
+                        salary: 50000,
+                        photo: "https://via.placeholder.com/150?text=Yash+Barlota",
+                        doc: "#"
+                    };
+                } else if (uid.toLowerCase() === "sales" && pin === "1234") {
+                    currentUser = {
+                        uid: "sales",
+                        name: "Rohan (Sales Staff)",
+                        role: "Sales Staff",
+                        salary: 20000,
+                        photo: "https://via.placeholder.com/150?text=Rohan+Sales",
+                        doc: "#"
+                    };
+                } else if (uid.toLowerCase() === "staff" && pin === "1234") {
+                    currentUser = {
+                        uid: "staff",
+                        name: "Office Operator",
+                        role: "Back Office Staff",
+                        salary: 15000,
+                        photo: "https://via.placeholder.com/150?text=Backoffice",
+                        doc: "#"
+                    };
+                } else {
+                    // Match with Google Sheet database ("Staff Master" tab) using self-healing dynamic column matching
+                    if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
+                        const headers = store_staff[0];
+                        const rows = store_staff.slice(1);
+                        
+                        let idCol = 0, pinCol = 1, nameCol = 2, roleCol = 3, salaryCol = 4, photoCol = 5, docCol = 6;
+                        headers.forEach((h, i) => {
+                            const val = h.toString().toLowerCase().trim();
+                            if (val === "id" || val.includes("username") || val.includes("staff id")) idCol = i;
+                            if (val.includes("pin") || val.includes("password") || val === "pass") pinCol = i;
+                            if (val === "name" || val.includes("employee name") || val.includes("staff name")) nameCol = i;
+                            if (val.includes("role") || val.includes("designation")) roleCol = i;
+                            if (val.includes("salary") || val.includes("pagar") || val.includes("monthly")) salaryCol = i;
+                            if (val.includes("photo") || val.includes("image") || val.includes("passport")) photoCol = i;
+                            if (val.includes("doc") || val.includes("aadhar") || val.includes("pan") || val.includes("file")) docCol = i;
+                        });
+
+                        const staffRow = rows.find(row => row[idCol] && row[idCol].toString().trim().toLowerCase() === uid.toLowerCase() && row[pinCol] && row[pinCol].toString().trim() === pin);
+                        if (staffRow) {
+                            currentUser = {
+                                uid: staffRow[idCol].toString().trim(),
+                                name: staffRow[nameCol].toString().trim(),
+                                role: staffRow[roleCol].toString().trim(),
+                                salary: parseFloat(staffRow[salaryCol]) || 15000,
+                                photo: getDirectDriveUrl(staffRow[photoCol]),
+                                doc: getDirectDriveUrl(staffRow[docCol])
+                            };
+                        }
                     }
                 }
-            }
-            
-            if (!currentUser) {
-                alert("🚫 AUTH DENIED: ID ya PIN galat hai.");
-                return;
-            }
+                
+                if (!currentUser) {
+                    alert("🚫 AUTH DENIED: ID ya PIN galat hai.");
+                    return;
+                }
 
-            localStorage.setItem("backbone_current_user", JSON.stringify(currentUser));
-            showWorkspace();
+                localStorage.setItem("backbone_current_user", JSON.stringify(currentUser));
+                showWorkspace();
+            } catch(e) {
+                console.error("Login Error: ", e);
+                alert("Login Error: " + e.message);
+            }
         }
 
         function showWorkspace() {
