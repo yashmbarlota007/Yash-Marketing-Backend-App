@@ -101,7 +101,7 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
-            <!-- 2. ANALYTICAL BAR: DEPT COUNTERS (Staff-Friendly Replacement) -->
+            <!-- 2. ANALYTICAL BAR: DEPT COUNTERS -->
             <div class="xl:col-span-4 space-y-6">
                 <div class="card bg-white shadow-md p-4 border-b-8 border-indigo-600">
                     <div class="flex justify-between items-center mb-4">
@@ -109,9 +109,8 @@
                         <span class="badge badge-indigo font-bold text-[10px] py-1 px-2 uppercase shadow-sm">Live Counters</span>
                     </div>
                     
-                    <!-- Simpler readable Counter list -->
                     <div id="dept-load-list" class="space-y-2 max-h-[300px] md:max-h-[450px] overflow-y-auto beauty-scroll pr-1">
-                        <!-- Instantly injected by script -->
+                        <!-- Injected dynamically -->
                     </div>
                     
                     <div class="mt-4 p-3 bg-indigo-50 rounded-xl text-center border border-dashed border-indigo-100">
@@ -121,7 +120,7 @@
                     </div>
                 </div>
 
-                <!-- S-30 MIS DASHBOARD (Compact Overlap Protection) -->
+                <!-- S-30 MIS DASHBOARD -->
                 <div class="bg-slate-900 rounded-2xl p-4 text-white shadow-xl relative overflow-hidden group">
                     <div class="relative z-10">
                         <h3 class="text-indigo-400 font-black text-[11px] tracking-wider mb-3 uppercase italic flex items-center gap-2">
@@ -165,14 +164,14 @@
         </div>
     </div>
 
-    <!-- 4. PROCESS MODAL (ROBUST COMPACT) -->
-    <dialog id="process_modal" class="modal modal-bottom sm:modal-middle backdrop-blur-3xl">
-        <div class="modal-box w-11/12 max-w-[1550px] bg-white p-0 rounded-2xl shadow-3xl border-none">
+    <!-- 4. PROCESS MODAL (ROBUST COMPACT - perfectly centered) -->
+    <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
+        <div class="modal-box w-11/12 max-w-[1000px] bg-white p-0 rounded-2xl shadow-3xl border-none my-auto mx-auto overflow-y-auto max-h-[90vh] beauty-scroll">
             
             <!-- Modal Header -->
             <div class="bg-indigo-600 p-5 text-white flex justify-between items-center relative overflow-hidden">
                 <div class="relative z-10 min-w-0">
-                    <h3 id="m-dealer" class="text-2xl md:text-4xl font-black italic tracking-tight uppercase leading-none mb-3 break-words">Dealer</h3>
+                    <h3 id="m-dealer" class="text-2xl md:text-3xl font-black italic tracking-tight uppercase leading-none mb-3 break-words">Dealer</h3>
                     <div class="flex flex-wrap gap-2 items-center">
                         <span id="m-id" class="text-xs font-black tracking-wider opacity-80 border-r border-white/20 pr-3 uppercase italic">ID: #000</span>
                         <span id="m-area" class="text-xs font-black tracking-wide bg-white/20 px-2 py-0.5 rounded-full uppercase italic">REGION: GENERAL</span>
@@ -184,10 +183,9 @@
             </div>
 
             <div class="p-5">
-                <!-- 9-Stage Visual Track (Mobile Swipe-able) -->
-                <div class="mb-6 overflow-x-auto pb-2 max-w-full beauty-scroll">
-                    <ul id="timeline-track" class="steps steps-horizontal min-w-[850px] w-full text-[11px] font-black uppercase tracking-tight">
-                        <li class="step">Received</li>
+                <!-- Visual Steps (Stacked vertically on mobile, horizontal on desktop) -->
+                <div class="mb-6 max-w-full">
+                    <ul id="timeline-track" class="steps steps-vertical md:steps-horizontal w-full text-xs font-black uppercase tracking-tight gap-1">
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
                         <li class="step">Processed</li>
@@ -201,17 +199,17 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <!-- LEFT: Pick-List -->
-                    <div class="lg:col-span-5 space-y-4">
+                    <div class="lg:col-span-6 space-y-4">
                         <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-100 shadow-inner">
-                            <h4 class="text-md font-black text-indigo-600 uppercase mb-4 flex items-center gap-2">Item Pick-List</h4>
+                            <h4 class="text-sm font-black text-indigo-600 uppercase mb-4 flex items-center gap-2">Item Pick-List</h4>
                             <div id="m-product-list" class="space-y-3 max-h-[350px] overflow-y-auto beauty-scroll pr-1">
                                 <!-- Catalogue items injected dynamically -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- MIDDLE: System Sync Engine -->
-                    <div class="lg:col-span-4 space-y-4 text-center">
+                    <!-- RIGHT: System Sync Engine -->
+                    <div class="lg:col-span-6 space-y-4 text-center">
                         <div class="bg-indigo-50 p-4 rounded-xl border-2 border-dashed border-indigo-200 shadow-md">
                             <div class="mb-4">
                                 <span id="m-stage-tag" class="text-xs font-black text-indigo-700 uppercase tracking-wider bg-white px-3 py-1.5 rounded-full shadow-sm inline-block">
@@ -230,15 +228,12 @@
                         
                         <div class="flex gap-3">
                             <button onclick="handleSplitUI()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SPLIT</button>
-                            <button class="btn btn-ghost bg-slate-100 text-slate-500 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">AUDIT</button>
                         </div>
-                    </div>
 
-                    <!-- RIGHT: Vault -->
-                    <div class="lg:col-span-3">
-                        <div class="bg-white p-4 rounded-xl border-2 border-slate-50 shadow-sm min-h-[250px]">
-                            <h4 class="text-xs font-black text-slate-400 uppercase mb-4 tracking-wider text-center">Security Vault</h4>
-                            <div id="m-vault-feed" class="space-y-3 max-h-[250px] overflow-y-auto beauty-scroll pr-1">
+                        <!-- Security Vault Stream placed securely below controls in flow -->
+                        <div class="bg-white p-4 rounded-xl border-2 border-slate-50 shadow-sm text-left">
+                            <h4 class="text-xs font-black text-slate-400 uppercase mb-3 tracking-wider text-center">Security Vault</h4>
+                            <div id="m-vault-feed" class="space-y-3 max-h-[220px] overflow-y-auto beauty-scroll pr-1">
                                 <!-- Vault content -->
                             </div>
                         </div>
@@ -255,7 +250,9 @@
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
-        const PROTOCOL_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
+        
+        // "Received" background start name hai, main step workflow "Balance Check" se shuru hoga.
+        const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         
         let store_orders = [];
         let store_stock = [];
@@ -329,8 +326,14 @@
 
             listContainer.innerHTML = PROTOCOL_STAGES.map(stage => {
                 const count = data.filter(o => {
-                    const s = (o.Current_Status !== undefined && o.Current_Status !== null) ? o.Current_Status.toString().trim() : "Received";
-                    return s.toLowerCase() === stage.toLowerCase();
+                    // Safety check dynamic column shifts on spreadsheet
+                    let curStatus = "Received";
+                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
+                        curStatus = o.Dealer_Area.toString().trim();
+                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                        curStatus = o.Current_Status.toString().trim();
+                    }
+                    return curStatus.toLowerCase() === stage.toLowerCase();
                 }).length;
 
                 const isSelected = activeFilterStage === stage;
@@ -378,7 +381,22 @@
                         }
                     }
                 } catch (de) {
-                    console.error("Date formatting failed", de);
+                    console.error("Date formatting failed: ", de);
+                }
+
+                // Dynamic Column Autodetect system to prevent layout mapping distortion
+                let curStatus = "Received";
+                if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
+                    curStatus = o.Dealer_Area.toString().trim();
+                } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                    curStatus = o.Current_Status.toString().trim();
+                }
+
+                let orderVal = "N/A";
+                if (o.Order_Value) {
+                    orderVal = o.Order_Value;
+                } else if (o.Current_Status && !isNaN(o.Current_Status)) {
+                    orderVal = o.Current_Status;
                 }
                 
                 const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
@@ -393,18 +411,18 @@
                                 <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
                                 <h3 class="text-lg font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
                             </div>
-                            <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${o.Current_Status || 'Received'}</div>
+                            <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${curStatus}</div>
                         </div>
 
                         <div class="flex items-center gap-3 mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200/40">
                             <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse shrink-0"></div>
-                            <p class="text-xs md:text-sm font-bold text-slate-500 line-clamp-1 italic">Stock Items: ${o.Items || 'Accessing Pick-List...'}</p>
+                            <p class="text-xs md:text-sm font-bold text-slate-500 line-clamp-1 italic">Order Value: ₹ ${orderVal}</p>
                         </div>
 
                         <div class="flex justify-between items-center border-t border-slate-100 pt-3 gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 <svg class="w-4 h-4 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
-                                <span class="text-xs font-black text-slate-400 uppercase tracking-wider italic truncate">${o.Dealer_Area || 'GENERAL'}</span>
+                                <span class="text-xs font-black text-slate-400 uppercase tracking-wider italic truncate">${o.Order_Brought_By || 'Yash Marketing'}</span>
                             </div>
                             <div class="flex flex-col items-end gap-1 shrink-0">
                                 <span class="text-xs md:text-sm font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full shadow-inner tracking-tight">${prettyStr}</span>
@@ -429,29 +447,53 @@
                 safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
                 safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
 
-                // Visual Catalogue Pick-List
+                // Visual Catalogue Multi-Item quantity parser
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
-                    const items = order.Items ? order.Items.toString().split(',') : [];
-                    catScroll.innerHTML = items.map(item => {
-                        const query = item.trim().toLowerCase();
+                    const itemString = (order.Items || order.SLA_Start_Time || "").toString();
+                    const rawItems = itemString.includes('|') ? itemString.split('|') : itemString.split(',');
+                    
+                    catScroll.innerHTML = rawItems.map(item => {
+                        const trimmed = item.trim();
+                        if (!trimmed) return '';
+                        
+                        // Parse name and ordered qty (e.g. "Product x2")
+                        const qtyMatch = trimmed.match(/(.+)\s+x\s*(\d+)$/i);
+                        let name = trimmed;
+                        let qty = "1";
+                        if (qtyMatch) {
+                            name = qtyMatch[1].trim();
+                            qty = qtyMatch[2].trim();
+                        }
+                        
+                        const query = name.toLowerCase();
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
                         const img = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
                         return `
                             <div class="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group">
-                                <img src="${img}" class="cat-image shadow-md transition-transform" onerror="this.src='https://via.placeholder.com/150?text=N/A'">
+                                <img src="${img}" class="cat-image shadow-md transition-transform" onerror="this.src='https://via.placeholder.com/150?text=📦'">
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-sm md:text-base font-black text-slate-800 uppercase italic truncate leading-tight">${item.trim()}</p>
-                                    <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mt-1 leading-none">Stock Mapping: Verified</p>
+                                    <p class="text-sm font-black text-slate-800 uppercase italic truncate leading-tight">${name}</p>
+                                    <div class="flex justify-between items-center mt-2 gap-2">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ordered Qty:</span>
+                                        <span class="badge badge-primary font-black text-xs px-2.5 rounded-md">${qty}</span>
+                                    </div>
                                 </div>
                             </div>
                         `;
                     }).join('');
                 }
 
-                // Timeline steps alignment
-                const rawStatus = (order.Current_Status !== undefined && order.Current_Status !== null) ? order.Current_Status.toString() : "Received";
-                const status = rawStatus.trim();
+                // Timeline stages auto-mapping with "Received" bypass
+                let rawStatus = "Received";
+                if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
+                    rawStatus = order.Dealer_Area.toString().trim();
+                } else if (order.Current_Status && isNaN(order.Current_Status)) {
+                    rawStatus = order.Current_Status.toString().trim();
+                }
+
+                const status = rawStatus;
+                // Received is step -1 index (since "Received" is only the starting hook, not step list)
                 const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
                 
                 const timelineSteps = document.querySelectorAll('#timeline-track .step');
@@ -469,11 +511,14 @@
 
                 // Media upload control switcher
                 const inputZone = safe.el('m-media-control');
-                safe.text('m-stage-tag', "STAGE: " + status.toUpperCase());
+                
+                // Safe Upper Case mapping
+                const safeStatusString = (status && typeof status.toUpperCase === 'function') ? status.toUpperCase() : "RECEIVED";
+                safe.text('m-stage-tag', "STAGE: " + safeStatusString);
 
                 if (inputZone) {
                     if (status.toLowerCase() === "received") {
-                        inputZone.innerHTML = `<div class="py-6 px-4 bg-white rounded-2xl border border-indigo-100 shadow-inner"><p class="text-xs md:text-sm font-black text-indigo-600 italic tracking-tight text-center leading-relaxed">ACKNOWLEDGMENT COMPLETE.<br>TRIGGER BALANCE CHECK.</p></div>`;
+                        inputZone.innerHTML = `<div class="py-6 px-4 bg-white rounded-2xl border border-indigo-100 shadow-inner"><p class="text-xs md:text-sm font-black text-indigo-600 italic tracking-tight text-center leading-relaxed">RECEIVED: process start.<br>READY FOR BALANCE CHECK.</p></div>`;
                     } else {
                         const isAudio = status.toLowerCase().includes("call");
                         inputZone.innerHTML = `
@@ -496,7 +541,7 @@
                 }
             } catch (err) {
                 console.error("Process modal failed:", err);
-                alert("Critical error inside load engine: " + err.message);
+                alert("Critical process load failed: " + err.message);
             }
         }
 
@@ -523,13 +568,13 @@
                     contentCount++;
                     if(p.aud) {
                         vault.innerHTML += `
-                            <div class="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100/80 shadow-inner">
+                            <div class="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 shadow-inner">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l}</p>
                                 <audio controls class="w-full h-8 rounded-full border border-white"><source src="${val}"></audio>
                             </div>`;
                     } else {
                         vault.innerHTML += `
-                            <div class="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100/80 shadow-inner">
+                            <div class="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 shadow-inner">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider text-center italic">${p.l}</p>
                                 <img src="${val}" class="proof-frame w-full max-h-[120px] object-cover cursor-pointer" onclick="window.open('${val}')">
                             </div>`;
@@ -546,8 +591,19 @@
             if(!btn) return;
             const order = window.activeOrder;
             if(!order) return;
-            const cur = (order.Current_Status !== undefined && order.Current_Status !== null) ? order.Current_Status.toString() : "Received";
-            const next = PROTOCOL_STAGES[PROTOCOL_STAGES.indexOf(cur) + 1];
+            
+            // Safe fallback logic
+            let rawStatus = "Received";
+            if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
+                rawStatus = order.Dealer_Area.toString().trim();
+            } else if (order.Current_Status && isNaN(order.Current_Status)) {
+                rawStatus = order.Current_Status.toString().trim();
+            }
+            const cur = rawStatus;
+            
+            // "Received" pointer leads directly to first active step: "Balance Check"
+            const curIndex = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === cur.toLowerCase());
+            const next = PROTOCOL_STAGES[curIndex + 1] || null;
 
             if(!next) {
                 alert("System Lockdown: Cycle Finalized.");
@@ -617,7 +673,12 @@
             safe.text('line-title', "DEPARTMENT: " + s);
             safe.removeClass('filter-badge', 'hidden');
             renderLineFeed(store_orders.filter(o => {
-                const curSt = (o.Current_Status !== undefined && o.Current_Status !== null) ? o.Current_Status.toString() : "Received";
+                let curSt = "Received";
+                if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
+                    curSt = o.Dealer_Area.toString().trim();
+                } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                    curSt = o.Current_Status.toString().trim();
+                }
                 return curSt.toLowerCase() === s.toLowerCase();
             }));
         }
