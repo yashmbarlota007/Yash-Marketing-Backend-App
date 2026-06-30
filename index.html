@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING | BACKBONE SUPER-APP v10.0</title>
+    <title>YASH MARKETING | BACKBONE SUPER-APP v10.1</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +15,7 @@
         :root { --brand: #4f46e5; --danger: #ef4444; --bg: #f3f6f9; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: #1e293b; overflow-x: hidden; }
         
-        /* Premium Aesthetic Tokens (Responsive) */
+        /* Premium Responsive Aesthetic Tokens */
         .glass-shards { 
             background: rgba(255, 255, 255, 0.9); 
             backdrop-filter: blur(60px); 
@@ -81,7 +81,7 @@
                 <div>
                     <h1 class="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Yash Marketing <span class="text-indigo-600">Backbone</span></h1>
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                        <span class="badge badge-primary font-black tracking-wider text-xs md:text-sm py-2 px-4 shadow-md uppercase italic border-none">LAUNCH READY v10.0</span>
+                        <span class="badge badge-primary font-black tracking-wider text-xs md:text-sm py-2 px-4 shadow-md uppercase italic border-none">LAUNCH READY v10.1</span>
                         <div class="flex items-center gap-2">
                             <div class="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
                             <span class="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest italic">Cloud Engine: Online</span>
@@ -201,14 +201,14 @@
                 <div class="mb-8 md:mb-12 overflow-x-auto pb-4 max-w-full beauty-scroll">
                     <ul id="timeline-track" class="steps steps-horizontal min-w-[900px] xl:w-full text-xs md:text-sm font-black uppercase tracking-tight">
                         <li class="step">Received</li>
-                        <li class="step">Balance</li>
+                        <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
-                        <li class="step">Stock</li>
+                        <li class="step">Processed</li>
                         <li class="step">Invoiced</li>
                         <li class="step">Dispatched</li>
                         <li class="step">Call 2</li>
                         <li class="step">Delivered</li>
-                        <li class="step">Final</li>
+                        <li class="step">Final Call</li>
                     </ul>
                 </div>
 
@@ -277,8 +277,8 @@
 
     <script>
         /**
-         * v10.0 CORE BACKBONE ENGINE (LAUNCH-ULTIMATE)
-         * --------------------------------------------
+         * v10.1 CORE BACKBONE ENGINE (LAUNCH-ULTIMATE WITH ACTIVE SAFE CHECKS)
+         * -------------------------------------------------------------
          */
         
         // APPS SCRIPT URL (FROM RECENT DEPLOYMENT)
@@ -300,11 +300,16 @@
         };
 
         window.onload = async () => {
-            await syncData();
-            const loader = safe.el('boot-loader');
-            if(loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 1000);
+            try {
+                await syncData();
+            } catch(e) {
+                console.error("Init Error: ", e);
+            } finally {
+                const loader = safe.el('boot-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 1000);
+                }
             }
         };
 
@@ -356,18 +361,30 @@
             }
 
             feed.innerHTML = data.map((o, idx) => {
-                const date = new Date(o.Date);
-                const prettyStr = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear().toString().slice(-2)}`;
+                let prettyStr = "N/A";
+                try {
+                    if (o.Date) {
+                        const date = new Date(o.Date);
+                        if (!isNaN(date.getTime())) {
+                            prettyStr = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear().toString().slice(-2)}`;
+                        }
+                    }
+                } catch (de) {
+                    console.error("Date parsing error: ", de);
+                }
+                
+                // Pure Safe-Checks applied on template render
+                const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
                 
                 return `
                     <div class="slide-up-fade card bg-white shadow-lg p-4 md:p-6 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer ${o.isLate ? 'bottleneck-pulse' : 'hover:scale-[1.02]'}" 
                          style="animation-delay: ${idx * 0.05}s"
-                         onclick="openProcessModal('${o.Order_ID}')">
+                         onclick="openProcessModal('${safeOrderId}')">
                         
                         <div class="flex justify-between items-start mb-4 gap-2">
                             <div class="min-w-0">
-                                <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID}</span>
-                                <h3 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name}</h3>
+                                <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
+                                <h3 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
                             </div>
                             <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${o.Current_Status || 'Received'}</div>
                         </div>
@@ -393,76 +410,88 @@
         }
 
         function openProcessModal(id) {
-            const order = store_orders.find(o => o.Order_ID === id);
-            if(!order) return;
-            window.activeOrder = order;
-
-            safe.text('m-dealer', order.Dealer_Name || "N/A");
-            safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
-            safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
-
-            // Visual Catalogue Pick-List with Photo Mapping
-            const catScroll = safe.el('m-product-list');
-            if(catScroll) {
-                const items = order.Items ? order.Items.split(',') : [];
-                catScroll.innerHTML = items.map(item => {
-                    const query = item.trim().toLowerCase();
-                    const matched = store_stock ? store_stock.find(c => c[1] && c[1].toLowerCase().includes(query)) : null;
-                    const img = matched ? matched[2] : "https://via.placeholder.com/150?text=📦";
-                    return `
-                        <div class="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group">
-                            <img src="${img}" class="cat-image shadow-md transition-transform" onerror="this.src='https://via.placeholder.com/150?text=N/A'">
-                            <div class="min-w-0">
-                                <p class="text-sm md:text-base font-black text-slate-800 uppercase italic truncate leading-tight">${item.trim()}</p>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mt-1 leading-none">Stock Mapping: Verified</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            // Timeline Track Sync
-            const status = order.Current_Status || "Received";
-            const curIdx = PROTOCOL_STAGES.indexOf(status);
-            const timelineSteps = document.querySelectorAll('#timeline-track .step');
-            if(timelineSteps) {
-                timelineSteps.forEach((s, i) => {
-                    s.classList.toggle('step-primary', i <= curIdx);
-                    s.innerText = PROTOCOL_STAGES[i];
-                    if(i === curIdx) {
-                        s.classList.add('font-black', 'text-indigo-600');
-                    } else {
-                        s.classList.remove('font-black', 'text-indigo-600');
-                    }
-                });
-            }
-
-            // Media System Switcher
-            const inputZone = safe.el('m-media-control');
-            safe.text('m-stage-tag', "STAGE: " + status.toUpperCase());
-
-            if (inputZone) {
-                if (status === "Received") {
-                    inputZone.innerHTML = `<div class="py-6 px-4 bg-white rounded-2xl border border-indigo-100 shadow-inner"><p class="text-sm md:text-base font-black text-indigo-600 italic tracking-tight text-center leading-relaxed">ACKNOWLEDGMENT COMPLETE.<br>TRIGGER BALANCE CHECK.</p></div>`;
-                } else {
-                    const isAudio = status.includes("Call");
-                    inputZone.innerHTML = `
-                        <div class="form-control w-full">
-                            <input type="file" id="m-file-input" 
-                                class="file-input file-input-bordered file-input-primary w-full rounded-xl shadow-md text-xs font-bold" 
-                                ${isAudio ? 'accept="audio/*"' : 'accept="image/*" capture="environment"'} 
-                                multiple />
-                            <p class="text-[10px] md:text-xs font-black text-slate-400 mt-2 uppercase tracking-widest italic text-center">
-                                ${isAudio ? 'AUDIO CAPTURE MODE ACTIVE' : 'CAMERA OPTICS MODE ACTIVE'}
-                            </p>
-                        </div>`;
+            try {
+                if (!id) return;
+                
+                // Safe lookup converting values to string to prevent numeric type mismatches
+                const order = store_orders.find(o => o.Order_ID && o.Order_ID.toString() === id.toString());
+                if(!order) {
+                    console.warn("Order not found inside local engine store: ID " + id);
+                    return;
                 }
-            }
+                window.activeOrder = order;
 
-            refreshVault(order);
-            const modal = safe.el('process_modal');
-            if (modal && typeof modal.showModal === 'function') {
-                modal.showModal();
+                safe.text('m-dealer', order.Dealer_Name || "N/A");
+                safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
+                safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
+
+                // Visual Catalogue Pick-List with Photo Mapping
+                const catScroll = safe.el('m-product-list');
+                if(catScroll) {
+                    const items = order.Items ? order.Items.toString().split(',') : [];
+                    catScroll.innerHTML = items.map(item => {
+                        const query = item.trim().toLowerCase();
+                        // Safe check of stock index bounds to avoid runtime execution blocking
+                        const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
+                        const img = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
+                        return `
+                            <div class="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group">
+                                <img src="${img}" class="cat-image shadow-md transition-transform" onerror="this.src='https://via.placeholder.com/150?text=N/A'">
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm md:text-base font-black text-slate-800 uppercase italic truncate leading-tight">${item.trim()}</p>
+                                    <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mt-1 leading-none">Stock Mapping: Verified</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Timeline Track Sync
+                const status = order.Current_Status || "Received";
+                const curIdx = PROTOCOL_STAGES.indexOf(status);
+                const timelineSteps = document.querySelectorAll('#timeline-track .step');
+                if(timelineSteps && timelineSteps.length > 0) {
+                    timelineSteps.forEach((s, i) => {
+                        s.classList.toggle('step-primary', i <= curIdx);
+                        s.innerText = PROTOCOL_STAGES[i] || '';
+                        if(i === curIdx) {
+                            s.classList.add('font-black', 'text-indigo-600');
+                        } else {
+                            s.classList.remove('font-black', 'text-indigo-600');
+                        }
+                    });
+                }
+
+                // Media System Switcher
+                const inputZone = safe.el('m-media-control');
+                safe.text('m-stage-tag', "STAGE: " + status.toUpperCase());
+
+                if (inputZone) {
+                    if (status === "Received") {
+                        inputZone.innerHTML = `<div class="py-6 px-4 bg-white rounded-2xl border border-indigo-100 shadow-inner"><p class="text-sm md:text-base font-black text-indigo-600 italic tracking-tight text-center leading-relaxed">ACKNOWLEDGMENT COMPLETE.<br>TRIGGER BALANCE CHECK.</p></div>`;
+                    } else {
+                        const isAudio = status.includes("Call");
+                        inputZone.innerHTML = `
+                            <div class="form-control w-full">
+                                <input type="file" id="m-file-input" 
+                                    class="file-input file-input-bordered file-input-primary w-full rounded-xl shadow-md text-xs font-bold" 
+                                    ${isAudio ? 'accept="audio/*"' : 'accept="image/*" capture="environment"'} 
+                                    multiple />
+                                <p class="text-[10px] md:text-xs font-black text-slate-400 mt-2 uppercase tracking-widest italic text-center">
+                                    ${isAudio ? 'AUDIO CAPTURE MODE ACTIVE' : 'CAMERA OPTICS MODE ACTIVE'}
+                                </p>
+                            </div>`;
+                    }
+                }
+
+                refreshVault(order);
+                const modal = safe.el('process_modal');
+                if (modal && typeof modal.showModal === 'function') {
+                    modal.showModal();
+                }
+            } catch (err) {
+                console.error("Modal Render Failed: ", err);
+                alert("Critical process load failed: " + err.message);
             }
         }
 
@@ -657,5 +686,3 @@
         // Auto Sync every 5 minutes
         setInterval(syncData, 300000);
     </script>
-</body>
-</html>
