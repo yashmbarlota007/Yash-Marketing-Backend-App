@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING | BACKBONE SUPER-APP v10.5</title>
+    <title>YASH MARKETING SYSTEM v11.0</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase Compat SDKs (For secure local attendance & visit logging) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root { --brand: #4f46e5; --danger: #ef4444; --bg: #f3f6f9; }
@@ -21,18 +26,18 @@
             border-radius: 1rem; 
         }
 
-        /* 3x3 Double Folded Rail Track (No Scroll) */
+        /* 3x3 Double Folded Rail Track */
         .railway-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
+            gap: 0.5rem;
             position: relative;
             z-index: 10;
         }
         @media (min-width: 1024px) {
             .railway-grid {
                 grid-template-columns: repeat(9, 1fr);
-                gap: 0.5rem;
+                gap: 0.4rem;
             }
         }
         
@@ -63,57 +68,147 @@
         #boot-loader { position: fixed; inset: 0; background: #fff; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-4 md:p-6 lg:p-10 min-h-screen">
+<body class="p-4 md:p-6 lg:p-8 min-h-screen">
 
     <!-- System Bootloader -->
     <div id="boot-loader">
         <div class="relative">
             <div class="w-16 h-16 border-[6px] border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
-        <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Kaam Shuru Ho Raha Hai...</h2>
+        <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Loading Yash Marketing Backbone</h2>
     </div>
 
-    <div class="max-w-[2000px] mx-auto">
-        
-        <!-- 1. COMPACT NAVBAR & HUD STATS -->
-        <header class="bg-white rounded-2xl shadow-md p-4 mb-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <!-- Brand Title -->
-                <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-                    <div class="p-2.5 bg-indigo-600 rounded-xl text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </div>
-                    <div>
-                        <h1 class="text-lg md:text-xl font-black tracking-tight text-slate-900 uppercase italic">Yash Marketing <span class="text-indigo-600">Backbone</span></h1>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Kaam Shuru Karein!</p>
-                    </div>
-                </div>
+    <!-- 1. LOGIN SCREEN PANEL (Strict Role verification) -->
+    <div id="login-screen" class="max-w-[450px] mx-auto mt-12 bg-white rounded-2xl shadow-xl p-6 border-t-8 border-indigo-600">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white mb-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11.5V6l-3.707 3.707M12 11c1.744 2.772 2.753 6.054 2.753 9.571M12 11V6l3.707 3.707M12 2a9 9 0 110 18 9 9 0 010-18z"/></svg>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 italic uppercase">Yash Marketing Portal</h2>
+            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Apna Staff ID aur PIN enter karein</p>
+        </div>
 
-                <!-- Compact Stats & Refresh Button -->
-                <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
-                    <div class="flex gap-6 items-center">
-                        <div>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Kul Chal Rahe Orders</span>
-                            <p id="hud-total" class="text-xl md:text-2xl font-black text-indigo-700 italic leading-none mt-1">0</p>
-                        </div>
-                    </div>
-                    <button onclick="syncData()" class="btn btn-circle btn-sm bg-indigo-50 border-none hover:bg-indigo-100 shrink-0">
-                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    </button>
+        <div class="space-y-4">
+            <div class="form-control">
+                <label class="label"><span class="label-text text-xs font-black text-slate-500">Staff ID (Username)</span></label>
+                <input type="text" id="login-username" placeholder="E.g. staff_id" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800" />
+            </div>
+            <div class="form-control">
+                <label class="label"><span class="label-text text-xs font-black text-slate-500">Aapka Secret PIN</span></label>
+                <input type="password" id="login-pin" placeholder="••••" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800 text-center tracking-widest" />
+            </div>
+            <button onclick="handleLogin()" class="btn btn-primary w-full h-12 rounded-xl font-black uppercase text-sm italic mt-4 shadow-lg">
+                PORTAL MEIN PRAVESH KAREIN ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APPLICATION WORKSPACE (Hidden till Login) -->
+    <div id="main-workspace" class="hidden max-w-[2000px] mx-auto space-y-6">
+        
+        <!-- Compact User Session Info -->
+        <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-md gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+                <img id="user-avatar" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-full border-2 border-indigo-500 object-cover" onerror="this.src='https://via.placeholder.com/150?text=👤'">
+                <div>
+                    <h3 id="user-display-name" class="text-sm font-black text-slate-800 uppercase italic">Staff Member</h3>
+                    <p id="user-role-badge" class="badge badge-primary font-black text-[9px] uppercase tracking-wide">Role</p>
                 </div>
             </div>
-        </header>
+            <div class="flex gap-2">
+                <button onclick="openProfileModal()" class="btn btn-xs btn-ghost bg-indigo-50 text-indigo-700 font-black rounded-full">Profile & Documents</button>
+                <button onclick="handleLogout()" class="btn btn-xs btn-ghost bg-red-50 text-red-650 font-black rounded-full">Logout ➔</button>
+            </div>
+        </div>
 
-        <div class="grid grid-cols-1 gap-6">
-            
-            <!-- 2. DOUBLE FOLDED RAIL KI PATRI - ORDER STAGE REVIEW (No Scroll, 3x3 Grid on Mobile, 9 inline on Desktop) -->
-            <div class="card bg-slate-950 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
+        <!-- 3. ATTENDANCE PUNCH MODULE (Geofenced + Live Salary view for employee) -->
+        <div id="attendance-card" class="card bg-white shadow-md p-4 border-l-8 border-indigo-600">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider">Attendance Register (Punch Panel)</h2>
+                <span id="gps-status" class="text-[10px] font-bold text-slate-400 italic">GPS Loading...</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between text-center gap-3">
+                    <p class="text-xs font-black text-slate-500 uppercase">Kripya Office Ke 50m Ke Andar Punch-in/Out Karein</p>
+                    <div class="flex gap-2 justify-center">
+                        <button id="punch-in-btn" onclick="punchAttendance('In')" class="btn btn-sm btn-success rounded-full text-white font-black">PUNCH IN (Aagman)</button>
+                        <button id="punch-out-btn" onclick="punchAttendance('Out')" class="btn btn-sm btn-error rounded-full text-white font-black">PUNCH OUT (Prasthan)</button>
+                    </div>
+                </div>
+
+                <!-- Personal live salary calculator tracker inside employee session -->
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-left space-y-2">
+                    <p class="text-xs font-black text-indigo-700 uppercase tracking-wider">Aapka Is Mahine Ka Record (Calendar Sync):</p>
+                    <div class="grid grid-cols-4 gap-1 text-center text-[10px] font-black uppercase text-slate-600">
+                        <div class="bg-white p-1 rounded border"><span class="text-indigo-600">Present</span><p id="calc-p-count">0</p></div>
+                        <div class="bg-white p-1 rounded border"><span class="text-yellow-600">Half-Day</span><p id="calc-hd-count">0</p></div>
+                        <div class="bg-white p-1 rounded border"><span class="text-orange-600">Late</span><p id="calc-l-count">0</p></div>
+                        <div class="bg-white p-1 rounded border"><span class="text-red-500">Absent</span><p id="calc-a-count">0</p></div>
+                    </div>
+                    <div class="border-t border-indigo-200/50 pt-2 flex justify-between items-center text-xs font-bold text-slate-700">
+                        <span>Live Estimated Salary:</span>
+                        <span id="calc-live-salary" class="text-indigo-600 font-black">₹ 0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. OWNER-ONLY DASHBOARD VIEW (Full HR attendance overview & dynamic totals) -->
+        <div id="owner-hr-card" class="hidden card bg-white shadow-md p-4 border-l-8 border-purple-600">
+            <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Malik Panel: HR & Live Salary Overview (All Employees)</h2>
+            <div class="overflow-x-auto beauty-scroll">
+                <table class="table table-xs w-full text-slate-800">
+                    <thead>
+                        <tr class="text-slate-400 font-black">
+                            <th>Employee</th>
+                            <th>Role</th>
+                            <th>Basic Salary</th>
+                            <th>P</th>
+                            <th>HD</th>
+                            <th>L</th>
+                            <th>A</th>
+                            <th>Net Payable (Is Month)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="owner-hr-tbody">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. SALES MARKET VISIT FORM (Sales Team exclusive) -->
+        <div id="sales-visit-card" class="hidden card bg-white shadow-md p-4 border-l-8 border-emerald-500">
+            <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Market Visit Registration (Client Survey Form)</h2>
+            <form id="visit-form" onsubmit="event.preventDefault();" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="label"><span class="label-text text-xs font-bold">Client / Shop Name</span></label>
+                    <input type="text" id="visit-client" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+                </div>
+                <div>
+                    <label class="label"><span class="label-text text-xs font-bold">Client Contact (Phone No)</span></label>
+                    <input type="text" id="visit-phone" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+                </div>
+                <div>
+                    <label class="label"><span class="label-text text-xs font-bold">Visit Remarks / Deal Status</span></label>
+                    <input type="text" id="visit-remarks" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+                </div>
+                <div class="md:col-span-3">
+                    <button onclick="submitMarketVisit()" class="btn btn-sm btn-emerald w-full text-white font-black rounded-lg">VISIT LOG SUBMIT KAREIN</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 6. BACKOFFICE & OWNER ORDER WORKSPACE -->
+        <div id="order-processing-workspace" class="hidden grid grid-cols-1 gap-6">
+            <!-- 3x3 Double Folded Rail Track (No Scroll) -->
+            <div class="card bg-slate-900 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xs font-black text-slate-400 uppercase tracking-wider">Order Stage Review (Rail Ki Patri Flow)</h2>
                     <span class="badge badge-primary font-bold text-[10px] py-1 px-2 uppercase shadow-sm">All Stages Live</span>
                 </div>
                 
-                <!-- Folded Track -->
                 <div class="relative w-full py-2">
                     <div id="rail-track" class="railway-grid">
                         <!-- Stations injected dynamically by JS -->
@@ -127,10 +222,8 @@
                 </div>
             </div>
 
-            <!-- 3. ASSEMBLY LINE HUB -->
+            <!-- Assembly Line Hub -->
             <div class="space-y-4">
-                
-                <!-- Time Filter & Short Orders Buttons -->
                 <div class="flex flex-wrap gap-2 px-2">
                     <button onclick="setDateFilter('all')" id="df-all" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-indigo-600 text-white border-none px-3">Saare Orders</button>
                     <button onclick="setDateFilter('today')" id="df-today" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Aaj Ke</button>
@@ -139,32 +232,40 @@
                     <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">⚠️ Short Orders Only</button>
                 </div>
 
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2 gap-4">
-                    <div class="flex items-center gap-3">
-                        <h2 id="line-title" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-wide italic flex items-center gap-2 leading-none">
-                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            Kaam Ki Assembly Line
-                        </h2>
-                        <span id="filter-badge" class="hidden badge badge-primary font-black animate-pulse text-xs p-2 rounded-full shadow-lg uppercase italic">Filter Chalu Hai</span>
-                    </div>
-                </div>
-                
                 <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[95vh] overflow-y-auto beauty-scroll pr-2 pb-24">
                     <!-- Dynamic Order Cards grouped by Received Date -->
-                    <div id="sync-preloader" class="col-span-full py-16 text-center">
-                        <span class="loading loading-ring loading-lg text-indigo-600 mb-4"></span>
-                        <p class="font-black tracking-widest uppercase text-xs text-slate-400 italic">Database se data load ho raha hai...</p>
-                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- 4. PROCESS MODAL (ROBUST COMPACT - perfectly centered modal-middle) -->
+    <!-- 7. PROFILE & DOCUMENTS VIEW MODAL -->
+    <dialog id="profile_modal" class="modal modal-middle backdrop-blur-md">
+        <div class="modal-box w-11/12 max-w-[500px] bg-white p-5 rounded-2xl shadow-3xl border-none my-auto mx-auto overflow-y-auto max-h-[85vh]">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-black text-slate-800 uppercase italic">Aapka Profile & Documents</h3>
+                <form method="dialog"><button class="btn btn-circle btn-sm btn-ghost">✕</button></form>
+            </div>
+            <div class="flex flex-col items-center text-center space-y-4">
+                <img id="prof-photo" src="https://via.placeholder.com/150" class="w-32 h-32 rounded-full border-4 border-indigo-600 object-cover shadow-md" onerror="this.src='https://via.placeholder.com/150?text=Passport+Photo'">
+                <div>
+                    <h4 id="prof-name" class="text-xl font-black text-slate-800 uppercase">Employee Name</h4>
+                    <p id="prof-role" class="badge badge-primary font-black text-xs uppercase tracking-wide">Role</p>
+                </div>
+                <div class="w-full bg-slate-50 p-4 rounded-xl border text-left space-y-2">
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-wider">Aadhar / PAN Card Document Link:</p>
+                    <a id="prof-doc-link" href="#" target="_blank" class="text-sm font-bold text-indigo-600 hover:underline flex items-center gap-1">
+                        📄 View Uploaded Document ➔
+                    </a>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- 8. ORDER PROCESS MODAL (ROBUST COMPACT - perfectly centered modal-middle) -->
     <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
         <div class="modal-box w-11/12 max-w-[950px] bg-white p-0 rounded-2xl shadow-3xl border-none my-auto mx-auto overflow-y-auto max-h-[90vh] beauty-scroll">
-            
-            <!-- Modal Header -->
             <div class="bg-indigo-600 p-5 text-white flex justify-between items-center relative overflow-hidden">
                 <div class="relative z-10 min-w-0">
                     <h3 id="m-dealer" class="text-2xl md:text-3xl font-black italic tracking-tight uppercase leading-none mb-3 break-words">Dealer Name</h3>
@@ -179,9 +280,8 @@
             </div>
 
             <div class="p-5">
-                <!-- 8-Stage Visual Track (Stacked vertically on mobile, horizontal on desktop) -->
                 <div class="mb-6 max-w-full">
-                    <ul id="timeline-track" class="steps steps-vertical md:steps-horizontal w-full text-[11px] font-black uppercase tracking-tight gap-4 md:gap-1">
+                    <ul id="timeline-track" class="steps steps-vertical w-full text-[11px] font-black uppercase tracking-tight gap-4">
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
                         <li class="step">Processed</li>
@@ -193,24 +293,19 @@
                     </ul>
                 </div>
 
-                <!-- Live Stage Explanation (Staff Hinglish Guidance) -->
                 <div class="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-left">
                     <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">📢 Staff Guide (Aapko Kya Karna Hai):</p>
                     <p id="m-step-explanation" class="text-sm font-medium text-indigo-900 leading-relaxed">Stage load ho rahi hai...</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- LEFT: Pick-List -->
                     <div class="lg:col-span-6 space-y-4">
                         <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-100 shadow-inner">
                             <h4 class="text-sm font-black text-indigo-600 uppercase mb-4 flex items-center gap-2">Saaman Ki List (Sahi Saaman Chunein)</h4>
-                            <div id="m-product-list" class="space-y-3 max-h-[400px] overflow-y-auto beauty-scroll pr-1">
-                                <!-- Catalogue items injected dynamically -->
-                            </div>
+                            <div id="m-product-list" class="space-y-3 max-h-[400px] overflow-y-auto beauty-scroll pr-1"></div>
                         </div>
                     </div>
 
-                    <!-- RIGHT: System Sync Engine -->
                     <div class="lg:col-span-6 space-y-4 text-center">
                         <div class="bg-indigo-50 p-4 rounded-xl border-2 border-dashed border-indigo-200 shadow-md">
                             <div class="mb-4">
@@ -219,30 +314,21 @@
                                 </span>
                             </div>
                             
-                            <div id="m-media-control" class="space-y-3">
-                                <!-- Dynamic File/Capture Inputs -->
-                            </div>
+                            <div id="m-media-control" class="space-y-3"></div>
 
                             <button id="m-sync-btn" onclick="executeSyncProtocol()" class="btn btn-primary w-full mt-4 h-12 rounded-full shadow-md font-black italic">
                                 KAAM COMPLETE! (Aage Bhejein)
                             </button>
                         </div>
                         
-                        <!-- Toggle Button for Split panel -->
                         <div class="flex gap-3">
                             <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SHORT ORDER (Saaman Alag Karein)</button>
                         </div>
 
-                        <!-- INTERACTIVE MULTI-PRODUCT SPLIT ORDER PANEL -->
                         <div id="m-split-zone" class="hidden bg-orange-50 border-2 border-orange-250 p-4 rounded-xl text-left space-y-3 shadow-inner">
                             <p class="text-xs font-black text-orange-700 uppercase tracking-wider">✂️ Short Order Panel (Shortage Items Chunein)</p>
                             <p class="text-[11px] text-slate-500 font-medium">Jo items warehouse mein abhi short hain, unhe check karein aur unki shortage quantity dalein. Unka ek naya Received short order ban jayega, aur original bacha hua order isi stage par aage badhega.</p>
-                            
-                            <!-- Dynamic Multi-item Selection List -->
-                            <div id="m-split-items-list" class="space-y-3">
-                                <!-- Options injected dynamically -->
-                            </div>
-                            
+                            <div id="m-split-items-list" class="space-y-3"></div>
                             <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-sm btn-warning w-full rounded-full font-black text-xs uppercase shadow-md mt-2">
                                 CONFIRM SHORT ORDER (Shortage Alag Karein)
                             </button>
@@ -255,20 +341,16 @@
 
     <script>
         /**
-         * v10.5 LIVE ENGINE (FIXED CONVEYOR PATRI & INTERACTIVE MULTI-SPLIT)
-         * -----------------------------------------------------------------
+         * v11.0 WORKSPACE ENGINE (ERP EDITION WITH GEOLOCTION ATTENDANCE & DYNAMIC SHORT CHECKS)
+         * ---------------------------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
-        
-        // Modal step sequence
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
-        
-        // Full Railway Track sequence (9 stations)
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
         const STAGE_EXPLANATIONS = {
-            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance check karke proof/receipt ki photo load karein.",
+            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance sheet check karke proof/receipt ki photo load karein.",
             "Call 1": "📞 <b>Call 1:</b> Customer ko call karke order confirm karein aur recording file (.mp3) upload karein.",
             "Processed": "📦 <b>Processed:</b> Warehouse se saaman packed hone ke baad packing box ka photo upload karein.",
             "Invoiced": "📄 <b>Invoiced:</b> Generate kiye gaye bill/invoice ki photo khinch kar yahan load karein.",
@@ -278,8 +360,25 @@
             "Final Call": "⭐ <b>Final Call:</b> Customer feedback call recording file yahan upload karke process close karein."
         };
 
+        // Firebase Initialization (For secure anonymous authentication & robust public/private logs storage)
+        const firebaseConfig = {
+            apiKey: "", // Automatically injected at runtime by context
+            authDomain: "default-app-id.firebaseapp.com",
+            projectId: "default-app-id",
+            storageBucket: "default-app-id.appspot.com",
+            messagingSenderId: "12345678",
+            appId: "1:12345678:web:1234"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let store_orders = [];
         let store_stock = [];
+        let store_staff = [];
+        let currentUser = null;
+        let officeCoordinates = { lat: 19.0760, lon: 72.8777 }; // Ahmednagar / Mumbai regional custom office coordinate
+        
         let activeFilterStage = null;
         let activeDateFilter = "all";
         let activeSplitOnlyFilter = false;
@@ -292,7 +391,7 @@
             removeClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.remove(cls); }
         };
 
-        // Convert HTML Drive viewer URLs to lh3 engine direct raw image links (Instant Display)
+        // Convert sharing URLs to direct rendering links via docs.google.com API to prevent empty blocks
         function getDirectDriveUrl(url) {
             if (!url) return "https://via.placeholder.com/150?text=📦";
             const sUrl = url.toString().trim();
@@ -306,63 +405,431 @@
                     if (idMatch) id = idMatch[1];
                 }
                 if (id) {
-                    return `https://lh3.googleusercontent.com/d/${id}`;
+                    return `https://docs.google.com/uc?export=download&id=${id}`;
                 }
             }
             return sUrl;
         }
 
-        window.onload = async () => {
+        // Distance formula (Haversine) for 50 meter GPS validation checking
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; 
+            const phi1 = lat1 * Math.PI/180;
+            const phi2 = lat2 * Math.PI/180;
+            const deltaPhi = (lat2-lat1) * Math.PI/180;
+            const deltaLambda = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+                      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        // Auth anonymus before fetching logs (Strict Rule 3)
+        async function authenticateAndSync() {
             try {
-                await syncData();
-            } catch(e) {
-                console.error("Initialization error:", e);
-            } finally {
+                await firebase.auth().signInAnonymously();
+                const response = await fetch(CLOUD_API);
+                const data = await response.json();
+                
+                store_orders = data.orders || [];
+                store_stock = data.catalogue || [];
+                store_staff = data.staff || [];
+                
                 const loader = safe.el('boot-loader');
-                if(loader) {
+                if (loader) {
                     loader.style.opacity = '0';
                     setTimeout(() => loader.style.display = 'none', 500);
                 }
-            }
-        };
-
-        async function syncData() {
-            try {
-                const response = await fetch(CLOUD_API);
-                if (!response.ok) throw new Error("Sync Handshake Failed");
-                const data = await response.json();
                 
-                if(data.status === "error") throw new Error(data.message);
-
-                store_orders = data.orders || []; 
-                store_stock = data.catalogue || [];
-                
-                const preloader = safe.el('sync-preloader');
-                if (preloader) preloader.classList.add('hidden');
-
-                applyFilters();
-                renderRailTrack(store_orders); // Corrected function name called reliably on load
-                syncHeaderStats(store_orders);
-                
-            } catch (e) {
-                console.error(e);
-                const feed = safe.el('assembly-line');
-                if (feed) {
-                    feed.innerHTML = `
-                        <div class="col-span-full p-6 bg-red-50 rounded-2xl border-2 border-red-200 text-center">
-                            <p class="text-red-600 font-black text-xl italic mb-3 uppercase">DATABASE SYNC ERROR</p>
-                            <p class="text-xs text-red-400 font-black uppercase tracking-widest leading-relaxed italic">DETAILS: ${e.message}</p>
-                            <button onclick="location.reload()" class="btn btn-error btn-sm mt-4 rounded-full px-6 font-black shadow-md italic">RE-ESTABLISH LINK</button>
-                        </div>`;
+                // Keep session alive if stored locally
+                const savedUser = localStorage.getItem("backbone_current_user");
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    showWorkspace();
                 }
+            } catch (err) {
+                console.error("Auth Fail:", err);
+                alert("Database authentication failed. Incognito mode allow karein.");
             }
         }
 
-        function syncHeaderStats(data) {
-            safe.text('hud-total', data.length);
+        authenticateAndSync();
+
+        function handleLogin() {
+            const uid = safe.el('login-username').value.trim();
+            const pin = safe.el('login-pin').value.trim();
+            
+            if(!uid || !pin) {
+                alert("Kripya ID aur PIN dono enter karein.");
+                return;
+            }
+
+            // Verify with Staff Master sheet row values (Index 0: Username, Index 1: PIN, Index 2: Name, Index 3: Role, Index 4: Salary, Index 5: Photo, Index 6: Doc)
+            const staffRow = store_staff.find(row => row[0].toString().trim() === uid && row[1].toString().trim() === pin);
+            
+            if (!staffRow) {
+                alert("🚫 AUTH DENIED: Sahi ID ya PIN select karein.");
+                return;
+            }
+
+            currentUser = {
+                uid: staffRow[0].toString().trim(),
+                name: staffRow[2].toString().trim(),
+                role: staffRow[3].toString().trim(),
+                salary: parseFloat(staffRow[4]) || 15000,
+                photo: getDirectDriveUrl(staffRow[5]),
+                doc: getDirectDriveUrl(staffRow[6])
+            };
+
+            localStorage.setItem("backbone_current_user", JSON.stringify(currentUser));
+            showWorkspace();
         }
 
-        // Rail ki Patri renderer (Vertical Metroline Map on Mobile, Horizontal Train Line on Desktop)
+        function showWorkspace() {
+            safe.hide('login-screen');
+            safe.removeClass('main-workspace', 'hidden');
+            
+            safe.text('user-display-name', currentUser.name);
+            safe.text('user-role-badge', currentUser.role);
+            
+            const avatar = safe.el('user-avatar');
+            if (avatar) avatar.src = currentUser.photo;
+
+            // Render Role Dashboards
+            if (currentUser.role.toLowerCase() === "owner") {
+                safe.removeClass('owner-hr-card', 'hidden');
+                safe.removeClass('order-processing-workspace', 'hidden');
+                safe.hide('sales-visit-card');
+                renderOwnerHRDashboard();
+            } else if (currentUser.role.toLowerCase() === "sales staff") {
+                safe.removeClass('sales-visit-card', 'hidden');
+                safe.hide('owner-hr-card');
+                safe.hide('order-processing-workspace');
+            } else { // Back Office Staff
+                safe.removeClass('order-processing-workspace', 'hidden');
+                safe.hide('owner-hr-card');
+                safe.hide('sales-visit-card');
+            }
+
+            // Sync individual calculations
+            loadPersonalSalaryTracker();
+            syncData();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("backbone_current_user");
+            currentUser = null;
+            location.reload();
+        }
+
+        // GPS Geofenced Attendance Register (Strict 50m limitation rule)
+        async function punchAttendance(type) {
+            const btn = safe.el(`punch-${type.toLowerCase()}-btn`);
+            if(!btn) return;
+            
+            btn.disabled = true;
+            safe.text('gps-status', "GPS Verification In Progress...");
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const dist = getDistanceInMeters(lat, lon, officeCoordinates.lat, officeCoordinates.lon);
+                
+                safe.text('gps-status', `Calculated Distance: ${dist.toFixed(1)}m`);
+
+                // Sales staff is exempted from geofencing, others must stay within 50m
+                if (currentUser.role.toLowerCase() !== "sales staff" && dist > 50) {
+                    alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). punch-in ke liye office ke 50m radius ke andar hona mandatory hai.`);
+                    btn.disabled = false;
+                    return;
+                }
+
+                try {
+                    const todayStr = new Date().toDateString();
+                    await db.collection("attendance").add({
+                        staffId: currentUser.uid,
+                        name: currentUser.name,
+                        type: type,
+                        dateStr: todayStr,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        location: `${lat},${lon}`,
+                        distance: dist
+                    });
+                    
+                    alert(`✅ Punch ${type} Successful! Record saved in secure local registry.`);
+                    loadPersonalSalaryTracker();
+                    if (currentUser.role.toLowerCase() === "owner") renderOwnerHRDashboard();
+                } catch(err) {
+                    console.error(err);
+                    alert("Sync failed: Database quota exceeded.");
+                } finally {
+                    btn.disabled = false;
+                }
+            }, (err) => {
+                alert("⚠️ Location Error: Punch karne ke liye mobile GPS settings ON karein.");
+                btn.disabled = false;
+                safe.text('gps-status', "Location Refused.");
+            }, { enableHighAccuracy: true });
+        }
+
+        // Live Salary Calculations engine (Late penalty deductions: 3 lates = 1 absent deduction)
+        async function loadPersonalSalaryTracker() {
+            if(!currentUser) return;
+            try {
+                const snapshot = await db.collection("attendance").where("staffId", "==", currentUser.uid).get();
+                let logs = [];
+                snapshot.forEach(doc => logs.push(doc.data()));
+                
+                const stats = calculateSalaryStats(currentUser.salary, logs);
+                safe.text('calc-p-count', stats.present);
+                safe.text('calc-hd-count', stats.halfDay);
+                safe.text('calc-l-count', stats.late);
+                safe.text('calc-a-count', stats.absent);
+                safe.text('calc-live-salary', `₹ ${stats.payable.toFixed(2)}`);
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function calculateSalaryStats(basic, logs) {
+            const dailyRate = basic / 30;
+            let present = 0, halfDay = 0, late = 0, absent = 0;
+
+            logs.forEach(log => {
+                if (log.type === "In") {
+                    const punchTime = log.timestamp ? log.timestamp.toDate() : new Date();
+                    const hours = punchTime.getHours();
+                    const mins = punchTime.getMinutes();
+                    const absoluteMins = (hours * 60) + mins;
+                    
+                    if (absoluteMins > 630) { // Late after 10:30 AM
+                        late++;
+                    } else if (absoluteMins > 720) { // Half day after 12:00 PM
+                        halfDay++;
+                    } else {
+                        present++;
+                    }
+                }
+            });
+
+            // Late rule: 3 late punches results in 1 day salary deduction
+            const lateDeductionDays = Math.floor(late / 3);
+            absent = 30 - (present + halfDay);
+            if (absent < 0) absent = 0;
+
+            let payable = basic - (absent * dailyRate) - (halfDay * 0.5 * dailyRate) - (lateDeductionDays * dailyRate);
+            if (payable < 0) payable = 0;
+
+            return { present, halfDay, late, absent, payable };
+        }
+
+        // Owner live attendance database list
+        async function renderOwnerHRDashboard() {
+            const tbody = safe.el('owner-hr-tbody');
+            if(!tbody) return;
+
+            try {
+                const snapshot = await db.collection("attendance").get();
+                let allLogs = [];
+                snapshot.forEach(doc => allLogs.push(doc.data()));
+
+                tbody.innerHTML = store_staff.slice(1).map(row => {
+                    const uid = row[0].toString().trim();
+                    const name = row[2].toString().trim();
+                    const role = row[3].toString().trim();
+                    const basic = parseFloat(row[4]) || 15000;
+                    
+                    const logs = allLogs.filter(l => l.staffId === uid);
+                    const stats = calculateSalaryStats(basic, logs);
+
+                    return `
+                        <tr class="hover:bg-slate-50 border-b border-slate-100 font-bold">
+                            <td>${name}</td>
+                            <td><span class="badge badge-indigo text-[10px]">${role}</span></td>
+                            <td>₹ ${basic}</td>
+                            <td class="text-green-600">${stats.present}</td>
+                            <td class="text-yellow-600">${stats.halfDay}</td>
+                            <td class="text-orange-600">${stats.late}</td>
+                            <td class="text-red-500">${stats.absent}</td>
+                            <td class="text-indigo-600 font-black">₹ ${stats.payable.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Sales Market log submit
+        async function submitMarketVisit() {
+            const client = safe.el('visit-client').value.trim();
+            const phone = safe.el('visit-phone').value.trim();
+            const remarks = safe.el('visit-remarks').value.trim();
+
+            if(!client || !phone || !remarks) {
+                alert("Kripya forms ke saare cells fill karein.");
+                return;
+            }
+
+            try {
+                await db.collection("market_visits").add({
+                    staffId: currentUser.uid,
+                    staffName: currentUser.name,
+                    client: client,
+                    phone: phone,
+                    remarks: remarks,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("✅ Client visit logs successfully recorded!");
+                safe.el('visit-form').reset();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function openProfileModal() {
+            if(!currentUser) return;
+            const photoImg = safe.el('prof-photo');
+            if (photoImg) photoImg.src = currentUser.photo;
+            safe.text('prof-name', currentUser.name);
+            safe.text('prof-role', currentUser.role);
+            
+            const link = safe.el('prof-doc-link');
+            if (link) link.href = currentUser.doc;
+
+            const modal = safe.el('profile_modal');
+            if(modal && typeof modal.showModal === 'function') modal.showModal();
+        }
+
+        // Group strictly by original Col A date - Row IDs preserve chronological placement
+        function renderLineFeed(data) {
+            const feed = safe.el('assembly-line');
+            if(!feed) return;
+
+            if(data.length === 0) {
+                feed.innerHTML = `<div class="col-span-full py-12 text-center opacity-10 italic font-black uppercase text-xl tracking-widest">Is stage par koi order pending nahi hai.</div>`;
+                return;
+            }
+
+            // Check if Shortage Orders exist - Filter and render them strictly at the absolute top of the feed list
+            const splitOrders = data.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
+            const standardOrders = data.filter(o => !o.Order_ID || !o.Order_ID.toString().includes("-SHORT"));
+
+            let htmlString = "";
+
+            if (splitOrders.length > 0) {
+                htmlString += `
+                    <div class="col-span-full mt-2 mb-1">
+                        <div class="flex items-center gap-2 bg-orange-100 border-2 border-orange-250 py-1.5 px-3 rounded-xl w-fit">
+                            <span class="text-xs font-black text-orange-800 uppercase tracking-wide">⚠️ SHORTAGE ORDERS (Khatoti Priority)</span>
+                            <span class="badge badge-warning font-black text-xs px-2 rounded-md">${splitOrders.length} Short Orders</span>
+                        </div>
+                    </div>
+                `;
+                splitOrders.forEach(o => {
+                    htmlString += renderSingleOrderCard(o);
+                });
+            }
+
+            // Group standard orders by Received Date
+            const groups = {};
+            standardOrders.forEach(o => {
+                let dateKey = "Bina Date Ke Orders";
+                try {
+                    if (o.Date) {
+                        const date = new Date(o.Date);
+                        if (!isNaN(date.getTime())) {
+                            dateKey = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Date formatting failed:", e);
+                }
+
+                if (!groups[dateKey]) {
+                    groups[dateKey] = [];
+                }
+                groups[dateKey].push(o);
+            });
+
+            Object.keys(groups).forEach(dateKey => {
+                htmlString += `
+                    <div class="col-span-full mt-4 mb-1">
+                        <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 py-1 px-3 rounded-xl w-fit">
+                            <span class="text-xs md:text-sm font-black text-indigo-700 uppercase tracking-wide">📅 Order Milna Ka Date: ${dateKey}</span>
+                            <span class="badge badge-primary font-black text-xs px-2 rounded-md">${groups[dateKey].length} Orders</span>
+                        </div>
+                    </div>
+                `;
+
+                groups[dateKey].forEach(o => {
+                    htmlString += renderSingleOrderCard(o);
+                });
+            });
+
+            feed.innerHTML = htmlString;
+        }
+
+        function renderSingleOrderCard(o) {
+            let curStatus = "Received";
+            if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
+                curStatus = o.Dealer_Area.toString().trim();
+            } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                curStatus = o.Current_Status.toString().trim();
+            }
+
+            let orderVal = "N/A";
+            if (o.Order_Value) {
+                orderVal = o.Order_Value;
+            } else if (o.Current_Status && !isNaN(o.Current_Status)) {
+                orderVal = o.Current_Status;
+            }
+            
+            const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
+            
+            let prettyStr = "N/A";
+            try {
+                if (o.Date) {
+                    const date = new Date(o.Date);
+                    if (!isNaN(date.getTime())) {
+                        prettyStr = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
+                    }
+                }
+            } catch(e) {}
+
+            const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SHORT");
+            const splitBadge = isSplit ? `<span class="badge badge-warning font-black text-[9px] px-2 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">⚠️ SHORT ORDER</span>` : '';
+
+            return `
+                <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer hover:scale-[1.01]" 
+                     onclick="openProcessModal('${safeOrderId}')">
+                    
+                    <div class="flex justify-between items-start mb-4 gap-2">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
+                                ${splitBadge}
+                            </div>
+                            <h3 class="text-lg font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
+                        </div>
+                        <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${curStatus}</div>
+                    </div>
+
+                    <div class="flex items-center gap-3 mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200/40">
+                        <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse shrink-0"></div>
+                        <p class="text-xs md:text-sm font-bold text-slate-500 line-clamp-1 italic">Order Ki Keemat: ₹ ${orderVal}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center border-t border-slate-100 pt-3 gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-wider italic truncate">${o.Order_Brought_By || 'Yash Marketing'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Rail ki Patri station counts
         function renderRailTrack(data) {
             const listContainer = safe.el('rail-track');
             if (!listContainer) return;
@@ -392,192 +859,6 @@
                     </div>
                 `;
             }).join('');
-        }
-
-        function toggleStageFilter(stage) {
-            if (activeFilterStage === stage) {
-                activeFilterStage = null;
-            } else {
-                activeFilterStage = stage;
-            }
-            renderRailTrack(store_orders);
-            applyFilters();
-        }
-
-        // Date-wise Week-wise Month-wise Multi Filter Action Engine
-        function setDateFilter(filterType) {
-            activeDateFilter = filterType;
-            const types = ["all", "today", "week", "month"];
-            types.forEach(t => {
-                const btn = safe.el("df-" + t);
-                if (btn) {
-                    if (t === filterType) {
-                        btn.classList.add("bg-indigo-600", "text-white");
-                        btn.classList.remove("bg-white", "text-slate-650");
-                    } else {
-                        btn.classList.remove("bg-indigo-600", "text-white");
-                        btn.classList.add("bg-white", "text-slate-650");
-                    }
-                }
-            });
-            applyFilters();
-        }
-
-        function toggleSplitFilter() {
-            activeSplitOnlyFilter = !activeSplitOnlyFilter;
-            const btn = safe.el("df-split");
-            if (btn) {
-                if (activeSplitOnlyFilter) {
-                    btn.classList.add("bg-orange-500", "text-white");
-                    btn.classList.remove("bg-white", "text-slate-650");
-                } else {
-                    btn.classList.remove("bg-orange-500", "text-white");
-                    btn.classList.add("bg-white", "text-slate-650");
-                }
-            }
-            applyFilters();
-        }
-
-        function applyFilters() {
-            let filtered = [...store_orders];
-
-            // Filter 1: Stage Filter
-            if (activeFilterStage) {
-                filtered = filtered.filter(o => {
-                    let curSt = "Received";
-                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
-                        curSt = o.Dealer_Area.toString().trim();
-                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
-                        curSt = o.Current_Status.toString().trim();
-                    }
-                    return curSt.toLowerCase() === activeFilterStage.toLowerCase();
-                });
-            }
-
-            // Filter 2: Split Orders Filter (Short Order check)
-            if (activeSplitOnlyFilter) {
-                filtered = filtered.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
-            }
-
-            // Filter 3: Chronological Time Range filter
-            if (activeDateFilter !== "all") {
-                const now = new Date();
-                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                
-                filtered = filtered.filter(o => {
-                    if (!o.Date) return false;
-                    const orderDate = new Date(o.Date).getTime();
-                    
-                    if (activeDateFilter === "today") {
-                        return orderDate >= todayStart;
-                    } else if (activeDateFilter === "week") {
-                        const oneWeekAgo = todayStart - (7 * 24 * 60 * 60 * 1000);
-                        return orderDate >= oneWeekAgo;
-                    } else if (activeDateFilter === "month") {
-                        const oneMonthAgo = todayStart - (30 * 24 * 60 * 60 * 1000);
-                        return orderDate >= oneMonthAgo;
-                    }
-                    return true;
-                });
-            }
-
-            renderLineFeed(filtered);
-        }
-
-        // Render card feed grouped strictly by Row indices (Prevents shifting positions completely)
-        function renderLineFeed(data) {
-            const feed = safe.el('assembly-line');
-            if(!feed) return;
-
-            if(data.length === 0) {
-                feed.innerHTML = `<div class="col-span-full py-12 text-center opacity-10 italic font-black uppercase text-xl tracking-widest">Is stage par koi order pending nahi hai.</div>`;
-                return;
-            }
-
-            const groups = {};
-            data.forEach(o => {
-                let dateKey = "Bina Date Ke Orders";
-                try {
-                    if (o.Date) {
-                        const date = new Date(o.Date);
-                        if (!isNaN(date.getTime())) {
-                            dateKey = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
-                        }
-                    }
-                } catch (e) {
-                    console.error("Date formatting failed:", e);
-                }
-
-                if (!groups[dateKey]) {
-                    groups[dateKey] = [];
-                }
-                groups[dateKey].push(o);
-            });
-
-            let htmlString = "";
-            Object.keys(groups).forEach(dateKey => {
-                htmlString += `
-                    <div class="col-span-full mt-4 mb-1">
-                        <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 py-1 px-3 rounded-xl w-fit">
-                            <span class="text-xs md:text-sm font-black text-indigo-700 uppercase tracking-wide">📅 Order Milna Ka Date: ${dateKey}</span>
-                            <span class="badge badge-primary font-black text-xs px-2 rounded-md">${groups[dateKey].length} Orders</span>
-                        </div>
-                    </div>
-                `;
-
-                groups[dateKey].forEach(o => {
-                    let curStatus = "Received";
-                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
-                        curStatus = o.Dealer_Area.toString().trim();
-                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
-                        curStatus = o.Current_Status.toString().trim();
-                    }
-
-                    let orderVal = "N/A";
-                    if (o.Order_Value) {
-                        orderVal = o.Order_Value;
-                    } else if (o.Current_Status && !isNaN(o.Current_Status)) {
-                        orderVal = o.Current_Status;
-                    }
-                    
-                    const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
-                    
-                    // Display highly visible warning tag for split orders
-                    const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SHORT");
-                    const splitBadge = isSplit ? `<span class="badge badge-warning font-black text-[9px] px-2 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">⚠️ SHORT ORDER</span>` : '';
-
-                    htmlString += `
-                        <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer hover:scale-[1.01]" 
-                             onclick="openProcessModal('${safeOrderId}')">
-                            
-                            <div class="flex justify-between items-start mb-4 gap-2">
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <span class="text-xs font-black text-indigo-500 tracking-wider uppercase opacity-70 italic font-bold">#ID-${o.Order_ID || 'N/A'}</span>
-                                        ${splitBadge}
-                                    </div>
-                                    <h3 class="text-lg font-black text-slate-800 tracking-tight leading-tight mt-1 uppercase italic break-words">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
-                                </div>
-                                <div class="badge badge-neutral text-[10px] md:text-xs font-black py-2 px-3 rounded-full italic uppercase shadow-md border-none bg-slate-900 text-white shrink-0">${curStatus}</div>
-                            </div>
-
-                            <div class="flex items-center gap-3 mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200/40">
-                                <div class="w-3 h-3 bg-indigo-500 rounded-full animate-pulse shrink-0"></div>
-                                <p class="text-xs md:text-sm font-bold text-slate-500 line-clamp-1 italic">Order Ki Keemat: ₹ ${orderVal}</p>
-                            </div>
-
-                            <div class="flex justify-between items-center border-t border-slate-100 pt-3 gap-2">
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
-                                    <span class="text-xs font-black text-slate-400 uppercase tracking-wider italic truncate">${o.Order_Brought_By || 'Yash Marketing'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-
-            feed.innerHTML = htmlString;
         }
 
         function openProcessModal(id) {
@@ -615,13 +896,13 @@
                 const splitZone = safe.el('m-split-zone');
                 if (splitZone) splitZone.classList.add('hidden');
 
-                // Visual Catalogue Pick-List (Google Drive links are automatically converted to direct raw images)
+                // Visual Catalogue Pick-List with self-healing sheet column search for product images
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     catScroll.innerHTML = parsedItemsList.map(item => {
                         const query = item.name.toLowerCase();
                         
-                        // Self-healing database column search for product images
+                        // Self-healing check (Find first cell matching HTTP URL dynamically)
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
                         let rawImgUrl = "https://via.placeholder.com/150?text=📦";
                         if (matched && Array.isArray(matched)) {
@@ -631,7 +912,6 @@
                             }
                         }
                         
-                        // Parse direct image link to display natively in Chrome browser client
                         const cleanImgUrl = getDirectDriveUrl(rawImgUrl);
                         
                         return `
@@ -708,11 +988,10 @@
 
                         const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
 
-                        // Inject inline step preview next to name with descriptions below
                         s.innerHTML = `
                             <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100/60 text-left">
                                 <div class="flex justify-between items-center gap-2">
-                                    <span class="text-xs font-black uppercase tracking-wider text-slate-800">${stageName}</span>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-800">${stageName}</span>
                                     ${proofHtml}
                                 </div>
                                 <p class="text-[11px] text-slate-500 font-medium leading-relaxed bg-white p-2 rounded-lg border border-slate-100/50 mt-1">${rawExplanation}</p>
@@ -854,7 +1133,7 @@
 
             const splitItemsString = splitItemsList.join(' | ');
             const originalItemsString = remainingItemsList.join(' | ');
-            const splitOrderId = `${order.Order_ID}-SHORT`;
+            const splitOrderId = `${order.Order_ID}-SHORT`; // Suffix updated as SHORT
 
             if (!confirm(`Kya aap sach mein in selected shortage items ko alag (split) karke naya short order #${splitOrderId} banana chahte hain?`)) {
                 return;
