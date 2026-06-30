@@ -21,46 +21,36 @@
             border-radius: 1rem; 
         }
 
-        /* Responsive Rail ki Patri Line Layout */
-        .railway-line {
-            position: absolute;
-            left: 50%;
-            width: 8px;
-            top: 4%;
-            bottom: 4%;
-            background: repeating-linear-gradient(180deg, #475569, #475569 8px, #334155 8px, #334155 16px);
-            border-radius: 4px;
-            transform: translateX(-50%);
-            z-index: 0;
-            box-shadow: inset 2px 0 5px rgba(0,0,0,0.3);
+        /* 3x3 Double Folded Rail Track (No Scroll) */
+        .railway-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            position: relative;
+            z-index: 10;
         }
-        @media (min-width: 768px) {
-            .railway-line {
-                left: 4%;
-                right: 4%;
-                width: auto;
-                height: 10px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: repeating-linear-gradient(90deg, #475569, #475569 8px, #334155 8px, #334155 16px);
+        @media (min-width: 1024px) {
+            .railway-grid {
+                grid-template-columns: repeat(9, 1fr);
+                gap: 0.5rem;
             }
         }
         
         .railway-station {
             transition: all 0.3s ease;
-            z-index: 10;
+            cursor: pointer;
         }
         .railway-station:hover {
-            transform: scale(1.08);
+            transform: scale(1.05);
         }
 
         .beauty-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .beauty-scroll::-webkit-scrollbar-thumb { background: var(--brand); border-radius: 100px; }
         
         /* Component Visuals */
-        .cat-image { width: 55px; height: 60px; object-fit: cover; border-radius: 0.8rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .cat-image { width: 60px; height: 60px; object-fit: cover; border-radius: 0.8rem; border: 2px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         @media (min-width: 768px) {
-            .cat-image { width: 75px; height: 80px; border-radius: 1.2rem; }
+            .cat-image { width: 80px; height: 80px; border-radius: 1.2rem; }
         }
         
         .proof-frame { border-radius: 0.8rem; border: 2px solid #e2e8f0; transition: 0.4s; overflow: hidden; }
@@ -99,7 +89,7 @@
                     </div>
                 </div>
 
-                <!-- Inline Compact Stats & Refresh Button -->
+                <!-- Compact Stats & Refresh Button -->
                 <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
                     <div class="flex gap-6 items-center">
                         <div>
@@ -116,18 +106,16 @@
 
         <div class="grid grid-cols-1 gap-6">
             
-            <!-- 2. RAIL KI PATRI - ORDER STAGE REVIEW (Vertical on Mobile, Horizontal on Desktop) -->
-            <div class="card bg-slate-900 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
+            <!-- 2. DOUBLE FOLDED RAIL KI PATRI - ORDER STAGE REVIEW (No Scroll, 3x3 Grid on Mobile, 9 inline on Desktop) -->
+            <div class="card bg-slate-950 shadow-xl p-4 border-b-8 border-indigo-600 relative overflow-hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xs font-black text-slate-400 uppercase tracking-wider">Order Stage Review (Rail Ki Patri Flow)</h2>
                     <span class="badge badge-primary font-bold text-[10px] py-1 px-2 uppercase shadow-sm">All Stages Live</span>
                 </div>
                 
-                <!-- Rail track responsive wrapper -->
-                <div class="relative w-full py-6 px-2 min-h-[380px] md:min-h-[100px] flex items-center">
-                    <div class="railway-line"></div>
-                    
-                    <div id="rail-track" class="flex flex-col md:flex-row justify-between items-stretch md:items-center w-full relative z-10 gap-4 md:gap-1 px-4">
+                <!-- Folded Track -->
+                <div class="relative w-full py-2">
+                    <div id="rail-track" class="railway-grid">
                         <!-- Stations injected dynamically by JS -->
                     </div>
                 </div>
@@ -142,13 +130,13 @@
             <!-- 3. ASSEMBLY LINE HUB -->
             <div class="space-y-4">
                 
-                <!-- Time Filter & Split Only Buttons -->
+                <!-- Time Filter & Short Orders Buttons -->
                 <div class="flex flex-wrap gap-2 px-2">
                     <button onclick="setDateFilter('all')" id="df-all" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-indigo-600 text-white border-none px-3">Saare Orders</button>
                     <button onclick="setDateFilter('today')" id="df-today" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Aaj Ke</button>
                     <button onclick="setDateFilter('week')" id="df-week" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Is Hafte Ke</button>
                     <button onclick="setDateFilter('month')" id="df-month" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">Is Mahine Ke</button>
-                    <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">✂️ Split Orders Only</button>
+                    <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3">⚠️ Short Orders Only</button>
                 </div>
 
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2 gap-4">
@@ -242,13 +230,13 @@
                         
                         <!-- Toggle Button for Split panel -->
                         <div class="flex gap-3">
-                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SPLIT (Shortage Saaman Alag Karein)</button>
+                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-100 text-orange-700 flex-1 rounded-full font-black h-10 text-xs italic shadow-sm">SHORT ORDER (Saaman Alag Karein)</button>
                         </div>
 
                         <!-- INTERACTIVE MULTI-PRODUCT SPLIT ORDER PANEL -->
                         <div id="m-split-zone" class="hidden bg-orange-50 border-2 border-orange-250 p-4 rounded-xl text-left space-y-3 shadow-inner">
-                            <p class="text-xs font-black text-orange-700 uppercase tracking-wider">✂️ Split Order Panel (Shortage Items Chunein)</p>
-                            <p class="text-[11px] text-slate-500 font-medium">Jo items warehouse mein abhi short hain, unhe check karein aur unki shortage quantity dalein. Unka ek naya Received split order ban jayega, aur original bacha hua order isi stage par aage badhega.</p>
+                            <p class="text-xs font-black text-orange-700 uppercase tracking-wider">✂️ Short Order Panel (Shortage Items Chunein)</p>
+                            <p class="text-[11px] text-slate-500 font-medium">Jo items warehouse mein abhi short hain, unhe check karein aur unki shortage quantity dalein. Unka ek naya Received short order ban jayega, aur original bacha hua order isi stage par aage badhega.</p>
                             
                             <!-- Dynamic Multi-item Selection List -->
                             <div id="m-split-items-list" class="space-y-3">
@@ -256,7 +244,7 @@
                             </div>
                             
                             <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-sm btn-warning w-full rounded-full font-black text-xs uppercase shadow-md mt-2">
-                                CONFIRM SPLIT (Shortage Alag Karein)
+                                CONFIRM SHORT ORDER (Shortage Alag Karein)
                             </button>
                         </div>
                     </div>
@@ -276,11 +264,11 @@
         // Modal step sequence
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         
-        // Full Rail Track sequence (9 stations)
+        // Full Railway Track sequence (9 stations)
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
         const STAGE_EXPLANATIONS = {
-            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance sheet check karein aur receipt/proof ki photo load karein.",
+            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance check karke proof/receipt ki photo load karein.",
             "Call 1": "📞 <b>Call 1:</b> Customer ko call karke order confirm karein aur recording file (.mp3) upload karein.",
             "Processed": "📦 <b>Processed:</b> Warehouse se saaman packed hone ke baad packing box ka photo upload karein.",
             "Invoiced": "📄 <b>Invoiced:</b> Generate kiye gaye bill/invoice ki photo khinch kar yahan load karein.",
@@ -394,7 +382,7 @@
                 
                 return `
                     <div onclick="toggleStageFilter('${stage}')" 
-                         class="railway-station flex flex-row md:flex-col items-center justify-between md:justify-center w-full gap-2 p-2 rounded-xl transition-all cursor-pointer ${isSelected ? 'bg-indigo-600 text-white border-2 border-white' : 'bg-slate-800 text-slate-300'}">
+                         class="railway-station flex flex-row md:flex-col items-center justify-between md:justify-center p-2 rounded-xl transition-all cursor-pointer ${isSelected ? 'bg-indigo-600 text-white border-2 border-white' : 'bg-slate-800 text-slate-300'}">
                         <div class="flex items-center gap-2 md:flex-col md:gap-1 w-full md:w-auto">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-2 transition-all shrink-0 ${isSelected ? 'bg-white text-indigo-600 border-white shadow-md' : 'bg-slate-900 text-slate-200 border-slate-700'}">
                                 ${count}
@@ -466,9 +454,9 @@
                 });
             }
 
-            // Filter 2: Split Orders Filter
+            // Filter 2: Split Orders Filter (Short Order check)
             if (activeSplitOnlyFilter) {
-                filtered = filtered.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SPLIT"));
+                filtered = filtered.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
             }
 
             // Filter 3: Chronological Time Range filter
@@ -555,8 +543,8 @@
                     const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
                     
                     // Display highly visible warning tag for split orders
-                    const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SPLIT");
-                    const splitBadge = isSplit ? `<span class="badge badge-warning font-black text-[9px] px-2 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">✂️ SHORTAGE SPLIT</span>` : '';
+                    const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SHORT");
+                    const splitBadge = isSplit ? `<span class="badge badge-warning font-black text-[9px] px-2 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">⚠️ SHORT ORDER</span>` : '';
 
                     htmlString += `
                         <div class="slide-up-fade card bg-white shadow-md p-4 border-t-8 border-indigo-600 transition-all duration-500 cursor-pointer hover:scale-[1.01]" 
@@ -627,13 +615,21 @@
                 const splitZone = safe.el('m-split-zone');
                 if (splitZone) splitZone.classList.add('hidden');
 
-                // Visual Catalogue Pick-List with converted direct Drive image URLs
+                // Visual Catalogue Pick-List (Google Drive links are automatically converted to direct raw images)
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     catScroll.innerHTML = parsedItemsList.map(item => {
                         const query = item.name.toLowerCase();
+                        
+                        // Self-healing database column search for product images
                         const matched = (store_stock && Array.isArray(store_stock)) ? store_stock.find(c => c && c[1] && c[1].toString().toLowerCase().includes(query)) : null;
-                        const rawImgUrl = matched && matched[2] ? matched[2] : "https://via.placeholder.com/150?text=📦";
+                        let rawImgUrl = "https://via.placeholder.com/150?text=📦";
+                        if (matched && Array.isArray(matched)) {
+                            const foundLink = matched.find(cell => cell && cell.toString().trim().startsWith("http"));
+                            if (foundLink) {
+                                rawImgUrl = foundLink;
+                            }
+                        }
                         
                         // Parse direct image link to display natively in Chrome browser client
                         const cleanImgUrl = getDirectDriveUrl(rawImgUrl);
@@ -712,7 +708,7 @@
 
                         const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
 
-                        // Inject inline step preview next to name
+                        // Inject inline step preview next to name with descriptions below
                         s.innerHTML = `
                             <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100/60 text-left">
                                 <div class="flex justify-between items-center gap-2">
@@ -858,9 +854,9 @@
 
             const splitItemsString = splitItemsList.join(' | ');
             const originalItemsString = remainingItemsList.join(' | ');
-            const splitOrderId = `${order.Order_ID}-SPLIT`;
+            const splitOrderId = `${order.Order_ID}-SHORT`;
 
-            if (!confirm(`Kya aap sach mein in selected shortage items ko alag (split) karke naya backorder #${splitOrderId} banana chahte hain?`)) {
+            if (!confirm(`Kya aap sach mein in selected shortage items ko alag (split) karke naya short order #${splitOrderId} banana chahte hain?`)) {
                 return;
             }
 
@@ -881,7 +877,7 @@
 
                 const data = await res.json();
                 if (data && data.status === "success") {
-                    alert("✂️ REPLICATION SUCCESSFUL! Shortage items ka naya split order ban gaya hai: #" + splitOrderId);
+                    alert("✂️ REPLICATION SUCCESSFUL! Shortage items ka naya short order ban gaya hai: #" + splitOrderId);
                     const modal = safe.el('process_modal');
                     if (modal && typeof modal.close === 'function') modal.close();
                     await syncData();
@@ -893,7 +889,7 @@
                 console.error(err);
             } finally {
                 splitBtn.disabled = false;
-                splitBtn.innerText = "CONFIRM SPLIT (Shortage Alag Karein)";
+                splitBtn.innerText = "CONFIRM SHORT ORDER (Shortage Alag Karein)";
             }
         }
 
