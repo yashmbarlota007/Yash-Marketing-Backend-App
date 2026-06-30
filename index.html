@@ -21,7 +21,7 @@
             border-radius: 1rem; 
         }
 
-        /* 3x3 Double Folded Rail Track (Perfect Fitting on Mobile) */
+        /* 3x3 Double Folded Rail Track (Compact, No Scroll, Perfect Alignment) */
         .railway-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -86,7 +86,7 @@
         <div class="space-y-4">
             <div class="form-control">
                 <label class="label"><span class="label-text text-xs font-black text-slate-500">Staff ID (Username)</span></label>
-                <input type="text" id="login-username" placeholder="E.g. owner / sales / staff" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800" />
+                <input type="text" id="login-username" placeholder="E.g. YM001 / YM002" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800" />
             </div>
             <div class="form-control">
                 <label class="label"><span class="label-text text-xs font-black text-slate-500">Aapka Secret PIN</span></label>
@@ -335,7 +335,7 @@
 
     <script>
         /**
-         * v11.0 WORKSPACE ENGINE (CRASH-PROOF SELF-HEALING ERP FOR STAFF)
+         * v11.0 WORKSPACE ENGINE (SELF-HEALING ERP FOR STAFF)
          * ---------------------------------------------------------------------
          */
         
@@ -359,7 +359,7 @@
         let store_staff = [];
         let store_attendance = [];
         let currentUser = null;
-        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Headquarter coordinates
+        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Ahmednagar headquarter location
         
         let activeFilterStage = null;
         let activeDateFilter = "all";
@@ -389,7 +389,7 @@
                     if (idMatch) id = idMatch[1];
                 }
                 if (id) {
-                    return `https://docs.google.com/uc?export=download&id=${id}`;
+                    return `https://lh3.googleusercontent.com/d/${id}`;
                 }
             }
             return sUrl;
@@ -488,7 +488,7 @@
                     return;
                 }
 
-                // 1. EMERGENCY BYPASS LOGINS (Google Sheet blank hone par bhi kaam karega)
+                // 1. EMERGENCY BYPASS LOGINS (Google Sheet database mismatch bypass)
                 if (uid === "owner" && pin === "1234") {
                     currentUser = {
                         uid: "owner",
@@ -517,7 +517,7 @@
                         doc: "#"
                     };
                 } else {
-                    // 2. SELF-HEALING GOOGLE SHEET "Staff Master" LOGIN
+                    // 2. SELF-HEALING GOOGLE SHEET "Staff Master" LOGIN MATCHING ENGINE
                     if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
                         const headers = store_staff[0];
                         const rows = store_staff.slice(1);
@@ -525,7 +525,7 @@
                         let idCol = 0, pinCol = 1, nameCol = 2, roleCol = 3, salaryCol = 4, photoCol = 5, docCol = 6;
                         headers.forEach((h, i) => {
                             const val = h.toString().toLowerCase().trim();
-                            if (val === "id" || val.includes("username") || val.includes("staff id")) idCol = i;
+                            if (val === "employee id" || val.includes("username") || val === "id") idCol = i;
                             if (val.includes("pin") || val.includes("password") || val === "pass") pinCol = i;
                             if (val === "name" || val.includes("employee name") || val.includes("staff name")) nameCol = i;
                             if (val.includes("role") || val.includes("designation")) roleCol = i;
@@ -537,13 +537,14 @@
                         const staffRow = rows.find(row => {
                             if (!row[idCol] || !row[pinCol]) return false;
                             
-                            // Convert ID to clean string
+                            // Convert ID to clean string (Supports matching either Employee ID or exact Name!)
                             const sheetId = row[idCol].toString().trim().toLowerCase();
+                            const sheetName = row[nameCol] ? row[nameCol].toString().trim().toLowerCase() : "";
                             
-                            // Strict Fix: Convert numeric Sheet PIN (like 1234.0) to clean string (like 1234)
+                            // Strict Fix: Convert numeric Sheet PIN/Password (like Yash001 or 1234.0) to clean string
                             const sheetPin = row[pinCol].toString().trim().replace(/\.0$/, '');
                             
-                            return sheetId === uid && sheetPin === pin;
+                            return (sheetId === uid || sheetName === uid) && sheetPin === pin;
                         });
 
                         if (staffRow) {
@@ -560,7 +561,13 @@
                 }
                 
                 if (!currentUser) {
-                    alert("🚫 AUTH DENIED: Sahi ID aur PIN enter karein.");
+                    // Detailed login failure popup to help you verify exact inputs!
+                    if (store_staff && store_staff.length > 0) {
+                        const debugData = store_staff.slice(1).map(r => `ID: ${r[0]}, Name: ${r[1]}, Pass: ${r[3]}`).join("\n");
+                        alert(`🚫 LOGIN FAILED!\n\nAapki Sheet se ye data load hua hai:\n${debugData}\n\nAapne enter kiya:\nID/Name: ${uid}\nPIN: ${pin}`);
+                    } else {
+                        alert("🚫 AUTH FAILED: ID ya PIN galat hai. Sheet database blank hai.");
+                    }
                     return;
                 }
 
@@ -583,16 +590,17 @@
             if (avatar) avatar.src = currentUser.photo;
 
             // Render Role-Based Dashboards
-            if (currentUser.role.toLowerCase() === "owner") {
+            const normalizedRole = currentUser.role.toLowerCase();
+            if (normalizedRole === "owner") {
                 safe.removeClass('owner-hr-card', 'hidden');
                 safe.removeClass('order-processing-workspace', 'hidden');
                 safe.hide('sales-visit-card');
                 renderOwnerHRDashboard();
-            } else if (currentUser.role.toLowerCase() === "sales staff") {
+            } else if (normalizedRole.includes("sales")) { // Sales Boy, Sales Staff, etc.
                 safe.removeClass('sales-visit-card', 'hidden');
                 safe.hide('owner-hr-card');
                 safe.hide('order-processing-workspace');
-            } else { // Back Office Staff
+            } else { // Accountants, MIS, CRM, Operators, etc.
                 safe.removeClass('order-processing-workspace', 'hidden');
                 safe.hide('owner-hr-card');
                 safe.hide('sales-visit-card');
@@ -627,7 +635,8 @@
                 safe.text('gps-status', `Office Distance: ${dist.toFixed(1)}m`);
 
                 // Sales staff is exempted from geofencing, others must stay within 50m
-                if (currentUser.role.toLowerCase() !== "sales staff" && dist > 50) {
+                const normalizedRole = currentUser.role.toLowerCase();
+                if (!normalizedRole.includes("sales") && dist > 50) {
                     alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). Punch karne ke liye office ke 50m radius ke andar hona mandatory hai.`);
                     btn.disabled = false;
                     return;
@@ -722,9 +731,9 @@
 
             tbody.innerHTML = store_staff.slice(1).map(row => {
                 const uid = row[0].toString().trim();
-                const name = row[2].toString().trim();
-                const role = row[3].toString().trim();
-                const basic = parseFloat(row[4]) || 15000;
+                const name = row[1] ? row[1].toString().trim() : "Staff Member"; // Column B is Name
+                const role = row[4] ? row[4].toString().trim() : "Staff"; // Column E is Role
+                const basic = parseFloat(row[5]) || 15000; // Column F is Salary
                 
                 const logs = store_attendance.filter(l => l[1] && l[1].toString().trim() === uid);
                 const stats = calculateSalaryStats(basic, logs);
