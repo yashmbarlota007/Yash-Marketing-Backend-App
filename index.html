@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING SYSTEM v11.1</title>
+    <title>YASH MARKETING SYSTEM v11.2</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +21,7 @@
             border-radius: 1rem; 
         }
 
-        /* 3x3 Double Folded Rail Track (Compact, No Scroll, Perfect Fitting) */
+        /* 3x3 Double Folded Rail Track (Compact, No Scroll, Perfect Fitting on Mobile) */
         .railway-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -134,7 +134,7 @@
 
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-left space-y-2">
                     <div class="flex justify-between items-center">
-                        <p class="text-xs font-black text-indigo-700 uppercase tracking-wider">Mahine Ka Attendance Table:</p>
+                        <p class="text-xs font-black text-indigo-700 uppercase tracking-wider">Aapka Is Mahine Ka Record (Calendar Sync):</p>
                         <button onclick="toggleAttendanceTable()" class="btn btn-xs btn-ghost bg-white/50 text-indigo-800 rounded-full font-bold">📅 View Calendar Logs</button>
                     </div>
                     
@@ -253,7 +253,7 @@
                 </div>
 
                 <div>
-                    <label class="label"><span class="label-text text-xs font-bold">Visit Suggestion Remarks (Sales badhane ke liye kya kar sakte hain?)</span></label>
+                    <label class="label"><span class="label-text text-xs font-bold">Visit Remarks / Suggestion Remarks (Sales badhane ke liye kya kar sakte hain?)</span></label>
                     <textarea id="visit-remarks" required class="textarea textarea-bordered w-full rounded-xl bg-slate-50 font-bold" rows="2"></textarea>
                 </div>
 
@@ -404,11 +404,11 @@
 
     <script>
         /**
-         * v11.1 WORKSPACE ENGINE (SELF-HEALING ERP FOR STAFF)
-         * ---------------------------------------------------------------------
+         * v11.1 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
+         * ---------------------------------------------------------------------------------
          */
         
-        const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
+        const CLOUD_API = "https://script.google.com/macros/s/AKfycbz-6tSfFUyFinrcXTxxdJ4tld22tzIp2sZ13PDLpu6aAwSaJcNDpMMrbDw6CqTZTydx/exec";
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
@@ -573,7 +573,7 @@
 
                 // Strictly verify: User ID and Password must be the SAME phone number!
                 if (uid !== pin) {
-                    alert("🚫 LOGIN FAILED: Aapka Phone Number aur Password dono same (aapka registered Phone Number) hone chahiye!");
+                    alert("🚫 LOGIN FAILED: ID aur Password dono same (aapka registered Phone Number) hone chahiye!");
                     return;
                 }
 
