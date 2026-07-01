@@ -49,6 +49,16 @@
             border: 1px solid #f1f5f9; 
         }
 
+        /* Responsive Compact Steps timeline card style */
+        .step-micro-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.75rem;
+            text-align: left;
+            width: 100%;
+        }
+
         .slide-up-fade { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         @keyframes slideUpFade { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -331,7 +341,7 @@
         </div>
     </dialog>
 
-    <!-- 8. ORDER PROCESS MODAL (Compact Layout with Custom Vertical Pipeline Connector) -->
+    <!-- 8. ORDER PROCESS MODAL (Perfect Compact Styling & Bug Fixed Timeline) -->
     <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
         <div class="modal-box w-11/12 max-w-[800px] bg-white p-0 rounded-2xl shadow-3xl my-auto mx-auto overflow-y-auto max-h-[85vh] beauty-scroll border border-slate-200">
             <div class="bg-slate-900 p-4 px-5 text-white flex justify-between items-center border-b border-slate-800">
@@ -351,7 +361,7 @@
                 <!-- Custom Modern Vertical Step Bar (No Overlapping Ever) -->
                 <div class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div id="timeline-track" class="space-y-2.5">
-                        <!-- Loaded dynamically -->
+                        <!-- Custom Timeline node blocks loaded dynamically by JS -->
                     </div>
                 </div>
 
@@ -403,7 +413,7 @@
 
     <script>
         /**
-         * v12.2 WORKSPACE ENGINE
+         * v12.2 WORKSPACE ENGINE - FULL PRODUCTION VERSION
          * ---------------------------------------------------------------------------------
          */
         
@@ -1052,45 +1062,6 @@
             }
         }
 
-        function openProfileModal() {
-            if(!currentUser) return;
-            const photoImg = safe.el('prof-photo');
-            if (photoImg) photoImg.src = currentUser.photo;
-            safe.text('prof-name', currentUser.name);
-            safe.text('prof-role', currentUser.role);
-            
-            const link = safe.el('prof-doc-link');
-            if (link) link.href = currentUser.doc;
-
-            // Load existing uploaded files list dynamically
-            const previewDiv = safe.el('doc-links-preview');
-            if (previewDiv) {
-                let docHtml = "";
-                const docLabels = {
-                    "Aadhar Card": currentUser.doc_aadhar,
-                    "PAN Card": currentUser.doc_pan,
-                    "Bank Passbook": currentUser.doc_passbook,
-                    "Agreement Copy": currentUser.doc_agreement
-                };
-                
-                let count = 0;
-                for (let label in docLabels) {
-                    const url = docLabels[label];
-                    if (url && url.toString().includes('http')) {
-                        count++;
-                        docHtml += `<a href="${url}" target="_blank" class="block hover:underline">📄 View ${label} ➔</a>`;
-                    }
-                }
-                if (count === 0) {
-                    docHtml = `<span class="text-slate-400 italic">No verification documents uploaded yet.</span>`;
-                }
-                previewDiv.innerHTML = docHtml;
-            }
-
-            const modal = safe.el('profile_modal');
-            if(modal && typeof modal.showModal === 'function') modal.showModal();
-        }
-
         async function uploadStaffDocuments() {
             if(!currentUser) return;
             const btn = safe.el('profile-upload-btn');
@@ -1160,6 +1131,50 @@
                 btn.disabled = false;
                 btn.innerText = "Upload Selected Documents";
             }
+        }
+
+        function openProfileModal() {
+            if(!currentUser) return;
+            const photoImg = safe.el('prof-photo');
+            if (photoImg) photoImg.src = currentUser.photo;
+            safe.text('prof-name', currentUser.name);
+            safe.text('prof-role', currentUser.role);
+
+            // Populate current files if available in Database (Staff Master matching)
+            const linksContainer = safe.el('doc-links-preview');
+            if(linksContainer && store_staff && store_staff.length > 0) {
+                const headers = store_staff[0];
+                const rows = store_staff.slice(1);
+                
+                let phoneCol = 2;
+                headers.forEach((h, i) => {
+                    const val = h.toString().toLowerCase().trim();
+                    if (val.includes("phone") || val.includes("mobile") || val === "contact") phoneCol = i;
+                });
+
+                const staffRow = rows.find(r => r[phoneCol] && r[phoneCol].toString().trim().replace(/\.0$/, '') === currentUser.uid);
+                if (staffRow) {
+                    const keys = [
+                        { label: "Profile Photo", idx: 6 },
+                        { label: "Aadhar Card", idx: 7 },
+                        { label: "PAN Card", idx: 8 },
+                        { label: "Bank Pass Book", idx: 9 },
+                        { label: "Agreement", idx: 10 }
+                    ];
+                    
+                    linksContainer.innerHTML = keys.map(k => {
+                        const cellVal = staffRow[k.idx];
+                        if (cellVal && cellVal.toString().includes("http")) {
+                            return `<div class="flex justify-between"><span>${k.label}:</span> <a href="${cellVal}" target="_blank" class="text-blue-600 hover:underline">View File ➔</a></div>`;
+                        } else {
+                            return `<div class="flex justify-between text-slate-400"><span>${k.label}:</span> <span>Not Uploaded</span></div>`;
+                        }
+                    }).join('');
+                }
+            }
+
+            const modal = safe.el('profile_modal');
+            if(modal && typeof modal.showModal === 'function') modal.showModal();
         }
 
         function renderLineFeed(data) {
@@ -1258,14 +1273,14 @@
                         <div class="badge badge-neutral text-[10px] font-semibold py-1 px-2.5 rounded-full border-none bg-blue-50 text-blue-700 shrink-0 uppercase">${curStatus}</div>
                     </div>
 
-                    <div class="flex items-center gap-3 mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200/40">
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shrink-0"></div>
-                        <p class="text-xs md:text-sm font-semibold text-slate-600">Order Value: <span class="text-slate-800 font-bold">₹ ${orderVal}</span></p>
+                    <div class="flex items-center gap-2 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
+                        <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0"></div>
+                        <p class="text-xs font-semibold text-slate-600">Order Value: <span class="text-slate-800 font-bold">₹ ${orderVal}</span></p>
                     </div>
 
-                    <div class="flex justify-between items-center border-t border-slate-100 pt-3 gap-2">
+                    <div class="flex justify-between items-center border-t border-slate-50 pt-2 gap-2">
                         <div class="flex items-center gap-1.5 min-w-0">
-                            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
                             <span class="text-xs font-medium text-slate-500 truncate">${o.Order_Brought_By || 'Yash Marketing'}</span>
                         </div>
                     </div>
@@ -1392,7 +1407,6 @@
                                     <div class="p-1 bg-slate-100 rounded border border-slate-200 flex items-center gap-1">
                                         <audio controls class="h-6 max-w-[120px]"><source src="${cleanUrl}"></audio>
                                     </div>`;
-                                    
                             } else {
                                 proofHtml += `
                                     <div class="relative">
@@ -1400,7 +1414,6 @@
                                              onclick="window.open('${cleanUrl}', '_blank')" 
                                              onerror="this.src='https://via.placeholder.com/150?text=Error'">
                                     </div>`;
-                                    
                             }
                         });
                         proofHtml += `</div>`;
