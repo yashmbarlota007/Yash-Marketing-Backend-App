@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING SYSTEM v11.0</title>
+    <title>YASH MARKETING SYSTEM v11.1</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -133,7 +133,19 @@
                 </div>
 
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-left space-y-2">
-                    <p class="text-xs font-black text-indigo-700 uppercase tracking-wider">Aapka Is Mahine Ka Record (Calendar Sync):</p>
+                    <div class="flex justify-between items-center">
+                        <p class="text-xs font-black text-indigo-700 uppercase tracking-wider">Mahine Ka Attendance Table:</p>
+                        <button onclick="toggleAttendanceTable()" class="btn btn-xs btn-ghost bg-white/50 text-indigo-800 rounded-full font-bold">📅 View Calendar Logs</button>
+                    </div>
+                    
+                    <!-- Dynamic Calendar table grid -->
+                    <div id="personal-attendance-table" class="hidden overflow-x-auto max-h-[150px] beauty-scroll border rounded-xl bg-white p-2">
+                        <table class="table table-xs w-full text-slate-700">
+                            <thead><tr class="font-black text-[9px] text-slate-400"><th>Date</th><th>Type</th><th>Distance</th></tr></thead>
+                            <tbody id="personal-attend-tbody"></tbody>
+                        </table>
+                    </div>
+
                     <div class="grid grid-cols-4 gap-1 text-center text-[10px] font-black uppercase text-slate-600">
                         <div class="bg-white p-1 rounded border"><span class="text-indigo-600">Present</span><p id="calc-p-count">0</p></div>
                         <div class="bg-white p-1 rounded border"><span class="text-yellow-600">Half-Day</span><p id="calc-hd-count">0</p></div>
@@ -172,24 +184,81 @@
             </div>
         </div>
 
-        <!-- 5. SALES MARKET VISIT FORM (Sales Team exclusive) -->
-        <div id="sales-visit-card" class="hidden card bg-white shadow-md p-4 border-l-8 border-emerald-500">
-            <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Market Visit Registration (Client Survey Form)</h2>
-            <form id="visit-form" onsubmit="event.preventDefault();" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="label"><span class="label-text text-xs font-bold">Client / Shop Name</span></label>
-                    <input type="text" id="visit-client" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+        <!-- 5. SALES MARKET VISIT FORM (Sales Team exclusive with searchable drop-downs and dynamic Stock checklist) -->
+        <div id="sales-visit-card" class="hidden card bg-white shadow-md p-4 border-l-8 border-emerald-500 space-y-4">
+            <h2 class="text-xs font-black text-slate-500 uppercase tracking-wider">Market Visit Registration (Client Survey Form)</h2>
+            <form id="visit-form" onsubmit="event.preventDefault();" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic Area Drop-down list -->
+                    <div class="form-control w-full">
+                        <label class="label"><span class="label-text text-xs font-bold text-slate-600">Safar Route (Select Area)</span></label>
+                        <select id="visit-area-select" onchange="updateDealerListByArea()" class="select select-bordered select-sm w-full rounded-lg bg-slate-50 font-bold text-xs text-slate-800">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Searchable Dealer drop-down list -->
+                    <div class="form-control w-full">
+                        <label class="label"><span class="label-text text-xs font-bold text-slate-600">Dealer Name (Searchable Shop List)</span></label>
+                        <input list="visit-dealers-list" id="visit-dealer-input" placeholder="Search shop name..." class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs text-slate-800" />
+                        <datalist id="visit-dealers-list">
+                            <!-- Auto Filtered based on route selection -->
+                        </datalist>
+                    </div>
                 </div>
-                <div>
-                    <label class="label"><span class="label-text text-xs font-bold">Client Contact (Phone No)</span></label>
-                    <input type="text" id="visit-phone" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label"><span class="label-text text-xs font-bold">Client Contact (Phone No)</span></label>
+                        <input type="text" id="visit-phone" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text text-xs font-bold">Payment Pending (Rupees)</span></label>
+                        <input type="number" id="visit-pay-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+                    </div>
+                    <div>
+                        <label class="label"><span class="label-text text-xs font-bold">Cash Payment Pending (Without Bill)</span></label>
+                        <input type="number" id="visit-cash-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+                    </div>
                 </div>
-                <div>
-                    <label class="label"><span class="label-text text-xs font-bold">Visit Remarks / Deal Status</span></label>
-                    <input type="text" id="visit-remarks" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold" />
+
+                <!-- Structured Dealer Stock Report Checklist (Same columns as spreadsheet) -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-wider mb-4 border-b pb-2">📦 Dealer Stock Report Checklist (Warehouse Match)</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div><label class="label"><span class="label-text text-xs font-bold">Boat Airpods Stock</span></label><input type="number" id="vs-b-air" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Boat Neckband Stock</span></label><input type="number" id="vs-b-neck" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Boat Powerbank Stock</span></label><input type="number" id="vs-b-pwr" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Boat Smartwatch Stock</span></label><input type="number" id="vs-b-smart" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Velocity Airpods Stock</span></label><input type="number" id="vs-v-air" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Velocity Neckband Stock</span></label><input type="number" id="vs-v-neck" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Velocity Cable Stock</span></label><input type="number" id="vs-v-cable" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Velocity Charger Stock</span></label><input type="number" id="vs-v-char" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Memory Card Stock</span></label><input type="number" id="vs-mc" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Pen Drive Stock</span></label><input type="number" id="vs-pd" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">External SSD Stock</span></label><input type="number" id="vs-ssd" value="0" class="input input-bordered input-sm w-full rounded-lg" /></div>
+                        <div><label class="label"><span class="label-text text-xs font-bold">Dealer Replacement Done?</span></label><select id="vs-rep-given" class="select select-bordered select-sm w-full rounded-lg"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t pt-4">
+                        <div>
+                            <label class="label"><span class="label-text text-xs font-bold text-slate-600">Sales Visit Selfie (Live Photo Mandatory!)</span></label>
+                            <input type="file" id="vs-selfie-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full rounded-lg bg-white" />
+                        </div>
+                        <div>
+                            <label class="label"><span class="label-text text-xs font-bold text-slate-600">Dealer Replacement / Payment Photo</span></label>
+                            <input type="file" id="vs-pay-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full rounded-lg bg-white" />
+                        </div>
+                    </div>
                 </div>
-                <div class="md:col-span-3">
-                    <button onclick="submitMarketVisit()" class="btn btn-sm btn-emerald w-full text-white font-black rounded-lg">VISIT LOG SUBMIT KAREIN</button>
+
+                <div>
+                    <label class="label"><span class="label-text text-xs font-bold">Visit Suggestion Remarks (Sales badhane ke liye kya kar sakte hain?)</span></label>
+                    <textarea id="visit-remarks" required class="textarea textarea-bordered w-full rounded-xl bg-slate-50 font-bold" rows="2"></textarea>
+                </div>
+
+                <div>
+                    <button onclick="submitMarketVisit()" class="btn btn-emerald w-full text-white font-black rounded-lg">VISIT LOG SUBMIT KAREIN</button>
                 </div>
             </form>
         </div>
@@ -335,11 +404,11 @@
 
     <script>
         /**
-         * v11.1 WORKSPACE ENGINE (CRASH-PROOF SELF-HEALING ERP FOR STAFF)
+         * v11.1 WORKSPACE ENGINE (SELF-HEALING ERP FOR STAFF)
          * ---------------------------------------------------------------------
          */
         
-        const CLOUD_API = "https://script.google.com/macros/s/AKfycbz-6tSfFUyFinrcXTxxdJ4tld22tzIp2sZ13PDLpu6aAwSaJcNDpMMrbDw6CqTZTydx/exec";
+        const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
@@ -357,6 +426,7 @@
         // STAFF MASTER BACKUP LOCAL DATABASE (In case Google Sheets connection fails or is empty)
         const LOCAL_STAFF_DB = [
             { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" },
+            { phone: "8805566651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" }, // Supports both typo variations 6651 and 8651
             { phone: "8485874324", name: "Preetam Bogawat", role: "Sales Boy", salary: 20000, photo: "", doc: "#" },
             { phone: "7744033134", name: "Ganesh Parkad", role: "Sales Boy", salary: 16000, photo: "", doc: "#" },
             { phone: "9307838076", name: "Komal Gurap", role: "Accountant", salary: 13000, photo: "", doc: "#" },
@@ -369,6 +439,7 @@
         let store_stock = [];
         let store_staff = [];
         let store_attendance = [];
+        let store_dealers = [];
         let currentUser = null;
         let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Standard Ahmednagar headquarter location
         
@@ -467,6 +538,7 @@
                 store_stock = data.catalogue || [];
                 store_staff = data.staff || [];
                 store_attendance = data.attendance || [];
+                store_dealers = data.dealers || [];
                 
                 // Keep session alive if stored locally
                 const savedUser = localStorage.getItem("backbone_current_user");
@@ -495,7 +567,7 @@
                 const pin = safe.el('login-pin').value.trim(); // Client typing Password
 
                 if(!uid || !pin) {
-                    alert("Kripya apna Phone Number aur Password dono dabbo mein enter karein.");
+                    alert("Kripya apna Phone Number aur Password dono enter karein.");
                     return;
                 }
 
@@ -587,6 +659,7 @@
                 safe.removeClass('sales-visit-card', 'hidden');
                 safe.hide('owner-hr-card');
                 safe.hide('order-processing-workspace');
+                populateSalesRoutes();
             } else { // Accountants, MIS, CRM, Operators, etc.
                 safe.removeClass('order-processing-workspace', 'hidden');
                 safe.hide('owner-hr-card');
@@ -600,10 +673,75 @@
             syncHeaderStats(store_orders);
         }
 
+        // Populate dynamic Routes/Areas in Sales Panel
+        function populateSalesRoutes() {
+            const areaSelect = safe.el('visit-area-select');
+            if (!areaSelect || !store_dealers || store_dealers.length < 2) return;
+
+            const rows = store_dealers.slice(1);
+            // Unique Area (Column D / Index 3 in Dealer Master)
+            const areas = [...new Set(rows.map(r => r[3] ? r[3].toString().trim() : "").filter(a => a !== ""))];
+
+            areaSelect.innerHTML = `<option value="">-- Select Safar Route Area --</option>` + 
+                areas.map(a => `<option value="${a}">${a}</option>`).join('');
+        }
+
+        // Update searchable Dealer list when Route changes
+        function updateDealerListByArea() {
+            const area = safe.el('visit-area-select').value;
+            const datalist = safe.el('visit-dealers-list');
+            const dealerInput = safe.el('visit-dealer-input');
+            if (!datalist || !dealerInput || !store_dealers) return;
+
+            dealerInput.value = "";
+            const rows = store_dealers.slice(1);
+            
+            // Filter dealers matching selected Area (Col D / Index 3)
+            const filteredDealers = rows.filter(r => r[3] && r[3].toString().trim() === area);
+
+            // Dealer Name (Col E / Index 4 in Dealer Master)
+            datalist.innerHTML = filteredDealers.map(r => {
+                const name = r[4] ? r[4].toString().trim() : "Shop Name";
+                return `<option value="${name}"></option>`;
+            }).join('');
+        }
+
         function handleLogout() {
             localStorage.removeItem("backbone_current_user");
             currentUser = null;
             location.reload();
+        }
+
+        // Toggle calendar view list
+        function toggleAttendanceTable() {
+            const div = safe.el('personal-attendance-table');
+            if (div) {
+                div.classList.toggle('hidden');
+                if (!div.classList.contains('hidden')) {
+                    renderPersonalAttendanceLogs();
+                }
+            }
+        }
+
+        // Render Calendar Logs dynamically inside staff card
+        function renderPersonalAttendanceLogs() {
+            const tbody = safe.el('personal-attend-tbody');
+            if(!tbody || !store_attendance || !currentUser) return;
+
+            const userLogs = store_attendance.filter(r => r[1] && r[1].toString().trim() === currentUser.uid);
+            tbody.innerHTML = userLogs.map(log => {
+                const date = new Date(log[0]);
+                const prettyStr = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
+                const timeStr = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                
+                return `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100 font-bold">
+                        <td>${prettyStr} (${timeStr})</td>
+                        <td><span class="badge ${log[3] === 'In' ? 'badge-success' : 'badge-error'} text-[9px] text-white">${log[3]}</span></td>
+                        <td>${log[5]}m</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // GPS Geofenced Attendance Register (Strict 50m limitation rule)
@@ -613,6 +751,21 @@
             
             btn.disabled = true;
             safe.text('gps-status', "GPS Verification In Progress...");
+
+            // Dynamic Restriction Check: Prevent staff from punching same state twice per day!
+            const todayStr = new Date().toDateString();
+            const alreadyPunched = store_attendance.find(log => {
+                if(!log[1] || !log[0]) return false;
+                const logDateStr = new Date(log[0]).toDateString();
+                return log[1].toString().trim() === currentUser.uid && logDateStr === todayStr && log[3] === type;
+            });
+
+            if (alreadyPunched) {
+                alert(`⚠️ APOLOGY: Aapne aaj ki Punch-${type} Attendance pehle hi laga di hai. Ek din mein ek hi baar allow hai.`);
+                btn.disabled = false;
+                safe.text('gps-status', "Punch Already Done.");
+                return;
+            }
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const lat = pos.coords.latitude;
@@ -740,38 +893,98 @@
             }).join('');
         }
 
-        // Sales Market log submit
+        // Sales Market visit & detail stock survey log submit
         async function submitMarketVisit() {
-            const client = safe.el('visit-client').value.trim();
-            const phone = safe.el('visit-phone').value.trim();
-            const remarks = safe.el('visit-remarks').value.trim();
-
-            if(!client || !phone || !remarks) {
-                alert("Kripya forms ke saare cells fill karein.");
-                return;
-            }
-
             try {
-                const res = await fetch(CLOUD_API, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: "visit",
-                        staffId: currentUser.uid,
-                        staffName: currentUser.name,
-                        client: client,
-                        phone: phone,
-                        remarks: remarks
-                    })
-                });
+                const area = safe.el('visit-area-select').value;
+                const dealerName = safe.el('visit-dealer-input').value.trim();
+                const phone = safe.el('visit-phone').value.trim();
+                const remarks = safe.el('visit-remarks').value.trim();
 
-                const rData = await res.json();
-                if (rData.status === "success") {
-                    alert("✅ Client visit logs successfully recorded!");
-                    safe.el('visit-form').reset();
-                    syncData();
-                } else {
-                    throw new Error(rData.message);
+                const selfieIn = safe.el('vs-selfie-file');
+                const payIn = safe.el('vs-pay-file');
+
+                if(!area || !dealerName || !phone || !remarks) {
+                    alert("Kripya safar route aur shop name ke sath Remarks cell enter karein.");
+                    return;
                 }
+
+                // GPS & Selfie must be mandatory
+                if (!selfieIn || !selfieIn.files || selfieIn.files.length === 0) {
+                    alert("⚠️ MANDATORY: Kripya Sales selfie click ya load karein. Photo upload mandatory hai.");
+                    return;
+                }
+
+                const btn = event.target;
+                btn.disabled = true;
+                btn.innerText = "SUBMITTING VISIT REPORT...";
+
+                // Capture current GPS position
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const gpsLoc = `${pos.coords.latitude},${pos.coords.longitude}`;
+
+                    // Convert photos to base64 safely
+                    let selfieB64 = null, selfieMime = null;
+                    if(selfieIn.files[0]) {
+                        selfieMime = selfieIn.files[0].type;
+                        selfieB64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(selfieIn.files[0]); });
+                    }
+
+                    let payB64 = null, payMime = null;
+                    if(payIn && payIn.files[0]) {
+                        payMime = payIn.files[0].type;
+                        payB64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(payIn.files[0]); });
+                    }
+
+                    const visitId = "YMMV-" + new Date().getTime().toString().slice(-6);
+
+                    const res = await fetch(CLOUD_API, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: "visit",
+                            staffId: currentUser.uid,
+                            staffName: currentUser.name,
+                            location: gpsLoc,
+                            dealerName: dealerName,
+                            dealerArea: area,
+                            paymentPending: safe.el('visit-pay-pending').value || 0,
+                            cashPending: safe.el('visit-cash-pending').value || 0,
+                            visitId: visitId,
+                            selfieBase64: selfieB64,
+                            selfieMime: selfieMime,
+                            stockBoatAirpods: safe.el('vs-b-air').value || 0,
+                            stockBoatNeckband: safe.el('vs-b-neck').value || 0,
+                            stockBoatPowerbank: safe.el('vs-b-pwr').value || 0,
+                            stockBoatSmartwatch: safe.el('vs-b-smart').value || 0,
+                            stockVelocityAirpods: safe.el('vs-v-air').value || 0,
+                            stockVelocityNeckband: safe.el('vs-v-neck').value || 0,
+                            stockVelocityCable: safe.el('vs-v-cable').value || 0,
+                            stockVelocityCharger: safe.el('vs-v-char').value || 0,
+                            stockMemoryCard: safe.el('vs-mc').value || 0,
+                            stockPenDrive: safe.el('vs-pd').value || 0,
+                            stockExternalSSD: safe.el('vs-ssd').value || 0,
+                            salesRemarks: remarks,
+                            replacementGiven: safe.el('vs-rep-given').value || "No",
+                            payBase64: payB64,
+                            payMime: payMime
+                        })
+                    });
+
+                    const rData = await res.json();
+                    if (rData.status === "success") {
+                        alert("✅ Visit Log aur Stock Survey Report successfully Sheet par save ho gayi!");
+                        safe.el('visit-form').reset();
+                        syncData();
+                    } else {
+                        throw new Error(rData.message);
+                    }
+                    btn.disabled = false;
+                    btn.innerText = "VISIT LOG SUBMIT KAREIN";
+                }, (err) => {
+                    alert("🚫 Visit Rejected: Location check mandatory hai. GPS turned on karein.");
+                    btn.disabled = false;
+                    btn.innerText = "VISIT LOG SUBMIT KAREIN";
+                });
             } catch(e) {
                 console.error(e);
                 alert("Submit fail: Connection error.");
