@@ -21,7 +21,7 @@
             border-radius: 1rem; 
         }
 
-        /* 3x3 Double Folded Rail Track (Compact, No Scroll, Perfect Alignment) */
+        /* 3x3 Double Folded Rail Track (Compact, No Scroll, Perfect Fitting) */
         .railway-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -73,24 +73,24 @@
         <h2 class="mt-4 text-xs font-black tracking-widest text-slate-400 uppercase italic animate-pulse">Loading Yash Marketing Backbone</h2>
     </div>
 
-    <!-- 1. LOGIN SCREEN PANEL (Strict Phone + Password login with Bypass) -->
+    <!-- 1. LOGIN SCREEN PANEL (Strict Phone-to-Phone verification with Local Backup) -->
     <div id="login-screen" class="max-w-[450px] mx-auto mt-12 bg-white rounded-2xl shadow-xl p-6 border-t-8 border-indigo-600">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white mb-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11.5V6l-3.707 3.707M12 11c1.744 2.772 2.753 6.054 2.753 9.571M12 11V6l3.707 3.707M12 2a9 9 0 110 18 9 9 0 010-18z"/></svg>
             </div>
             <h2 class="text-2xl font-black text-slate-800 italic uppercase">Yash Marketing Portal</h2>
-            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Apna Register Phone No aur PIN enter karein</p>
+            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Apna registered Mobile No dono jagah dalein</p>
         </div>
 
         <div class="space-y-4">
             <div class="form-control">
-                <label class="label"><span class="label-text text-xs font-black text-slate-500">Phone Number (Mobile No)</span></label>
-                <input type="text" id="login-username" placeholder="E.g. 8805568651 / 8485874324" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800" />
+                <label class="label"><span class="label-text text-xs font-black text-slate-500">Staff Mobile Number</span></label>
+                <input type="text" id="login-username" placeholder="E.g. 8805568651" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800 text-center tracking-wider" />
             </div>
             <div class="form-control">
-                <label class="label"><span class="label-text text-xs font-black text-slate-500">Aapka Secret Password (PIN)</span></label>
-                <input type="password" id="login-pin" placeholder="••••" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800 text-center tracking-widest" />
+                <label class="label"><span class="label-text text-xs font-black text-slate-500">Secret Password (Wahi Mobile No firse dalein)</span></label>
+                <input type="password" id="login-pin" placeholder="••••••••••" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800 text-center tracking-wider" />
             </div>
             <button onclick="handleLogin()" class="btn btn-primary w-full h-12 rounded-xl font-black uppercase text-sm italic mt-4 shadow-lg">
                 PORTAL MEIN PRAVESH KAREIN ➔
@@ -335,8 +335,8 @@
 
     <script>
         /**
-         * v11.0 WORKSPACE ENGINE (CRASH-PROOF SELF-HEALING ERP FOR STAFF)
-         * ---------------------------------------------------------------------
+         * v11.0 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
+         * ---------------------------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
@@ -480,54 +480,53 @@
 
         function handleLogin() {
             try {
-                const uid = safe.el('login-username').value.trim().toLowerCase();
-                const pin = safe.el('login-pin').value.trim();
-                
+                const uid = safe.el('login-username').value.trim(); // Client typing registered mobile
+                const pin = safe.el('login-pin').value.trim(); // Client typing Password
+
                 if(!uid || !pin) {
-                    alert("Kripya apna registered Mobile No aur Password enter karein.");
+                    alert("Kripya apna Phone Number aur Password dono enter karein.");
                     return;
                 }
 
-                // 1. EMERGENCY BYPASS LOGINS (Google Sheet blank ya error hone par bhi login allow karega)
-                if (uid === "owner" && pin === "1234") {
+                // 1. EMERGENCY BYPASS LOGINS (Bypass logins updated for easy direct local testing)
+                if (uid === "8805568651" && pin === "8805568651") {
                     currentUser = {
-                        uid: "owner",
+                        uid: "YM001",
                         name: "Yash Barlota (Malik)",
                         role: "Owner",
                         salary: 50000,
                         photo: "https://via.placeholder.com/150?text=Yash+Barlota",
                         doc: "#"
                     };
-                } else if (uid === "sales" && pin === "1234") {
+                } else if (uid === "8485874324" && pin === "8485874324") {
                     currentUser = {
-                        uid: "sales",
-                        name: "Rohan (Sales Staff)",
-                        role: "Sales Staff",
+                        uid: "YM002",
+                        name: "Preetam Bogawat",
+                        role: "Sales Boy",
                         salary: 20000,
-                        photo: "https://via.placeholder.com/150?text=Rohan+Sales",
+                        photo: "https://via.placeholder.com/150?text=Preetam",
                         doc: "#"
                     };
-                } else if (uid === "staff" && pin === "1234") {
+                } else if (uid === "9075708290" && pin === "9075708290") {
                     currentUser = {
-                        uid: "staff",
-                        name: "Office Operator",
-                        role: "Back Office Staff",
-                        salary: 15000,
-                        photo: "https://via.placeholder.com/150?text=Backoffice",
+                        uid: "YM006",
+                        name: "Shubham Bade",
+                        role: "MIS",
+                        salary: 18000,
+                        photo: "https://via.placeholder.com/150?text=Shubham",
                         doc: "#"
                     };
                 } else {
-                    // 2. SELF-HEALING PHONE + PASSWORD LOGIN MATCHING ENGINE (Directly reads from Staff Master)
+                    // 2. SELF-HEALING PHONE-TO-PHONE LOGIN MATCHING ENGINE (ID & Password are both validated strictly against registered Mobile No)
                     if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
                         const headers = store_staff[0];
                         const rows = store_staff.slice(1);
                         
                         // Automatically search column positions to bypass manual sequence changes
-                        let phoneCol = 2, pinCol = 3, nameCol = 1, roleCol = 4, salaryCol = 5, photoCol = 6, docCol = 7;
+                        let phoneCol = 2, nameCol = 1, roleCol = 4, salaryCol = 5, photoCol = 6, docCol = 7;
                         headers.forEach((h, i) => {
                             const val = h.toString().toLowerCase().trim();
                             if (val.includes("phone") || val.includes("mobile") || val === "contact") phoneCol = i;
-                            if (val.includes("password") || val.includes("pin") || val === "pass") pinCol = i;
                             if (val === "name" || val.includes("employee name") || val.includes("staff name")) nameCol = i;
                             if (val.includes("role") || val.includes("designation")) roleCol = i;
                             if (val.includes("salary") || val.includes("pagar") || val.includes("monthly")) salaryCol = i;
@@ -536,13 +535,13 @@
                         });
 
                         const staffRow = rows.find(row => {
-                            if (!row[phoneCol] || !row[pinCol]) return false;
+                            if (!row[phoneCol]) return false;
                             
                             // Clean decimal formatting from Google Sheet numeric conversion
                             const sheetPhone = row[phoneCol].toString().trim().replace(/\.0$/, '');
-                            const sheetPin = row[pinCol].toString().trim().replace(/\.0$/, '');
                             
-                            return sheetPhone === uid && sheetPin === pin;
+                            // Since ID and Password are both the Phone Number, we compare Sheet Phone to BOTH typed fields
+                            return sheetPhone === uid && sheetPhone === pin;
                         });
 
                         if (staffRow) {
@@ -559,22 +558,12 @@
                 }
                 
                 if (!currentUser) {
-                    // Help popup shows exact sheet entries so you can verify instantly!
+                    // Detailed login failure popup to help you verify exact inputs!
                     if (store_staff && store_staff.length > 0) {
-                        const headers = store_staff[0];
-                        const rows = store_staff.slice(1);
-                        let phoneCol = 2, nameCol = 1, pinCol = 3;
-                        headers.forEach((h, i) => {
-                            const val = h.toString().toLowerCase().trim();
-                            if (val.includes("phone") || val === "contact") phoneCol = i;
-                            if (val === "name" || val.includes("employee name")) nameCol = i;
-                            if (val.includes("password") || val === "pass") pinCol = i;
-                        });
-                        
-                        const debugData = rows.map(r => `• Name: ${r[nameCol]}, Phone: ${r[phoneCol] ? r[phoneCol].toString().replace(/\.0$/, '') : 'N/A'}, Pass: ${r[pinCol] ? r[pinCol].toString().replace(/\.0$/, '') : 'N/A'}`).join("\n");
-                        alert(`🚫 LOGIN FAILED!\n\nGoogle Sheet se ye staff data mila hai:\n${debugData}\n\nAapne enter kiya:\nPhone: ${uid}\nPIN/Pass: ${pin}`);
+                        const debugData = store_staff.slice(1).map(r => `Name: ${r[1]}, Phone/Password: ${r[2] ? r[2].toString().replace(/\.0$/, '') : 'N/A'}`).join("\n");
+                        alert(`🚫 LOGIN FAILED!\n\nAapki Sheet se ye Phone Numbers load hue hain (Dono dabbo mein Phone No dalein):\n${debugData}\n\nAapne enter kiya:\nUsername/Phone: ${uid}\nPassword: ${pin}`);
                     } else {
-                        alert("🚫 AUTH FAILED: Sahi Phone aur Password enter karein. Connection error.");
+                        alert("🚫 AUTH FAILED: ID ya PIN galat hai. Sheet database blank hai.");
                     }
                     return;
                 }
