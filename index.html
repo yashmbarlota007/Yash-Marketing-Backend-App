@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING SYSTEM v11.1</title>
+    <title>YASH MARKETING SYSTEM v11.0</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -335,8 +335,8 @@
 
     <script>
         /**
-         * v11.1 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
-         * ---------------------------------------------------------------------------------
+         * v11.1 WORKSPACE ENGINE (CRASH-PROOF SELF-HEALING ERP FOR STAFF)
+         * ---------------------------------------------------------------------
          */
         
         const CLOUD_API = "https://script.google.com/macros/s/AKfycbwPrf-NllPSgWUAjVkVJ7cAEVCawhtCqqy6VZRNEX6G14fvmw9HNSRtrMkkbC_N-klw/exec";
@@ -356,7 +356,7 @@
 
         // STAFF MASTER BACKUP LOCAL DATABASE (In case Google Sheets connection fails or is empty)
         const LOCAL_STAFF_DB = [
-            { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "", doc: "#" },
+            { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" },
             { phone: "8485874324", name: "Preetam Bogawat", role: "Sales Boy", salary: 20000, photo: "", doc: "#" },
             { phone: "7744033134", name: "Ganesh Parkad", role: "Sales Boy", salary: 16000, photo: "", doc: "#" },
             { phone: "9307838076", name: "Komal Gurap", role: "Accountant", salary: 13000, photo: "", doc: "#" },
@@ -454,7 +454,7 @@
             const deltaPhi = (lat2-lat1) * Math.PI/180;
             const deltaLambda = (lon2-lon1) * Math.PI/180;
             const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
-                      const1 = Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+                      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
@@ -495,17 +495,17 @@
                 const pin = safe.el('login-pin').value.trim(); // Client typing Password
 
                 if(!uid || !pin) {
-                    alert("Kripya apna Phone Number dono dabbo mein enter karein.");
+                    alert("Kripya apna Phone Number aur Password dono dabbo mein enter karein.");
                     return;
                 }
 
                 // Strictly verify: User ID and Password must be the SAME phone number!
                 if (uid !== pin) {
-                    alert("🚫 LOGIN FAILED: Aapka Phone Number aur Password dono dabbo (fields) mein bilkul same hona chahiye!");
+                    alert("🚫 LOGIN FAILED: Aapka Phone Number aur Password dono same (aapka registered Phone Number) hone chahiye!");
                     return;
                 }
 
-                // 1. LOCAL BACKUP FALLBACK (Google Sheets disconnect hone par bhi immediately login karega!)
+                // 1. LOCAL DATA MATCHING (Bina Sheets API lag ke login karne ke liye)
                 const matchedLocal = LOCAL_STAFF_DB.find(s => s.phone === uid);
                 
                 if (matchedLocal) {
@@ -518,7 +518,7 @@
                         doc: matchedLocal.doc
                     };
                 } else {
-                    // 2. SELF-HEALING LIVE SHEETS VERIFICATION (Fallback matching directly on live Sheet data)
+                    // 2. SELF-HEALING LIVE SHEETS VERIFICATION (In case local DB doesn't have the entry)
                     if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
                         const headers = store_staff[0];
                         const rows = store_staff.slice(1);
@@ -537,7 +537,7 @@
                         const staffRow = rows.find(row => {
                             if (!row[phoneCol]) return false;
                             const sheetPhone = row[phoneCol].toString().trim().replace(/\.0$/, '');
-                            return sheetPhone === uid; // Same phone no acts as both username and password
+                            return sheetPhone === uid;
                         });
 
                         if (staffRow) {
@@ -554,7 +554,7 @@
                 }
                 
                 if (!currentUser) {
-                    alert(`🚫 LOGIN FAILED: Yeh Mobile Number system mein registered nahi hai!`);
+                    alert("🚫 LOGIN FAILED: Yeh Mobile Number system mein registered nahi hai!");
                     return;
                 }
 
