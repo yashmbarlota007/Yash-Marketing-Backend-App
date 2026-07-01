@@ -3,182 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing System v12.0</title>
+    <title>Yash Marketing System v12.1</title>
     
-    <!-- Frameworks -->
+    <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root { 
-            --brand: #4f46e5; 
-            --brand-light: #e0e7ff;
-            --bg: #f8fafc; 
+            --navy-base: #1e293b;
+            --brand: #3b82f6; 
+            --brand-deep: #1d4ed8;
+            --soft-surface: #f8fafc;
+            --border-tint: #e2e8f0;
         }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: var(--bg); 
-            color: #334155; 
+            background: radial-gradient(circle at 10% 20%, rgb(241, 245, 249) 0%, rgb(248, 250, 252) 90%);
+            color: #1e293b; 
             overflow-x: hidden; 
         }
         
-        /* Smooth Custom Scrollbar */
+        /* Premium Soft Containers */
+        .premium-slate-card {
+            background: #ffffff;
+            border: 1px solid var(--border-tint);
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08);
+            transition: all 0.2s ease-in-out;
+        }
+        .premium-slate-card:hover {
+            box-shadow: 0 10px 30px -4px rgba(148, 163, 184, 0.15);
+            border-color: #cbd5e1;
+        }
+
         .beauty-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .beauty-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 100px; }
-        .beauty-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Elegant Cards with soft ambient shadow */
-        .premium-card {
-            background: #ffffff;
-            border: 1px solid #f1f5f9;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            border-radius: 1rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .premium-card:hover {
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-        }
-
-        /* Modern timeline bar style instead of dark block grids */
-        .timeline-rail {
-            display: flex;
-            gap: 0.75rem;
-            overflow-x: auto;
-            padding: 0.5rem 0.25rem;
-        }
-
+        
         .cat-image { 
-            width: 70px; 
-            height: 70px; 
+            width: 50px; 
+            height: 50px; 
             object-fit: cover; 
-            border-radius: 0.75rem; 
-            background: #f1f5f9;
+            border-radius: 0.5rem; 
+            border: 1px solid #f1f5f9; 
         }
 
-        .slide-up-fade { 
-            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-        }
-        @keyframes slideUpFade { 
-            from { transform: translateY(12px); opacity: 0; } 
-            to { transform: translateY(0); opacity: 1; } 
+        /* Responsive Compact Steps timeline */
+        .step-micro-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            text-align: left;
+            width: 100%;
         }
 
-        #boot-loader { 
-            position: fixed; 
-            inset: 0; 
-            background: #ffffff; 
-            z-index: 99999; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-        }
+        .slide-up-fade { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        @keyframes slideUpFade { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        #boot-loader { position: fixed; inset: 0; background: #fff; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="p-3 md:p-6 min-h-screen">
 
-    <!-- Loading State Screen -->
+    <!-- System Loader -->
     <div id="boot-loader">
         <div class="relative">
-            <div class="w-12 h-12 border-[3px] border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
+            <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
         </div>
         <h2 class="mt-4 text-xs font-semibold tracking-widest text-slate-400 uppercase italic">Yash Marketing Backbone Loading</h2>
     </div>
 
-    <!-- 1. LOGIN SCREEN -->
+    <!-- 1. LOGIN PANEL -->
     <div id="login-screen" class="max-w-[400px] mx-auto mt-16 bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
         <div class="text-center mb-8">
-            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto text-indigo-600 mb-4">
+            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 mb-4">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11.5V6l-3.707 3.707M12 11c1.744 2.772 2.753 6.054 2.753 9.571M12 11V6l3.707 3.707M12 2a9 9 0 110 18 9 9 0 010-18z"/></svg>
             </div>
-            <h2 class="text-xl font-bold text-slate-800 tracking-tight">Portal Entry</h2>
-            <p class="text-xs text-slate-400 mt-1.5">Apna registered Mobile Number dono jagah enter karein</p>
+            <h2 class="text-xl font-bold text-slate-800 tracking-tight uppercase">Yash Marketing Portal</h2>
+            <p class="text-xs text-slate-400 mt-1">Apna registered Mobile Number dono jagah enter karein</p>
         </div>
 
         <div class="space-y-4">
             <div class="form-control">
                 <label class="label"><span class="label-text text-xs font-semibold text-slate-500">Phone Number (Mobile No)</span></label>
-                <input type="text" id="login-username" placeholder="E.g. 8805568651" class="input input-bordered w-full rounded-xl bg-slate-50/50 text-sm text-center font-medium focus:outline-none" />
+                <input type="text" id="login-username" placeholder="E.g. 8805568651" class="input input-bordered w-full rounded-xl bg-slate-50 text-center font-bold text-sm" />
             </div>
             <div class="form-control">
-                <label class="label"><span class="label-text text-xs font-semibold text-slate-500">Secret Password (Wahi Number firse)</span></label>
-                <input type="password" id="login-pin" placeholder="••••••••••" class="input input-bordered w-full rounded-xl bg-slate-50/50 text-sm text-center font-medium focus:outline-none" />
+                <label class="label"><span class="label-text text-xs font-semibold text-slate-500">Secret Password (Same Mobile No)</span></label>
+                <input type="password" id="login-pin" placeholder="••••••••••" class="input input-bordered w-full rounded-xl bg-slate-50 text-center font-bold text-sm" />
             </div>
             <button onclick="handleLogin()" class="btn btn-primary w-full h-11 rounded-xl font-bold uppercase text-xs tracking-wider mt-4">
-                Pravesh Karein ➔
+                Portal Me Pravesh Karein ➔
             </button>
         </div>
     </div>
 
     <!-- 2. MAIN APPLICATION WORKSPACE -->
-    <div id="main-workspace" class="hidden max-w-5xl mx-auto space-y-6">
+    <div id="main-workspace" class="hidden max-w-[1200px] mx-auto space-y-6">
         
         <!-- User Session Ribbon -->
-        <div class="flex justify-between items-center bg-white p-3 px-4 rounded-xl border border-slate-100 shadow-sm flex-wrap gap-3">
+        <div class="flex justify-between items-center bg-slate-900 text-white p-3 px-4 rounded-xl shadow-md gap-3 flex-wrap">
             <div class="flex items-center gap-3">
-                <img id="user-avatar" src="https://via.placeholder.com/150" class="w-9 h-9 rounded-full border border-slate-200 object-cover" onerror="this.src='https://via.placeholder.com/150?text=👤'">
+                <img id="user-avatar" src="https://via.placeholder.com/150" class="w-9 h-9 rounded-full border border-slate-700 object-cover" onerror="this.src='https://via.placeholder.com/150?text=👤'">
                 <div>
-                    <h3 id="user-display-name" class="text-sm font-bold text-slate-800 leading-tight">Staff Member</h3>
-                    <p id="user-role-badge" class="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider mt-0.5">Role</p>
+                    <h3 id="user-display-name" class="text-sm font-bold text-slate-100">Staff Member</h3>
+                    <p id="user-role-badge" class="badge badge-primary text-[9px] font-bold uppercase py-0.5 px-2">Role</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="openProfileModal()" class="btn btn-xs btn-ghost bg-slate-50 text-slate-600 font-bold rounded-lg border-none hover:bg-slate-100">Documents</button>
-                <button onclick="handleLogout()" class="btn btn-xs btn-ghost bg-red-50 text-red-650 font-bold rounded-lg border-none hover:bg-red-100">Logout</button>
+                <button onclick="forceSyncRefresh()" class="btn btn-xs btn-outline btn-info font-bold rounded-lg gap-1">
+                    🔄 Refresh Data
+                </button>
+                <button onclick="openProfileModal()" class="btn btn-xs bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg border-none">
+                    My Profile & Docs
+                </button>
+                <button onclick="handleLogout()" class="btn btn-xs bg-red-650 text-white font-bold rounded-lg border-none hover:bg-red-700">Logout</button>
             </div>
         </div>
 
         <!-- 3. ATTENDANCE PUNCH MODULE -->
-        <div id="attendance-card" class="premium-card p-5">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Attendance Register (Haajiri)</h2>
-                <span id="gps-status" class="text-[10px] font-medium text-indigo-500">GPS Status Loading...</span>
+        <div id="attendance-card" class="premium-slate-card p-4">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Attendance Register</h2>
+                <span id="gps-status" class="text-[10px] font-semibold text-slate-400">GPS Locating...</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between gap-3 text-center">
-                    <p class="text-xs text-slate-500 font-medium">Punch-In/Out ke liye office ke 50 meter ke andar hona zaroori hai.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between text-center gap-3">
+                    <p class="text-xs font-medium text-slate-500 leading-normal">Office ke 50 meter ke andar Punch-In/Out karein (Sales boys exempted)</p>
                     <div class="flex gap-2 justify-center">
-                        <button id="punch-in-btn" onclick="punchAttendance('In')" class="btn btn-sm btn-outline btn-success rounded-lg font-bold">Punch In</button>
-                        <button id="punch-out-btn" onclick="punchAttendance('Out')" class="btn btn-sm btn-outline btn-error rounded-lg font-bold">Punch Out</button>
+                        <button id="punch-in-btn" onclick="punchAttendance('In')" class="btn btn-sm btn-success text-white rounded-lg font-bold px-4">Punch In</button>
+                        <button id="punch-out-btn" onclick="punchAttendance('Out')" class="btn btn-sm btn-error text-white rounded-lg font-bold px-4">Punch Out</button>
                     </div>
                 </div>
 
-                <div class="bg-indigo-50/30 p-4 rounded-xl border border-indigo-50 text-left space-y-3">
+                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-50 text-left space-y-3">
                     <div class="flex justify-between items-center">
-                        <p class="text-xs font-bold text-indigo-900">Aapka Is Mahine Ka Record:</p>
-                        <button onclick="toggleAttendanceTable()" class="text-[11px] font-bold text-indigo-600 hover:underline">📅 View Logs</button>
+                        <p class="text-xs font-bold text-blue-900">Aapka Attendance Record:</p>
+                        <button onclick="toggleAttendanceTable()" class="btn btn-xs btn-ghost text-blue-600 font-bold">📅 Logs</button>
                     </div>
                     
-                    <div id="personal-attendance-table" class="hidden overflow-x-auto max-h-[150px] beauty-scroll border border-slate-150 rounded-lg bg-white p-1">
+                    <div id="personal-attendance-table" class="hidden overflow-x-auto max-h-[130px] beauty-scroll border rounded-lg bg-white p-2">
                         <table class="table table-xs w-full text-slate-700">
                             <thead><tr class="font-bold text-[9px] text-slate-400"><th>Date</th><th>Type</th><th>Distance</th></tr></thead>
                             <tbody id="personal-attend-tbody"></tbody>
                         </table>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-semibold text-slate-500">
-                        <div class="bg-white p-1.5 rounded-lg border border-slate-100"><span>Present</span><p id="calc-p-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                        <div class="bg-white p-1.5 rounded-lg border border-slate-100"><span>Half-Day</span><p id="calc-hd-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                        <div class="bg-white p-1.5 rounded-lg border border-slate-100"><span>Late</span><p id="calc-l-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                        <div class="bg-white p-1.5 rounded-lg border border-slate-100"><span>Absent</span><p id="calc-a-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
+                    <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-semibold text-slate-500">
+                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Present</span><p id="calc-p-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
+                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Half-Day</span><p id="calc-hd-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
+                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Late</span><p id="calc-l-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
+                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Absent</span><p id="calc-a-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
                     </div>
-                    <div class="border-t border-indigo-100/50 pt-2 flex justify-between items-center text-xs font-semibold text-slate-700">
-                        <span>Live Salary Status:</span>
-                        <span id="calc-live-salary" class="text-indigo-600 font-bold">₹ 0.00</span>
+                    <div class="border-t border-blue-100/50 pt-2 flex justify-between items-center text-xs font-bold text-slate-700">
+                        <span>Month Live Salary Estimation:</span>
+                        <span id="calc-live-salary" class="text-blue-600 font-bold">₹ 0.00</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 4. OWNER-ONLY DASHBOARD VIEW -->
-        <div id="owner-hr-card" class="hidden premium-card p-5">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Malik Panel: HR & Salary Tracker</h2>
+        <div id="owner-hr-card" class="hidden premium-slate-card p-4">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Malik HR & Payroll Manager</h2>
             <div class="overflow-x-auto beauty-scroll">
                 <table class="table table-xs w-full text-slate-800">
                     <thead>
-                        <tr class="text-slate-400 font-bold border-b border-slate-100">
+                        <tr class="text-slate-400 font-bold border-b">
                             <th>Employee</th>
                             <th>Role</th>
                             <th>Salary</th>
@@ -195,40 +189,40 @@
         </div>
 
         <!-- 5. SALES MARKET VISIT FORM -->
-        <div id="sales-visit-card" class="hidden premium-card p-5 space-y-4">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Market Visit & Survey</h2>
+        <div id="sales-visit-card" class="hidden premium-slate-card p-4 space-y-4">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Market Visit Form (Survey)</h2>
             <form id="visit-form" onsubmit="event.preventDefault();" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-control w-full">
-                        <label class="label"><span class="label-text text-xs font-medium">Route / Area Select</span></label>
-                        <select id="visit-area-select" onchange="updateDealerListByArea()" class="select select-bordered select-sm w-full rounded-lg bg-slate-50/50 text-xs">
+                        <label class="label"><span class="label-text text-xs font-semibold">Safar Route Area</span></label>
+                        <select id="visit-area-select" onchange="updateDealerListByArea()" class="select select-bordered select-sm w-full rounded-lg bg-slate-50 font-bold text-xs">
                         </select>
                     </div>
                     <div class="form-control w-full">
-                        <label class="label"><span class="label-text text-xs font-medium">Shop / Dealer Name</span></label>
-                        <input list="visit-dealers-list" id="visit-dealer-input" placeholder="Search shop name..." class="input input-bordered input-sm w-full rounded-lg bg-slate-50/50 text-xs" />
+                        <label class="label"><span class="label-text text-xs font-semibold">Dealer Shop List</span></label>
+                        <input list="visit-dealers-list" id="visit-dealer-input" placeholder="Search shop name..." class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
                         <datalist id="visit-dealers-list"></datalist>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="label"><span class="label-text text-xs font-medium">Client Contact</span></label>
-                        <input type="text" id="visit-phone" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50/50" />
+                        <label class="label"><span class="label-text text-xs font-semibold">Client Contact Phone</span></label>
+                        <input type="text" id="visit-phone" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
                     </div>
                     <div>
-                        <label class="label"><span class="label-text text-xs font-medium">Payment Pending</span></label>
-                        <input type="number" id="visit-pay-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50/50" />
+                        <label class="label"><span class="label-text text-xs font-semibold">Payment Pending (Rs)</span></label>
+                        <input type="number" id="visit-pay-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
                     </div>
                     <div>
-                        <label class="label"><span class="label-text text-xs font-medium">Cash Pending (No Bill)</span></label>
-                        <input type="number" id="visit-cash-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50/50" />
+                        <label class="label"><span class="label-text text-xs font-semibold">Cash Pending</span></label>
+                        <input type="number" id="visit-cash-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
                     </div>
                 </div>
 
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 pb-1 border-b">📦 Product Stock Report Checklist</p>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b pb-2">📦 Dealer Stock survey Checklist</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold">
                         <div><label class="label"><span class="label-text">Boat Airpods</span></label><input type="number" id="vs-b-air" value="0" class="input input-bordered input-sm w-full" /></div>
                         <div><label class="label"><span class="label-text">Boat Neckband</span></label><input type="number" id="vs-b-neck" value="0" class="input input-bordered input-sm w-full" /></div>
                         <div><label class="label"><span class="label-text">Boat Powerbank</span></label><input type="number" id="vs-b-pwr" value="0" class="input input-bordered input-sm w-full" /></div>
@@ -245,97 +239,130 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t pt-4">
                         <div>
-                            <label class="label"><span class="label-text text-xs text-slate-500">Live Selfie (Mandatory)</span></label>
-                            <input type="file" id="vs-selfie-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full" />
+                            <label class="label"><span class="label-text text-xs text-slate-500">Sales Visit Selfie (Live Photo)</span></label>
+                            <input type="file" id="vs-selfie-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full bg-white" />
                         </div>
                         <div>
                             <label class="label"><span class="label-text text-xs text-slate-500">Replacement / Payment Photo</span></label>
-                            <input type="file" id="vs-pay-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full" />
+                            <input type="file" id="vs-pay-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full bg-white" />
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="label"><span class="label-text text-xs font-medium">Remarks / Feedback</span></label>
+                    <label class="label"><span class="label-text text-xs font-bold">Visit Remarks / Suggestion Remarks</span></label>
                     <textarea id="visit-remarks" required class="textarea textarea-bordered w-full rounded-xl" rows="2"></textarea>
                 </div>
 
-                <button onclick="submitMarketVisit()" class="btn btn-emerald w-full text-white font-bold rounded-xl text-xs tracking-wider">
-                    Submit Visit Report
-                </button>
+                <button onclick="submitMarketVisit()" class="btn btn-emerald w-full text-white font-bold rounded-lg h-11">Submit Visit Logs</button>
             </form>
         </div>
 
-        <!-- 6. BACKOFFICE & OWNER ORDER WORKSPACE -->
+        <!-- 6. ORDER WORKSPACE -->
         <div id="order-processing-workspace" class="hidden space-y-6">
-            <!-- Modern Stage Bar Track (Horizontal Scrollable steps) -->
-            <div class="premium-card p-5">
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Pipeline Status View</h2>
-                <div class="beauty-scroll overflow-x-auto">
-                    <div id="rail-track" class="timeline-rail">
+            <!-- Modern Stage Bar Track -->
+            <div class="premium-slate-card p-4">
+                <h2 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Order Pipeline Stage Flow</h2>
+                <div class="overflow-x-auto beauty-scroll">
+                    <div id="rail-track" class="flex gap-2 pb-2">
                         <!-- Stations loaded dynamically -->
                     </div>
                 </div>
             </div>
 
-            <!-- Assembly Line Hub Filter Buttons -->
+            <!-- Assembly Line Hub filters -->
             <div class="flex flex-wrap gap-2 px-1">
-                <button onclick="setDateFilter('all')" id="df-all" class="btn btn-sm rounded-lg font-bold text-xs bg-indigo-600 text-white border-none px-4">Saare Orders</button>
-                <button onclick="setDateFilter('today')" id="df-today" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-100 px-4 hover:bg-slate-50">Aaj Ke</button>
-                <button onclick="setDateFilter('week')" id="df-week" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-100 px-4 hover:bg-slate-50">Is Hafte Ke</button>
-                <button onclick="setDateFilter('month')" id="df-month" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-100 px-4 hover:bg-slate-50">Is Mahine Ke</button>
-                <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-100 px-4 hover:bg-slate-50">⚠️ Short Orders Only</button>
+                <button onclick="setDateFilter('all')" id="df-all" class="btn btn-sm rounded-lg font-bold text-xs bg-blue-600 text-white border-none px-4">All Orders</button>
+                <button onclick="setDateFilter('today')" id="df-today" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">Today</button>
+                <button onclick="setDateFilter('week')" id="df-week" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">This Week</button>
+                <button onclick="setDateFilter('month')" id="df-month" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">This Month</button>
+                <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">⚠️ Shorts Only</button>
             </div>
 
-            <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[85vh] overflow-y-auto beauty-scroll pr-2 pb-16">
-                <!-- Orders will list here dynamically without duplicate headers -->
+            <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[90vh] overflow-y-auto beauty-scroll pr-1 pb-16">
+                <!-- Orders -->
             </div>
         </div>
 
     </div>
 
-    <!-- 7. PROFILE & DOCUMENTS VIEW MODAL -->
+    <!-- 7. PROFILE & DOCUMENTS VIEW/UPDATE MODAL -->
     <dialog id="profile_modal" class="modal modal-middle backdrop-blur-md">
-        <div class="modal-box w-11/12 max-w-[450px] bg-white p-6 rounded-2xl shadow-2xl my-auto mx-auto overflow-y-auto max-h-[85vh]">
+        <div class="modal-box w-11/12 max-w-[500px] bg-white p-5 rounded-2xl shadow-2xl my-auto mx-auto overflow-y-auto max-h-[85vh] beauty-scroll">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="text-base font-bold text-slate-800">Profile & Documents</h3>
+                <h3 class="text-sm font-bold text-slate-800 uppercase">My Profile & Verification Documents</h3>
                 <form method="dialog"><button class="btn btn-circle btn-xs btn-ghost">✕</button></form>
             </div>
-            <div class="flex flex-col items-center text-center space-y-4">
-                <img id="prof-photo" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full border-2 border-slate-200 object-cover shadow-sm" onerror="this.src='https://via.placeholder.com/150?text=Passport+Photo'">
-                <div>
-                    <h4 id="prof-name" class="text-base font-bold text-slate-800">Employee Name</h4>
-                    <p id="prof-role" class="text-xs text-indigo-600 font-semibold uppercase tracking-wider mt-0.5">Role</p>
+            
+            <!-- Employee Self-Document Upload Panel -->
+            <div class="space-y-4">
+                <div class="flex flex-col items-center text-center pb-2 border-b">
+                    <img id="prof-photo" src="https://via.placeholder.com/150" class="w-20 h-20 rounded-full object-cover shadow border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=Passport+Photo'">
+                    <h4 id="prof-name" class="text-base font-bold text-slate-800 mt-2">Employee Name</h4>
+                    <p id="prof-role" class="badge badge-primary text-[10px] uppercase font-bold tracking-wider mt-1">Role</p>
                 </div>
-                <div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 text-left space-y-2">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aadhar / PAN Document:</p>
-                    <a id="prof-doc-link" href="#" target="_blank" class="text-xs font-semibold text-indigo-600 hover:underline flex items-center gap-1">
-                        📄 View Document ➔
-                    </a>
+
+                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-left space-y-4">
+                    <h5 class="text-xs font-bold text-blue-900 uppercase">Upload / Update Documents:</h5>
+                    
+                    <div class="space-y-3 text-xs font-semibold">
+                        <div>
+                            <label class="label py-1"><span class="label-text text-[11px]">Profile Photo (Passport size)</span></label>
+                            <input type="file" id="up-photo" accept="image/*" class="file-input file-input-bordered file-input-xs w-full bg-white" />
+                        </div>
+                        <div>
+                            <label class="label py-1"><span class="label-text text-[11px]">Aadhar Card Copy</span></label>
+                            <input type="file" id="up-aadhar" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
+                        </div>
+                        <div>
+                            <label class="label py-1"><span class="label-text text-[11px]">PAN Card Copy</span></label>
+                            <input type="file" id="up-pan" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
+                        </div>
+                        <div>
+                            <label class="label py-1"><span class="label-text text-[11px]">Bank Pass Book Frontpage</span></label>
+                            <input type="file" id="up-passbook" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
+                        </div>
+                        <div>
+                            <label class="label py-1"><span class="label-text text-[11px]">Agreement Copy</span></label>
+                            <input type="file" id="up-agreement" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
+                        </div>
+                    </div>
+
+                    <button id="profile-upload-btn" onclick="uploadStaffDocuments()" class="btn btn-primary btn-sm w-full font-bold uppercase text-[10px] tracking-wider mt-2">
+                        Upload Selected Documents
+                    </button>
+                </div>
+
+                <div class="w-full bg-slate-50 p-4 rounded-xl border text-left space-y-2">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Documents currently on sheet:</p>
+                    <div id="doc-links-preview" class="space-y-1.5 text-xs text-blue-600 font-semibold">
+                        <!-- Loaded dynamically -->
+                    </div>
                 </div>
             </div>
         </div>
     </dialog>
 
-    <!-- 8. ORDER PROCESS MODAL -->
+    <!-- 8. ORDER PROCESS MODAL (Perfect Compact Styling) -->
     <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
-        <div class="modal-box w-11/12 max-w-[900px] bg-white p-0 rounded-2xl shadow-3xl my-auto mx-auto overflow-y-auto max-h-[90vh] beauty-scroll">
-            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
+        <div class="modal-box w-11/12 max-w-[800px] bg-white p-0 rounded-2xl shadow-3xl my-auto mx-auto overflow-y-auto max-h-[85vh] beauty-scroll border border-slate-200">
+            <div class="bg-slate-900 p-4 px-5 text-white flex justify-between items-center border-b border-slate-800">
                 <div>
-                    <h3 id="m-dealer" class="text-xl font-bold break-words">Dealer Name</h3>
-                    <div class="flex flex-wrap gap-2 items-center mt-1.5">
-                        <span id="m-id" class="text-xs opacity-80 border-r border-white/20 pr-3 font-semibold">ID: #000</span>
-                        <span id="m-area" class="text-[11px] font-semibold bg-white/10 px-2 py-0.5 rounded-full uppercase">Region: General</span>
+                    <h3 id="m-dealer" class="text-sm md:text-base font-bold tracking-tight">Dealer Name</h3>
+                    <div class="flex flex-wrap gap-2 items-center mt-1">
+                        <span id="m-id" class="text-[10px] text-slate-400 font-semibold">ID: #000</span>
+                        <span id="m-area" class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-blue-400 font-bold uppercase">Region: General</span>
                     </div>
                 </div>
-                <form method="dialog" class="shrink-0 ml-4">
-                    <button class="btn btn-circle btn-sm btn-ghost text-white border border-white/20 hover:rotate-90 transition-transform">✕</button>
+                <form method="dialog" class="shrink-0">
+                    <button class="btn btn-circle btn-xs btn-ghost text-white border border-slate-800">✕</button>
                 </form>
             </div>
 
-            <div class="p-6">
-                <div class="mb-6">
-                    <ul id="timeline-track" class="steps steps-vertical w-full text-xs font-semibold tracking-tight gap-4">
+            <div class="p-4 md:p-5">
+                <!-- Timeline process steps (Miniature & tighter spacing) -->
+                <div class="mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <ul id="timeline-track" class="steps steps-vertical w-full text-[10px] font-bold tracking-tight gap-2.5">
                         <li class="step">Balance Check</li>
                         <li class="step">Call 1</li>
                         <li class="step">Processed</li>
@@ -347,43 +374,43 @@
                     </ul>
                 </div>
 
-                <div class="mb-6 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-                    <p class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mb-1">📢 Staff Guide (Kaam Ka Tarika):</p>
-                    <p id="m-step-explanation" class="text-xs font-medium text-indigo-950 leading-relaxed">Loading guide...</p>
+                <div class="mb-5 p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl text-left">
+                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">📢 Staff Guide:</p>
+                    <p id="m-step-explanation" class="text-xs text-slate-700 leading-snug">Stage explanation loading...</p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-6 space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-inner">
-                            <h4 class="text-xs font-bold text-indigo-600 uppercase mb-4 tracking-wider">Saman Ki List</h4>
-                            <div id="m-product-list" class="space-y-3 max-h-[300px] overflow-y-auto beauty-scroll pr-1"></div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+                    <div class="md:col-span-6 space-y-3">
+                        <div class="bg-slate-50/30 p-3.5 rounded-xl border border-slate-200">
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Saman Ki List</h4>
+                            <div id="m-product-list" class="space-y-2 max-h-[220px] overflow-y-auto beauty-scroll pr-1"></div>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-6 space-y-4 text-center">
-                        <div class="bg-indigo-50/30 p-4 rounded-xl border-2 border-dashed border-indigo-100">
-                            <div class="mb-4">
-                                <span id="m-stage-tag" class="text-xs font-bold text-indigo-700 uppercase tracking-wider bg-white px-3 py-1.5 rounded-full shadow-sm inline-block">
+                    <div class="md:col-span-6 space-y-3 text-center">
+                        <div class="bg-blue-50/20 p-4 rounded-xl border-2 border-dashed border-blue-100">
+                            <div class="mb-3">
+                                <span id="m-stage-tag" class="text-[10px] font-bold text-blue-700 uppercase tracking-widest bg-white px-2.5 py-1 rounded shadow-sm inline-block">
                                     Stage: Loading
                                 </span>
                             </div>
                             
                             <div id="m-media-control" class="space-y-3"></div>
 
-                            <button id="m-sync-btn" onclick="executeSyncProtocol()" class="btn btn-primary w-full mt-4 h-11 rounded-xl shadow-sm font-bold text-xs tracking-wide">
-                                Complete Process (Aage Bhejein)
+                            <button id="m-sync-btn" onclick="executeSyncProtocol()" class="btn btn-primary w-full mt-3 h-10 rounded-lg shadow-sm font-bold text-xs">
+                                Process Completed (Aage Bhejein)
                             </button>
                         </div>
                         
-                        <div class="flex gap-3">
-                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-50 text-orange-700 flex-1 rounded-xl font-bold h-10 text-xs shadow-sm">Short Order (Saman Alag Karein)</button>
+                        <div class="flex gap-2">
+                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-50/50 hover:bg-orange-100 text-orange-700 flex-1 rounded-lg font-bold h-9 text-[11px]">Short Order (Saman Alag)</button>
                         </div>
 
-                        <div id="m-split-zone" class="hidden bg-orange-50/50 border-2 border-orange-100 p-4 rounded-xl text-left space-y-3">
-                            <p class="text-xs font-bold text-orange-700 uppercase">✂️ Short Order Panel</p>
-                            <p class="text-[11px] text-slate-500 leading-relaxed">Jo shortage items hain unhe check karke quantity alag karein taaki unka naya sub-order ban sake.</p>
-                            <div id="m-split-items-list" class="space-y-3"></div>
-                            <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-sm btn-warning w-full rounded-xl font-bold text-xs uppercase shadow-sm mt-2">
+                        <div id="m-split-zone" class="hidden bg-orange-50/20 border-2 border-orange-100 p-3.5 rounded-xl text-left space-y-2.5">
+                            <p class="text-[11px] font-bold text-orange-700 uppercase">Short Order Panel</p>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">Saman alag karke shortage sub-order banayein.</p>
+                            <div id="m-split-items-list" class="space-y-2"></div>
+                            <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-xs btn-warning w-full rounded-lg font-bold uppercase py-2">
                                 Confirm Shortage Split
                             </button>
                         </div>
@@ -395,11 +422,11 @@
 
     <script>
         /**
-         * v12.0 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE)
+         * v12.1 WORKSPACE ENGINE
          * ---------------------------------------------------------------------------------
          */
         
-        const CLOUD_API = "https://script.google.com/macros/s/AKfycbxTdo6KB-XPtdWw5-8L15HuFTqKI1xOQCIHZ8UIY9dNnf86AtCfQ-U3HYIkEQki2rni/exec";
+        const CLOUD_API = "https://script.google.com/macros/s/AKfycbz-6tSfFUyFinrcXTxxdJ4tld22tzIp2sZ13PDLpu6aAwSaJcNDpMMrbDw6CqTZTydx/exec";
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
@@ -431,7 +458,9 @@
         let store_attendance = [];
         let store_dealers = [];
         let currentUser = null;
-        let officeCoordinates = { lat: 19.0948, lon: 74.7480 };
+        
+        // Exact updated office location coordinates
+        let officeCoordinates = { lat: 19.08904387245274, lon: 74.73377820517885 };
         
         let activeFilterStage = null;
         let activeDateFilter = "all";
@@ -448,7 +477,7 @@
         };
 
         function getDirectDriveUrl(url) {
-            if (!url) return "https://via.placeholder.com/150?text=📦";
+            if (!url) return "#";
             const sUrl = url.toString().trim();
             if (sUrl.includes("drive.google.com")) {
                 let id = "";
@@ -518,7 +547,7 @@
 
         async function syncData() {
             try {
-                // Cache-buster added to prevent stale browser copies
+                // Real-time bypass timestamp
                 const response = await fetch(`${CLOUD_API}?_t=${Date.now()}`);
                 const data = await response.json();
                 
@@ -543,6 +572,17 @@
                     setTimeout(() => loader.style.display = 'none', 500);
                 }
             }
+        }
+
+        function forceSyncRefresh() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = "Syncing...";
+            syncData().then(() => {
+                btn.disabled = false;
+                btn.innerText = "🔄 Refresh Data";
+                alert("Data Refreshed!");
+            });
         }
 
         syncData();
@@ -659,7 +699,6 @@
                 return;
             }
 
-            // Sanitized empty rows and blank Order IDs out to keep loop clean
             let filtered = store_orders.filter(o => o && o.Order_ID && o.Order_ID.toString().trim() !== "");
 
             if (activeFilterStage) {
@@ -710,9 +749,9 @@
                 const btn = safe.el(`df-${btnId}`);
                 if (btn) {
                     if (btnId === type) {
-                        btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-indigo-600 text-white border-none px-4";
+                        btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-blue-600 text-white border-none px-4";
                     } else {
-                        btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-100 px-4 hover:bg-slate-50";
+                        btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50";
                     }
                 }
             });
@@ -726,7 +765,7 @@
                 if (activeSplitOnlyFilter) {
                     btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-orange-600 text-white border-none px-4";
                 } else {
-                    btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-100 px-4 hover:bg-slate-50";
+                    btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50";
                 }
             }
             applyFilters();
@@ -748,7 +787,7 @@
             const rows = store_dealers.slice(1);
             const areas = [...new Set(rows.map(r => r[3] ? r[3].toString().trim() : "").filter(a => a !== ""))];
 
-            areaSelect.innerHTML = `<option value="">-- Route Select --</option>` + 
+            areaSelect.innerHTML = `<option value="">-- Route Area --</option>` + 
                 areas.map(a => `<option value="${a}">${a}</option>`).join('');
         }
 
@@ -828,7 +867,7 @@
 
                 const normalizedRole = currentUser.role.toLowerCase();
                 if (!normalizedRole.includes("sales") && dist > 50) {
-                    alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). Radius 50m hona chahiye.`);
+                    alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). Office ke 50m radius ke andar hona mandatory hai.`);
                     btn.disabled = false;
                     return;
                 }
@@ -958,7 +997,7 @@
                 }
 
                 if (!selfieIn || !selfieIn.files || selfieIn.files.length === 0) {
-                    alert("⚠️ Live Selfie photo click karna zaroori hai.");
+                    alert("⚠️ Live Selfie click karna zaroori hai.");
                     return;
                 }
 
@@ -1017,7 +1056,7 @@
 
                     const rData = await res.json();
                     if (rData.status === "success") {
-                        alert("✅ Visit Report and Stock Survey saved.");
+                        alert("✅ Visit Log aur Stock Survey saved.");
                         safe.el('visit-form').reset();
                         syncData();
                     } else {
@@ -1036,15 +1075,108 @@
             }
         }
 
+        // STAFF DOCUMENTS UPLOAD HANDLER
+        async function uploadStaffDocuments() {
+            if(!currentUser) return;
+            const btn = safe.el('profile-upload-btn');
+            btn.disabled = true;
+            btn.innerText = "UPLOADING FILES...";
+
+            const upPhoto = safe.el('up-photo');
+            const upAadhar = safe.el('up-aadhar');
+            const upPan = safe.el('up-pan');
+            const upPassbook = safe.el('up-passbook');
+            const upAgreement = safe.el('up-agreement');
+
+            const payload = {
+                action: "update_profile_docs",
+                staffId: currentUser.uid
+            };
+
+            const filesToProcess = [
+                { key: 'photo', el: upPhoto },
+                { key: 'aadhar', el: upAadhar },
+                { key: 'pan', el: upPan },
+                { key: 'passbook', el: upPassbook },
+                { key: 'agreement', el: upAgreement }
+            ];
+
+            try {
+                for (let fileObj of filesToProcess) {
+                    if (fileObj.el && fileObj.el.files && fileObj.el.files.length > 0) {
+                        const file = fileObj.el.files[0];
+                        const base64 = await new Promise(resolve => {
+                            const rd = new FileReader();
+                            rd.onload = () => resolve(rd.result.split(',')[1]);
+                            rd.readAsDataURL(file);
+                        });
+                        payload[fileObj.key + 'Base64'] = base64;
+                        payload[fileObj.key + 'Mime'] = file.type;
+                    }
+                }
+
+                const res = await fetch(CLOUD_API, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.status === "success") {
+                    alert("✅ Documents successfully uploaded and sheets updated!");
+                    syncData();
+                    const modal = safe.el('profile_modal');
+                    if (modal && typeof modal.close === 'function') modal.close();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Upload failed: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Upload Selected Documents";
+            }
+        }
+
         function openProfileModal() {
             if(!currentUser) return;
             const photoImg = safe.el('prof-photo');
             if (photoImg) photoImg.src = currentUser.photo;
             safe.text('prof-name', currentUser.name);
             safe.text('prof-role', currentUser.role);
-            
-            const link = safe.el('prof-doc-link');
-            if (link) link.href = currentUser.doc;
+
+            // Populate current files if available in Database (Staff Master matching)
+            const linksContainer = safe.el('doc-links-preview');
+            if(linksContainer && store_staff && store_staff.length > 0) {
+                const headers = store_staff[0];
+                const rows = store_staff.slice(1);
+                
+                let phoneCol = 2;
+                headers.forEach((h, i) => {
+                    const val = h.toString().toLowerCase().trim();
+                    if (val.includes("phone") || val.includes("mobile") || val === "contact") phoneCol = i;
+                });
+
+                const staffRow = rows.find(r => r[phoneCol] && r[phoneCol].toString().trim().replace(/\.0$/, '') === currentUser.uid);
+                if (staffRow) {
+                    const keys = [
+                        { label: "Profile Photo", idx: 6 },
+                        { label: "Aadhar Card", idx: 7 },
+                        { label: "PAN Card", idx: 8 },
+                        { label: "Bank Pass Book", idx: 9 },
+                        { label: "Agreement", idx: 10 }
+                    ];
+                    
+                    linksContainer.innerHTML = keys.map(k => {
+                        const cellVal = staffRow[k.idx];
+                        if (cellVal && cellVal.toString().includes("http")) {
+                            return `<div class="flex justify-between"><span>${k.label}:</span> <a href="${cellVal}" target="_blank" class="text-blue-600 hover:underline">View File ➔</a></div>`;
+                        } else {
+                            return `<div class="flex justify-between text-slate-400"><span>${k.label}:</span> <span>Not Uploaded</span></div>`;
+                        }
+                    }).join('');
+                }
+            }
 
             const modal = safe.el('profile_modal');
             if(modal && typeof modal.showModal === 'function') modal.showModal();
@@ -1079,7 +1211,7 @@
 
             const groups = {};
             standardOrders.forEach(o => {
-                let dateKey = "Orders without Date";
+                let dateKey = "Bina Date Ke Orders";
                 try {
                     if (o.Date) {
                         const date = new Date(o.Date);
@@ -1134,7 +1266,7 @@
             const splitBadge = isSplit ? `<span class="badge badge-warning text-[10px] font-bold px-2 py-0.5 rounded">⚠️ SHORT ORDER</span>` : '';
 
             return `
-                <div class="slide-up-fade premium-card p-5 cursor-pointer hover:border-indigo-100" 
+                <div class="slide-up-fade premium-slate-card p-4 cursor-pointer hover:border-indigo-100" 
                      onclick="openProcessModal('${safeOrderId}')">
                     
                     <div class="flex justify-between items-start mb-3 gap-2">
@@ -1145,11 +1277,11 @@
                             </div>
                             <h3 class="text-base font-bold text-slate-800 tracking-tight mt-1 leading-snug truncate">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
                         </div>
-                        <div class="badge badge-neutral text-[10px] font-semibold py-1 px-2.5 rounded-full border-none bg-indigo-50 text-indigo-700 shrink-0 uppercase">${curStatus}</div>
+                        <div class="badge badge-neutral text-[10px] font-semibold py-1 px-2.5 rounded-full border-none bg-blue-50 text-blue-700 shrink-0 uppercase">${curStatus}</div>
                     </div>
 
                     <div class="flex items-center gap-2 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
-                        <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shrink-0"></div>
+                        <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0"></div>
                         <p class="text-xs font-semibold text-slate-600">Order Value: <span class="text-slate-800 font-bold">₹ ${orderVal}</span></p>
                     </div>
 
@@ -1182,7 +1314,7 @@
                 
                 return `
                     <div onclick="toggleStageFilter('${stage}')" 
-                         class="flex items-center gap-2 p-2 px-4 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'}">
+                         class="flex items-center gap-2 p-1.5 px-3 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
                         <span class="text-xs font-bold">${stage}</span>
                         <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white text-indigo-600' : 'bg-slate-200 text-slate-700'}">${count}</span>
                     </div>
@@ -1229,13 +1361,13 @@
                         const cleanImgUrl = findProductImage(item.name);
                         
                         return `
-                            <div class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-100 hover:shadow-sm transition-all">
-                                <img src="${cleanImgUrl}" class="cat-image object-cover rounded-lg border border-slate-100" onerror="this.src='https://via.placeholder.com/150?text=📦'">
+                            <div class="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-100 hover:shadow-sm transition-all">
+                                <img src="${cleanImgUrl}" class="cat-image object-cover rounded-lg" onerror="this.src='https://via.placeholder.com/150?text=📦'">
                                 <div class="min-w-0 flex-1">
                                     <p class="text-xs font-bold text-slate-800 truncate uppercase">${item.name}</p>
                                     <div class="flex justify-between items-center mt-1">
-                                        <span class="text-[10px] text-slate-400">Qty Ordered:</span>
-                                        <span class="badge badge-primary font-bold text-xs rounded">${item.qty}</span>
+                                        <span class="text-[9px] text-slate-400">Qty Ordered:</span>
+                                        <span class="badge badge-primary font-bold text-[10px] rounded px-1.5">${item.qty}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1278,18 +1410,18 @@
                             const urls = fileVal.toString().split('\n');
                             const isAudio = stageName.toLowerCase().includes("call");
                             
-                            proofHtml = `<div class="mt-2 flex flex-wrap gap-2 justify-start items-center">`;
+                            proofHtml = `<div class="mt-1 flex flex-wrap gap-2 justify-start items-center">`;
                             urls.forEach((u, uIdx) => {
                                 const cleanUrl = getDirectDriveUrl(u.trim());
                                 if (isAudio) {
                                     proofHtml += `
-                                        <div class="p-1 bg-slate-100 rounded-lg border border-slate-200 flex items-center gap-1">
-                                            <audio controls class="h-8 max-w-[150px]"><source src="${cleanUrl}"></audio>
+                                        <div class="p-1 bg-slate-100 rounded border border-slate-200 flex items-center gap-1">
+                                            <audio controls class="h-6 max-w-[130px]"><source src="${cleanUrl}"></audio>
                                         </div>`;
                                 } else {
                                     proofHtml += `
                                         <div class="relative group">
-                                            <img src="${cleanUrl}" class="w-12 h-12 object-cover rounded border border-slate-200 cursor-pointer" 
+                                            <img src="${cleanUrl}" class="w-10 h-10 object-cover rounded border cursor-pointer" 
                                                  onclick="window.open('${cleanUrl}', '_blank')" 
                                                  onerror="this.src='https://via.placeholder.com/150?text=Error'">
                                         </div>`;
@@ -1301,12 +1433,12 @@
                         const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
 
                         s.innerHTML = `
-                            <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-left">
+                            <div class="step-micro-card">
                                 <div class="flex justify-between items-center gap-2">
                                     <span class="text-xs font-bold text-slate-800">${stageName}</span>
                                     ${proofHtml}
                                 </div>
-                                <p class="text-[11px] text-slate-500 leading-relaxed mt-1">${rawExplanation}</p>
+                                <p class="text-[10px] text-slate-500 leading-snug mt-1">${rawExplanation}</p>
                             </div>
                         `;
 
@@ -1327,18 +1459,15 @@
 
                 if (inputZone) {
                     if (status.toLowerCase() === "received") {
-                        inputZone.innerHTML = `<div class="py-4 px-3 bg-white rounded-xl border border-indigo-50 shadow-inner"><p class="text-xs text-indigo-600 font-semibold tracking-tight text-center leading-relaxed">RECEIVED: Process start. Balance Check ke liye aage bhejein.</p></div>`;
+                        inputZone.innerHTML = `<div class="py-3 px-3 bg-white rounded-xl border border-blue-50 shadow-inner"><p class="text-[11px] text-blue-600 font-semibold text-center leading-normal">RECEIVED: Process starting. Send to Balance Check.</p></div>`;
                     } else {
                         const isAudio = status.toLowerCase().includes("call");
                         inputZone.innerHTML = `
                             <div class="form-control w-full">
                                 <input type="file" id="m-file-input" 
-                                    class="file-input file-input-bordered file-input-primary file-input-sm w-full rounded-lg text-xs" 
+                                    class="file-input file-input-bordered file-input-primary file-input-xs w-full rounded-lg" 
                                     ${isAudio ? 'accept="audio/*"' : 'accept="image/*" multiple'} 
                                      />
-                                <p class="text-[9px] text-slate-400 mt-1.5 uppercase tracking-wider text-center font-bold">
-                                    ${isAudio ? 'AUDIO FILE (.MP3) REQUIRED' : 'PHOTOS REQUIRED'}
-                                </p>
                             </div>`;
                     }
                 }
@@ -1362,16 +1491,16 @@
             if(listContainer && window.activeOrderItems) {
                 listContainer.innerHTML = window.activeOrderItems.map((item, idx) => {
                     return `
-                        <div class="flex items-center justify-between gap-4 p-2 bg-white rounded-lg border border-slate-205">
+                        <div class="flex items-center justify-between gap-3 p-1.5 bg-white rounded-lg border border-slate-200 text-xs">
                             <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
-                                <input type="checkbox" id="split-chk-${idx}" class="checkbox checkbox-warning checkbox-sm rounded" onchange="toggleSplitInput(${idx})" />
+                                <input type="checkbox" id="split-chk-${idx}" class="checkbox checkbox-warning checkbox-xs rounded" onchange="toggleSplitInput(${idx})" />
                                 <span class="text-xs text-slate-800 truncate">${item.name}</span>
                             </label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <span class="text-[10px] text-slate-400">Qty:</span>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <span class="text-[9px] text-slate-400">Qty:</span>
                                 <input type="number" id="split-qty-${idx}" min="1" max="${item.qty}" value="1" disabled 
-                                       class="input input-bordered input-xs w-12 text-center bg-slate-100" />
-                                <span class="text-[10px] text-slate-400">/ ${item.qty}</span>
+                                       class="input input-bordered input-xs w-10 text-center bg-slate-100 p-0" />
+                                <span class="text-[10px] text-slate-450">/ ${item.qty}</span>
                             </div>
                         </div>
                     `;
@@ -1415,7 +1544,7 @@
                     const splitQty = parseInt(qtyInput.value, 10);
                     
                     if (isNaN(splitQty) || splitQty <= 0 || splitQty > item.qty) {
-                        alert(`⚠️ ERROR: Kripya ${item.name} ki quantity select karein.`);
+                        alert(`⚠️ ERROR: Quantity correct select karein.`);
                         return;
                     }
 
@@ -1432,7 +1561,7 @@
             }
 
             if (!hasSelection) {
-                alert("⚠️ ERROR: Kripya split karne ke liye kam-se-kam ek product select karein.");
+                alert("⚠️ ERROR: Split shortage select karein.");
                 return;
             }
 
@@ -1445,12 +1574,12 @@
             const originalItemsString = remainingItemsList.join(' | ');
             const splitOrderId = `${order.Order_ID}-SHORT`;
 
-            if (!confirm(`Kya aap shortage items ko alag karke sub-order #${splitOrderId} banana chahte hain?`)) {
+            if (!confirm(`Kya shortage items ko alag karke sub-order #${splitOrderId} banana chahte hain?`)) {
                 return;
             }
 
             splitBtn.disabled = true;
-            splitBtn.innerText = "Splitting Order...";
+            splitBtn.innerText = "Splitting...";
 
             try {
                 const res = await fetch(CLOUD_API, {
@@ -1466,19 +1595,19 @@
 
                 const data = await res.json();
                 if (data && data.status === "success") {
-                    alert("✂️ Replication Successful: Sub-order created #" + splitOrderId);
+                    alert("✂️ Shortage sub-order successfully created: #" + splitOrderId);
                     const modal = safe.el('process_modal');
                     if (modal && typeof modal.close === 'function') modal.close();
                     await syncData();
                 } else {
-                    throw new Error(data ? data.message : "Split execution failed.");
+                    throw new Error(data ? data.message : "Split failed.");
                 }
             } catch (err) {
-                alert("Split trigger failure: " + err.message);
+                alert("Split failed: " + err.message);
                 console.error(err);
             } finally {
                 splitBtn.disabled = false;
-                splitBtn.innerText = "CONFIRM SHORT ORDER (Shortage Alag Karein)";
+                splitBtn.innerText = "Confirm Shortage Split";
             }
         }
 
@@ -1510,20 +1639,20 @@
             if (cur.toLowerCase() !== "received") {
                 if (!fIn || !fIn.files || fIn.files.length === 0) {
                     if (isAudioStage) {
-                        alert("⚠️ Recording file load karna zaroori hai.");
+                        alert("⚠️ Audio file select karna mandatory hai.");
                     } else {
-                        alert("⚠️ Photo upload karna zaroori hai.");
+                        alert("⚠️ Proof image select karna mandatory hai.");
                     }
                     return;
                 }
                 
                 const selectedFile = fIn.files[0];
                 if (isAudioStage && !selectedFile.type.includes("audio")) {
-                    alert("⚠️ Kripya recording (.mp3) file hi select karein.");
+                    alert("⚠️ Kripya recording (.mp3) file select karein.");
                     return;
                 }
                 if (!isAudioStage && !selectedFile.type.includes("image")) {
-                    alert("⚠️ Kripya images hi select karein.");
+                    alert("⚠️ Kripya image files select karein.");
                     return;
                 }
             }
@@ -1581,15 +1710,15 @@
                     throw new Error(data ? data.message : "Sync failed"); 
                 }
             } catch (e) { 
-                alert("SYNC FAILURE! Verify Permissions & Quota.\nDetails: " + e.message); 
+                alert("SYNC FAILURE! Verify permissions and webapp version deployment."); 
                 console.error(e); 
             } finally { 
                 btn.disabled = false; 
-                btn.innerText = "KAAM COMPLETE! (Aage Bhejein)"; 
+                btn.innerText = "Process Completed (Aage Bhejein)"; 
             }
         }
 
         setInterval(syncData, 300000);
     </script>
 </body>
-</html>
+</html
