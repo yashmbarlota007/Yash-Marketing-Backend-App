@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing System v12.1</title>
+    <title>Yash Marketing System v12.2</title>
     
-    <!-- Heavyweight Frameworks -->
+    <!-- Premium Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root { 
-            --navy-base: #1e293b;
-            --brand: #3b82f6; 
+            --navy-base: #0f172a;
+            --brand: #2563eb; 
             --brand-deep: #1d4ed8;
             --soft-surface: #f8fafc;
             --border-tint: #e2e8f0;
@@ -25,7 +25,7 @@
             overflow-x: hidden; 
         }
         
-        /* Premium Soft Containers */
+        /* Premium Corporate Slate Cards */
         .premium-slate-card {
             background: #ffffff;
             border: 1px solid var(--border-tint);
@@ -47,16 +47,6 @@
             object-fit: cover; 
             border-radius: 0.5rem; 
             border: 1px solid #f1f5f9; 
-        }
-
-        /* Responsive Compact Steps timeline */
-        .step-micro-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            text-align: left;
-            width: 100%;
         }
 
         .slide-up-fade { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
@@ -168,7 +158,7 @@
 
         <!-- 4. OWNER-ONLY DASHBOARD VIEW -->
         <div id="owner-hr-card" class="hidden premium-slate-card p-4">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Malik HR & Payroll Manager</h2>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Malik HR & Salary Tracker</h2>
             <div class="overflow-x-auto beauty-scroll">
                 <table class="table table-xs w-full text-slate-800">
                     <thead>
@@ -294,7 +284,6 @@
                 <form method="dialog"><button class="btn btn-circle btn-xs btn-ghost">✕</button></form>
             </div>
             
-            <!-- Employee Self-Document Upload Panel -->
             <div class="space-y-4">
                 <div class="flex flex-col items-center text-center pb-2 border-b">
                     <img id="prof-photo" src="https://via.placeholder.com/150" class="w-20 h-20 rounded-full object-cover shadow border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=Passport+Photo'">
@@ -336,14 +325,13 @@
                 <div class="w-full bg-slate-50 p-4 rounded-xl border text-left space-y-2">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Documents currently on sheet:</p>
                     <div id="doc-links-preview" class="space-y-1.5 text-xs text-blue-600 font-semibold">
-                        <!-- Loaded dynamically -->
                     </div>
                 </div>
             </div>
         </div>
     </dialog>
 
-    <!-- 8. ORDER PROCESS MODAL (Perfect Compact Styling) -->
+    <!-- 8. ORDER PROCESS MODAL (Compact Layout with Custom Vertical Pipeline Connector) -->
     <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
         <div class="modal-box w-11/12 max-w-[800px] bg-white p-0 rounded-2xl shadow-3xl my-auto mx-auto overflow-y-auto max-h-[85vh] beauty-scroll border border-slate-200">
             <div class="bg-slate-900 p-4 px-5 text-white flex justify-between items-center border-b border-slate-800">
@@ -360,18 +348,11 @@
             </div>
 
             <div class="p-4 md:p-5">
-                <!-- Timeline process steps (Miniature & tighter spacing) -->
-                <div class="mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <ul id="timeline-track" class="steps steps-vertical w-full text-[10px] font-bold tracking-tight gap-2.5">
-                        <li class="step">Balance Check</li>
-                        <li class="step">Call 1</li>
-                        <li class="step">Processed</li>
-                        <li class="step">Invoiced</li>
-                        <li class="step">Dispatched</li>
-                        <li class="step">Call 2</li>
-                        <li class="step">Delivered</li>
-                        <li class="step">Final Call</li>
-                    </ul>
+                <!-- Custom Modern Vertical Step Bar (No Overlapping Ever) -->
+                <div class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div id="timeline-track" class="space-y-2.5">
+                        <!-- Loaded dynamically -->
+                    </div>
                 </div>
 
                 <div class="mb-5 p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl text-left">
@@ -422,11 +403,11 @@
 
     <script>
         /**
-         * v12.1 WORKSPACE ENGINE
+         * v12.2 WORKSPACE ENGINE
          * ---------------------------------------------------------------------------------
          */
         
-        const CLOUD_API = "https://script.google.com/macros/s/AKfycbxTdo6KB-XPtdWw5-8L15HuFTqKI1xOQCIHZ8UIY9dNnf86AtCfQ-U3HYIkEQki2rni/exec";
+        const CLOUD_API = "https://script.google.com/macros/s/AKfycbz-6tSfFUyFinrcXTxxdJ4tld22tzIp2sZ13PDLpu6aAwSaJcNDpMMrbDw6CqTZTydx/exec";
         const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
         const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
 
@@ -442,8 +423,8 @@
         };
 
         const LOCAL_STAFF_DB = [
-            { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" },
-            { phone: "8805566651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" },
+            { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://via.placeholder.com/150?text=Owner", doc: "#" },
+            { phone: "8805566651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://via.placeholder.com/150?text=Owner", doc: "#" },
             { phone: "8485874324", name: "Preetam Bogawat", role: "Sales Boy", salary: 20000, photo: "", doc: "#" },
             { phone: "7744033134", name: "Ganesh Parkad", role: "Sales Boy", salary: 16000, photo: "", doc: "#" },
             { phone: "9307838076", name: "Komal Gurap", role: "Accountant", salary: 13000, photo: "", doc: "#" },
@@ -459,7 +440,6 @@
         let store_dealers = [];
         let currentUser = null;
         
-        // Exact updated office location coordinates
         let officeCoordinates = { lat: 19.08904387245274, lon: 74.73377820517885 };
         
         let activeFilterStage = null;
@@ -547,7 +527,6 @@
 
         async function syncData() {
             try {
-                // Real-time bypass timestamp
                 const response = await fetch(`${CLOUD_API}?_t=${Date.now()}`);
                 const data = await response.json();
                 
@@ -704,9 +683,7 @@
             if (activeFilterStage) {
                 filtered = filtered.filter(o => {
                     let curSt = "Received";
-                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
-                        curSt = o.Dealer_Area.toString().trim();
-                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                    if (o.Current_Status && o.Current_Status.toString().trim() !== "") {
                         curSt = o.Current_Status.toString().trim();
                     }
                     return curSt.toLowerCase() === activeFilterStage.toLowerCase();
@@ -997,7 +974,7 @@
                 }
 
                 if (!selfieIn || !selfieIn.files || selfieIn.files.length === 0) {
-                    alert("⚠️ Live Selfie click karna zaroori hai.");
+                    alert("⚠️ Live Selfie photo click karna zaroori hai.");
                     return;
                 }
 
@@ -1056,7 +1033,7 @@
 
                     const rData = await res.json();
                     if (rData.status === "success") {
-                        alert("✅ Visit Log aur Stock Survey saved.");
+                        alert("✅ Visit Report and Stock Survey saved.");
                         safe.el('visit-form').reset();
                         syncData();
                     } else {
@@ -1075,7 +1052,45 @@
             }
         }
 
-        // STAFF DOCUMENTS UPLOAD HANDLER
+        function openProfileModal() {
+            if(!currentUser) return;
+            const photoImg = safe.el('prof-photo');
+            if (photoImg) photoImg.src = currentUser.photo;
+            safe.text('prof-name', currentUser.name);
+            safe.text('prof-role', currentUser.role);
+            
+            const link = safe.el('prof-doc-link');
+            if (link) link.href = currentUser.doc;
+
+            // Load existing uploaded files list dynamically
+            const previewDiv = safe.el('doc-links-preview');
+            if (previewDiv) {
+                let docHtml = "";
+                const docLabels = {
+                    "Aadhar Card": currentUser.doc_aadhar,
+                    "PAN Card": currentUser.doc_pan,
+                    "Bank Passbook": currentUser.doc_passbook,
+                    "Agreement Copy": currentUser.doc_agreement
+                };
+                
+                let count = 0;
+                for (let label in docLabels) {
+                    const url = docLabels[label];
+                    if (url && url.toString().includes('http')) {
+                        count++;
+                        docHtml += `<a href="${url}" target="_blank" class="block hover:underline">📄 View ${label} ➔</a>`;
+                    }
+                }
+                if (count === 0) {
+                    docHtml = `<span class="text-slate-400 italic">No verification documents uploaded yet.</span>`;
+                }
+                previewDiv.innerHTML = docHtml;
+            }
+
+            const modal = safe.el('profile_modal');
+            if(modal && typeof modal.showModal === 'function') modal.showModal();
+        }
+
         async function uploadStaffDocuments() {
             if(!currentUser) return;
             const btn = safe.el('profile-upload-btn');
@@ -1102,8 +1117,10 @@
             ];
 
             try {
+                let uploadedCount = 0;
                 for (let fileObj of filesToProcess) {
                     if (fileObj.el && fileObj.el.files && fileObj.el.files.length > 0) {
+                        uploadedCount++;
                         const file = fileObj.el.files[0];
                         const base64 = await new Promise(resolve => {
                             const rd = new FileReader();
@@ -1115,6 +1132,13 @@
                     }
                 }
 
+                if (uploadedCount === 0) {
+                    alert("Kripya upload karne ke liye kam-se-kam ek file select karein.");
+                    btn.disabled = false;
+                    btn.innerText = "Upload Selected Documents";
+                    return;
+                }
+
                 const res = await fetch(CLOUD_API, {
                     method: 'POST',
                     body: JSON.stringify(payload)
@@ -1122,7 +1146,7 @@
                 const data = await res.json();
                 
                 if (data.status === "success") {
-                    alert("✅ Documents successfully uploaded and sheets updated!");
+                    alert("✅ Documents successfully uploaded and sheet updated!");
                     syncData();
                     const modal = safe.el('profile_modal');
                     if (modal && typeof modal.close === 'function') modal.close();
@@ -1136,50 +1160,6 @@
                 btn.disabled = false;
                 btn.innerText = "Upload Selected Documents";
             }
-        }
-
-        function openProfileModal() {
-            if(!currentUser) return;
-            const photoImg = safe.el('prof-photo');
-            if (photoImg) photoImg.src = currentUser.photo;
-            safe.text('prof-name', currentUser.name);
-            safe.text('prof-role', currentUser.role);
-
-            // Populate current files if available in Database (Staff Master matching)
-            const linksContainer = safe.el('doc-links-preview');
-            if(linksContainer && store_staff && store_staff.length > 0) {
-                const headers = store_staff[0];
-                const rows = store_staff.slice(1);
-                
-                let phoneCol = 2;
-                headers.forEach((h, i) => {
-                    const val = h.toString().toLowerCase().trim();
-                    if (val.includes("phone") || val.includes("mobile") || val === "contact") phoneCol = i;
-                });
-
-                const staffRow = rows.find(r => r[phoneCol] && r[phoneCol].toString().trim().replace(/\.0$/, '') === currentUser.uid);
-                if (staffRow) {
-                    const keys = [
-                        { label: "Profile Photo", idx: 6 },
-                        { label: "Aadhar Card", idx: 7 },
-                        { label: "PAN Card", idx: 8 },
-                        { label: "Bank Pass Book", idx: 9 },
-                        { label: "Agreement", idx: 10 }
-                    ];
-                    
-                    linksContainer.innerHTML = keys.map(k => {
-                        const cellVal = staffRow[k.idx];
-                        if (cellVal && cellVal.toString().includes("http")) {
-                            return `<div class="flex justify-between"><span>${k.label}:</span> <a href="${cellVal}" target="_blank" class="text-blue-600 hover:underline">View File ➔</a></div>`;
-                        } else {
-                            return `<div class="flex justify-between text-slate-400"><span>${k.label}:</span> <span>Not Uploaded</span></div>`;
-                        }
-                    }).join('');
-                }
-            }
-
-            const modal = safe.el('profile_modal');
-            if(modal && typeof modal.showModal === 'function') modal.showModal();
         }
 
         function renderLineFeed(data) {
@@ -1248,17 +1228,15 @@
 
         function renderSingleOrderCard(o) {
             let curStatus = "Received";
-            if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
-                curStatus = o.Dealer_Area.toString().trim();
-            } else if (o.Current_Status && isNaN(o.Current_Status)) {
+            if (o.Current_Status && o.Current_Status.toString().trim() !== "") {
                 curStatus = o.Current_Status.toString().trim();
             }
 
-            let orderVal = "N/A";
-            if (o.Order_Value) {
-                orderVal = o.Order_Value;
-            } else if (o.Current_Status && !isNaN(o.Current_Status)) {
-                orderVal = o.Current_Status;
+            let orderVal = "0";
+            if (o.Order_Value && o.Order_Value.toString().trim() !== "") {
+                orderVal = o.Order_Value.toString().trim();
+            } else if (o.Current_Status && !isNaN(o.Current_Status) && o.Current_Status.toString().trim() !== "") {
+                orderVal = o.Current_Status.toString().trim();
             }
             
             const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
@@ -1280,14 +1258,14 @@
                         <div class="badge badge-neutral text-[10px] font-semibold py-1 px-2.5 rounded-full border-none bg-blue-50 text-blue-700 shrink-0 uppercase">${curStatus}</div>
                     </div>
 
-                    <div class="flex items-center gap-2 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
-                        <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0"></div>
-                        <p class="text-xs font-semibold text-slate-600">Order Value: <span class="text-slate-800 font-bold">₹ ${orderVal}</span></p>
+                    <div class="flex items-center gap-3 mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200/40">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shrink-0"></div>
+                        <p class="text-xs md:text-sm font-semibold text-slate-600">Order Value: <span class="text-slate-800 font-bold">₹ ${orderVal}</span></p>
                     </div>
 
-                    <div class="flex justify-between items-center border-t border-slate-50 pt-2 gap-2">
+                    <div class="flex justify-between items-center border-t border-slate-100 pt-3 gap-2">
                         <div class="flex items-center gap-1.5 min-w-0">
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+                            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
                             <span class="text-xs font-medium text-slate-500 truncate">${o.Order_Brought_By || 'Yash Marketing'}</span>
                         </div>
                     </div>
@@ -1302,9 +1280,7 @@
             listContainer.innerHTML = RAILWAY_STAGES.map(stage => {
                 const count = data.filter(o => {
                     let curStatus = "Received";
-                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
-                        curStatus = o.Dealer_Area.toString().trim();
-                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                    if (o.Current_Status && o.Current_Status.toString().trim() !== "") {
                         curStatus = o.Current_Status.toString().trim();
                     }
                     return curStatus.toLowerCase() === stage.toLowerCase();
@@ -1376,79 +1352,83 @@
                 }
 
                 let rawStatus = "Received";
-                if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
-                    rawStatus = order.Dealer_Area.toString().trim();
-                } else if (order.Current_Status && isNaN(order.Current_Status)) {
+                if (order.Current_Status && order.Current_Status.toString().trim() !== "") {
                     rawStatus = order.Current_Status.toString().trim();
                 }
 
                 const status = rawStatus;
                 const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
                 
-                const timelineSteps = document.querySelectorAll('#timeline-track .step');
-                if(timelineSteps && timelineSteps.length > 0) {
-                    timelineSteps.forEach((s, i) => {
-                        const stageName = PROTOCOL_STAGES[i];
-                        s.classList.toggle('step-primary', i <= curIdx);
-                        
-                        const mapping = {
-                            "Balance Check": "Balance_Proof",
-                            "Call 1": "Call_1_Audio",
-                            "Processed": "Stock_Proof",
-                            "Invoiced": "Invoice_Proof",
-                            "Dispatched": "Box_Proof",
-                            "Call 2": "Call_2_Audio",
-                            "Delivered": "Pauti_Photo",
-                            "Final Call": "Final_Audio"
-                        };
-                        
-                        const valKey = mapping[stageName];
-                        const fileVal = valKey ? order[valKey] : null;
-                        
-                        let proofHtml = "";
-                        if (fileVal && fileVal.toString().includes('http')) {
-                            const urls = fileVal.toString().split('\n');
-                            const isAudio = stageName.toLowerCase().includes("call");
-                            
-                            proofHtml = `<div class="mt-1 flex flex-wrap gap-2 justify-start items-center">`;
-                            urls.forEach((u, uIdx) => {
-                                const cleanUrl = getDirectDriveUrl(u.trim());
-                                if (isAudio) {
-                                    proofHtml += `
-                                        <div class="p-1 bg-slate-100 rounded border border-slate-200 flex items-center gap-1">
-                                            <audio controls class="h-6 max-w-[130px]"><source src="${cleanUrl}"></audio>
-                                        </div>`;
-                                } else {
-                                    proofHtml += `
-                                        <div class="relative group">
-                                            <img src="${cleanUrl}" class="w-10 h-10 object-cover rounded border cursor-pointer" 
-                                                 onclick="window.open('${cleanUrl}', '_blank')" 
-                                                 onerror="this.src='https://via.placeholder.com/150?text=Error'">
-                                        </div>`;
-                                }
-                            });
-                            proofHtml += `</div>`;
-                        }
+                // Pure Overlap-Proof Vertical Pipeline implementation
+                let timelineHtml = "";
+                PROTOCOL_STAGES.forEach((stageName, i) => {
+                    const isCompleted = i <= curIdx;
+                    const isActive = i === curIdx;
 
-                        const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
+                    const mapping = {
+                        "Balance Check": "Balance_Proof",
+                        "Call 1": "Call_1_Audio",
+                        "Processed": "Stock_Proof",
+                        "Invoiced": "Invoice_Proof",
+                        "Dispatched": "Box_Proof",
+                        "Call 2": "Call_2_Audio",
+                        "Delivered": "Pauti_Photo",
+                        "Final Call": "Final_Audio"
+                    };
+                    
+                    const valKey = mapping[stageName];
+                    const fileVal = valKey ? order[valKey] : null;
+                    
+                    let proofHtml = "";
+                    if (fileVal && fileVal.toString().includes('http')) {
+                        const urls = fileVal.toString().split('\n');
+                        const isAudio = stageName.toLowerCase().includes("call");
+                        
+                        proofHtml = `<div class="mt-1 flex flex-wrap gap-1.5 justify-start items-center">`;
+                        urls.forEach((u) => {
+                            const cleanUrl = getDirectDriveUrl(u.trim());
+                            if (isAudio) {
+                                proofHtml += `
+                                    <div class="p-1 bg-slate-100 rounded border border-slate-200 flex items-center gap-1">
+                                        <audio controls class="h-6 max-w-[120px]"><source src="${cleanUrl}"></audio>
+                                    </div>`;
+                                    
+                            } else {
+                                proofHtml += `
+                                    <div class="relative">
+                                        <img src="${cleanUrl}" class="w-8 h-10 object-cover rounded border cursor-pointer hover:scale-105 transition-transform" 
+                                             onclick="window.open('${cleanUrl}', '_blank')" 
+                                             onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                                    </div>`;
+                                    
+                            }
+                        });
+                        proofHtml += `</div>`;
+                    }
 
-                        s.innerHTML = `
-                            <div class="step-micro-card">
-                                <div class="flex justify-between items-center gap-2">
-                                    <span class="text-xs font-bold text-slate-800">${stageName}</span>
+                    const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
+
+                    timelineHtml += `
+                        <div class="flex items-start gap-3">
+                            <div class="flex flex-col items-center shrink-0">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all 
+                                    ${isActive ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-100' : isCompleted ? 'bg-green-50 text-green-700 border-green-500' : 'bg-slate-100 text-slate-400 border-slate-200'}">
+                                    ${i + 1}
+                                </div>
+                                ${i < PROTOCOL_STAGES.length - 1 ? `<div class="w-0.5 h-10 ${isCompleted ? 'bg-green-500' : 'bg-slate-200'}"></div>` : ''}
+                            </div>
+                            <div class="flex-1 min-w-0 bg-white p-2.5 rounded-xl border ${isActive ? 'border-blue-200 bg-blue-50/10' : 'border-slate-100'} text-left">
+                                <div class="flex justify-between items-start gap-2">
+                                    <span class="text-xs font-bold ${isActive ? 'text-blue-700' : 'text-slate-700'}">${stageName}</span>
                                     ${proofHtml}
                                 </div>
-                                <p class="text-[10px] text-slate-500 leading-snug mt-1">${rawExplanation}</p>
+                                <p class="text-[10px] text-slate-500 mt-1 leading-relaxed font-medium">${rawExplanation}</p>
                             </div>
-                        `;
+                        </div>
+                    `;
+                });
 
-                        if(i === curIdx) {
-                            s.classList.add('font-bold');
-                        } else {
-                            s.classList.remove('font-bold');
-                        }
-                    });
-                }
+                safe.html('timeline-track', timelineHtml);
 
                 const explText = STAGE_EXPLANATIONS[status] || "💳 <b>Next Step Balance Check:</b> Click complete to initialize process.";
                 safe.html('m-step-explanation', explText);
@@ -1491,7 +1471,7 @@
             if(listContainer && window.activeOrderItems) {
                 listContainer.innerHTML = window.activeOrderItems.map((item, idx) => {
                     return `
-                        <div class="flex items-center justify-between gap-3 p-1.5 bg-white rounded-lg border border-slate-200 text-xs">
+                        <div class="flex items-center justify-between gap-3 p-1.5 bg-white rounded-lg border border-slate-205 text-xs">
                             <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
                                 <input type="checkbox" id="split-chk-${idx}" class="checkbox checkbox-warning checkbox-xs rounded" onchange="toggleSplitInput(${idx})" />
                                 <span class="text-xs text-slate-800 truncate">${item.name}</span>
@@ -1618,9 +1598,7 @@
             if(!order) return;
             
             let rawStatus = "Received";
-            if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
-                rawStatus = order.Dealer_Area.toString().trim();
-            } else if (order.Current_Status && isNaN(order.Current_Status)) {
+            if (order.Current_Status && order.Current_Status.toString().trim() !== "") {
                 rawStatus = order.Current_Status.toString().trim();
             }
             const cur = rawStatus;
@@ -1721,4 +1699,4 @@
         setInterval(syncData, 300000);
     </script>
 </body>
-</html
+</html>
