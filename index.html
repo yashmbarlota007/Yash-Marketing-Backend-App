@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YASH MARKETING SYSTEM v11.0</title>
+    <title>YASH MARKETING SYSTEM v11.1</title>
     
     <!-- Heavyweight Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -85,8 +85,8 @@
 
         <div class="space-y-4">
             <div class="form-control">
-                <label class="label"><span class="label-text text-xs font-black text-slate-500">Staff Mobile Number</span></label>
-                <input type="text" id="login-username" placeholder="E.g. 8805568651" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800 text-center tracking-wider" />
+                <label class="label"><span class="label-text text-xs font-black text-slate-500">Phone Number (Mobile No)</span></label>
+                <input type="text" id="login-username" placeholder="E.g. 8805568651 / 8485874324" class="input input-bordered w-full rounded-xl bg-slate-50 font-bold text-sm text-slate-800 text-center tracking-wider" />
             </div>
             <div class="form-control">
                 <label class="label"><span class="label-text text-xs font-black text-slate-500">Secret Password (Wahi Mobile No firse dalein)</span></label>
@@ -335,7 +335,7 @@
 
     <script>
         /**
-         * v11.0 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
+         * v11.1 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
          * ---------------------------------------------------------------------------------
          */
         
@@ -353,6 +353,17 @@
             "Delivered": "✅ <b>Delivered:</b> Customer se sign kiya hua delivery challan (Pauti Photo) click karke upload karein.",
             "Final Call": "⭐ <b>Final Call:</b> Customer feedback call recording file yahan upload karke process close karein."
         };
+
+        // STAFF MASTER BACKUP LOCAL DATABASE (In case Google Sheets connection fails or is empty)
+        const LOCAL_STAFF_DB = [
+            { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "", doc: "#" },
+            { phone: "8485874324", name: "Preetam Bogawat", role: "Sales Boy", salary: 20000, photo: "", doc: "#" },
+            { phone: "7744033134", name: "Ganesh Parkad", role: "Sales Boy", salary: 16000, photo: "", doc: "#" },
+            { phone: "9307838076", name: "Komal Gurap", role: "Accountant", salary: 13000, photo: "", doc: "#" },
+            { phone: "9834871120", name: "Vishal Gunjal", role: "Store Manager", salary: 15000, photo: "", doc: "#" },
+            { phone: "9075708290", name: "Shubham Bade", role: "MIS", salary: 18000, photo: "", doc: "#" },
+            { phone: "9273384373", name: "Jyoti Jadhav", role: "CRM", salary: 10000, photo: "", doc: "#" }
+        ];
 
         let store_orders = [];
         let store_stock = [];
@@ -443,7 +454,7 @@
             const deltaPhi = (lat2-lat1) * Math.PI/180;
             const deltaLambda = (lon2-lon1) * Math.PI/180;
             const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
-                      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+                      const1 = Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
@@ -484,45 +495,34 @@
                 const pin = safe.el('login-pin').value.trim(); // Client typing Password
 
                 if(!uid || !pin) {
-                    alert("Kripya apna Phone Number aur Password dono enter karein.");
+                    alert("Kripya apna Phone Number dono dabbo mein enter karein.");
                     return;
                 }
 
-                // 1. EMERGENCY BYPASS LOGINS (Bypass logins updated for easy direct local testing)
-                if (uid === "8805568651" && pin === "8805568651") {
+                // Strictly verify: User ID and Password must be the SAME phone number!
+                if (uid !== pin) {
+                    alert("🚫 LOGIN FAILED: Aapka Phone Number aur Password dono dabbo (fields) mein bilkul same hona chahiye!");
+                    return;
+                }
+
+                // 1. LOCAL BACKUP FALLBACK (Google Sheets disconnect hone par bhi immediately login karega!)
+                const matchedLocal = LOCAL_STAFF_DB.find(s => s.phone === uid);
+                
+                if (matchedLocal) {
                     currentUser = {
-                        uid: "YM001",
-                        name: "Yash Barlota (Malik)",
-                        role: "Owner",
-                        salary: 50000,
-                        photo: "https://via.placeholder.com/150?text=Yash+Barlota",
-                        doc: "#"
-                    };
-                } else if (uid === "8485874324" && pin === "8485874324") {
-                    currentUser = {
-                        uid: "YM002",
-                        name: "Preetam Bogawat",
-                        role: "Sales Boy",
-                        salary: 20000,
-                        photo: "https://via.placeholder.com/150?text=Preetam",
-                        doc: "#"
-                    };
-                } else if (uid === "9075708290" && pin === "9075708290") {
-                    currentUser = {
-                        uid: "YM006",
-                        name: "Shubham Bade",
-                        role: "MIS",
-                        salary: 18000,
-                        photo: "https://via.placeholder.com/150?text=Shubham",
-                        doc: "#"
+                        uid: matchedLocal.phone,
+                        name: matchedLocal.name,
+                        role: matchedLocal.role,
+                        salary: matchedLocal.salary,
+                        photo: matchedLocal.photo || "https://via.placeholder.com/150?text=Staff",
+                        doc: matchedLocal.doc
                     };
                 } else {
-                    // 2. SELF-HEALING PHONE-TO-PHONE LOGIN MATCHING ENGINE (ID & Password are both validated strictly against registered Mobile No)
+                    // 2. SELF-HEALING LIVE SHEETS VERIFICATION (Fallback matching directly on live Sheet data)
                     if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
                         const headers = store_staff[0];
                         const rows = store_staff.slice(1);
                         
-                        // Automatically search column positions to bypass manual sequence changes
                         let phoneCol = 2, nameCol = 1, roleCol = 4, salaryCol = 5, photoCol = 6, docCol = 7;
                         headers.forEach((h, i) => {
                             const val = h.toString().toLowerCase().trim();
@@ -536,17 +536,13 @@
 
                         const staffRow = rows.find(row => {
                             if (!row[phoneCol]) return false;
-                            
-                            // Clean decimal formatting from Google Sheet numeric conversion
                             const sheetPhone = row[phoneCol].toString().trim().replace(/\.0$/, '');
-                            
-                            // Since ID and Password are both the Phone Number, we compare Sheet Phone to BOTH typed fields
-                            return sheetPhone === uid && sheetPhone === pin;
+                            return sheetPhone === uid; // Same phone no acts as both username and password
                         });
 
                         if (staffRow) {
                             currentUser = {
-                                uid: staffRow[0].toString().trim(), // ID remains Employee ID
+                                uid: staffRow[0].toString().trim(), 
                                 name: staffRow[nameCol].toString().trim(),
                                 role: staffRow[roleCol].toString().trim(),
                                 salary: parseFloat(staffRow[salaryCol]) || 15000,
@@ -558,13 +554,7 @@
                 }
                 
                 if (!currentUser) {
-                    // Detailed login failure popup to help you verify exact inputs!
-                    if (store_staff && store_staff.length > 0) {
-                        const debugData = store_staff.slice(1).map(r => `Name: ${r[1]}, Phone/Password: ${r[2] ? r[2].toString().replace(/\.0$/, '') : 'N/A'}`).join("\n");
-                        alert(`🚫 LOGIN FAILED!\n\nAapki Sheet se ye Phone Numbers load hue hain (Dono dabbo mein Phone No dalein):\n${debugData}\n\nAapne enter kiya:\nUsername/Phone: ${uid}\nPassword: ${pin}`);
-                    } else {
-                        alert("🚫 AUTH FAILED: ID ya PIN galat hai. Sheet database blank hai.");
-                    }
+                    alert(`🚫 LOGIN FAILED: Yeh Mobile Number system mein registered nahi hai!`);
                     return;
                 }
 
