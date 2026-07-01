@@ -404,7 +404,7 @@
 
     <script>
         /**
-         * v11.1 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE - NO FIREBASE ERROR!)
+         * v11.2 WORKSPACE ENGINE (ROBUST SHEETS-BASED ERP ENGINE)
          * ---------------------------------------------------------------------------------
          */
         
@@ -423,10 +423,9 @@
             "Final Call": "⭐ <b>Final Call:</b> Customer feedback call recording file yahan upload karke process close karein."
         };
 
-        // STAFF MASTER BACKUP LOCAL DATABASE (In case Google Sheets connection fails or is empty)
         const LOCAL_STAFF_DB = [
             { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" },
-            { phone: "8805566651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" }, // Supports both typo variations 6651 and 8651
+            { phone: "8805566651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://lh3.googleusercontent.com/d/10LGokEgddhSfqmTZuL99Zmj_RFD-5CnA", doc: "#" },
             { phone: "8485874324", name: "Preetam Bogawat", role: "Sales Boy", salary: 20000, photo: "", doc: "#" },
             { phone: "7744033134", name: "Ganesh Parkad", role: "Sales Boy", salary: 16000, photo: "", doc: "#" },
             { phone: "9307838076", name: "Komal Gurap", role: "Accountant", salary: 13000, photo: "", doc: "#" },
@@ -441,7 +440,7 @@
         let store_attendance = [];
         let store_dealers = [];
         let currentUser = null;
-        let officeCoordinates = { lat: 19.0948, lon: 74.7480 }; // Standard Ahmednagar headquarter location
+        let officeCoordinates = { lat: 19.0948, lon: 74.7480 };
         
         let activeFilterStage = null;
         let activeDateFilter = "all";
@@ -457,7 +456,6 @@
             hide: (id) => { const el = safe.el(id); if (el) el.style.display = 'none'; }
         };
 
-        // Convert sharing URLs to direct rendering links (lh3 high-speed engine)
         function getDirectDriveUrl(url) {
             if (!url) return "https://via.placeholder.com/150?text=📦";
             const sUrl = url.toString().trim();
@@ -477,7 +475,6 @@
             return sUrl;
         }
 
-        // Self-Healing Image Matcher - Automatically maps product images even if columns shift dynamically!
         function findProductImage(itemName) {
             try {
                 const query = itemName.trim().toLowerCase();
@@ -499,8 +496,8 @@
                     }
                 });
 
-                if (nameIdx === -1) nameIdx = 1; // Fallback to Col B
-                if (imgIdx === -1) imgIdx = 2;   // Fallback to Col C
+                if (nameIdx === -1) nameIdx = 1;
+                if (imgIdx === -1) imgIdx = 2;
                 
                 const matchedRow = rows.find(r => r && r[nameIdx] && r[nameIdx].toString().toLowerCase().trim() === query);
                 if (matchedRow && matchedRow[imgIdx]) {
@@ -517,7 +514,6 @@
             return "https://via.placeholder.com/150?text=📦";
         }
 
-        // Distance formula (Haversine) for 50 meter GPS validation checking
         function getDistanceInMeters(lat1, lon1, lat2, lon2) {
             const R = 6371e3; 
             const phi1 = lat1 * Math.PI/180;
@@ -540,7 +536,6 @@
                 store_attendance = data.attendance || [];
                 store_dealers = data.dealers || [];
                 
-                // Keep session alive if stored locally
                 const savedUser = localStorage.getItem("backbone_current_user");
                 if (savedUser) {
                     currentUser = JSON.parse(savedUser);
@@ -550,7 +545,6 @@
                 console.error("Fetch Fail:", err);
                 alert("Database load failed. Incognito mode allow karein.");
             } finally {
-                // Ensure loader hides in all conditions to prevent infinite loading screen
                 const loader = safe.el('boot-loader');
                 if (loader) {
                     loader.style.opacity = '0';
@@ -563,21 +557,19 @@
 
         function handleLogin() {
             try {
-                const uid = safe.el('login-username').value.trim(); // Client typing registered mobile
-                const pin = safe.el('login-pin').value.trim(); // Client typing Password
+                const uid = safe.el('login-username').value.trim();
+                const pin = safe.el('login-pin').value.trim();
 
                 if(!uid || !pin) {
                     alert("Kripya apna Phone Number aur Password dono enter karein.");
                     return;
                 }
 
-                // Strictly verify: User ID and Password must be the SAME phone number!
                 if (uid !== pin) {
                     alert("🚫 LOGIN FAILED: ID aur Password dono same (aapka registered Phone Number) hone chahiye!");
                     return;
                 }
 
-                // 1. LOCAL DATA MATCHING (Bina Sheets API lag ke login karne ke liye)
                 const matchedLocal = LOCAL_STAFF_DB.find(s => s.phone === uid);
                 
                 if (matchedLocal) {
@@ -590,7 +582,6 @@
                         doc: matchedLocal.doc
                     };
                 } else {
-                    // 2. SELF-HEALING LIVE SHEETS VERIFICATION (In case local DB doesn't have the entry)
                     if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
                         const headers = store_staff[0];
                         const rows = store_staff.slice(1);
@@ -648,45 +639,130 @@
             const avatar = safe.el('user-avatar');
             if (avatar) avatar.src = currentUser.photo;
 
-            // Render Role-Based Dashboards
             const normalizedRole = currentUser.role.toLowerCase();
             if (normalizedRole === "owner") {
                 safe.removeClass('owner-hr-card', 'hidden');
                 safe.removeClass('order-processing-workspace', 'hidden');
                 safe.hide('sales-visit-card');
                 renderOwnerHRDashboard();
-            } else if (normalizedRole.includes("sales")) { // Sales Boy, Sales Staff, etc.
+            } else if (normalizedRole.includes("sales")) {
                 safe.removeClass('sales-visit-card', 'hidden');
                 safe.hide('owner-hr-card');
                 safe.hide('order-processing-workspace');
                 populateSalesRoutes();
-            } else { // Accountants, MIS, CRM, Operators, etc.
+            } else {
                 safe.removeClass('order-processing-workspace', 'hidden');
                 safe.hide('owner-hr-card');
                 safe.hide('sales-visit-card');
             }
 
-            // Sync stats
             loadPersonalSalaryTracker();
             applyFilters();
             renderRailTrack(store_orders);
-            syncHeaderStats(store_orders);
         }
 
-        // Populate dynamic Routes/Areas in Sales Panel
+        // Active State Filter Engine
+        function applyFilters() {
+            if (!store_orders || store_orders.length === 0) {
+                renderLineFeed([]);
+                return;
+            }
+
+            let filtered = [...store_orders];
+
+            // 1. Filter by Railway/Timeline Stage
+            if (activeFilterStage) {
+                filtered = filtered.filter(o => {
+                    let curSt = "Received";
+                    if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
+                        curSt = o.Dealer_Area.toString().trim();
+                    } else if (o.Current_Status && isNaN(o.Current_Status)) {
+                        curSt = o.Current_Status.toString().trim();
+                    }
+                    return curSt.toLowerCase() === activeFilterStage.toLowerCase();
+                });
+            }
+
+            // 2. Filter by Date range
+            if (activeDateFilter !== "all") {
+                const now = new Date();
+                filtered = filtered.filter(o => {
+                    if (!o.Date) return false;
+                    const oDate = new Date(o.Date);
+                    if (isNaN(oDate.getTime())) return false;
+
+                    const diffTime = Math.abs(now - oDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (activeDateFilter === "today") {
+                        return oDate.toDateString() === now.toDateString();
+                    } else if (activeDateFilter === "week") {
+                        return diffDays <= 7;
+                    } else if (activeDateFilter === "month") {
+                        return diffDays <= 30;
+                    }
+                    return true;
+                });
+            }
+
+            // 3. Filter by split shortage status only
+            if (activeSplitOnlyFilter) {
+                filtered = filtered.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
+            }
+
+            renderLineFeed(filtered);
+            renderRailTrack(store_orders);
+        }
+
+        function setDateFilter(type) {
+            activeDateFilter = type;
+            const buttons = ["all", "today", "week", "month"];
+            buttons.forEach(btnId => {
+                const btn = safe.el(`df-${btnId}`);
+                if (btn) {
+                    if (btnId === type) {
+                        btn.className = "btn btn-xs rounded-full font-black uppercase shadow-sm bg-indigo-600 text-white border-none px-3";
+                    } else {
+                        btn.className = "btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3";
+                    }
+                }
+            });
+            applyFilters();
+        }
+
+        function toggleSplitFilter() {
+            activeSplitOnlyFilter = !activeSplitOnlyFilter;
+            const btn = safe.el('df-split');
+            if (btn) {
+                if (activeSplitOnlyFilter) {
+                    btn.className = "btn btn-xs rounded-full font-black uppercase shadow-sm bg-orange-600 text-white border-none px-3";
+                } else {
+                    btn.className = "btn btn-xs rounded-full font-black uppercase shadow-sm bg-white text-slate-650 border-slate-100 px-3";
+                }
+            }
+            applyFilters();
+        }
+
+        function toggleStageFilter(stage) {
+            if (activeFilterStage === stage) {
+                activeFilterStage = null;
+            } else {
+                activeFilterStage = stage;
+            }
+            applyFilters();
+        }
+
         function populateSalesRoutes() {
             const areaSelect = safe.el('visit-area-select');
             if (!areaSelect || !store_dealers || store_dealers.length < 2) return;
 
             const rows = store_dealers.slice(1);
-            // Unique Area (Column D / Index 3 in Dealer Master)
             const areas = [...new Set(rows.map(r => r[3] ? r[3].toString().trim() : "").filter(a => a !== ""))];
 
             areaSelect.innerHTML = `<option value="">-- Select Safar Route Area --</option>` + 
                 areas.map(a => `<option value="${a}">${a}</option>`).join('');
         }
 
-        // Update searchable Dealer list when Route changes
         function updateDealerListByArea() {
             const area = safe.el('visit-area-select').value;
             const datalist = safe.el('visit-dealers-list');
@@ -695,11 +771,8 @@
 
             dealerInput.value = "";
             const rows = store_dealers.slice(1);
-            
-            // Filter dealers matching selected Area (Col D / Index 3)
             const filteredDealers = rows.filter(r => r[3] && r[3].toString().trim() === area);
 
-            // Dealer Name (Col E / Index 4 in Dealer Master)
             datalist.innerHTML = filteredDealers.map(r => {
                 const name = r[4] ? r[4].toString().trim() : "Shop Name";
                 return `<option value="${name}"></option>`;
@@ -712,7 +785,6 @@
             location.reload();
         }
 
-        // Toggle calendar view list
         function toggleAttendanceTable() {
             const div = safe.el('personal-attendance-table');
             if (div) {
@@ -723,7 +795,6 @@
             }
         }
 
-        // Render Calendar Logs dynamically inside staff card
         function renderPersonalAttendanceLogs() {
             const tbody = safe.el('personal-attend-tbody');
             if(!tbody || !store_attendance || !currentUser) return;
@@ -744,7 +815,6 @@
             }).join('');
         }
 
-        // GPS Geofenced Attendance Register (Strict 50m limitation rule)
         async function punchAttendance(type) {
             const btn = safe.el(`punch-${type.toLowerCase()}-btn`);
             if(!btn) return;
@@ -752,7 +822,6 @@
             btn.disabled = true;
             safe.text('gps-status', "GPS Verification In Progress...");
 
-            // Dynamic Restriction Check: Prevent staff from punching same state twice per day!
             const todayStr = new Date().toDateString();
             const alreadyPunched = store_attendance.find(log => {
                 if(!log[1] || !log[0]) return false;
@@ -761,7 +830,7 @@
             });
 
             if (alreadyPunched) {
-                alert(`⚠️ APOLOGY: Aapne aaj ki Punch-${type} Attendance pehle hi laga di hai. Ek din mein ek hi baar allow hai.`);
+                alert(`⚠️ APOLOGY: Aapne aaj ki Punch-${type} Attendance pehle hi laga di hai.`);
                 btn.disabled = false;
                 safe.text('gps-status', "Punch Already Done.");
                 return;
@@ -774,10 +843,9 @@
                 
                 safe.text('gps-status', `Office Distance: ${dist.toFixed(1)}m`);
 
-                // Sales staff is exempted from geofencing, others must stay within 50m
                 const normalizedRole = currentUser.role.toLowerCase();
                 if (!normalizedRole.includes("sales") && dist > 50) {
-                    alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). Punch karne ke liye office ke 50m radius ke andar hona mandatory hai.`);
+                    alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). Radius 50m hona chahiye.`);
                     btn.disabled = false;
                     return;
                 }
@@ -797,7 +865,7 @@
 
                     const rData = await res.json();
                     if(rData.status === "success") {
-                        alert(`✅ Punch ${type} Successful! Record saved in Google Sheets.`);
+                        alert(`✅ Punch ${type} Successful!`);
                         syncData();
                     } else {
                         throw new Error(rData.message);
@@ -815,7 +883,6 @@
             }, { enableHighAccuracy: true });
         }
 
-        // Live Salary Calculations engine (Late penalty deductions: 3 lates = 1 day salary deduction)
         function loadPersonalSalaryTracker() {
             if(!currentUser || !store_attendance) return;
             
@@ -842,9 +909,9 @@
                             const mins = punchTime.getMinutes();
                             const absoluteMins = (hours * 60) + mins;
                             
-                            if (absoluteMins > 720) { // Half day after 12:00 PM
+                            if (absoluteMins > 720) {
                                 halfDay++;
-                            } else if (absoluteMins > 630) { // Late after 10:30 AM
+                            } else if (absoluteMins > 630) {
                                 late++;
                             } else {
                                 present++;
@@ -864,16 +931,15 @@
             return { present, halfDay, late, absent, payable };
         }
 
-        // Owner live attendance HR database list
         function renderOwnerHRDashboard() {
             const tbody = safe.el('owner-hr-tbody');
             if(!tbody || !store_staff || !store_attendance) return;
 
             tbody.innerHTML = store_staff.slice(1).map(row => {
                 const uid = row[0].toString().trim();
-                const name = row[1] ? row[1].toString().trim() : "Staff Member"; // Column B is Name
-                const role = row[4] ? row[4].toString().trim() : "Staff"; // Column E is Role
-                const basic = parseFloat(row[5]) || 15000; // Column F is Salary
+                const name = row[1] ? row[1].toString().trim() : "Staff Member";
+                const role = row[4] ? row[4].toString().trim() : "Staff";
+                const basic = parseFloat(row[5]) || 15000;
                 
                 const logs = store_attendance.filter(l => l[1] && l[1].toString().trim() === uid);
                 const stats = calculateSalaryStats(basic, logs);
@@ -893,7 +959,6 @@
             }).join('');
         }
 
-        // Sales Market visit & detail stock survey log submit
         async function submitMarketVisit() {
             try {
                 const area = safe.el('visit-area-select').value;
@@ -909,9 +974,8 @@
                     return;
                 }
 
-                // GPS & Selfie must be mandatory
                 if (!selfieIn || !selfieIn.files || selfieIn.files.length === 0) {
-                    alert("⚠️ MANDATORY: Kripya Sales selfie click ya load karein. Photo upload mandatory hai.");
+                    alert("⚠️ MANDATORY: Kripya Sales selfie click karein.");
                     return;
                 }
 
@@ -919,11 +983,9 @@
                 btn.disabled = true;
                 btn.innerText = "SUBMITTING VISIT REPORT...";
 
-                // Capture current GPS position
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     const gpsLoc = `${pos.coords.latitude},${pos.coords.longitude}`;
 
-                    // Convert photos to base64 safely
                     let selfieB64 = null, selfieMime = null;
                     if(selfieIn.files[0]) {
                         selfieMime = selfieIn.files[0].type;
@@ -972,7 +1034,7 @@
 
                     const rData = await res.json();
                     if (rData.status === "success") {
-                        alert("✅ Visit Log aur Stock Survey Report successfully Sheet par save ho gayi!");
+                        alert("✅ Visit Log aur Stock Survey Report saved.");
                         safe.el('visit-form').reset();
                         syncData();
                     } else {
@@ -981,7 +1043,7 @@
                     btn.disabled = false;
                     btn.innerText = "VISIT LOG SUBMIT KAREIN";
                 }, (err) => {
-                    alert("🚫 Visit Rejected: Location check mandatory hai. GPS turned on karein.");
+                    alert("🚫 Visit Rejected: GPS turned on karein.");
                     btn.disabled = false;
                     btn.innerText = "VISIT LOG SUBMIT KAREIN";
                 });
@@ -1005,7 +1067,6 @@
             if(modal && typeof modal.showModal === 'function') modal.showModal();
         }
 
-        // Group strictly by original Col A date - Row IDs preserve chronological placement
         function renderLineFeed(data) {
             const feed = safe.el('assembly-line');
             if(!feed) return;
@@ -1015,7 +1076,6 @@
                 return;
             }
 
-            // Check if Shortage Orders exist - Filter and render them strictly at the absolute top of the feed list
             const splitOrders = data.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
             const standardOrders = data.filter(o => !o.Order_ID || !o.Order_ID.toString().includes("-SHORT"));
 
@@ -1035,7 +1095,6 @@
                 });
             }
 
-            // Group standard orders by Received Date
             const groups = {};
             standardOrders.forEach(o => {
                 let dateKey = "Bina Date Ke Orders";
@@ -1091,16 +1150,6 @@
             
             const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
             
-            let prettyStr = "N/A";
-            try {
-                if (o.Date) {
-                    const date = new Date(o.Date);
-                    if (!isNaN(date.getTime())) {
-                        prettyStr = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
-                    }
-                }
-            } catch(e) {}
-
             const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SHORT");
             const splitBadge = isSplit ? `<span class="badge badge-warning font-black text-[9px] px-2 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">⚠️ SHORT ORDER</span>` : '';
 
@@ -1134,7 +1183,6 @@
             `;
         }
 
-        // Rail ki Patri station counts
         function renderRailTrack(data) {
             const listContainer = safe.el('rail-track');
             if (!listContainer) return;
@@ -1178,7 +1226,6 @@
                 safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
                 safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
 
-                // Dynamic parsed items split by comma or pipe safely
                 const itemString = (order.Items || order.SLA_Start_Time || "").toString();
                 const rawItems = itemString.includes('|') ? itemString.split('|') : itemString.split(',');
                 
@@ -1197,11 +1244,9 @@
                 });
                 window.activeOrderItems = parsedItemsList;
 
-                // Close Split zone if opened previously
                 const splitZone = safe.el('m-split-zone');
                 if (splitZone) splitZone.classList.add('hidden');
 
-                // Visual Catalogue Pick-List with self-healing sheet column search for product images
                 const catScroll = safe.el('m-product-list');
                 if(catScroll) {
                     catScroll.innerHTML = parsedItemsList.map(item => {
@@ -1222,7 +1267,6 @@
                     }).join('');
                 }
 
-                // Timeline alignment
                 let rawStatus = "Received";
                 if (order.Dealer_Area && isNaN(order.Dealer_Area)) {
                     rawStatus = order.Dealer_Area.toString().trim();
@@ -1233,7 +1277,6 @@
                 const status = rawStatus;
                 const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
                 
-                // Direct Inline Proof Thumbnails and Audio elements inside vertical timeline list with explanations
                 const timelineSteps = document.querySelectorAll('#timeline-track .step');
                 if(timelineSteps && timelineSteps.length > 0) {
                     timelineSteps.forEach((s, i) => {
@@ -1281,7 +1324,6 @@
 
                         const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
 
-                        // Inject inline step preview next to name
                         s.innerHTML = `
                             <div class="flex flex-col justify-between w-full gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100/60 text-left">
                                 <div class="flex justify-between items-center gap-2">
@@ -1300,7 +1342,6 @@
                     });
                 }
 
-                // Load active stage guide text
                 const explText = STAGE_EXPLANATIONS[status] || "💳 <b>Next Step Balance Check:</b> Click complete to initialize process.";
                 safe.html('m-step-explanation', explText);
 
@@ -1336,7 +1377,6 @@
             }
         }
 
-        // Toggle Split Section inside Modal with multi-item selection grid
         function toggleSplitZone() {
             const zone = safe.el('m-split-zone');
             if(!zone) return;
@@ -1407,11 +1447,11 @@
                     const remaining = item.qty - splitQty;
                     if (remaining > 0) {
                         remainingItemsList.push(`${item.name} x${remaining}`);
-                        fullSplitAttempt = false; // Original order still retains some quantity
+                        fullSplitAttempt = false;
                     }
                 } else {
                     remainingItemsList.push(`${item.name} x${item.qty}`);
-                    fullSplitAttempt = false; // This item wasn't split at all
+                    fullSplitAttempt = false;
                 }
             }
 
@@ -1427,7 +1467,7 @@
 
             const splitItemsString = splitItemsList.join(' | ');
             const originalItemsString = remainingItemsList.join(' | ');
-            const splitOrderId = `${order.Order_ID}-SHORT`; // Suffix updated as SHORT
+            const splitOrderId = `${order.Order_ID}-SHORT`;
 
             if (!confirm(`Kya aap sach mein in selected shortage items ko alag (split) karke naya short order #${splitOrderId} banana chahte hain?`)) {
                 return;
@@ -1488,7 +1528,6 @@
                 return;
             }
 
-            // CRITICAL VALIDATION: Validate mandatory photos vs audio uploads
             const fIn = safe.el('m-file-input');
             const isAudioStage = cur.toLowerCase().includes("call");
 
@@ -1502,7 +1541,6 @@
                     return;
                 }
                 
-                // Mime validations
                 const selectedFile = fIn.files[0];
                 if (isAudioStage && !selectedFile.type.includes("audio")) {
                     alert("⚠️ SYSTEM ERROR: Kripya audio (.mp3) call recording file hi select karein.");
@@ -1575,27 +1613,6 @@
             }
         }
 
-        function drillDown(s) {
-            safe.text('line-title', "STAGE: " + s);
-            safe.removeClass('filter-badge', 'hidden');
-            renderLineFeed(store_orders.filter(o => {
-                let curSt = "Received";
-                if (o.Dealer_Area && isNaN(o.Dealer_Area)) {
-                    curSt = o.Dealer_Area.toString().trim();
-                } else if (o.Current_Status && isNaN(o.Current_Status)) {
-                    curSt = o.Current_Status.toString().trim();
-                }
-                return curSt.toLowerCase() === s.toLowerCase();
-            }));
-        }
-
-        function clearFilt() {
-            safe.text('line-title', "Kaam Ki Assembly Line");
-            safe.addClass('filter-badge', 'hidden');
-            renderLineFeed(store_orders);
-        }
-
-        // Auto Sync every 5 minutes
         setInterval(syncData, 300000);
     </script>
 </body>
