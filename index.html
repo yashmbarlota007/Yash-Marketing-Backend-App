@@ -1,592 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Yash Marketing — Dispatch</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#14161A;
-    --surface:#1B1E23;
-    --surface-2:#23262C;
-    --border:#2C3038;
-    --amber:#C89B3C;
-    --amber-dim:#5C4B25;
-    --teal:#3FA796;
-    --danger:#C1584B;
-    --text:#EDEEF0;
-    --text-muted:#8B909A;
-    --radius:14px;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
-  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em;}
-  .mono{font-family:'JetBrains Mono',monospace;}
-  .muted{color:var(--text-muted);}
-  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:10px;}
-  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
-
-  /* ---------- Top bar ---------- */
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(20,22,26,0.9);backdrop-filter:blur(10px);z-index:20;}
-  .brand{display:flex;align-items:center;gap:12px;}
-  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--amber),#8a6a25);display:flex;align-items:center;justify-content:center;font-weight:700;color:#14161A;font-family:'Space Grotesk',sans-serif;}
-  .brand-name{font-size:15px;font-weight:600;}
-  .brand-sub{font-size:11px;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;}
-  .staff-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:7px 14px;border-radius:999px;font-size:13px;}
-  .staff-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);}
-
-  /* ---------- Login ---------- */
-  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
-  .login-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 32px;}
-  .login-card h1{font-size:22px;margin:18px 0 4px;}
-  .login-card p{margin:0 0 28px;color:var(--text-muted);font-size:13.5px;}
-  .field{margin-bottom:16px;}
-  .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
-  .field select,.field input,.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:14px;}
-  .field select:focus,.field input:focus,.field textarea:focus{outline:none;border-color:var(--amber);}
-  .btn-primary{width:100%;background:var(--amber);color:#14161A;font-weight:600;padding:13px;font-size:14px;transition:filter .15s;}
-  .btn-primary:hover{filter:brightness(1.08);}
-  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
-  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px 16px;font-size:13px;}
-  .error-msg{color:var(--danger);font-size:13px;margin-top:10px;}
-
-  /* ---------- Layout ---------- */
-  .app{display:none;}
-  .app.active{display:block;}
-  .container{max-width:1100px;margin:0 auto;padding:28px;}
-  .stats-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:24px;}
-  .stat-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;min-width:96px;}
-  .stat-chip .num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;}
-  .stat-chip .lbl{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
-  .stat-chip.active{border-color:var(--amber);}
-
-  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
-  .toolbar h2{font-size:19px;margin:0;}
-  .btn-new{background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:9px 16px;font-size:13px;display:flex;align-items:center;gap:6px;}
-  .btn-new:hover{border-color:var(--amber);}
-
-  .order-list{display:flex;flex-direction:column;gap:10px;}
-  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s, transform .1s;}
-  .order-card:hover{border-color:var(--amber);transform:translateY(-1px);}
-  .order-card .oid{font-size:11px;color:var(--text-muted);}
-  .order-card .dealer{font-size:15.5px;font-weight:600;margin-top:2px;}
-  .order-card .stageline{font-size:12.5px;color:var(--amber);margin-top:4px;}
-  .amt{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-muted);}
-  .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
-
-  /* ---------- Order detail ---------- */
-  .detail-overlay{position:fixed;inset:0;background:rgba(10,11,13,.7);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:32px 16px;overflow-y:auto;}
-  .detail-overlay.active{display:flex;}
-  .detail-card{width:100%;max-width:920px;background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:40px;}
-  .detail-head{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
-  .detail-head .oid{font-size:11px;color:var(--amber);letter-spacing:.05em;}
-  .detail-head h2{margin:4px 0 0;font-size:20px;}
-  .close-btn{background:var(--surface-2);color:var(--text-muted);width:34px;height:34px;border-radius:50%;font-size:16px;display:flex;align-items:center;justify-content:center;}
-  .detail-body{display:grid;grid-template-columns:220px 1fr;gap:0;}
-  @media(max-width:720px){.detail-body{grid-template-columns:1fr;}}
-
-  /* dispatch rail — signature element */
-  .rail{padding:26px 20px;border-right:1px solid var(--border);}
-  .rail-node{display:flex;gap:12px;position:relative;padding-bottom:28px;}
-  .rail-node:last-child{padding-bottom:0;}
-  .rail-node .line{position:absolute;left:11px;top:24px;bottom:-4px;width:2px;background:var(--border);}
-  .rail-node:last-child .line{display:none;}
-  .rail-node.done .line{background:var(--amber);}
-  .node-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text-muted);flex:0 0 auto;z-index:1;}
-  .rail-node.done .node-dot{background:var(--amber);border-color:var(--amber);color:#14161A;}
-  .rail-node.current .node-dot{border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 4px rgba(200,155,60,.15);animation:pulse 1.8s infinite;}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(200,155,60,.15);}50%{box-shadow:0 0 0 7px rgba(200,155,60,.06);}}
-  .node-label{font-size:12.5px;padding-top:2px;}
-  .rail-node.done .node-label{color:var(--text);}
-  .rail-node.current .node-label{color:var(--amber);font-weight:600;}
-  .rail-node.pending .node-label{color:var(--text-muted);}
-  .node-time{font-size:10.5px;color:var(--text-muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
-
-  /* action panel */
-  .action-panel{padding:26px;}
-  .action-panel h3{margin:0 0 6px;font-size:16px;}
-  .action-panel .sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
-  .proof-box{border:1.5px dashed var(--border);border-radius:14px;padding:24px;text-align:center;margin-bottom:18px;}
-  .proof-box.has-media{border-style:solid;border-color:var(--teal);padding:12px;}
-  .proof-box img{max-width:100%;max-height:220px;border-radius:10px;}
-  .proof-box input[type=file]{display:none;}
-  .upload-label{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);padding:10px 18px;border-radius:10px;font-size:13.5px;}
-  .upload-label:hover{border-color:var(--amber);}
-  .rec-controls{display:flex;align-items:center;gap:12px;justify-content:center;}
-  .rec-btn{width:56px;height:56px;border-radius:50%;background:var(--danger);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
-  .rec-btn.recording{animation:recpulse 1s infinite;}
-  @keyframes recpulse{0%,100%{box-shadow:0 0 0 0 rgba(193,88,75,.5);}50%{box-shadow:0 0 0 10px rgba(193,88,75,0);}}
-  .rec-timer{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-muted);}
-  .stars{display:flex;gap:6px;justify-content:center;margin:12px 0 4px;}
-  .star{font-size:28px;color:var(--border);cursor:pointer;}
-  .star.filled{color:var(--amber);}
-  .info-row{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);}
-  .info-row:last-child{border-bottom:none;}
-  .info-row span:first-child{color:var(--text-muted);}
-  textarea.feedback{min-height:70px;resize:vertical;}
-  .stage-complete-banner{background:rgba(63,167,150,.12);border:1px solid var(--teal);color:var(--teal);padding:14px 16px;border-radius:12px;font-size:14px;text-align:center;}
-
-  /* new order modal */
-  .no-field{margin-bottom:14px;}
-  .items-row{display:flex;gap:8px;margin-bottom:8px;}
-  .items-row input{flex:1;}
-  .add-item-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--amber);padding:8px 12px;font-size:12.5px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yash Marketing - Operations Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex items-center justify-center p-4">
 
-<!-- ============ LOGIN ============ -->
-<div class="login-wrap" id="loginWrap">
-  <div class="login-card">
-    <div class="brand-mark display">YM</div>
-    <h1>Yash Marketing</h1>
-    <p>Dispatch Operations — staff sign-in</p>
-    <div class="field">
-      <label>Staff Name</label>
-      <select id="staffSelect"><option value="">Loading staff…</option></select>
-    </div>
-    <div class="field">
-      <label>PIN</label>
-      <input type="password" id="pinInput" inputmode="numeric" placeholder="••••">
-    </div>
-    <button class="btn-primary" id="loginBtn">Sign In</button>
-    <div class="error-msg" id="loginError"></div>
-  </div>
-</div>
-
-<!-- ============ APP ============ -->
-<div class="app" id="app">
-  <div class="topbar">
-    <div class="brand">
-      <div class="brand-mark display">YM</div>
-      <div>
-        <div class="brand-name">Yash Marketing</div>
-        <div class="brand-sub">Dispatch Console</div>
-      </div>
-    </div>
-    <div class="staff-pill"><span class="staff-dot"></span><span id="staffNameLabel"></span></div>
-  </div>
-
-  <div class="container">
-    <div class="stats-strip" id="statsStrip"></div>
-
-    <div class="toolbar">
-      <h2>Active Orders</h2>
-      <button class="btn-new" onclick="openNewOrder()">+ New Order</button>
-    </div>
-
-    <div class="order-list" id="orderList"><div class="empty-state">Loading orders…</div></div>
-  </div>
-</div>
-
-<!-- ============ ORDER DETAIL ============ -->
-<div class="detail-overlay" id="detailOverlay">
-  <div class="detail-card">
-    <div class="detail-head">
-      <div>
-        <div class="oid mono" id="detOrderId"></div>
-        <h2 id="detDealer"></h2>
-      </div>
-      <button class="close-btn" onclick="closeDetail()">✕</button>
-    </div>
-    <div class="detail-body">
-      <div class="rail" id="detRail"></div>
-      <div class="action-panel" id="detAction"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ NEW ORDER ============ -->
-<div class="detail-overlay" id="newOrderOverlay">
-  <div class="detail-card" style="max-width:480px;">
-    <div class="detail-head">
-      <h2>New Order</h2>
-      <button class="close-btn" onclick="closeNewOrder()">✕</button>
-    </div>
-    <div class="action-panel">
-      <div class="no-field field"><label>Dealer Name</label><input id="noDealerName"></div>
-      <div class="no-field field"><label>Dealer Phone</label><input id="noDealerPhone"></div>
-      <div class="no-field field">
-        <label>Items</label>
-        <div id="itemsWrap"></div>
-        <button class="add-item-btn" onclick="addItemRow()">+ Add item</button>
-      </div>
-      <div class="no-field field"><label>Total Amount (₹)</label><input id="noTotal" type="number"></div>
-      <button class="btn-primary" onclick="submitNewOrder()">Create Order</button>
-      <div class="error-msg" id="newOrderError"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-/* ================= CONFIG ================= */
-const APP_CONFIG = {
-  // IMPORTANT: Replace this with your actual Web App URL after redeploying Google Apps Script
-  API_URL: 'https://script.google.com/macros/s/AKfycbztMCeOxwevdvkdZbbUO8V0wLKxxKN9ZDRpFirrGVH5URvltZMMyy_EY04nSKkI1JikYQ/exec' 
-};
-
-const STAGES = [
-  {key:1,name:'Order Received',proof:'accept'},
-  {key:2,name:'Balance Check',proof:'photo'},
-  {key:3,name:'Call 1 — Confirmation',proof:'recording'},
-  {key:4,name:'Processed',proof:'photo'},
-  {key:5,name:'Invoiced',proof:'photo'},
-  {key:6,name:'Dispatched',proof:'photo'},
-  {key:7,name:'Call 2 — Out for Delivery',proof:'recording'},
-  {key:8,name:'Delivered',proof:'photo'},
-  {key:9,name:'Final Call & Feedback',proof:'recording+rating'}
-];
-
-let currentStaff = null;
-let allOrders = [];
-let activeOrder = null;
-let capturedFile = null; 
-let mediaRecorder, recordedChunks = [], recTimer, recSeconds = 0;
-
-/* ================= API HELPERS ================= */
-let _jsonpCounter = 0;
-function apiGet(params){
-  return new Promise((resolve, reject) => {
-    const cbName = '_jsonp_cb_' + (_jsonpCounter++) + '_' + Date.now();
-    const timeout = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 20000);
-    function cleanup(){
-      clearTimeout(timeout);
-      delete window[cbName];
-      if(script.parentNode) script.parentNode.removeChild(script);
-    }
-    window[cbName] = (data) => { cleanup(); resolve(data); };
-    const url = APP_CONFIG.API_URL + '?' + new URLSearchParams({...params, callback: cbName}).toString();
-    const script = document.createElement('script');
-    script.src = url;
-    script.onerror = () => { cleanup(); reject(new Error('Network error contacting backend')); };
-    document.body.appendChild(script);
-  });
-}
-
-let _postCounter = 0;
-function apiPost(body){
-  return new Promise((resolve, reject) => {
-    const reqId = '_req_' + (_postCounter++) + '_' + Date.now();
-    const iframeName = '_iframe_' + reqId;
-
-    const iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = APP_CONFIG.API_URL;
-    form.target = iframeName;
-    form.style.display = 'none';
-
-    const payloadInput = document.createElement('input');
-    payloadInput.type = 'hidden'; payloadInput.name = 'payload'; payloadInput.value = JSON.stringify(body);
-    form.appendChild(payloadInput);
-
-    const reqIdInput = document.createElement('input');
-    reqIdInput.type = 'hidden'; reqIdInput.name = 'reqId'; reqIdInput.value = reqId;
-    form.appendChild(reqIdInput);
-
-    document.body.appendChild(form);
-
-    const timeout = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 30000);
-    function cleanup(){
-      clearTimeout(timeout);
-      window.removeEventListener('message', onMessage);
-      if(form.parentNode) form.parentNode.removeChild(form);
-      if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
-    }
-    function onMessage(event){
-      if(event.data && event.data.__reqId === reqId){
-        cleanup();
-        resolve(event.data.result);
-      }
-    }
-    window.addEventListener('message', onMessage);
-    form.submit();
-  });
-}
-
-/* ================= LOGIN ================= */
-async function loadStaff(){
-  try{
-    const r = await apiGet({action:'staffList'});
-    const sel = document.getElementById('staffSelect');
-    sel.innerHTML = '<option value="">Select your name</option>' +
-      r.staff.map(s=>`<option value="${s}">${s}</option>`).join('');
-  }catch(e){
-    document.getElementById('staffSelect').innerHTML = '<option value="">Could not load staff</option>';
-  }
-}
-document.getElementById('loginBtn').onclick = async () => {
-  const staffName = document.getElementById('staffSelect').value;
-  const pin = document.getElementById('pinInput').value;
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-  if(!staffName || !pin){ errEl.textContent = 'Select your name and enter PIN.'; return; }
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true; btn.textContent = 'Signing in…';
-  const r = await apiPost({action:'login', staffName, pin});
-  btn.disabled = false; btn.textContent = 'Sign In';
-  if(r.ok){
-    currentStaff = r.staffName;
-    document.getElementById('staffNameLabel').textContent = currentStaff;
-    document.getElementById('loginWrap').style.display = 'none';
-    document.getElementById('app').classList.add('active');
-    boot();
-  } else {
-    errEl.textContent = r.error || 'Login failed';
-  }
-};
-loadStaff();
-
-/* ================= BOOT / DASHBOARD ================= */
-async function boot(){
-  await refreshStats();
-  await refreshOrders();
-}
-async function refreshStats(){
-  const r = await apiGet({action:'stats'});
-  const strip = document.getElementById('statsStrip');
-  if(!r.ok) return;
-  strip.innerHTML = STAGES.map(s=>`
-    <div class="stat-chip">
-      <div class="num">${r.counts[s.key]||0}</div>
-      <div class="lbl">${s.name}</div>
-    </div>`).join('');
-}
-async function refreshOrders(){
-  const r = await apiGet({action:'list'});
-  const list = document.getElementById('orderList');
-  if(!r.ok || !r.orders.length){ list.innerHTML = '<div class="empty-state">No orders yet. Create one to begin.</div>'; return; }
-  allOrders = r.orders;
-  list.innerHTML = allOrders.map(o=>`
-    <div class="order-card" onclick="openDetail('${o.orderId}')">
-      <div>
-        <div class="oid mono">${o.orderId}</div>
-        <div class="dealer">${o.dealerName}</div>
-        <div class="stageline">Stage ${o.currentStage} — ${STAGES[o.currentStage-1].name}</div>
-      </div>
-      <div class="amt">₹${Number(o.totalAmount).toLocaleString('en-IN')}</div>
-    </div>`).join('');
-}
-
-/* ================= ORDER DETAIL ================= */
-function openDetail(orderId){
-  activeOrder = allOrders.find(o=>o.orderId===orderId);
-  if(!activeOrder) return;
-  capturedFile = null;
-  document.getElementById('detOrderId').textContent = activeOrder.orderId;
-  document.getElementById('detDealer').textContent = activeOrder.dealerName;
-  renderRail();
-  renderAction();
-  document.getElementById('detailOverlay').classList.add('active');
-}
-function closeDetail(){
-  document.getElementById('detailOverlay').classList.remove('active');
-  stopRecordingCleanup();
-}
-function renderRail(){
-  const rail = document.getElementById('detRail');
-  const cur = Number(activeOrder.currentStage);
-  rail.innerHTML = STAGES.map(s=>{
-    let cls = 'pending';
-    if(s.key < cur) cls='done'; else if(s.key===cur) cls='current';
-    const st = activeOrder.stages[s.key];
-    const time = st && st.time ? new Date(st.time).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
-    return `<div class="rail-node ${cls}">
-      <div class="line"></div>
-      <div class="node-dot">${s.key < cur ? '✓' : s.key}</div>
-      <div>
-        <div class="node-label">${s.name}</div>
-        ${time?`<div class="node-time">${time}</div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-function renderAction(){
-  const cur = Number(activeOrder.currentStage);
-  const panel = document.getElementById('detAction');
-  if(cur > 9){
-    panel.innerHTML = `<div class="stage-complete-banner">✓ Order fully delivered & closed out.</div>`;
-    return;
-  }
-  const stageDef = STAGES[cur-1];
-  let html = `<h3>${stageDef.name}</h3>`;
-
-  if(stageDef.proof === 'accept'){
-    html += `<div class="sub">Accept this order to begin the dispatch pipeline.</div>
-      <button class="btn-primary" onclick="submitStage(${cur})">Accept Order</button>`;
-  } else if(stageDef.proof === 'photo'){
-    html += `<div class="sub">Upload photo proof to move this order forward.</div>
-      <div class="proof-box" id="proofBox">
-        <label class="upload-label" for="photoInput">📷 Capture / Upload Photo</label>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-      </div>
-      <button class="btn-primary" id="submitBtn" disabled onclick="submitStage(${cur})">Submit & Advance</button>`;
-  } else if(stageDef.proof === 'recording'){
-    html += `<div class="sub">Record the call before advancing this order.</div>
-      <div class="proof-box" id="proofBox">
-        <div class="rec-controls">
-          <button class="rec-btn" id="recBtn" onclick="toggleRecording()">●</button>
-          <div class="rec-timer" id="recTimerLabel">00:00</div>
+    <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">YASH MARKETING</h1>
+            <p class="text-slate-400 text-sm tracking-widest mt-2 uppercase">Automated Operations Terminal</p>
         </div>
-      </div>
-      <button class="btn-primary" id="submitBtn" disabled onclick="submitStage(${cur})">Submit & Advance</button>`;
-  } else if(stageDef.proof === 'recording+rating'){
-    html += `<div class="sub">Final confirmation call, delivery rating & feedback.</div>
-      <div class="proof-box" id="proofBox">
-        <div class="rec-controls">
-          <button class="rec-btn" id="recBtn" onclick="toggleRecording()">●</button>
-          <div class="rec-timer" id="recTimerLabel">00:00</div>
-        </div>
-      </div>
-      <div class="stars" id="starsRow">${[1,2,3,4,5].map(n=>`<span class="star" data-n="${n}" onclick="setRating(${n})">★</span>`).join('')}</div>
-      <textarea class="feedback field" id="feedbackInput" placeholder="Feedback notes (optional)"></textarea>
-      <button class="btn-primary" id="submitBtn" style="margin-top:10px" disabled onclick="submitStage(${cur})">Submit & Close Order</button>`;
-  }
 
-  html += `
-    <div style="margin-top:22px;">
-      <div class="info-row"><span>Dealer</span><span>${activeOrder.dealerPhone||'—'}</span></div>
-      <div class="info-row"><span>Total</span><span class="mono">₹${Number(activeOrder.totalAmount).toLocaleString('en-IN')}</span></div>
-      <div class="info-row"><span>Assigned to</span><span>${currentStaff}</span></div>
-    </div>`;
-  panel.innerHTML = html;
-  window._rating = 0;
-}
+        <form id="opsForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">Order ID</label>
+                <input type="text" id="orderId" required placeholder="e.g. ORD-8842" 
+                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            </div>
 
-/* ---- photo capture ---- */
-function handlePhoto(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    capturedFile = { base64: reader.result.split(',')[1], mimeType: file.type, fileName: file.name };
-    document.getElementById('proofBox').classList.add('has-media');
-    document.getElementById('proofBox').innerHTML = `<img src="${reader.result}">`;
-    document.getElementById('submitBtn').disabled = false;
-  };
-  reader.readAsDataURL(file);
-}
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">Processing Stage</label>
+                <select id="stage" required onchange="checkStage()"
+                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    <option value="1">1. Order Received (Accept)</option>
+                    <option value="2">2. Balance Check (Tally Photo)</option>
+                    <option value="3">3. Call 1 (Confirmation Audio)</option>
+                    <option value="4">4. Processed (Stock Photo)</option>
+                    <option value="5">5. Invoiced (Invoice Photo)</option>
+                    <option value="6">6. Dispatched (Box/Bag Photo)</option>
+                    <option value="7">7. Call 2 (Out-for-delivery Audio)</option>
+                    <option value="8">8. Delivered (Transport Pauti Photo)</option>
+                    <option value="9">9. Final Call (Feedback Audio & Rating)</option>
+                </select>
+            </div>
 
-/* ---- audio recording ---- */
-async function toggleRecording(){
-  const btn = document.getElementById('recBtn');
-  if(mediaRecorder && mediaRecorder.state === 'recording'){
-    mediaRecorder.stop();
-    btn.classList.remove('recording'); btn.textContent = '●';
-    clearInterval(recTimer);
-    return;
-  }
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(recordedChunks, {type:'audio/webm'});
-      const reader = new FileReader();
-      reader.onload = () => {
-        capturedFile = { base64: reader.result.split(',')[1], mimeType:'audio/webm', fileName:'call_recording.webm' };
-        document.getElementById('submitBtn').disabled = window._rating !== undefined && document.getElementById('starsRow') ? window._rating===0 : false;
-      };
-      reader.readAsDataURL(blob);
-      stream.getTracks().forEach(t=>t.stop());
-    };
-    mediaRecorder.start();
-    btn.classList.add('recording'); btn.textContent = '■';
-    recSeconds = 0;
-    recTimer = setInterval(()=>{
-      recSeconds++;
-      const m = String(Math.floor(recSeconds/60)).padStart(2,'0');
-      const s = String(recSeconds%60).padStart(2,'0');
-      document.getElementById('recTimerLabel').textContent = `${m}:${s}`;
-    },1000);
-  }catch(err){
-    alert('Microphone access denied or unavailable.');
-  }
-}
-function stopRecordingCleanup(){
-  if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-  clearInterval(recTimer);
-}
-function setRating(n){
-  window._rating = n;
-  document.querySelectorAll('#starsRow .star').forEach(el=>{
-    el.classList.toggle('filled', Number(el.dataset.n) <= n);
-  });
-  const submitBtn = document.getElementById('submitBtn');
-  if(submitBtn) submitBtn.disabled = !capturedFile;
-}
+            <div id="ratingDiv" class="hidden">
+                <label class="block text-sm font-medium text-slate-300 mb-1">Customer Rating (1-5)</label>
+                <input type="number" id="rating" min="1" max="5" placeholder="5" 
+                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
 
-/* ---- submit stage ---- */
-async function submitStage(stage){
-  const btn = document.getElementById('submitBtn') || event.target;
-  btn.disabled = true; btn.textContent = 'Submitting…';
-  const payload = { action:'advanceStage', orderId: activeOrder.orderId, stage, staffName: currentStaff };
-  if(capturedFile){
-    payload.fileBase64 = capturedFile.base64;
-    payload.mimeType = capturedFile.mimeType;
-    payload.fileName = capturedFile.fileName;
-  }
-  if(stage === 9){
-    payload.rating = window._rating || 0;
-    payload.feedback = (document.getElementById('feedbackInput')||{}).value || '';
-  }
-  const r = await apiPost(payload);
-  if(r.ok){
-    capturedFile = null;
-    stopRecordingCleanup();
-    await refreshStats();
-    await refreshOrders();
-    const updated = await apiGet({action:'get', orderId: activeOrder.orderId});
-    if(updated.ok){ activeOrder = updated.order; renderRail(); renderAction(); }
-  } else {
-    alert('Error: ' + r.error);
-    if(btn){ btn.disabled = false; btn.textContent = 'Submit & Advance'; }
-  }
-}
+            <div id="fileUploadDiv" class="hidden">
+                <label class="block text-sm font-medium text-slate-300 mb-1" id="fileLabel">Upload Proof</label>
+                <input type="file" id="fileInput" 
+                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 transition">
+            </div>
 
-/* ================= NEW ORDER ================= */
-function openNewOrder(){
-  document.getElementById('itemsWrap').innerHTML='';
-  addItemRow();
-  document.getElementById('noDealerName').value='';
-  document.getElementById('noDealerPhone').value='';
-  document.getElementById('noTotal').value='';
-  document.getElementById('newOrderError').textContent='';
-  document.getElementById('newOrderOverlay').classList.add('active');
-}
-function closeNewOrder(){ document.getElementById('newOrderOverlay').classList.remove('active'); }
-function addItemRow(){
-  const wrap = document.getElementById('itemsWrap');
-  const row = document.createElement('div');
-  row.className='items-row';
-  row.innerHTML = `<input placeholder="Item name" class="item-name"><input placeholder="Qty" type="number" class="item-qty" style="max-width:70px">`;
-  wrap.appendChild(row);
-}
-async function submitNewOrder(){
-  const dealerName = document.getElementById('noDealerName').value.trim();
-  const dealerPhone = document.getElementById('noDealerPhone').value.trim();
-  const total = document.getElementById('noTotal').value;
-  const errEl = document.getElementById('newOrderError');
-  if(!dealerName || !total){ errEl.textContent='Dealer name and total amount are required.'; return; }
-  const items = Array.from(document.querySelectorAll('#itemsWrap .items-row')).map(r=>({
-    name: r.querySelector('.item-name').value, qty: r.querySelector('.item-qty').value
-  })).filter(i=>i.name);
-  const r = await apiPost({action:'createOrder', dealerName, dealerPhone, totalAmount:Number(total), items});
-  if(r.ok){
-    closeNewOrder();
-    await refreshStats();
-    await refreshOrders();
-  } else {
-    errEl.textContent = r.error || 'Failed to create order';
-  }
-}
-</script>
+            <button type="submit" id="submitBtn" 
+                class="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform transition hover:-translate-y-0.5">
+                Update System
+            </button>
+        </form>
+        
+        <div id="status" class="mt-4 text-center text-sm font-semibold hidden"></div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbw4nHbS6ts09-LuPmKE-iQqTVLCANh7Zh0eOR2DXZ6FsLXCud_qObH9ZpORpEmLxR-PMA/exec"; // <--- PASTE YOUR GAS WEB APP URL HERE
+
+        // Toggle file and rating inputs based on stage
+        function checkStage() {
+            const stage = document.getElementById('stage').value;
+            const fileDiv = document.getElementById('fileUploadDiv');
+            const fileLabel = document.getElementById('fileLabel');
+            const ratingDiv = document.getElementById('ratingDiv');
+            
+            ratingDiv.classList.add('hidden');
+            
+            if (stage === "1") {
+                fileDiv.classList.add('hidden');
+            } else {
+                fileDiv.classList.remove('hidden');
+                if (["3", "7", "9"].includes(stage)) {
+                    fileLabel.innerText = "Upload Audio Recording (.mp3/.m4a)";
+                    document.getElementById('fileInput').accept = "audio/*";
+                } else {
+                    fileLabel.innerText = "Upload Photo Proof (.jpg/.png)";
+                    document.getElementById('fileInput').accept = "image/*";
+                }
+                
+                if (stage === "9") {
+                    ratingDiv.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Convert file to Base64
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        document.getElementById('opsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const statusDiv = document.getElementById('status');
+            
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+            statusDiv.classList.add('hidden');
+
+            const orderId = document.getElementById('orderId').value;
+            const stage = document.getElementById('stage').value;
+            const rating = document.getElementById('rating').value;
+            const fileInput = document.getElementById('fileInput');
+
+            let payload = { orderId, stage, rating };
+
+            if (stage !== "1" && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                payload.fileName = file.name;
+                payload.mimeType = file.type;
+                payload.fileBase64 = await getBase64(file);
+            } else if (stage !== "1" && fileInput.files.length === 0) {
+                alert("Proof file is required for this stage.");
+                btn.innerText = "Update System";
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                statusDiv.innerText = result.message;
+                statusDiv.className = "mt-4 text-center text-sm font-semibold text-emerald-400";
+                document.getElementById('opsForm').reset();
+                checkStage();
+            } catch (error) {
+                statusDiv.innerText = "Error syncing with Control Tower.";
+                statusDiv.className = "mt-4 text-center text-sm font-semibold text-red-400";
+            }
+
+            statusDiv.classList.remove('hidden');
+            btn.innerText = "Update System";
+            btn.disabled = false;
+        });
+
+        // Initialize UI state
+        checkStage();
+    </script>
 </body>
 </html>
