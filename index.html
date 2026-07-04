@@ -1,1719 +1,541 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing System v12.3</title>
-    
-    <!-- Premium Frameworks -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yash Marketing — Dispatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161A;
+    --surface:#1B1E23;
+    --surface-2:#23262C;
+    --border:#2C3038;
+    --amber:#C89B3C;
+    --amber-dim:#5C4B25;
+    --teal:#3FA796;
+    --danger:#C1584B;
+    --text:#EDEEF0;
+    --text-muted:#8B909A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .muted{color:var(--text-muted);}
+  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:10px;}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
 
-    <style>
-        :root { 
-            --navy-base: #1e293b;
-            --brand: #2563eb; 
-            --brand-deep: #1d4ed8;
-            --soft-surface: #f8fafc;
-            --border-tint: #e2e8f0;
-        }
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: radial-gradient(circle at 10% 20%, rgb(241, 245, 249) 0%, rgb(248, 250, 252) 90%);
-            color: #1e293b; 
-            overflow-x: hidden; 
-        }
-        
-        /* Premium Corporate Slate Cards */
-        .premium-slate-card {
-            background: #ffffff;
-            border: 1px solid var(--border-tint);
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08);
-            transition: all 0.2s ease-in-out;
-        }
-        .premium-slate-card:hover {
-            box-shadow: 0 10px 30px -4px rgba(148, 163, 184, 0.15);
-            border-color: #cbd5e1;
-        }
+  /* ---------- Top bar ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(20,22,26,0.9);backdrop-filter:blur(10px);z-index:20;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--amber),#8a6a25);display:flex;align-items:center;justify-content:center;font-weight:700;color:#14161A;font-family:'Space Grotesk',sans-serif;}
+  .brand-name{font-size:15px;font-weight:600;}
+  .brand-sub{font-size:11px;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;}
+  .staff-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:7px 14px;border-radius:999px;font-size:13px;}
+  .staff-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);}
 
-        .beauty-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .beauty-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 100px; }
-        
-        .cat-image { 
-            width: 50px; 
-            height: 50px; 
-            object-fit: cover; 
-            border-radius: 0.5rem; 
-            border: 1px solid #f1f5f9; 
-        }
+  /* ---------- Login ---------- */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 32px;}
+  .login-card h1{font-size:22px;margin:18px 0 4px;}
+  .login-card p{margin:0 0 28px;color:var(--text-muted);font-size:13.5px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+  .field select,.field input,.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:14px;}
+  .field select:focus,.field input:focus,.field textarea:focus{outline:none;border-color:var(--amber);}
+  .btn-primary{width:100%;background:var(--amber);color:#14161A;font-weight:600;padding:13px;font-size:14px;transition:filter .15s;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px 16px;font-size:13px;}
+  .error-msg{color:var(--danger);font-size:13px;margin-top:10px;}
 
-        /* Responsive Compact Steps timeline card style */
-        .step-micro-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 0.65rem 0.75rem;
-            text-align: left;
-            width: 100%;
-        }
+  /* ---------- Layout ---------- */
+  .app{display:none;}
+  .app.active{display:block;}
+  .container{max-width:1100px;margin:0 auto;padding:28px;}
+  .stats-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:24px;}
+  .stat-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;min-width:96px;}
+  .stat-chip .num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;}
+  .stat-chip .lbl{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+  .stat-chip.active{border-color:var(--amber);}
 
-        .slide-up-fade { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        @keyframes slideUpFade { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .toolbar h2{font-size:19px;margin:0;}
+  .btn-new{background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:9px 16px;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .btn-new:hover{border-color:var(--amber);}
 
-        #boot-loader { position: fixed; inset: 0; background: #fff; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    </style>
+  .order-list{display:flex;flex-direction:column;gap:10px;}
+  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s, transform .1s;}
+  .order-card:hover{border-color:var(--amber);transform:translateY(-1px);}
+  .order-card .oid{font-size:11px;color:var(--text-muted);}
+  .order-card .dealer{font-size:15.5px;font-weight:600;margin-top:2px;}
+  .order-card .stageline{font-size:12.5px;color:var(--amber);margin-top:4px;}
+  .amt{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-muted);}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
+
+  /* ---------- Order detail ---------- */
+  .detail-overlay{position:fixed;inset:0;background:rgba(10,11,13,.7);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:32px 16px;overflow-y:auto;}
+  .detail-overlay.active{display:flex;}
+  .detail-card{width:100%;max-width:920px;background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:40px;}
+  .detail-head{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+  .detail-head .oid{font-size:11px;color:var(--amber);letter-spacing:.05em;}
+  .detail-head h2{margin:4px 0 0;font-size:20px;}
+  .close-btn{background:var(--surface-2);color:var(--text-muted);width:34px;height:34px;border-radius:50%;font-size:16px;display:flex;align-items:center;justify-content:center;}
+  .detail-body{display:grid;grid-template-columns:220px 1fr;gap:0;}
+  @media(max-width:720px){.detail-body{grid-template-columns:1fr;}}
+
+  /* dispatch rail — signature element */
+  .rail{padding:26px 20px;border-right:1px solid var(--border);}
+  .rail-node{display:flex;gap:12px;position:relative;padding-bottom:28px;}
+  .rail-node:last-child{padding-bottom:0;}
+  .rail-node .line{position:absolute;left:11px;top:24px;bottom:-4px;width:2px;background:var(--border);}
+  .rail-node:last-child .line{display:none;}
+  .rail-node.done .line{background:var(--amber);}
+  .node-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text-muted);flex:0 0 auto;z-index:1;}
+  .rail-node.done .node-dot{background:var(--amber);border-color:var(--amber);color:#14161A;}
+  .rail-node.current .node-dot{border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 4px rgba(200,155,60,.15);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(200,155,60,.15);}50%{box-shadow:0 0 0 7px rgba(200,155,60,.06);}}
+  .node-label{font-size:12.5px;padding-top:2px;}
+  .rail-node.done .node-label{color:var(--text);}
+  .rail-node.current .node-label{color:var(--amber);font-weight:600;}
+  .rail-node.pending .node-label{color:var(--text-muted);}
+  .node-time{font-size:10.5px;color:var(--text-muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+
+  /* action panel */
+  .action-panel{padding:26px;}
+  .action-panel h3{margin:0 0 6px;font-size:16px;}
+  .action-panel .sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+  .proof-box{border:1.5px dashed var(--border);border-radius:14px;padding:24px;text-align:center;margin-bottom:18px;}
+  .proof-box.has-media{border-style:solid;border-color:var(--teal);padding:12px;}
+  .proof-box img{max-width:100%;max-height:220px;border-radius:10px;}
+  .proof-box input[type=file]{display:none;}
+  .upload-label{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);padding:10px 18px;border-radius:10px;font-size:13.5px;}
+  .upload-label:hover{border-color:var(--amber);}
+  .rec-controls{display:flex;align-items:center;gap:12px;justify-content:center;}
+  .rec-btn{width:56px;height:56px;border-radius:50%;background:var(--danger);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
+  .rec-btn.recording{animation:recpulse 1s infinite;}
+  @keyframes recpulse{0%,100%{box-shadow:0 0 0 0 rgba(193,88,75,.5);}50%{box-shadow:0 0 0 10px rgba(193,88,75,0);}}
+  .rec-timer{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-muted);}
+  .stars{display:flex;gap:6px;justify-content:center;margin:12px 0 4px;}
+  .star{font-size:28px;color:var(--border);cursor:pointer;}
+  .star.filled{color:var(--amber);}
+  .info-row{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .info-row:last-child{border-bottom:none;}
+  .info-row span:first-child{color:var(--text-muted);}
+  textarea.feedback{min-height:70px;resize:vertical;}
+  .stage-complete-banner{background:rgba(63,167,150,.12);border:1px solid var(--teal);color:var(--teal);padding:14px 16px;border-radius:12px;font-size:14px;text-align:center;}
+
+  /* new order modal */
+  .no-field{margin-bottom:14px;}
+  .items-row{display:flex;gap:8px;margin-bottom:8px;}
+  .items-row input{flex:1;}
+  .add-item-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--amber);padding:8px 12px;font-size:12.5px;}
+</style>
 </head>
-<body class="p-3 md:p-6 min-h-screen">
+<body>
 
-    <!-- System Loader -->
-    <div id="boot-loader">
-        <div class="relative">
-            <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
-        </div>
-        <h2 class="mt-4 text-xs font-semibold tracking-widest text-slate-400 uppercase italic">Yash Marketing Backbone Loading</h2>
+<!-- ============ LOGIN ============ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="brand-mark display">YM</div>
+    <h1>Yash Marketing</h1>
+    <p>Dispatch Operations — staff sign-in</p>
+    <div class="field">
+      <label>Staff Name</label>
+      <select id="staffSelect"><option value="">Loading staff…</option></select>
+    </div>
+    <div class="field">
+      <label>PIN</label>
+      <input type="password" id="pinInput" inputmode="numeric" placeholder="••••">
+    </div>
+    <button class="btn-primary" id="loginBtn">Sign In</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark display">YM</div>
+      <div>
+        <div class="brand-name">Yash Marketing</div>
+        <div class="brand-sub">Dispatch Console</div>
+      </div>
+    </div>
+    <div class="staff-pill"><span class="staff-dot"></span><span id="staffNameLabel"></span></div>
+  </div>
+
+  <div class="container">
+    <div class="stats-strip" id="statsStrip"></div>
+
+    <div class="toolbar">
+      <h2>Active Orders</h2>
+      <button class="btn-new" onclick="openNewOrder()">+ New Order</button>
     </div>
 
-    <!-- 1. LOGIN PANEL -->
-    <div id="login-screen" class="max-w-[400px] mx-auto mt-16 bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-        <div class="text-center mb-8">
-            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 mb-4">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11.5V6l-3.707 3.707M12 11c1.744 2.772 2.753 6.054 2.753 9.571M12 11V6l3.707 3.707M12 2a9 9 0 110 18 9 9 0 010-18z"/></svg>
-            </div>
-            <h2 class="text-xl font-bold text-slate-800 tracking-tight uppercase">Yash Marketing Portal</h2>
-            <p class="text-xs text-slate-400 mt-1">Apna registered Mobile Number dono jagah enter karein</p>
-        </div>
+    <div class="order-list" id="orderList"><div class="empty-state">Loading orders…</div></div>
+  </div>
+</div>
 
-        <div class="space-y-4">
-            <div class="form-control">
-                <label class="label"><span class="label-text text-xs font-semibold text-slate-500">Phone Number (Mobile No)</span></label>
-                <input type="text" id="login-username" placeholder="E.g. 8805568651" class="input input-bordered w-full rounded-xl bg-slate-50 text-center font-bold text-sm" />
-            </div>
-            <div class="form-control">
-                <label class="label"><span class="label-text text-xs font-semibold text-slate-500">Secret Password (Same Mobile No)</span></label>
-                <input type="password" id="login-pin" placeholder="••••••••••" class="input input-bordered w-full rounded-xl bg-slate-50 text-center font-bold text-sm" />
-            </div>
-            <button onclick="handleLogin()" class="btn btn-primary w-full h-11 rounded-xl font-bold uppercase text-xs tracking-wider mt-4">
-                Portal Me Pravesh Karein ➔
-            </button>
-        </div>
+<!-- ============ ORDER DETAIL ============ -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-card">
+    <div class="detail-head">
+      <div>
+        <div class="oid mono" id="detOrderId"></div>
+        <h2 id="detDealer"></h2>
+      </div>
+      <button class="close-btn" onclick="closeDetail()">✕</button>
     </div>
-
-    <!-- 2. MAIN APPLICATION WORKSPACE -->
-    <div id="main-workspace" class="hidden max-w-[1200px] mx-auto space-y-6">
-        
-        <!-- User Session Ribbon -->
-        <div class="flex justify-between items-center bg-slate-900 text-white p-3 px-4 rounded-xl shadow-md gap-3 flex-wrap">
-            <div class="flex items-center gap-3">
-                <img id="user-avatar" src="https://via.placeholder.com/150" class="w-9 h-9 rounded-full border border-slate-700 object-cover" onerror="this.src='https://via.placeholder.com/150?text=👤'">
-                <div>
-                    <h3 id="user-display-name" class="text-sm font-bold text-slate-100">Staff Member</h3>
-                    <p id="user-role-badge" class="badge badge-primary text-[9px] font-bold uppercase py-0.5 px-2">Role</p>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="forceSyncRefresh()" class="btn btn-xs btn-outline btn-info font-bold rounded-lg gap-1">
-                    🔄 Refresh Data
-                </button>
-                <button onclick="openProfileModal()" class="btn btn-xs bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg border-none">
-                    My Profile & Docs
-                </button>
-                <button onclick="handleLogout()" class="btn btn-xs bg-red-650 text-white font-bold rounded-lg border-none hover:bg-red-700">Logout</button>
-            </div>
-        </div>
-
-        <!-- 3. ATTENDANCE PUNCH MODULE -->
-        <div id="attendance-card" class="premium-slate-card p-4">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Attendance Register</h2>
-                <span id="gps-status" class="text-[10px] font-semibold text-slate-400">GPS Locating...</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between text-center gap-3">
-                    <p class="text-xs font-medium text-slate-500 leading-normal">Office ke 50 meter ke andar Punch-In/Out karein (Sales boys exempted)</p>
-                    <div class="flex gap-2 justify-center">
-                        <button id="punch-in-btn" onclick="punchAttendance('In')" class="btn btn-sm btn-success text-white rounded-lg font-bold px-4">Punch In</button>
-                        <button id="punch-out-btn" onclick="punchAttendance('Out')" class="btn btn-sm btn-error text-white rounded-lg font-bold px-4">Punch Out</button>
-                    </div>
-                </div>
-
-                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-50 text-left space-y-3">
-                    <div class="flex justify-between items-center">
-                        <p class="text-xs font-bold text-blue-900">Aapka Attendance Record:</p>
-                        <button onclick="toggleAttendanceTable()" class="btn btn-xs btn-ghost text-blue-600 font-bold">📅 Logs</button>
-                    </div>
-                    
-                    <div id="personal-attendance-table" class="hidden overflow-x-auto max-h-[130px] beauty-scroll border rounded-lg bg-white p-2">
-                        <table class="table table-xs w-full text-slate-700">
-                            <thead><tr class="font-bold text-[9px] text-slate-400"><th>Date</th><th>Type</th><th>Distance</th></tr></thead>
-                            <tbody id="personal-attend-tbody"></tbody>
-                        </table>
-                    </div>
-
-                    <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-semibold text-slate-500">
-                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Present</span><p id="calc-p-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Half-Day</span><p id="calc-hd-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Late</span><p id="calc-l-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                        <div class="bg-white p-1 rounded-lg border border-slate-100"><span>Absent</span><p id="calc-a-count" class="font-bold text-slate-800 text-xs mt-0.5">0</p></div>
-                    </div>
-                    <div class="border-t border-blue-100/50 pt-2 flex justify-between items-center text-xs font-bold text-slate-700">
-                        <span>Month Live Salary Estimation:</span>
-                        <span id="calc-live-salary" class="text-blue-600 font-bold">₹ 0.00</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. OWNER-ONLY DASHBOARD VIEW -->
-        <div id="owner-hr-card" class="hidden premium-slate-card p-4">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Malik HR & Salary Tracker</h2>
-            <div class="overflow-x-auto beauty-scroll">
-                <table class="table table-xs w-full text-slate-800">
-                    <thead>
-                        <tr class="text-slate-400 font-bold border-b">
-                            <th>Employee</th>
-                            <th>Role</th>
-                            <th>Salary</th>
-                            <th>P</th>
-                            <th>HD</th>
-                            <th>L</th>
-                            <th>A</th>
-                            <th>Net Payable</th>
-                        </tr>
-                    </thead>
-                    <tbody id="owner-hr-tbody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 5. SALES MARKET VISIT FORM -->
-        <div id="sales-visit-card" class="hidden premium-slate-card p-4 space-y-4">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Market Visit Form (Survey)</h2>
-            <form id="visit-form" onsubmit="event.preventDefault();" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-control w-full">
-                        <label class="label"><span class="label-text text-xs font-semibold">Safar Route Area</span></label>
-                        <select id="visit-area-select" onchange="updateDealerListByArea()" class="select select-bordered select-sm w-full rounded-lg bg-slate-50 font-bold text-xs">
-                        </select>
-                    </div>
-                    <div class="form-control w-full">
-                        <label class="label"><span class="label-text text-xs font-semibold">Dealer Shop List</span></label>
-                        <input list="visit-dealers-list" id="visit-dealer-input" placeholder="Search shop name..." class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
-                        <datalist id="visit-dealers-list"></datalist>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="label"><span class="label-text text-xs font-semibold">Client Contact Phone</span></label>
-                        <input type="text" id="visit-phone" required class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
-                    </div>
-                    <div>
-                        <label class="label"><span class="label-text text-xs font-semibold">Payment Pending (Rs)</span></label>
-                        <input type="number" id="visit-pay-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
-                    </div>
-                    <div>
-                        <label class="label"><span class="label-text text-xs font-semibold">Cash Pending</span></label>
-                        <input type="number" id="visit-cash-pending" value="0" class="input input-bordered input-sm w-full rounded-lg bg-slate-50 font-bold text-xs" />
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b pb-2">📦 Dealer Stock survey Checklist</p>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold">
-                        <div><label class="label"><span class="label-text">Boat Airpods</span></label><input type="number" id="vs-b-air" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Boat Neckband</span></label><input type="number" id="vs-b-neck" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Boat Powerbank</span></label><input type="number" id="vs-b-pwr" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Boat Smartwatch</span></label><input type="number" id="vs-b-smart" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Velocity Airpods</span></label><input type="number" id="vs-v-air" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Velocity Neckband</span></label><input type="number" id="vs-v-neck" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Velocity Cable</span></label><input type="number" id="vs-v-cable" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Velocity Charger</span></label><input type="number" id="vs-v-char" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Memory Card</span></label><input type="number" id="vs-mc" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Pen Drive</span></label><input type="number" id="vs-pd" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">External SSD</span></label><input type="number" id="vs-ssd" value="0" class="input input-bordered input-sm w-full" /></div>
-                        <div><label class="label"><span class="label-text">Replacement?</span></label><select id="vs-rep-given" class="select select-bordered select-sm w-full"><option value="No">No</option><option value="Yes">Yes</option></select></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t pt-4">
-                        <div>
-                            <label class="label"><span class="label-text text-xs text-slate-500">Sales Visit Selfie (Live Photo)</span></label>
-                            <input type="file" id="vs-selfie-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full bg-white" />
-                        </div>
-                        <div>
-                            <label class="label"><span class="label-text text-xs text-slate-500">Replacement / Payment Photo</span></label>
-                            <input type="file" id="vs-pay-file" accept="image/*" class="file-input file-input-bordered file-input-sm w-full bg-white" />
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="label"><span class="label-text text-xs font-bold">Visit Remarks / Suggestion Remarks</span></label>
-                    <textarea id="visit-remarks" required class="textarea textarea-bordered w-full rounded-xl" rows="2"></textarea>
-                </div>
-
-                <button onclick="submitMarketVisit()" class="btn btn-emerald w-full text-white font-bold rounded-lg h-11">Submit Visit Logs</button>
-            </form>
-        </div>
-
-        <!-- 6. ORDER WORKSPACE -->
-        <div id="order-processing-workspace" class="hidden space-y-6">
-            <!-- Modern Stage Bar Track -->
-            <div class="premium-slate-card p-4">
-                <h2 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Order Pipeline Stage Flow</h2>
-                <div class="overflow-x-auto beauty-scroll">
-                    <div id="rail-track" class="flex gap-2 pb-2">
-                        <!-- Stations loaded dynamically -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Assembly Line Hub filters -->
-            <div class="flex flex-wrap gap-2 px-1">
-                <button onclick="setDateFilter('all')" id="df-all" class="btn btn-sm rounded-lg font-bold text-xs bg-blue-600 text-white border-none px-4">All Orders</button>
-                <button onclick="setDateFilter('today')" id="df-today" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">Today</button>
-                <button onclick="setDateFilter('week')" id="df-week" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">This Week</button>
-                <button onclick="setDateFilter('month')" id="df-month" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">This Month</button>
-                <button onclick="toggleSplitFilter()" id="df-split" class="btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50">⚠️ Shorts Only</button>
-            </div>
-
-            <div id="assembly-line" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[90vh] overflow-y-auto beauty-scroll pr-1 pb-16">
-                <!-- Orders -->
-            </div>
-        </div>
-
+    <div class="detail-body">
+      <div class="rail" id="detRail"></div>
+      <div class="action-panel" id="detAction"></div>
     </div>
+  </div>
+</div>
 
-    <!-- 7. PROFILE & DOCUMENTS VIEW/UPDATE MODAL -->
-    <dialog id="profile_modal" class="modal modal-middle backdrop-blur-md">
-        <div class="modal-box w-11/12 max-w-[500px] bg-white p-5 rounded-2xl shadow-2xl my-auto mx-auto overflow-y-auto max-h-[85vh] beauty-scroll">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="text-sm font-bold text-slate-800 uppercase">My Profile & Verification Documents</h3>
-                <form method="dialog"><button class="btn btn-circle btn-xs btn-ghost">✕</button></form>
-            </div>
-            
-            <div class="space-y-4">
-                <div class="flex flex-col items-center text-center pb-2 border-b">
-                    <img id="prof-photo" src="https://via.placeholder.com/150" class="w-20 h-20 rounded-full object-cover shadow border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=Passport+Photo'">
-                    <h4 id="prof-name" class="text-base font-bold text-slate-800 mt-2">Employee Name</h4>
-                    <p id="prof-role" class="badge badge-primary text-[10px] uppercase font-bold tracking-wider mt-1">Role</p>
-                </div>
+<!-- ============ NEW ORDER ============ -->
+<div class="detail-overlay" id="newOrderOverlay">
+  <div class="detail-card" style="max-width:480px;">
+    <div class="detail-head">
+      <h2>New Order</h2>
+      <button class="close-btn" onclick="closeNewOrder()">✕</button>
+    </div>
+    <div class="action-panel">
+      <div class="no-field field"><label>Dealer Name</label><input id="noDealerName"></div>
+      <div class="no-field field"><label>Dealer Phone</label><input id="noDealerPhone"></div>
+      <div class="no-field field">
+        <label>Items</label>
+        <div id="itemsWrap"></div>
+        <button class="add-item-btn" onclick="addItemRow()">+ Add item</button>
+      </div>
+      <div class="no-field field"><label>Total Amount (₹)</label><input id="noTotal" type="number"></div>
+      <button class="btn-primary" onclick="submitNewOrder()">Create Order</button>
+      <div class="error-msg" id="newOrderError"></div>
+    </div>
+  </div>
+</div>
 
-                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-left space-y-4">
-                    <h5 class="text-xs font-bold text-blue-900 uppercase">Upload / Update Documents:</h5>
-                    
-                    <div class="space-y-3 text-xs font-semibold">
-                        <div>
-                            <label class="label py-1"><span class="label-text text-[11px]">Profile Photo (Passport size)</span></label>
-                            <input type="file" id="up-photo" accept="image/*" class="file-input file-input-bordered file-input-xs w-full bg-white" />
-                        </div>
-                        <div>
-                            <label class="label py-1"><span class="label-text text-[11px]">Aadhar Card Copy</span></label>
-                            <input type="file" id="up-aadhar" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
-                        </div>
-                        <div>
-                            <label class="label py-1"><span class="label-text text-[11px]">PAN Card Copy</span></label>
-                            <input type="file" id="up-pan" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
-                        </div>
-                        <div>
-                            <label class="label py-1"><span class="label-text text-[11px]">Bank Pass Book Frontpage</span></label>
-                            <input type="file" id="up-passbook" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
-                        </div>
-                        <div>
-                            <label class="label py-1"><span class="label-text text-[11px]">Agreement Copy</span></label>
-                            <input type="file" id="up-agreement" accept="image/*,application/pdf" class="file-input file-input-bordered file-input-xs w-full bg-white" />
-                        </div>
-                    </div>
+<script>
+/* ================= CONFIG ================= */
+const APP_CONFIG = {
+  API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' // ends with /exec
+};
 
-                    <button id="profile-upload-btn" onclick="uploadStaffDocuments()" class="btn btn-primary btn-sm w-full font-bold uppercase text-[10px] tracking-wider mt-2">
-                        Upload Selected Documents
-                    </button>
-                </div>
+const STAGES = [
+  {key:1,name:'Order Received',proof:'accept'},
+  {key:2,name:'Balance Check',proof:'photo'},
+  {key:3,name:'Call 1 — Confirmation',proof:'recording'},
+  {key:4,name:'Processed',proof:'photo'},
+  {key:5,name:'Invoiced',proof:'photo'},
+  {key:6,name:'Dispatched',proof:'photo'},
+  {key:7,name:'Call 2 — Out for Delivery',proof:'recording'},
+  {key:8,name:'Delivered',proof:'photo'},
+  {key:9,name:'Final Call & Feedback',proof:'recording+rating'}
+];
 
-                <div class="w-full bg-slate-50 p-4 rounded-xl border text-left space-y-2">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Documents currently on sheet:</p>
-                    <div id="doc-links-preview" class="space-y-1.5 text-xs text-blue-600 font-semibold">
-                    </div>
-                </div>
-            </div>
+let currentStaff = null;
+let allOrders = [];
+let activeOrder = null;
+let capturedFile = null; // {base64, mimeType, fileName}
+let mediaRecorder, recordedChunks = [], recTimer, recSeconds = 0;
+
+/* ================= API HELPERS ================= */
+async function apiGet(params){
+  const url = APP_CONFIG.API_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url);
+  return res.json();
+}
+async function apiPost(body){
+  const res = await fetch(APP_CONFIG.API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // avoids CORS preflight
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+/* ================= LOGIN ================= */
+async function loadStaff(){
+  try{
+    const r = await apiGet({action:'staffList'});
+    const sel = document.getElementById('staffSelect');
+    sel.innerHTML = '<option value="">Select your name</option>' +
+      r.staff.map(s=>`<option value="${s}">${s}</option>`).join('');
+  }catch(e){
+    document.getElementById('staffSelect').innerHTML = '<option value="">Could not load staff</option>';
+  }
+}
+document.getElementById('loginBtn').onclick = async () => {
+  const staffName = document.getElementById('staffSelect').value;
+  const pin = document.getElementById('pinInput').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if(!staffName || !pin){ errEl.textContent = 'Select your name and enter PIN.'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const r = await apiPost({action:'login', staffName, pin});
+  btn.disabled = false; btn.textContent = 'Sign In';
+  if(r.ok){
+    currentStaff = r.staffName;
+    document.getElementById('staffNameLabel').textContent = currentStaff;
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('app').classList.add('active');
+    boot();
+  } else {
+    errEl.textContent = r.error || 'Login failed';
+  }
+};
+loadStaff();
+
+/* ================= BOOT / DASHBOARD ================= */
+async function boot(){
+  await refreshStats();
+  await refreshOrders();
+}
+async function refreshStats(){
+  const r = await apiGet({action:'stats'});
+  const strip = document.getElementById('statsStrip');
+  if(!r.ok) return;
+  strip.innerHTML = STAGES.map(s=>`
+    <div class="stat-chip">
+      <div class="num">${r.counts[s.key]||0}</div>
+      <div class="lbl">${s.name}</div>
+    </div>`).join('');
+}
+async function refreshOrders(){
+  const r = await apiGet({action:'list'});
+  const list = document.getElementById('orderList');
+  if(!r.ok || !r.orders.length){ list.innerHTML = '<div class="empty-state">No orders yet. Create one to begin.</div>'; return; }
+  allOrders = r.orders;
+  list.innerHTML = allOrders.map(o=>`
+    <div class="order-card" onclick="openDetail('${o.orderId}')">
+      <div>
+        <div class="oid mono">${o.orderId}</div>
+        <div class="dealer">${o.dealerName}</div>
+        <div class="stageline">Stage ${o.currentStage} — ${STAGES[o.currentStage-1].name}</div>
+      </div>
+      <div class="amt">₹${Number(o.totalAmount).toLocaleString('en-IN')}</div>
+    </div>`).join('');
+}
+
+/* ================= ORDER DETAIL ================= */
+function openDetail(orderId){
+  activeOrder = allOrders.find(o=>o.orderId===orderId);
+  if(!activeOrder) return;
+  capturedFile = null;
+  document.getElementById('detOrderId').textContent = activeOrder.orderId;
+  document.getElementById('detDealer').textContent = activeOrder.dealerName;
+  renderRail();
+  renderAction();
+  document.getElementById('detailOverlay').classList.add('active');
+}
+function closeDetail(){
+  document.getElementById('detailOverlay').classList.remove('active');
+  stopRecordingCleanup();
+}
+function renderRail(){
+  const rail = document.getElementById('detRail');
+  const cur = Number(activeOrder.currentStage);
+  rail.innerHTML = STAGES.map(s=>{
+    let cls = 'pending';
+    if(s.key < cur) cls='done'; else if(s.key===cur) cls='current';
+    const st = activeOrder.stages[s.key];
+    const time = st && st.time ? new Date(st.time).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="rail-node ${cls}">
+      <div class="line"></div>
+      <div class="node-dot">${s.key < cur ? '✓' : s.key}</div>
+      <div>
+        <div class="node-label">${s.name}</div>
+        ${time?`<div class="node-time">${time}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderAction(){
+  const cur = Number(activeOrder.currentStage);
+  const panel = document.getElementById('detAction');
+  if(cur > 9){
+    panel.innerHTML = `<div class="stage-complete-banner">✓ Order fully delivered & closed out.</div>`;
+    return;
+  }
+  const stageDef = STAGES[cur-1];
+  let html = `<h3>${stageDef.name}</h3>`;
+
+  if(stageDef.proof === 'accept'){
+    html += `<div class="sub">Accept this order to begin the dispatch pipeline.</div>
+      <button class="btn-primary" onclick="submitStage(${cur})">Accept Order</button>`;
+  } else if(stageDef.proof === 'photo'){
+    html += `<div class="sub">Upload photo proof to move this order forward.</div>
+      <div class="proof-box" id="proofBox">
+        <label class="upload-label" for="photoInput">📷 Capture / Upload Photo</label>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+      </div>
+      <button class="btn-primary" id="submitBtn" disabled onclick="submitStage(${cur})">Submit & Advance</button>`;
+  } else if(stageDef.proof === 'recording'){
+    html += `<div class="sub">Record the call before advancing this order.</div>
+      <div class="proof-box" id="proofBox">
+        <div class="rec-controls">
+          <button class="rec-btn" id="recBtn" onclick="toggleRecording()">●</button>
+          <div class="rec-timer" id="recTimerLabel">00:00</div>
         </div>
-    </dialog>
-
-    <!-- 8. ORDER PROCESS MODAL (Perfect Compact Styling & Bug Fixed Timeline) -->
-    <dialog id="process_modal" class="modal modal-middle backdrop-blur-md">
-        <div class="modal-box w-11/12 max-w-[800px] bg-white p-0 rounded-2xl shadow-3xl my-auto mx-auto overflow-y-auto max-h-[85vh] beauty-scroll border border-slate-200">
-            <div class="bg-slate-900 p-4 px-5 text-white flex justify-between items-center border-b border-slate-800">
-                <div>
-                    <h3 id="m-dealer" class="text-sm md:text-base font-bold tracking-tight">Dealer Name</h3>
-                    <div class="flex flex-wrap gap-2 items-center mt-1">
-                        <span id="m-id" class="text-[10px] text-slate-400 font-semibold">ID: #000</span>
-                        <span id="m-area" class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-blue-400 font-bold uppercase">Region: General</span>
-                    </div>
-                </div>
-                <form method="dialog" class="shrink-0">
-                    <button class="btn btn-circle btn-xs btn-ghost text-white border border-slate-800">✕</button>
-                </form>
-            </div>
-
-            <div class="p-4 md:p-5">
-                <!-- Custom Modern Vertical Step Bar (No Overlapping Ever) -->
-                <div class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div id="timeline-track" class="space-y-2.5">
-                        <!-- Custom Timeline node blocks loaded dynamically by JS -->
-                    </div>
-                </div>
-
-                <div class="mb-5 p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl text-left">
-                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">📢 Staff Guide:</p>
-                    <p id="m-step-explanation" class="text-xs text-slate-700 leading-snug">Stage explanation loading...</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-                    <div class="md:col-span-6 space-y-3">
-                        <div class="bg-slate-50/30 p-3.5 rounded-xl border border-slate-200">
-                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Saman Ki List</h4>
-                            <div id="m-product-list" class="space-y-2 max-h-[220px] overflow-y-auto beauty-scroll pr-1"></div>
-                        </div>
-                    </div>
-
-                    <div class="md:col-span-6 space-y-3 text-center">
-                        <div class="bg-blue-50/20 p-4 rounded-xl border-2 border-dashed border-blue-100">
-                            <div class="mb-3">
-                                <span id="m-stage-tag" class="text-[10px] font-bold text-blue-700 uppercase tracking-widest bg-white px-2.5 py-1 rounded shadow-sm inline-block">
-                                    Stage: Loading
-                                </span>
-                            </div>
-                            
-                            <div id="m-media-control" class="space-y-3"></div>
-
-                            <button id="m-sync-btn" onclick="executeSyncProtocol()" class="btn btn-primary w-full mt-3 h-10 rounded-lg shadow-sm font-bold text-xs">
-                                Process Completed (Aage Bhejein)
-                            </button>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <button onclick="toggleSplitZone()" class="btn btn-ghost bg-orange-50/50 hover:bg-orange-100 text-orange-700 flex-1 rounded-lg font-bold h-9 text-[11px]">Short Order (Saman Alag)</button>
-                        </div>
-
-                        <div id="m-split-zone" class="hidden bg-orange-50/20 border-2 border-orange-100 p-3.5 rounded-xl text-left space-y-2.5">
-                            <p class="text-[11px] font-bold text-orange-700 uppercase">Short Order Panel</p>
-                            <p class="text-[10px] text-slate-500 leading-relaxed">Saman alag karke shortage sub-order banayein.</p>
-                            <div id="m-split-items-list" class="space-y-2"></div>
-                            <button id="m-split-submit-btn" onclick="confirmAndExecuteSplit()" class="btn btn-xs btn-warning w-full rounded-lg font-bold uppercase py-2">
-                                Confirm Shortage Split
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </div>
+      <button class="btn-primary" id="submitBtn" disabled onclick="submitStage(${cur})">Submit & Advance</button>`;
+  } else if(stageDef.proof === 'recording+rating'){
+    html += `<div class="sub">Final confirmation call, delivery rating & feedback.</div>
+      <div class="proof-box" id="proofBox">
+        <div class="rec-controls">
+          <button class="rec-btn" id="recBtn" onclick="toggleRecording()">●</button>
+          <div class="rec-timer" id="recTimerLabel">00:00</div>
         </div>
-    </dialog>
-
-    <script>
-        /**
-         * v12.2 WORKSPACE ENGINE - FULL PRODUCTION VERSION
-         * ---------------------------------------------------------------------------------
-         */
-        
-        const CLOUD_API = "https://script.google.com/macros/s/AKfycbz-6tSfFUyFinrcXTxxdJ4tld22tzIp2sZ13PDLpu6aAwSaJcNDpMMrbDw6CqTZTydx/exec";
-        const PROTOCOL_STAGES = ["Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
-        const RAILWAY_STAGES = ["Received", "Balance Check", "Call 1", "Processed", "Invoiced", "Dispatched", "Call 2", "Delivered", "Final Call"];
-
-        const STAGE_EXPLANATIONS = {
-            "Balance Check": "💳 <b>Balance Check:</b> Customer ka payment balance sheet check karke proof/receipt ki photo load karein.",
-            "Call 1": "📞 <b>Call 1:</b> Customer ko call karke order confirm karein aur recording file (.mp3) upload karein.",
-            "Processed": "📦 <b>Processed:</b> Warehouse se saaman packed hone ke baad packing box ka photo upload karein.",
-            "Invoiced": "📄 <b>Invoiced:</b> Generate kiye gaye bill/invoice ki photo khinch kar yahan load karein.",
-            "Dispatched": "🚛 <b>Dispatched:</b> Transport gaadi par maal load karte waqt parcel ki photo click karke upload karein.",
-            "Call 2": "🔊 <b>Call 2:</b> Tracking details dene ke liye call karein aur call recording (.mp3) file load karein.",
-            "Delivered": "✅ <b>Delivered:</b> Customer se sign kiya hua delivery challan (Pauti Photo) click karke upload karein.",
-            "Final Call": "⭐ <b>Final Call:</b> Customer feedback call recording file yahan upload karke process close karein."
-        };
-
-        const LOCAL_STAFF_DB = [
-            { phone: "8805568651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://via.placeholder.com/150?text=Owner", doc: "#" },
-            { phone: "8805566651", name: "Yash Barlota (Malik)", role: "Owner", salary: 50000, photo: "https://via.placeholder.com/150?text=Owner", doc: "#" },
-            { phone: "8485874324", name: "Preetam Bogawat", role: "Sales Boy", salary: 20000, photo: "", doc: "#" },
-            { phone: "7744033134", name: "Ganesh Parkad", role: "Sales Boy", salary: 16000, photo: "", doc: "#" },
-            { phone: "9307838076", name: "Komal Gurap", role: "Accountant", salary: 13000, photo: "", doc: "#" },
-            { phone: "9834871120", name: "Vishal Gunjal", role: "Store Manager", salary: 15000, photo: "", doc: "#" },
-            { phone: "9075708290", name: "Shubham Bade", role: "MIS", salary: 18000, photo: "", doc: "#" },
-            { phone: "9273384373", name: "Jyoti Jadhav", role: "CRM", salary: 10000, photo: "", doc: "#" }
-        ];
-
-        let store_orders = [];
-        let store_stock = [];
-        let store_staff = [];
-        let store_attendance = [];
-        let store_dealers = [];
-        let currentUser = null;
-        
-        let officeCoordinates = { lat: 19.08904387245274, lon: 74.73377820517885 };
-        
-        let activeFilterStage = null;
-        let activeDateFilter = "all";
-        let activeSplitOnlyFilter = false;
-
-        const safe = {
-            el: (id) => document.getElementById(id),
-            text: (id, val) => { const el = safe.el(id); if (el) el.innerText = val; },
-            html: (id, val) => { const el = safe.el(id); if (el) el.innerHTML = val; },
-            addClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.add(cls); },
-            removeClass: (id, cls) => { const el = safe.el(id); if (el) el.classList.remove(cls); },
-            show: (id) => { const el = safe.el(id); if (el) el.style.display = ''; },
-            hide: (id) => { const el = safe.el(id); if (el) el.style.display = 'none'; }
-        };
-
-        function getDirectDriveUrl(url) {
-            if (!url) return "#";
-            const sUrl = url.toString().trim();
-            if (sUrl.includes("drive.google.com")) {
-                let id = "";
-                const dMatch = sUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-                if (dMatch) {
-                    id = dMatch[1];
-                } else {
-                    const idMatch = sUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-                    if (idMatch) id = idMatch[1];
-                }
-                if (id) {
-                    return `https://docs.google.com/uc?export=download&id=${id}`;
-                }
-            }
-            return sUrl;
-        }
-
-        function findProductImage(itemName) {
-            try {
-                const query = itemName.trim().toLowerCase();
-                if (!store_stock || store_stock.length === 0) return "https://via.placeholder.com/150?text=📦";
-                
-                const headers = store_stock[0];
-                const rows = store_stock.slice(1);
-                
-                let nameIdx = -1;
-                let imgIdx = -1;
-                
-                headers.forEach((h, i) => {
-                    const val = h.toString().toLowerCase().trim();
-                    if (val.includes("product name") || val.includes("item name") || val === "name" || val === "product") {
-                        nameIdx = i;
-                    }
-                    if (val.includes("image url") || val.includes("image") || val.includes("photo") || val.includes("url") || val.includes("link")) {
-                        imgIdx = i;
-                    }
-                });
-
-                if (nameIdx === -1) nameIdx = 1;
-                if (imgIdx === -1) imgIdx = 2;
-                
-                const matchedRow = rows.find(r => r && r[nameIdx] && r[nameIdx].toString().toLowerCase().trim() === query);
-                if (matchedRow && matchedRow[imgIdx]) {
-                    return getDirectDriveUrl(matchedRow[imgIdx]);
-                }
-                
-                const fuzzyMatch = rows.find(r => r && r[nameIdx] && r[nameIdx].toString().toLowerCase().includes(query));
-                if (fuzzyMatch && fuzzyMatch[imgIdx]) {
-                    return getDirectDriveUrl(fuzzyMatch[imgIdx]);
-                }
-            } catch (err) {
-                console.error("Self-healing image search failed: ", err);
-            }
-            return "https://via.placeholder.com/150?text=📦";
-        }
-
-        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; 
-            const phi1 = lat1 * Math.PI/180;
-            const phi2 = lat2 * Math.PI/180;
-            const deltaPhi = (lat2-lat1) * Math.PI/180;
-            const deltaLambda = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
-                      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
-
-        // Helper to map blank or "Pending" states to standard initial "Received" stage
-        function normalizeStatus(status) {
-            if (!status) return "Received";
-            const s = status.toString().trim().toLowerCase();
-            if (s === "pending" || s === "received" || s === "") {
-                return "Received";
-            }
-            return status.toString().trim();
-        }
-
-        async function syncData() {
-            try {
-                const response = await fetch(`${CLOUD_API}?_t=${Date.now()}`);
-                const data = await response.json();
-                
-                store_orders = data.orders || [];
-                store_stock = data.catalogue || [];
-                store_staff = data.staff || [];
-                store_attendance = data.attendance || [];
-                store_dealers = data.dealers || [];
-                
-                const savedUser = localStorage.getItem("backbone_current_user");
-                if (savedUser) {
-                    currentUser = JSON.parse(savedUser);
-                    showWorkspace();
-                }
-            } catch (err) {
-                console.error("Fetch Fail:", err);
-                alert("Database load failed. Incognito mode allow karein.");
-            } finally {
-                const loader = safe.el('boot-loader');
-                if (loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }
-            }
-        }
-
-        function forceSyncRefresh() {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.innerText = "Syncing...";
-            syncData().then(() => {
-                btn.disabled = false;
-                btn.innerText = "🔄 Refresh Data";
-                alert("Data Refreshed!");
-            });
-        }
-
-        syncData();
-
-        function handleLogin() {
-            try {
-                const uid = safe.el('login-username').value.trim();
-                const pin = safe.el('login-pin').value.trim();
-
-                if(!uid || !pin) {
-                    alert("Kripya apna Phone Number aur Password dono enter karein.");
-                    return;
-                }
-
-                if (uid !== pin) {
-                    alert("🚫 LOGIN FAILED: ID aur Password dono same (aapka registered Phone Number) hone chahiye!");
-                    return;
-                }
-
-                const matchedLocal = LOCAL_STAFF_DB.find(s => s.phone === uid);
-                
-                if (matchedLocal) {
-                    currentUser = {
-                        uid: matchedLocal.phone,
-                        name: matchedLocal.name,
-                        role: matchedLocal.role,
-                        salary: matchedLocal.salary,
-                        photo: matchedLocal.photo || "https://via.placeholder.com/150?text=Staff",
-                        doc: matchedLocal.doc
-                    };
-                } else {
-                    if (store_staff && Array.isArray(store_staff) && store_staff.length > 0) {
-                        const headers = store_staff[0];
-                        const rows = store_staff.slice(1);
-                        
-                        let phoneCol = 2, nameCol = 1, roleCol = 4, salaryCol = 5, photoCol = 6, docCol = 7;
-                        headers.forEach((h, i) => {
-                            const val = h.toString().toLowerCase().trim();
-                            if (val.includes("phone") || val.includes("mobile") || val === "contact") phoneCol = i;
-                            if (val === "name" || val.includes("employee name") || val.includes("staff name")) nameCol = i;
-                            if (val.includes("role") || val.includes("designation")) roleCol = i;
-                            if (val.includes("salary") || val.includes("pagar") || val.includes("monthly")) salaryCol = i;
-                            if (val.includes("photo") || val.includes("image") || val.includes("passport")) photoCol = i;
-                            if (val.includes("doc") || val.includes("aadhar") || val.includes("pan") || val.includes("file")) docCol = i;
-                        });
-
-                        const staffRow = rows.find(row => {
-                            if (!row[phoneCol]) return false;
-                            const sheetPhone = row[phoneCol].toString().trim().replace(/\.0$/, '');
-                            return sheetPhone === uid;
-                        });
-
-                        if (staffRow) {
-                            currentUser = {
-                                uid: staffRow[0].toString().trim(), 
-                                name: staffRow[nameCol].toString().trim(),
-                                role: staffRow[roleCol].toString().trim(),
-                                salary: parseFloat(staffRow[salaryCol]) || 15000,
-                                photo: getDirectDriveUrl(staffRow[photoCol]),
-                                doc: getDirectDriveUrl(staffRow[docCol])
-                            };
-                        }
-                    }
-                }
-                
-                if (!currentUser) {
-                    alert("🚫 LOGIN FAILED: Yeh Mobile Number system mein registered nahi hai!");
-                    return;
-                }
-
-                localStorage.setItem("backbone_current_user", JSON.stringify(currentUser));
-                showWorkspace();
-            } catch(e) {
-                console.error("Login Error: ", e);
-                alert("Login System Error: " + e.message);
-            }
-        }
-
-        function showWorkspace() {
-            safe.hide('login-screen');
-            safe.removeClass('main-workspace', 'hidden');
-            
-            safe.text('user-display-name', currentUser.name);
-            safe.text('user-role-badge', currentUser.role);
-            
-            const avatar = safe.el('user-avatar');
-            if (avatar) avatar.src = currentUser.photo;
-
-            const normalizedRole = currentUser.role.toLowerCase();
-            if (normalizedRole === "owner") {
-                safe.removeClass('owner-hr-card', 'hidden');
-                safe.removeClass('order-processing-workspace', 'hidden');
-                safe.hide('sales-visit-card');
-                renderOwnerHRDashboard();
-            } else if (normalizedRole.includes("sales")) {
-                safe.removeClass('sales-visit-card', 'hidden');
-                safe.hide('owner-hr-card');
-                safe.hide('order-processing-workspace');
-                populateSalesRoutes();
-            } else {
-                safe.removeClass('order-processing-workspace', 'hidden');
-                safe.hide('owner-hr-card');
-                safe.hide('sales-visit-card');
-            }
-
-            loadPersonalSalaryTracker();
-            applyFilters();
-            renderRailTrack(store_orders);
-        }
-
-        function applyFilters() {
-            if (!store_orders || store_orders.length === 0) {
-                renderLineFeed([]);
-                return;
-            }
-
-            let filtered = store_orders.filter(o => o && o.Order_ID && o.Order_ID.toString().trim() !== "");
-
-            if (activeFilterStage) {
-                filtered = filtered.filter(o => {
-                    const curSt = normalizeStatus(o.Current_Status);
-                    return curSt.toLowerCase() === activeFilterStage.toLowerCase();
-                });
-            }
-
-            if (activeDateFilter !== "all") {
-                const now = new Date();
-                filtered = filtered.filter(o => {
-                    if (!o.Date) return false;
-                    const oDate = new Date(o.Date);
-                    if (isNaN(oDate.getTime())) return false;
-
-                    const diffTime = Math.abs(now - oDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (activeDateFilter === "today") {
-                        return oDate.toDateString() === now.toDateString();
-                    } else if (activeDateFilter === "week") {
-                        return diffDays <= 7;
-                    } else if (activeDateFilter === "month") {
-                        return diffDays <= 30;
-                    }
-                    return true;
-                });
-            }
-
-            if (activeSplitOnlyFilter) {
-                filtered = filtered.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
-            }
-
-            renderLineFeed(filtered);
-            renderRailTrack(store_orders.filter(o => o && o.Order_ID && o.Order_ID.toString().trim() !== ""));
-        }
-
-        function setDateFilter(type) {
-            activeDateFilter = type;
-            const buttons = ["all", "today", "week", "month"];
-            buttons.forEach(btnId => {
-                const btn = safe.el(`df-${btnId}`);
-                if (btn) {
-                    if (btnId === type) {
-                        btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-blue-600 text-white border-none px-4";
-                    } else {
-                        btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50";
-                    }
-                }
-            });
-            applyFilters();
-        }
-
-        function toggleSplitFilter() {
-            activeSplitOnlyFilter = !activeSplitOnlyFilter;
-            const btn = safe.el('df-split');
-            if (btn) {
-                if (activeSplitOnlyFilter) {
-                    btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-orange-600 text-white border-none px-4";
-                } else {
-                    btn.className = "btn btn-sm rounded-lg font-bold text-xs bg-white text-slate-600 border border-slate-200 px-4 hover:bg-slate-50";
-                }
-            }
-            applyFilters();
-        }
-
-        function toggleStageFilter(stage) {
-            if (activeFilterStage === stage) {
-                activeFilterStage = null;
-            } else {
-                activeFilterStage = stage;
-            }
-            applyFilters();
-        }
-
-        function populateSalesRoutes() {
-            const areaSelect = safe.el('visit-area-select');
-            if (!areaSelect || !store_dealers || store_dealers.length < 2) return;
-
-            const rows = store_dealers.slice(1);
-            const areas = [...new Set(rows.map(r => r[3] ? r[3].toString().trim() : "").filter(a => a !== ""))];
-
-            areaSelect.innerHTML = `<option value="">-- Route Area --</option>` + 
-                areas.map(a => `<option value="${a}">${a}</option>`).join('');
-        }
-
-        function updateDealerListByArea() {
-            const area = safe.el('visit-area-select').value;
-            const datalist = safe.el('visit-dealers-list');
-            const dealerInput = safe.el('visit-dealer-input');
-            if (!datalist || !dealerInput || !store_dealers) return;
-
-            dealerInput.value = "";
-            const rows = store_dealers.slice(1);
-            const filteredDealers = rows.filter(r => r[3] && r[3].toString().trim() === area);
-
-            datalist.innerHTML = filteredDealers.map(r => {
-                const name = r[4] ? r[4].toString().trim() : "Shop Name";
-                return `<option value="${name}"></option>`;
-            }).join('');
-        }
-
-        function toggleAttendanceTable() {
-            const div = safe.el('personal-attendance-table');
-            if (div) {
-                div.classList.toggle('hidden');
-                if (!div.classList.contains('hidden')) {
-                    renderPersonalAttendanceLogs();
-                }
-            }
-        }
-
-        function renderPersonalAttendanceLogs() {
-            const tbody = safe.el('personal-attend-tbody');
-            if(!tbody || !store_attendance || !currentUser) return;
-
-            const userLogs = store_attendance.filter(r => r[1] && r[1].toString().trim() === currentUser.uid);
-            tbody.innerHTML = userLogs.map(log => {
-                const date = new Date(log[0]);
-                const prettyStr = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
-                const timeStr = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-                
-                return `
-                    <tr class="hover:bg-slate-50 border-b border-slate-100 font-bold">
-                        <td>${prettyStr} (${timeStr})</td>
-                        <td><span class="badge ${log[3] === 'In' ? 'badge-success' : 'badge-error'} text-[9px] text-white">${log[3]}</span></td>
-                        <td>${log[5]}m</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function punchAttendance(type) {
-            const btn = safe.el(`punch-${type.toLowerCase()}-btn`);
-            if(!btn) return;
-            
-            btn.disabled = true;
-            safe.text('gps-status', "GPS Verification In Progress...");
-
-            const todayStr = new Date().toDateString();
-            const alreadyPunched = store_attendance.find(log => {
-                if(!log[1] || !log[0]) return false;
-                const logDateStr = new Date(log[0]).toDateString();
-                return log[1].toString().trim() === currentUser.uid && logDateStr === todayStr && log[3] === type;
-            });
-
-            if (alreadyPunched) {
-                alert(`⚠️ Aapne aaj ki Punch-${type} Attendance pehle hi laga di hai.`);
-                btn.disabled = false;
-                safe.text('gps-status', "Punch Already Done.");
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                const dist = getDistanceInMeters(lat, lon, officeCoordinates.lat, officeCoordinates.lon);
-                
-                safe.text('gps-status', `Office Distance: ${dist.toFixed(1)}m`);
-
-                const normalizedRole = currentUser.role.toLowerCase();
-                if (!normalizedRole.includes("sales") && dist > 50) {
-                    alert(`🚫 PUNCH REJECTED: Aap office se bahar hain (Distance: ${dist.toFixed(1)}m). Office ke 50m radius ke andar hona mandatory hai.`);
-                    btn.disabled = false;
-                    return;
-                }
-
-                try {
-                    const res = await fetch(CLOUD_API, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: "punch",
-                            staffId: currentUser.uid,
-                            name: currentUser.name,
-                            type: type,
-                            location: `${lat},${lon}`,
-                            distance: dist.toFixed(1)
-                        })
-                    });
-
-                    const rData = await res.json();
-                    if(rData.status === "success") {
-                        alert(`✅ Punch ${type} Successful!`);
-                        syncData();
-                    } else {
-                        throw new Error(rData.message);
-                    }
-                } catch(err) {
-                    console.error(err);
-                    alert("Sync failed: Connection error.");
-                } finally {
-                    btn.disabled = false;
-                }
-            }, (err) => {
-                alert("⚠️ Location Error: Punch karne ke liye GPS ON karein.");
-                btn.disabled = false;
-                safe.text('gps-status', "Location Refused.");
-            }, { enableHighAccuracy: true });
-        }
-
-        function loadPersonalSalaryTracker() {
-            if(!currentUser || !store_attendance) return;
-            
-            const userLogs = store_attendance.filter(r => r[1] && r[1].toString().trim() === currentUser.uid);
-            const stats = calculateSalaryStats(currentUser.salary, userLogs);
-            
-            safe.text('calc-p-count', stats.present);
-            safe.text('calc-hd-count', stats.halfDay);
-            safe.text('calc-l-count', stats.late);
-            safe.text('calc-a-count', stats.absent);
-            safe.text('calc-live-salary', `₹ ${stats.payable.toFixed(2)}`);
-        }
-
-        function calculateSalaryStats(basic, logs) {
-            const dailyRate = basic / 30;
-            let present = 0, halfDay = 0, late = 0, absent = 0;
-
-            logs.forEach(log => {
-                if (log[3] === "In") { 
-                    try {
-                        const punchTime = new Date(log[0]);
-                        if (!isNaN(punchTime.getTime())) {
-                            const hours = punchTime.getHours();
-                            const mins = punchTime.getMinutes();
-                            const absoluteMins = (hours * 60) + mins;
-                            
-                            if (absoluteMins > 720) {
-                                halfDay++;
-                            } else if (absoluteMins > 630) {
-                                late++;
-                            } else {
-                                present++;
-                            }
-                        }
-                    } catch(e){}
-                }
-            });
-
-            const lateDeductionDays = Math.floor(late / 3);
-            absent = 30 - (present + halfDay);
-            if (absent < 0) absent = 0;
-
-            let payable = basic - (absent * dailyRate) - (halfDay * 0.5 * dailyRate) - (lateDeductionDays * dailyRate);
-            if (payable < 0) payable = 0;
-
-            return { present, halfDay, late, absent, payable };
-        }
-
-        function renderOwnerHRDashboard() {
-            const tbody = safe.el('owner-hr-tbody');
-            if(!tbody || !store_staff || !store_attendance) return;
-
-            tbody.innerHTML = store_staff.slice(1).map(row => {
-                const uid = row[0].toString().trim();
-                const name = row[1] ? row[1].toString().trim() : "Staff Member";
-                const role = row[4] ? row[4].toString().trim() : "Staff";
-                const basic = parseFloat(row[5]) || 15000;
-                
-                const logs = store_attendance.filter(l => l[1] && l[1].toString().trim() === uid);
-                const stats = calculateSalaryStats(basic, logs);
-
-                return `
-                    <tr class="hover:bg-slate-50 border-b border-slate-100 font-bold">
-                        <td>${name}</td>
-                        <td><span class="badge badge-indigo text-[10px]">${role}</span></td>
-                        <td>₹ ${basic}</td>
-                        <td class="text-green-600">${stats.present}</td>
-                        <td class="text-yellow-600">${stats.halfDay}</td>
-                        <td class="text-orange-600">${stats.late}</td>
-                        <td class="text-red-500">${stats.absent}</td>
-                        <td class="text-indigo-600 font-black">₹ ${stats.payable.toFixed(2)}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function submitMarketVisit() {
-            try {
-                const area = safe.el('visit-area-select').value;
-                const dealerName = safe.el('visit-dealer-input').value.trim();
-                const phone = safe.el('visit-phone').value.trim();
-                const remarks = safe.el('visit-remarks').value.trim();
-
-                const selfieIn = safe.el('vs-selfie-file');
-                const payIn = safe.el('vs-pay-file');
-
-                if(!area || !dealerName || !phone || !remarks) {
-                    alert("Kripya safar route aur shop name ke remarks cell enter karein.");
-                    return;
-                }
-
-                if (!selfieIn || !selfieIn.files || selfieIn.files.length === 0) {
-                    alert("⚠️ Live Selfie photo click karna zaroori hai.");
-                    return;
-                }
-
-                const btn = event.target;
-                btn.disabled = true;
-                btn.innerText = "SUBMITTING VISIT REPORT...";
-
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    const gpsLoc = `${pos.coords.latitude},${pos.coords.longitude}`;
-
-                    let selfieB64 = null, selfieMime = null;
-                    if(selfieIn.files[0]) {
-                        selfieMime = selfieIn.files[0].type;
-                        selfieB64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(selfieIn.files[0]); });
-                    }
-
-                    let payB64 = null, payMime = null;
-                    if(payIn && payIn.files[0]) {
-                        payMime = payIn.svgFiles[0].type;
-                        payB64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(payIn.files[0]); });
-                    }
-
-                    const visitId = "YMMV-" + new Date().getTime().toString().slice(-6);
-
-                    const res = await fetch(CLOUD_API, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: "visit",
-                            staffId: currentUser.uid,
-                            staffName: currentUser.name,
-                            location: gpsLoc,
-                            dealerName: dealerName,
-                            dealerArea: area,
-                            paymentPending: safe.el('visit-pay-pending').value || 0,
-                            cashPending: safe.el('visit-cash-pending').value || 0,
-                            visitId: visitId,
-                            selfieBase64: selfieB64,
-                            selfieMime: selfieMime,
-                            stockBoatAirpods: safe.el('vs-b-air').value || 0,
-                            stockBoatNeckband: safe.el('vs-b-neck').value || 0,
-                            stockBoatPowerbank: safe.el('vs-b-pwr').value || 0,
-                            stockBoatSmartwatch: safe.el('vs-b-smart').value || 0,
-                            stockVelocityAirpods: safe.el('vs-v-air').value || 0,
-                            stockVelocityNeckband: safe.el('vs-v-neck').value || 0,
-                            stockVelocityCable: safe.el('vs-v-cable').value || 0,
-                            stockVelocityCharger: safe.el('vs-v-char').value || 0,
-                            stockMemoryCard: safe.el('vs-mc').value || 0,
-                            stockPenDrive: safe.el('vs-pd').value || 0,
-                            stockExternalSSD: safe.el('vs-ssd').value || 0,
-                            salesRemarks: remarks,
-                            replacementGiven: safe.el('vs-rep-given').value || "No",
-                            payBase64: payB64,
-                            payMime: payMime
-                        })
-                    });
-
-                    const rData = await res.json();
-                    if (rData.status === "success") {
-                        alert("✅ Visit Report and Stock Survey saved.");
-                        safe.el('visit-form').reset();
-                        syncData();
-                    } else {
-                        throw new Error(rData.message);
-                    }
-                    btn.disabled = false;
-                    btn.innerText = "VISIT LOG SUBMIT KAREIN";
-                }, (err) => {
-                    alert("🚫 Visit Rejected: Location access mandatory hai.");
-                    btn.disabled = false;
-                    btn.innerText = "VISIT LOG SUBMIT KAREIN";
-                });
-            } catch(e) {
-                console.error(e);
-                alert("Submit fail: Connection error.");
-            }
-        }
-
-        async function uploadStaffDocuments() {
-            if(!currentUser) return;
-            const btn = safe.el('profile-upload-btn');
-            btn.disabled = true;
-            btn.innerText = "UPLOADING FILES...";
-
-            const upPhoto = safe.el('up-photo');
-            const upAadhar = safe.el('up-aadhar');
-            const upPan = safe.el('up-pan');
-            const upPassbook = safe.el('up-passbook');
-            const upAgreement = safe.el('up-agreement');
-
-            const payload = {
-                action: "update_profile_docs",
-                staffId: currentUser.uid
-            };
-
-            const filesToProcess = [
-                { key: 'photo', el: upPhoto },
-                { key: 'aadhar', el: upAadhar },
-                { key: 'pan', el: upPan },
-                { key: 'passbook', el: upPassbook },
-                { key: 'agreement', el: upAgreement }
-            ];
-
-            try {
-                let uploadedCount = 0;
-                for (let fileObj of filesToProcess) {
-                    if (fileObj.el && fileObj.el.files && fileObj.el.files.length > 0) {
-                        uploadedCount++;
-                        const file = fileObj.el.files[0];
-                        const base64 = await new Promise(resolve => {
-                            const rd = new FileReader();
-                            rd.onload = () => resolve(rd.result.split(',')[1]);
-                            rd.readAsDataURL(file);
-                        });
-                        payload[fileObj.key + 'Base64'] = base64;
-                        payload[fileObj.key + 'Mime'] = file.type;
-                    }
-                }
-
-                if (uploadedCount === 0) {
-                    alert("Kripya upload karne ke liye kam-se-kam ek file select karein.");
-                    btn.disabled = false;
-                    btn.innerText = "Upload Selected Documents";
-                    return;
-                }
-
-                const res = await fetch(CLOUD_API, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                
-                if (data.status === "success") {
-                    alert("✅ Documents successfully uploaded and sheet updated!");
-                    syncData();
-                    const modal = safe.el('profile_modal');
-                    if (modal && typeof modal.close === 'function') modal.close();
-                } else {
-                    throw new Error(data.message);
-                }
-            } catch(e) {
-                console.error(e);
-                alert("Upload failed: " + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Upload Selected Documents";
-            }
-        }
-
-        function openProfileModal() {
-            if(!currentUser) return;
-            const photoImg = safe.el('prof-photo');
-            if (photoImg) photoImg.src = currentUser.photo;
-            safe.text('prof-name', currentUser.name);
-            safe.text('prof-role', currentUser.role);
-
-            // Populate current files if available in Database (Staff Master matching)
-            const linksContainer = safe.el('doc-links-preview');
-            if(linksContainer && store_staff && store_staff.length > 0) {
-                const headers = store_staff[0];
-                const rows = store_staff.slice(1);
-                
-                let phoneCol = 2;
-                headers.forEach((h, i) => {
-                    const val = h.toString().toLowerCase().trim();
-                    if (val.includes("phone") || val.includes("mobile") || val === "contact") phoneCol = i;
-                });
-
-                const staffRow = rows.find(r => r[phoneCol] && r[phoneCol].toString().trim().replace(/\.0$/, '') === currentUser.uid);
-                if (staffRow) {
-                    const keys = [
-                        { label: "Profile Photo", idx: 6 },
-                        { label: "Aadhar Card", idx: 7 },
-                        { label: "PAN Card", idx: 8 },
-                        { label: "Bank Pass Book", idx: 9 },
-                        { label: "Agreement", idx: 10 }
-                    ];
-                    
-                    linksContainer.innerHTML = keys.map(k => {
-                        const cellVal = staffRow[k.idx];
-                        if (cellVal && cellVal.toString().includes("http")) {
-                            return `<div class="flex justify-between"><span>${k.label}:</span> <a href="${cellVal}" target="_blank" class="text-blue-600 hover:underline">View File ➔</a></div>`;
-                        } else {
-                            return `<div class="flex justify-between text-slate-400"><span>${k.label}:</span> <span>Not Uploaded</span></div>`;
-                        }
-                    }).join('');
-                }
-            }
-
-            const modal = safe.el('profile_modal');
-            if(modal && typeof modal.showModal === 'function') modal.showModal();
-        }
-
-        function renderLineFeed(data) {
-            const feed = safe.el('assembly-line');
-            if(!feed) return;
-
-            if(data.length === 0) {
-                feed.innerHTML = `<div class="col-span-full py-12 text-center opacity-10 italic font-black uppercase text-xl tracking-widest">Is stage par koi order pending nahi hai.</div>`;
-                return;
-            }
-
-            const splitOrders = data.filter(o => o.Order_ID && o.Order_ID.toString().includes("-SHORT"));
-            const standardOrders = data.filter(o => !o.Order_ID || !o.Order_ID.toString().includes("-SHORT"));
-
-            let htmlString = "";
-
-            if (splitOrders.length > 0) {
-                htmlString += `
-                    <div class="col-span-full mt-2 mb-1">
-                        <div class="flex items-center gap-2 bg-orange-100/50 border border-orange-200 py-1.5 px-3 rounded-lg w-fit">
-                            <span class="text-xs font-bold text-orange-800 uppercase tracking-wide">⚠️ SHORTAGE ORDERS (${splitOrders.length})</span>
-                        </div>
-                    </div>
-                `;
-                splitOrders.forEach(o => {
-                    htmlString += renderSingleOrderCard(o);
-                });
-            }
-
-            const groups = {};
-            standardOrders.forEach(o => {
-                let dateKey = "Bina Date Ke Orders";
-                try {
-                    if (o.Date) {
-                        const date = new Date(o.Date);
-                        if (!isNaN(date.getTime())) {
-                            dateKey = `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
-                        }
-                    }
-                } catch (e) {
-                    console.error("Date formatting failed:", e);
-                }
-
-                if (!groups[dateKey]) {
-                    groups[dateKey] = [];
-                }
-                groups[dateKey].push(o);
-            });
-
-            Object.keys(groups).forEach(dateKey => {
-                htmlString += `
-                    <div class="col-span-full mt-4 mb-1">
-                        <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 py-1 px-3 rounded-lg w-fit">
-                            <span class="text-xs font-bold text-slate-700">📅 Date: ${dateKey} (${groups[dateKey].length})</span>
-                        </div>
-                    </div>
-                `;
-
-                groups[dateKey].forEach(o => {
-                    htmlString += renderSingleOrderCard(o);
-                });
-            });
-
-            feed.innerHTML = htmlString;
-        }
-
-        function renderSingleOrderCard(o) {
-            const curStatus = normalizeStatus(o.Current_Status);
-
-            let orderVal = "0";
-            if (o.Order_Value && o.Order_Value.toString().trim() !== "") {
-                orderVal = o.Order_Value.toString().trim();
-            } else if (o.Current_Status && !isNaN(o.Current_Status) && o.Current_Status.toString().trim() !== "") {
-                orderVal = o.Current_Status.toString().trim();
-            }
-            
-            const safeOrderId = o.Order_ID ? o.Order_ID.toString().replace(/'/g, "\\'") : '';
-            const isSplit = o.Order_ID && o.Order_ID.toString().includes("-SHORT");
-            const splitBadge = isSplit ? `<span class="badge badge-warning text-[10px] font-bold px-2 py-0.5 rounded">⚠️ SHORT ORDER</span>` : '';
-
-            return `
-                <div class="slide-up-fade premium-slate-card p-4 cursor-pointer hover:border-indigo-100" 
-                     onclick="openProcessModal('${safeOrderId}')">
-                    
-                    <div class="flex justify-between items-start mb-3 gap-2">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs font-bold text-indigo-600 tracking-wide uppercase">#ID-${o.Order_ID || 'N/A'}</span>
-                                ${splitBadge}
-                            </div>
-                            <h3 class="text-base font-bold text-slate-800 tracking-tight mt-1 leading-snug truncate">${o.Dealer_Name || 'GENERAL DEALER'}</h3>
-                        </div>
-                        <div class="badge badge-neutral text-[10px] font-semibold py-1 px-2.5 rounded-full border-none bg-blue-50 text-blue-700 shrink-0 uppercase">${curStatus}</div>
-                    </div>
-
-                    <div class="flex items-center gap-3 mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200/40">
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shrink-0"></div>
-                        <p class="text-xs md:text-sm font-semibold text-slate-600">Order Value: <span class="text-slate-800 font-bold">₹ ${orderVal}</span></p>
-                    </div>
-
-                    <div class="flex justify-between items-center border-t border-slate-100 pt-3 gap-2">
-                        <div class="flex items-center gap-1.5 min-w-0">
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"></path></svg>
-                            <span class="text-xs font-medium text-slate-500 truncate">${o.Order_Brought_By || 'Yash Marketing'}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderRailTrack(data) {
-            const listContainer = safe.el('rail-track');
-            if (!listContainer) return;
-
-            listContainer.innerHTML = RAILWAY_STAGES.map(stage => {
-                const count = data.filter(o => {
-                    const curStatus = normalizeStatus(o.Current_Status);
-                    return curStatus.toLowerCase() === stage.toLowerCase();
-                }).length;
-
-                const isSelected = activeFilterStage === stage;
-                
-                return `
-                    <div onclick="toggleStageFilter('${stage}')" 
-                         class="flex items-center gap-2 p-1.5 px-3 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
-                        <span class="text-xs font-bold">${stage}</span>
-                        <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white text-indigo-600' : 'bg-slate-200 text-slate-700'}">${count}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function openProcessModal(id) {
-            try {
-                if (!id) return;
-                
-                const order = store_orders.find(o => o.Order_ID && o.Order_ID.toString().trim() === id.toString().trim());
-                if(!order) return;
-                window.activeOrder = order;
-
-                safe.text('m-dealer', order.Dealer_Name || "N/A");
-                safe.text('m-id', "TRACKING: #" + (order.Order_ID || "000"));
-                safe.text('m-area', "REGION: " + (order.Dealer_Area || "GENERAL"));
-
-                const itemString = (order.Items || order.SLA_Start_Time || "").toString();
-                const rawItems = itemString.includes('|') ? itemString.split('|') : itemString.split(',');
-                
-                const parsedItemsList = [];
-                rawItems.forEach(item => {
-                    const trimmed = item.trim();
-                    if (!trimmed) return;
-                    const qtyMatch = trimmed.match(/(.+)\s+x\s*(\d+)$/i);
-                    let name = trimmed;
-                    let qty = 1;
-                    if (qtyMatch) {
-                        name = qtyMatch[1].trim();
-                        qty = parseInt(qtyMatch[2].trim(), 10) || 1;
-                    }
-                    parsedItemsList.push({ name, qty });
-                });
-                window.activeOrderItems = parsedItemsList;
-
-                const splitZone = safe.el('m-split-zone');
-                if (splitZone) splitZone.classList.add('hidden');
-
-                const catScroll = safe.el('m-product-list');
-                if(catScroll) {
-                    catScroll.innerHTML = parsedItemsList.map(item => {
-                        const cleanImgUrl = findProductImage(item.name);
-                        
-                        return `
-                            <div class="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-100 hover:shadow-sm transition-all">
-                                <img src="${cleanImgUrl}" class="cat-image object-cover rounded-lg" onerror="this.src='https://via.placeholder.com/150?text=📦'">
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-xs font-bold text-slate-800 truncate uppercase">${item.name}</p>
-                                    <div class="flex justify-between items-center mt-1">
-                                        <span class="text-[9px] text-slate-400">Qty Ordered:</span>
-                                        <span class="badge badge-primary font-bold text-[10px] rounded px-1.5">${item.qty}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                const status = normalizeStatus(order.Current_Status);
-                const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
-                
-                // Normalizing initial index logic so that first step (Balance Check) is active for "Pending/Received" orders
-                let activeStepIdx = curIdx + 1;
-                if (activeStepIdx >= PROTOCOL_STAGES.length) {
-                    activeStepIdx = PROTOCOL_STAGES.length - 1;
-                }
-
-                // Pure Overlap-Proof Vertical Pipeline implementation
-                let timelineHtml = "";
-                PROTOCOL_STAGES.forEach((stageName, i) => {
-                    const isCompleted = i < activeStepIdx;
-                    const isActive = i === activeStepIdx;
-
-                    const mapping = {
-                        "Balance Check": "Balance_Proof",
-                        "Call 1": "Call_1_Audio",
-                        "Processed": "Stock_Proof",
-                        "Invoiced": "Invoice_Proof",
-                        "Dispatched": "Box_Proof",
-                        "Call 2": "Call_2_Audio",
-                        "Delivered": "Pauti_Photo",
-                        "Final Call": "Final_Audio"
-                    };
-                    
-                    const valKey = mapping[stageName];
-                    const fileVal = valKey ? order[valKey] : null;
-                    
-                    let proofHtml = "";
-                    if (fileVal && fileVal.toString().includes('http')) {
-                        const urls = fileVal.toString().split('\n');
-                        const isAudio = stageName.toLowerCase().includes("call");
-                        
-                        proofHtml = `<div class="mt-1 flex flex-wrap gap-1.5 justify-start items-center">`;
-                        urls.forEach((u) => {
-                            const cleanUrl = getDirectDriveUrl(u.trim());
-                            if (isAudio) {
-                                proofHtml += `
-                                    <div class="p-1 bg-slate-100 rounded border border-slate-200 flex items-center gap-1">
-                                        <audio controls class="h-6 max-w-[120px]"><source src="${cleanUrl}"></audio>
-                                    </div>`;
-                            } else {
-                                proofHtml += `
-                                    <div class="relative">
-                                        <img src="${cleanUrl}" class="w-8 h-10 object-cover rounded border cursor-pointer hover:scale-105 transition-transform" 
-                                             onclick="window.open('${cleanUrl}', '_blank')" 
-                                             onerror="this.src='https://via.placeholder.com/150?text=Error'">
-                                    </div>`;
-                            }
-                        });
-                        proofHtml += `</div>`;
-                    }
-
-                    const rawExplanation = STAGE_EXPLANATIONS[stageName] || "";
-
-                    timelineHtml += `
-                        <div class="flex items-start gap-3">
-                            <div class="flex flex-col items-center shrink-0">
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all 
-                                    ${isActive ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-100' : isCompleted ? 'bg-green-50 text-green-700 border-green-500' : 'bg-slate-100 text-slate-400 border-slate-200'}">
-                                    ${i + 1}
-                                </div>
-                                ${i < PROTOCOL_STAGES.length - 1 ? `<div class="w-0.5 h-10 ${isCompleted ? 'bg-green-500' : 'bg-slate-200'}"></div>` : ''}
-                            </div>
-                            <div class="flex-1 min-w-0 bg-white p-2.5 rounded-xl border ${isActive ? 'border-blue-200 bg-blue-50/10' : 'border-slate-100'} text-left">
-                                <div class="flex justify-between items-start gap-2">
-                                    <span class="text-xs font-bold ${isActive ? 'text-blue-700' : 'text-slate-700'}">${stageName}</span>
-                                    ${proofHtml}
-                                </div>
-                                <p class="text-[10px] text-slate-500 mt-1 leading-relaxed font-medium">${rawExplanation}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                safe.html('timeline-track', timelineHtml);
-
-                const explText = STAGE_EXPLANATIONS[PROTOCOL_STAGES[activeStepIdx]] || "💳 <b>Next Step Balance Check:</b> Click complete to initialize process.";
-                safe.html('m-step-explanation', explText);
-
-                const inputZone = safe.el('m-media-control');
-                const safeStatusString = status.toUpperCase();
-                safe.text('m-stage-tag', "STAGE: " + safeStatusString);
-
-                if (inputZone) {
-                    const isAudio = PROTOCOL_STAGES[activeStepIdx].toLowerCase().includes("call");
-                    if (isAudio) {
-                        inputZone.innerHTML = `
-                            <div class="form-control w-full">
-                                <input type="file" id="m-file-input" accept="audio/*" 
-                                    class="file-input file-input-bordered file-input-primary file-input-sm w-full rounded-lg bg-white" />
-                                <p class="text-[10px] text-slate-400 mt-1.5 uppercase tracking-wider text-center font-bold">
-                                    AUDIO FILE (.MP3) REQUIRED
-                                </p>
-                            </div>`;
-                    } else {
-                        inputZone.innerHTML = `
-                            <div class="form-control w-full">
-                                <input type="file" id="m-file-input" accept="image/*" multiple="multiple" 
-                                    class="file-input file-input-bordered file-input-primary file-input-sm w-full rounded-lg bg-white" />
-                                <p class="text-[10px] text-slate-400 mt-1.5 uppercase tracking-wider text-center font-bold">
-                                    CAMERA SE PHOTOS KHINCHEIN / FILES CHUNEIN (MULTIPLE ALLOWED)
-                                </p>
-                            </div>`;
-                    }
-                }
-
-                const modal = safe.el('process_modal');
-                if (modal && typeof modal.showModal === 'function') {
-                    modal.showModal();
-                }
-            } catch (err) {
-                console.error("Process modal failed:", err);
-                alert("Critical process load failed: " + err.message);
-            }
-        }
-
-        function toggleSplitZone() {
-            const zone = safe.el('m-split-zone');
-            if(!zone) return;
-            zone.classList.toggle('hidden');
-
-            const listContainer = safe.el('m-split-items-list');
-            if(listContainer && window.activeOrderItems) {
-                listContainer.innerHTML = window.activeOrderItems.map((item, idx) => {
-                    return `
-                        <div class="flex items-center justify-between gap-3 p-1.5 bg-white rounded-lg border border-slate-205 text-xs">
-                            <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
-                                <input type="checkbox" id="split-chk-${idx}" class="checkbox checkbox-warning checkbox-xs rounded" onchange="toggleSplitInput(${idx})" />
-                                <span class="text-xs text-slate-800 truncate">${item.name}</span>
-                            </label>
-                            <div class="flex items-center gap-1 shrink-0">
-                                <span class="text-[9px] text-slate-400">Qty:</span>
-                                <input type="number" id="split-qty-${idx}" min="1" max="${item.qty}" value="1" disabled 
-                                       class="input input-bordered input-xs w-10 text-center bg-slate-100 p-0" />
-                                <span class="text-[10px] text-slate-450">/ ${item.qty}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        }
-
-        function toggleSplitInput(idx) {
-            const chk = safe.el(`split-chk-${idx}`);
-            const qty = safe.el(`split-qty-${idx}`);
-            if (chk && qty) {
-                qty.disabled = !chk.checked;
-                if (chk.checked) {
-                    qty.classList.remove('bg-slate-100');
-                    qty.classList.add('bg-white');
-                } else {
-                    qty.classList.add('bg-slate-100');
-                    qty.classList.remove('bg-white');
-                }
-            }
-        }
-
-        async function confirmAndExecuteSplit() {
-            const order = window.activeOrder;
-            const splitBtn = safe.el('m-split-submit-btn');
-
-            if(!order || !splitBtn || !window.activeOrderItems) return;
-
-            let splitItemsList = [];
-            let remainingItemsList = [];
-            let hasSelection = false;
-            let fullSplitAttempt = true;
-
-            for (let i = 0; i < window.activeOrderItems.length; i++) {
-                const item = window.activeOrderItems[i];
-                const chk = safe.el(`split-chk-${i}`);
-                const qtyInput = safe.el(`split-qty-${i}`);
-
-                if (chk && chk.checked && qtyInput) {
-                    hasSelection = true;
-                    const splitQty = parseInt(qtyInput.value, 10);
-                    
-                    if (isNaN(splitQty) || splitQty <= 0 || splitQty > item.qty) {
-                        alert(`⚠️ ERROR: Quantity correct select karein.`);
-                        return;
-                    }
-
-                    splitItemsList.push(`${item.name} x${splitQty}`);
-                    const remaining = item.qty - splitQty;
-                    if (remaining > 0) {
-                        remainingItemsList.push(`${item.name} x${remaining}`);
-                        fullSplitAttempt = false;
-                    }
-                } else {
-                    remainingItemsList.push(`${item.name} x${item.qty}`);
-                    fullSplitAttempt = false;
-                }
-            }
-
-            if (!hasSelection) {
-                alert("⚠️ ERROR: Split shortage select karein.");
-                return;
-            }
-
-            if (fullSplitAttempt) {
-                alert("⚠️ ERROR: Poora order split nahi kiya ja sakta!");
-                return;
-            }
-
-            const splitItemsString = splitItemsList.join(' | ');
-            const originalItemsString = remainingItemsList.join(' | ');
-            const splitOrderId = `${order.Order_ID}-SHORT`;
-
-            if (!confirm(`Kya shortage items ko alag karke sub-order #${splitOrderId} banana chahte hain?`)) {
-                return;
-            }
-
-            splitBtn.disabled = true;
-            splitBtn.innerText = "Splitting...";
-
-            try {
-                const res = await fetch(CLOUD_API, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: "split",
-                        orderId: order.Order_ID,
-                        splitOrderId: splitOrderId,
-                        updatedOriginalItems: originalItemsString,
-                        splitItems: splitItemsString
-                    })
-                });
-
-                const data = await res.json();
-                if (data && data.status === "success") {
-                    alert("✂️ Shortage sub-order successfully created: #" + splitOrderId);
-                    const modal = safe.el('process_modal');
-                    if (modal && typeof modal.close === 'function') modal.close();
-                    await syncData();
-                } else {
-                    throw new Error(data ? data.message : "Split failed.");
-                }
-            } catch (err) {
-                alert("Split failed: " + err.message);
-                console.error(err);
-            } finally {
-                splitBtn.disabled = false;
-                splitBtn.innerText = "Confirm Shortage Split";
-            }
-        }
-
-        async function executeSyncProtocol() {
-            const btn = safe.el('m-sync-btn');
-            if(!btn) return;
-            const order = window.activeOrder;
-            if(!order) return;
-            
-            const status = normalizeStatus(order.Current_Status);
-            const curIdx = PROTOCOL_STAGES.findIndex(s => s.toLowerCase() === status.toLowerCase());
-            
-            let activeStepIdx = curIdx + 1;
-            if (activeStepIdx >= PROTOCOL_STAGES.length) {
-                activeStepIdx = PROTOCOL_STAGES.length - 1;
-            }
-
-            const next = PROTOCOL_STAGES[activeStepIdx];
-
-            const fIn = safe.el('m-file-input');
-            const isAudioStage = next.toLowerCase().includes("call");
-
-            if (!fIn || !fIn.files || fIn.files.length === 0) {
-                if (isAudioStage) {
-                    alert("⚠️ Audio file select karna mandatory hai.");
-                } else {
-                    alert("⚠️ Proof image select karna mandatory hai.");
-                }
-                return;
-            }
-            
-            const selectedFile = fIn.files[0];
-            if (isAudioStage && !selectedFile.type.includes("audio")) {
-                alert("⚠️ Kripya recording (.mp3) file select karein.");
-                return;
-            }
-            if (!isAudioStage && !selectedFile.type.includes("image")) {
-                alert("⚠️ Kripya image files select karein.");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = `<span class="loading loading-spinner text-white scale-[1.2] mr-2"></span> SYNCHRONIZING...`;
-
-            try {
-                const geo = await new Promise(r => {
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                            p => r(`${p.coords.latitude},${p.coords.longitude}`), 
-                            () => r("0,0"),
-                            { timeout: 5000 }
-                        );
-                    } else {
-                        r("0,0");
-                    }
-                });
-                
-                let filesArray = [];
-                if (fIn && fIn.files && fIn.files.length > 0) {
-                    for(let i=0; i < fIn.files.length; i++) {
-                        const f = fIn.files[i];
-                        const base64 = await new Promise(resolve => {
-                            const rd = new FileReader();
-                            rd.onload = () => resolve(rd.result.split(',')[1]);
-                            rd.readAsDataURL(f);
-                        });
-                        filesArray.push({
-                            base64: base64,
-                            mimeType: f.type
-                        });
-                    }
-                }
-
-                const res = await fetch(CLOUD_API, { 
-                    method: 'POST', 
-                    body: JSON.stringify({
-                        orderId: order.Order_ID, 
-                        currentStage: status, 
-                        nextStage: next, 
-                        location: geo, 
-                        files: filesArray
-                    })
-                });
-
-                const data = await res.json();
-                if(data && data.status === "success") {
-                    alert("REPLICATION SUCCESSFUL! Current Stage: " + next);
-                    const modal = safe.el('process_modal');
-                    if (modal && typeof modal.close === 'function') modal.close(); 
-                    await syncData();
-                } else { 
-                    throw new Error(data ? data.message : "Sync failed"); 
-                }
-            } catch (e) { 
-                alert("SYNC FAILURE! Verify permissions and webapp version deployment."); 
-                console.error(e); 
-            } finally { 
-                btn.disabled = false; 
-                btn.innerText = "Process Completed (Aage Bhejein)"; 
-            }
-        }
-
-        setInterval(syncData, 300000);
-    </script>
+      </div>
+      <div class="stars" id="starsRow">${[1,2,3,4,5].map(n=>`<span class="star" data-n="${n}" onclick="setRating(${n})">★</span>`).join('')}</div>
+      <textarea class="feedback field" id="feedbackInput" placeholder="Feedback notes (optional)"></textarea>
+      <button class="btn-primary" id="submitBtn" style="margin-top:10px" disabled onclick="submitStage(${cur})">Submit & Close Order</button>`;
+  }
+
+  html += `
+    <div style="margin-top:22px;">
+      <div class="info-row"><span>Dealer</span><span>${activeOrder.dealerPhone||'—'}</span></div>
+      <div class="info-row"><span>Total</span><span class="mono">₹${Number(activeOrder.totalAmount).toLocaleString('en-IN')}</span></div>
+      <div class="info-row"><span>Assigned to</span><span>${currentStaff}</span></div>
+    </div>`;
+  panel.innerHTML = html;
+  window._rating = 0;
+}
+
+/* ---- photo capture ---- */
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    capturedFile = { base64: reader.result.split(',')[1], mimeType: file.type, fileName: file.name };
+    document.getElementById('proofBox').classList.add('has-media');
+    document.getElementById('proofBox').innerHTML = `<img src="${reader.result}">`;
+    document.getElementById('submitBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---- audio recording ---- */
+async function toggleRecording(){
+  const btn = document.getElementById('recBtn');
+  if(mediaRecorder && mediaRecorder.state === 'recording'){
+    mediaRecorder.stop();
+    btn.classList.remove('recording'); btn.textContent = '●';
+    clearInterval(recTimer);
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, {type:'audio/webm'});
+      const reader = new FileReader();
+      reader.onload = () => {
+        capturedFile = { base64: reader.result.split(',')[1], mimeType:'audio/webm', fileName:'call_recording.webm' };
+        document.getElementById('submitBtn').disabled = window._rating !== undefined && document.getElementById('starsRow') ? window._rating===0 : false;
+      };
+      reader.readAsDataURL(blob);
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    mediaRecorder.start();
+    btn.classList.add('recording'); btn.textContent = '■';
+    recSeconds = 0;
+    recTimer = setInterval(()=>{
+      recSeconds++;
+      const m = String(Math.floor(recSeconds/60)).padStart(2,'0');
+      const s = String(recSeconds%60).padStart(2,'0');
+      document.getElementById('recTimerLabel').textContent = `${m}:${s}`;
+    },1000);
+  }catch(err){
+    alert('Microphone access denied or unavailable.');
+  }
+}
+function stopRecordingCleanup(){
+  if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  clearInterval(recTimer);
+}
+function setRating(n){
+  window._rating = n;
+  document.querySelectorAll('#starsRow .star').forEach(el=>{
+    el.classList.toggle('filled', Number(el.dataset.n) <= n);
+  });
+  const submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.disabled = !capturedFile;
+}
+
+/* ---- submit stage ---- */
+async function submitStage(stage){
+  const btn = document.getElementById('submitBtn') || event.target;
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const payload = { action:'advanceStage', orderId: activeOrder.orderId, stage, staffName: currentStaff };
+  if(capturedFile){
+    payload.fileBase64 = capturedFile.base64;
+    payload.mimeType = capturedFile.mimeType;
+    payload.fileName = capturedFile.fileName;
+  }
+  if(stage === 9){
+    payload.rating = window._rating || 0;
+    payload.feedback = (document.getElementById('feedbackInput')||{}).value || '';
+  }
+  const r = await apiPost(payload);
+  if(r.ok){
+    capturedFile = null;
+    stopRecordingCleanup();
+    await refreshStats();
+    await refreshOrders();
+    const updated = await apiGet({action:'get', orderId: activeOrder.orderId});
+    if(updated.ok){ activeOrder = updated.order; renderRail(); renderAction(); }
+  } else {
+    alert('Error: ' + r.error);
+    if(btn){ btn.disabled = false; btn.textContent = 'Submit & Advance'; }
+  }
+}
+
+/* ================= NEW ORDER ================= */
+function openNewOrder(){
+  document.getElementById('itemsWrap').innerHTML='';
+  addItemRow();
+  document.getElementById('noDealerName').value='';
+  document.getElementById('noDealerPhone').value='';
+  document.getElementById('noTotal').value='';
+  document.getElementById('newOrderError').textContent='';
+  document.getElementById('newOrderOverlay').classList.add('active');
+}
+function closeNewOrder(){ document.getElementById('newOrderOverlay').classList.remove('active'); }
+function addItemRow(){
+  const wrap = document.getElementById('itemsWrap');
+  const row = document.createElement('div');
+  row.className='items-row';
+  row.innerHTML = `<input placeholder="Item name" class="item-name"><input placeholder="Qty" type="number" class="item-qty" style="max-width:70px">`;
+  wrap.appendChild(row);
+}
+async function submitNewOrder(){
+  const dealerName = document.getElementById('noDealerName').value.trim();
+  const dealerPhone = document.getElementById('noDealerPhone').value.trim();
+  const total = document.getElementById('noTotal').value;
+  const errEl = document.getElementById('newOrderError');
+  if(!dealerName || !total){ errEl.textContent='Dealer name and total amount are required.'; return; }
+  const items = Array.from(document.querySelectorAll('#itemsWrap .items-row')).map(r=>({
+    name: r.querySelector('.item-name').value, qty: r.querySelector('.item-qty').value
+  })).filter(i=>i.name);
+  const r = await apiPost({action:'createOrder', dealerName, dealerPhone, totalAmount:Number(total), items});
+  if(r.ok){
+    closeNewOrder();
+    await refreshStats();
+    await refreshOrders();
+  } else {
+    errEl.textContent = r.error || 'Failed to create order';
+  }
+}
+</script>
 </body>
 </html>
