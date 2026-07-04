@@ -223,7 +223,8 @@
 <script>
 /* ================= CONFIG ================= */
 const APP_CONFIG = {
-  API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' // ends with /exec
+  // IMPORTANT: Replace this with your actual Web App URL after redeploying Google Apps Script
+  API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' 
 };
 
 const STAGES = [
@@ -241,16 +242,10 @@ const STAGES = [
 let currentStaff = null;
 let allOrders = [];
 let activeOrder = null;
-let capturedFile = null; // {base64, mimeType, fileName}
+let capturedFile = null; 
 let mediaRecorder, recordedChunks = [], recTimer, recSeconds = 0;
 
-/* ================= API HELPERS =================
-   Apps Script can't reliably send CORS headers to a fetch() call from this
-   domain, so both calls below sidestep CORS entirely instead of fighting it:
-   - apiGet: JSONP via a <script> tag (never subject to CORS)
-   - apiPost: a real form submitted into a hidden iframe (also never subject
-     to CORS); the response comes back via window.postMessage
-*/
+/* ================= API HELPERS ================= */
 let _jsonpCounter = 0;
 function apiGet(params){
   return new Promise((resolve, reject) => {
