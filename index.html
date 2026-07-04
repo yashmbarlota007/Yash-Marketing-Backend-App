@@ -223,7 +223,7 @@
 <script>
 /* ================= CONFIG ================= */
 const APP_CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbwgdKR2k5WPae3u70-1hq84me4WvJafHF_liHARHFcPKW5pt-GjSN1AVDcd171qPVKx7Q/exec' // ends with /exec
+  API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' // ends with /exec
 };
 
 const STAGES = [
@@ -244,19 +244,75 @@ let activeOrder = null;
 let capturedFile = null; // {base64, mimeType, fileName}
 let mediaRecorder, recordedChunks = [], recTimer, recSeconds = 0;
 
-/* ================= API HELPERS ================= */
-async function apiGet(params){
-  const url = APP_CONFIG.API_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url);
-  return res.json();
-}
-async function apiPost(body){
-  const res = await fetch(APP_CONFIG.API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // avoids CORS preflight
-    body: JSON.stringify(body)
+/* ================= API HELPERS =================
+   Apps Script can't reliably send CORS headers to a fetch() call from this
+   domain, so both calls below sidestep CORS entirely instead of fighting it:
+   - apiGet: JSONP via a <script> tag (never subject to CORS)
+   - apiPost: a real form submitted into a hidden iframe (also never subject
+     to CORS); the response comes back via window.postMessage
+*/
+let _jsonpCounter = 0;
+function apiGet(params){
+  return new Promise((resolve, reject) => {
+    const cbName = '_jsonp_cb_' + (_jsonpCounter++) + '_' + Date.now();
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 20000);
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    const url = APP_CONFIG.API_URL + '?' + new URLSearchParams({...params, callback: cbName}).toString();
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = () => { cleanup(); reject(new Error('Network error contacting backend')); };
+    document.body.appendChild(script);
   });
-  return res.json();
+}
+
+let _postCounter = 0;
+function apiPost(body){
+  return new Promise((resolve, reject) => {
+    const reqId = '_req_' + (_postCounter++) + '_' + Date.now();
+    const iframeName = '_iframe_' + reqId;
+
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = APP_CONFIG.API_URL;
+    form.target = iframeName;
+    form.style.display = 'none';
+
+    const payloadInput = document.createElement('input');
+    payloadInput.type = 'hidden'; payloadInput.name = 'payload'; payloadInput.value = JSON.stringify(body);
+    form.appendChild(payloadInput);
+
+    const reqIdInput = document.createElement('input');
+    reqIdInput.type = 'hidden'; reqIdInput.name = 'reqId'; reqIdInput.value = reqId;
+    form.appendChild(reqIdInput);
+
+    document.body.appendChild(form);
+
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 30000);
+    function cleanup(){
+      clearTimeout(timeout);
+      window.removeEventListener('message', onMessage);
+      if(form.parentNode) form.parentNode.removeChild(form);
+      if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }
+    function onMessage(event){
+      if(event.data && event.data.__reqId === reqId){
+        cleanup();
+        resolve(event.data.result);
+      }
+    }
+    window.addEventListener('message', onMessage);
+    form.submit();
+  });
 }
 
 /* ================= LOGIN ================= */
