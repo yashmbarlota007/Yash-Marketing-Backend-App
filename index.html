@@ -11,11 +11,14 @@
         .stage-card { transition: all 0.2s; cursor: pointer; }
         .stage-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
         .locked { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
+        /* Custom scrollbar for modal */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
-    <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="flex h-[80vh] items-center justify-center">
         <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
             <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">YASH MARKETING</h1>
@@ -29,40 +32,47 @@
         </div>
     </div>
 
-    <!-- DASHBOARD SCREEN -->
     <div id="dashboardScreen" class="hidden max-w-6xl mx-auto">
-        <div class="flex justify-between items-end mb-8 border-b border-slate-700 pb-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-white">Active Sprints</h1>
                 <p class="text-emerald-400 text-sm mt-1">Logged in as: <span id="userName" class="font-bold"></span></p>
             </div>
-            <button onclick="logout()" class="text-slate-400 hover:text-white text-sm">Sign Out</button>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-2 flex items-center">
+                    <label class="text-xs text-slate-400 mr-2 uppercase tracking-wider">Audit Date:</label>
+                    <input type="date" id="historyDate" onchange="renderDashboard()" class="bg-slate-900 text-sm text-white rounded p-1 border border-slate-600 focus:outline-none focus:border-blue-500">
+                    <button onclick="clearDateFilter()" class="ml-2 text-xs text-blue-400 hover:text-blue-300">Clear</button>
+                </div>
+                <button onclick="logout()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">Sign Out</button>
+            </div>
         </div>
+
+        <div id="metricsBar" class="grid grid-cols-3 md:grid-cols-5 gap-2 mb-8 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+            </div>
         
         <div id="orderGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Cards Injected Here -->
-        </div>
+            </div>
     </div>
 
-    <!-- ORDER MODAL (The Frictionless Execution Flow) -->
     <div id="orderModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="glass-panel w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-[0_0_40px_rgba(0,0,0,0.5)]">
             <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800">
                 <div>
                     <h2 class="text-2xl font-bold text-white" id="modalOrderId">ORD-000</h2>
-                    <p class="text-slate-400 text-sm" id="modalShopName">Shop Name</p>
+                    <p class="text-emerald-400 text-sm font-semibold" id="modalShopName">Shop Name</p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl font-bold transition-colors">&times;</button>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-grow" id="stagesContainer">
-                <!-- Stages built dynamically in JS -->
-            </div>
+            <div class="p-6 overflow-y-auto flex-grow space-y-3" id="stagesContainer">
+                </div>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; // <--- PASTE DEPLOYED URL HERE
+        const API_URL = "YOUR_NEW_GOOGLE_WEB_APP_URL_HERE"; // <--- PASTE DEPLOYED URL HERE
         
         const STAGE_NAMES = [
             "Order Received (Accept)", "Balance Check (Tally Photo)", "Call 1 (Confirmation Audio)", 
@@ -70,6 +80,7 @@
             "Call 2 (Out-for-delivery Audio)", "Delivered (Transport Pauti Photo)", "Final Call (Feedback & Rating)"
         ];
 
+        let allOrdersData = [];
         let currentActiveOrder = null;
 
         // --- AUTHENTICATION ---
@@ -112,17 +123,10 @@
             fetchOrders();
         }
 
-        function logout() {
-            localStorage.removeItem('yash_user');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('yash_user'); location.reload(); }
+        if (localStorage.getItem('yash_user')) { showDashboard(localStorage.getItem('yash_user')); }
 
-        // Auto-login check
-        if (localStorage.getItem('yash_user')) {
-            showDashboard(localStorage.getItem('yash_user'));
-        }
-
-        // --- FETCH & RENDER DASHBOARD CARDS ---
+        // --- DATA FETCHING ---
         async function fetchOrders() {
             const grid = document.getElementById('orderGrid');
             grid.innerHTML = '<p class="text-slate-400">Syncing with Control Tower...</p>';
@@ -135,39 +139,92 @@
                 const response = await res.json();
                 
                 if (response.status === 'success') {
-                    grid.innerHTML = '';
-                    response.data.forEach(order => {
-                        const progress = (order.completedStages / 9) * 100;
-                        const dateString = new Date(order.date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
-                        
-                        grid.innerHTML += `
-                            <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-slate-800 border border-slate-700 rounded-xl p-5 stage-card shadow-lg flex flex-col justify-between">
-                                <div>
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="font-bold text-lg text-white">${order.orderId}</h3>
-                                        <span class="bg-slate-700 text-xs px-2 py-1 rounded text-slate-300">${dateString}</span>
-                                    </div>
-                                    <p class="text-emerald-400 font-semibold text-sm mb-4">${order.shopName}</p>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-xs text-slate-400 mb-1">
-                                        <span>Progress</span>
-                                        <span>${order.completedStages} / 9 Steps</span>
-                                    </div>
-                                    <div class="w-full bg-slate-700 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${progress}%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
+                    allOrdersData = response.data;
+                    renderDashboard();
                 }
             } catch (err) {
-                grid.innerHTML = '<p class="text-red-400">Failed to load orders.</p>';
+                grid.innerHTML = '<p class="text-red-400">Failed to load system data.</p>';
             }
         }
 
-        // --- EXECUTION MODAL LOGIC ---
+        function clearDateFilter() {
+            document.getElementById('historyDate').value = "";
+            renderDashboard();
+        }
+
+        // --- RENDERING METRICS & CARDS ---
+        function renderDashboard() {
+            const grid = document.getElementById('orderGrid');
+            const metricsBar = document.getElementById('metricsBar');
+            const selectedDate = document.getElementById('historyDate').value;
+            
+            grid.innerHTML = '';
+            
+            // 1. Filter Data Based on Date Selection
+            let displayOrders = allOrdersData.filter(order => {
+                if (selectedDate) {
+                    // Show ANY order from that specific date (even completed ones)
+                    const orderDate = new Date(order.date).toISOString().split('T')[0];
+                    return orderDate === selectedDate;
+                } else {
+                    // Default View: Hide fully completed orders (Inbox Zero)
+                    return !order.isFullyCompleted;
+                }
+            });
+
+            // 2. Calculate KPI Metrics
+            let stageCounts = { "Pending Actions": 0, "Dispatched": 0, "Delivered": 0 };
+            displayOrders.forEach(o => {
+                if(o.completedStages < 5) stageCounts["Pending Actions"]++;
+                if(o.completedStages >= 5 && o.completedStages < 8) stageCounts["Dispatched"]++;
+                if(o.completedStages >= 8) stageCounts["Delivered"]++;
+            });
+
+            metricsBar.innerHTML = `
+                <div class="text-center p-2"><div class="text-2xl font-bold text-white">${displayOrders.length}</div><div class="text-[10px] text-slate-400 uppercase tracking-widest">Total Shown</div></div>
+                <div class="text-center p-2 border-l border-slate-700"><div class="text-2xl font-bold text-blue-400">${stageCounts["Pending Actions"]}</div><div class="text-[10px] text-slate-400 uppercase tracking-widest">In Process</div></div>
+                <div class="text-center p-2 border-l border-slate-700"><div class="text-2xl font-bold text-orange-400">${stageCounts["Dispatched"]}</div><div class="text-[10px] text-slate-400 uppercase tracking-widest">Dispatched</div></div>
+                <div class="text-center p-2 border-l border-slate-700"><div class="text-2xl font-bold text-emerald-400">${stageCounts["Delivered"]}</div><div class="text-[10px] text-slate-400 uppercase tracking-widest">Delivered</div></div>
+            `;
+
+            // 3. Render Cards
+            if(displayOrders.length === 0) {
+                grid.innerHTML = '<p class="text-slate-500 italic mt-4">No data matches the current filter (Inbox Zero).</p>';
+                return;
+            }
+
+            displayOrders.forEach(order => {
+                const progress = (order.completedStages / 9) * 100;
+                let dateString = "Invalid Date";
+                if(order.date) {
+                    const d = new Date(order.date);
+                    if(!isNaN(d)) dateString = d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                }
+                
+                grid.innerHTML += `
+                    <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-slate-800 border border-slate-700 rounded-xl p-5 stage-card shadow-lg flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold text-lg text-white">${order.orderId}</h3>
+                                <span class="bg-slate-700 text-[10px] px-2 py-1 rounded text-slate-300 font-mono tracking-tighter">${dateString}</span>
+                            </div>
+                            <p class="text-emerald-400 font-semibold text-sm mb-4 truncate">${order.shopName}</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Progress</span>
+                                <span class="font-bold text-white">${order.completedStages} / 9</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700">
+                                <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-2 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- EXECUTION MODAL LOGIC WITH PREVIEWS ---
         function openModal(order) {
             currentActiveOrder = order;
             document.getElementById('modalOrderId').innerText = order.orderId;
@@ -185,35 +242,59 @@
                 let uiHtml = '';
                 
                 if (isCompleted) {
-                    uiHtml = `<div class="bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-4 mb-3 flex items-center justify-between">
-                                <span class="text-emerald-400 font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="text-emerald-500">✔ Done</span>
+                    // PREVIEW LOGIC
+                    let fileUrl = order.stageUrls ? order.stageUrls[i] : "";
+                    let previewHtml = "";
+                    
+                    if (fileUrl && fileUrl.includes("http")) {
+                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) { // Audio Stages
+                            previewHtml = `<div class="mt-3 bg-slate-900/50 p-2 rounded-lg border border-slate-700"><audio controls src="${fileUrl}" class="w-full h-8 outline-none"></audio></div>`;
+                        } else { // Image Stages
+                            previewHtml = `<a href="${fileUrl}" target="_blank" class="mt-2 inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 bg-blue-900/30 px-3 py-1.5 rounded border border-blue-800 transition">View Uploaded Image Proof &rarr;</a>`;
+                        }
+                    }
+
+                    uiHtml = `<div class="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between transition-all hover:bg-emerald-900/40">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-emerald-400 font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                    <span class="text-emerald-500 font-bold bg-emerald-900/50 px-2 py-1 rounded text-xs shadow-inner">✔ DONE</span>
+                                </div>
+                                ${previewHtml}
                               </div>`;
                 } else if (isLocked) {
-                    uiHtml = `<div class="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-3 locked flex items-center justify-between">
+                    uiHtml = `<div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 locked flex items-center justify-between">
                                 <span class="text-slate-500">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="text-slate-600">🔒 Locked</span>
+                                <span class="text-slate-600 font-mono text-xs">🔒 LOCKED</span>
                               </div>`;
                 } else if (isActive) {
                     let inputHtml = '';
                     if (stageNum === 1) {
-                        inputHtml = `<button onclick="submitStage(${stageNum})" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Acknowledge & Accept</button>`;
+                        inputHtml = `<button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-95">Acknowledge & Accept</button>`;
                     } else {
-                        const acceptType = [3, 7, 9].includes(stageNum) ? 'audio/*' : 'image/*';
-                        inputHtml = `<input type="file" id="fileUpload" accept="${acceptType}" class="w-full mt-3 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600">`;
-                        if (stageNum === 9) {
-                            inputHtml += `<input type="number" id="ratingInput" min="1" max="5" placeholder="Customer Rating (1-5)" class="w-full mt-3 bg-slate-900 border border-slate-600 rounded p-2 text-white">`;
+                        // STRICT FILE VALIDATION
+                        let acceptType = "image/*";
+                        let uploadPrompt = "Upload Photo Proof";
+                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) {
+                            acceptType = "audio/mp3,audio/wav,audio/m4a,audio/*"; // Only Audio
+                            uploadPrompt = "Upload Audio Recording";
                         }
-                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Upload & Complete Stage</button>`;
+                        
+                        inputHtml = `<input type="file" id="fileUpload" accept="${acceptType}" class="w-full mt-4 text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-400 file:transition-colors bg-slate-900 p-1 rounded-lg border border-slate-600">`;
+                        
+                        if (stageNum === 9) {
+                            inputHtml += `<input type="number" id="ratingInput" min="1" max="5" placeholder="Customer Rating (1-5)" class="w-full mt-3 bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none">`;
+                        }
+                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-95">Upload & Complete</button>`;
                     }
                     
-                    uiHtml = `<div class="bg-slate-700 border border-blue-500 rounded-lg p-4 mb-3 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                    uiHtml = `<div class="bg-slate-800 border-2 border-blue-500 rounded-xl p-5 shadow-[0_0_20px_rgba(59,130,246,0.15)] relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-white font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                    <span class="bg-blue-500 text-xs px-2 py-1 rounded text-white animate-pulse">ACTION REQUIRED</span>
+                                    <span class="text-white font-bold text-lg">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                    <span class="bg-blue-500 text-[10px] font-bold px-2 py-1 rounded text-white animate-pulse tracking-wider">ACTION REQUIRED</span>
                                 </div>
                                 <div id="actionArea_${stageNum}">${inputHtml}</div>
-                                <p id="status_${stageNum}" class="text-sm mt-2 hidden"></p>
+                                <p id="status_${stageNum}" class="text-sm mt-3 hidden font-mono"></p>
                               </div>`;
                 }
                 container.innerHTML += uiHtml;
@@ -224,10 +305,9 @@
 
         function closeModal() {
             document.getElementById('orderModal').classList.add('hidden');
-            fetchOrders(); // Refresh dashboard on close
+            fetchOrders(); // Sync latest data back to dashboard
         }
 
-        // Convert file to Base64
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -245,13 +325,21 @@
             
             if (stageNum !== 1) {
                 const fileInput = document.getElementById('fileUpload');
-                if (fileInput.files.length === 0) {
-                    alert("Proof file is required to proceed.");
-                    return;
-                }
+                if (fileInput.files.length === 0) { alert("Proof file is required to proceed."); return; }
+                
                 const file = fileInput.files[0];
-                btn.innerText = "Encoding File...";
-                btn.disabled = true;
+                
+                // Extra security check to reject wrong file types
+                if ([3, 7, 9].includes(stageNum) && !file.type.startsWith('audio/')) {
+                    alert("System Restriction: Only Audio files (.mp3, .wav) are allowed for this stage.");
+                    fileInput.value = ""; return;
+                }
+                if (![1, 3, 7, 9].includes(stageNum) && !file.type.startsWith('image/')) {
+                    alert("System Restriction: Only Image files (.jpg, .png) are allowed for this stage.");
+                    fileInput.value = ""; return;
+                }
+
+                btn.innerText = "Encoding File..."; btn.disabled = true;
                 
                 payload.fileName = file.name;
                 payload.mimeType = file.type;
@@ -259,7 +347,7 @@
                 
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
-                    if(!rating) { alert("Rating required."); btn.disabled = false; btn.innerText = "Upload & Complete Stage"; return;}
+                    if(!rating) { alert("Rating required."); btn.disabled = false; btn.innerText = "Upload & Complete"; return;}
                     payload.rating = rating;
                 }
             } else {
@@ -267,8 +355,8 @@
             }
             
             if(statusLabel) {
-                statusLabel.innerText = "Transmitting to Control Tower...";
-                statusLabel.className = "text-sm mt-2 text-blue-400 block";
+                statusLabel.innerText = "> Transmitting to Control Tower...";
+                statusLabel.className = "text-xs mt-3 text-blue-400 block animate-pulse";
             }
 
             try {
@@ -276,18 +364,17 @@
                 const data = await res.json();
                 
                 if (data.status === 'success') {
-                    // Locally update the order object to immediately show the next step without fetching again
-                    currentActiveOrder.completedStages++; 
-                    openModal(currentActiveOrder); 
+                    // Update local state and re-open modal to fetch new URLs seamlessly
+                    closeModal(); 
                 } else {
                     throw new Error(data.message);
                 }
             } catch (err) {
                 if(statusLabel) {
-                    statusLabel.innerText = "Error syncing. Try again.";
-                    statusLabel.className = "text-sm mt-2 text-red-400 block";
+                    statusLabel.innerText = "> Error syncing. Network delay.";
+                    statusLabel.className = "text-xs mt-3 text-red-400 block";
                 }
-                if(btn) { btn.innerText = "Upload & Complete Stage"; btn.disabled = false; }
+                if(btn) { btn.innerText = "Upload & Complete"; btn.disabled = false; }
             }
         }
     </script>
