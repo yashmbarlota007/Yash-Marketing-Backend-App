@@ -3,93 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing - Operations Terminal</title>
+    <title>Yash Marketing - Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .stage-card { transition: all 0.2s; cursor: pointer; }
+        .stage-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        .locked { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen p-4 md:p-8">
 
-    <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">YASH MARKETING</h1>
-            <p class="text-slate-400 text-sm tracking-widest mt-2 uppercase">Automated Operations Terminal</p>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="flex h-[80vh] items-center justify-center">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">YASH MARKETING</h1>
+            <p class="text-slate-400 text-sm tracking-widest mb-8 uppercase">Staff Authentication</p>
+            <form id="loginForm" class="space-y-4">
+                <input type="tel" id="loginPhone" placeholder="Phone Number" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="loginPass" placeholder="Password" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">Initialize Protocol</button>
+            </form>
+            <p id="loginError" class="text-red-400 text-sm mt-4 hidden"></p>
         </div>
+    </div>
 
-        <form id="opsForm" class="space-y-6">
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboardScreen" class="hidden max-w-6xl mx-auto">
+        <div class="flex justify-between items-end mb-8 border-b border-slate-700 pb-4">
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Order ID</label>
-                <input type="text" id="orderId" required placeholder="e.g. ORD-8842" 
-                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                <h1 class="text-3xl font-bold text-white">Active Sprints</h1>
+                <p class="text-emerald-400 text-sm mt-1">Logged in as: <span id="userName" class="font-bold"></span></p>
             </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Processing Stage</label>
-                <select id="stage" required onchange="checkStage()"
-                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                    <option value="1">1. Order Received (Accept)</option>
-                    <option value="2">2. Balance Check (Tally Photo)</option>
-                    <option value="3">3. Call 1 (Confirmation Audio)</option>
-                    <option value="4">4. Processed (Stock Photo)</option>
-                    <option value="5">5. Invoiced (Invoice Photo)</option>
-                    <option value="6">6. Dispatched (Box/Bag Photo)</option>
-                    <option value="7">7. Call 2 (Out-for-delivery Audio)</option>
-                    <option value="8">8. Delivered (Transport Pauti Photo)</option>
-                    <option value="9">9. Final Call (Feedback Audio & Rating)</option>
-                </select>
-            </div>
-
-            <div id="ratingDiv" class="hidden">
-                <label class="block text-sm font-medium text-slate-300 mb-1">Customer Rating (1-5)</label>
-                <input type="number" id="rating" min="1" max="5" placeholder="5" 
-                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-            </div>
-
-            <div id="fileUploadDiv" class="hidden">
-                <label class="block text-sm font-medium text-slate-300 mb-1" id="fileLabel">Upload Proof</label>
-                <input type="file" id="fileInput" 
-                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 transition">
-            </div>
-
-            <button type="submit" id="submitBtn" 
-                class="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform transition hover:-translate-y-0.5">
-                Update System
-            </button>
-        </form>
+            <button onclick="logout()" class="text-slate-400 hover:text-white text-sm">Sign Out</button>
+        </div>
         
-        <div id="status" class="mt-4 text-center text-sm font-semibold hidden"></div>
+        <div id="orderGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards Injected Here -->
+        </div>
+    </div>
+
+    <!-- ORDER MODAL (The Frictionless Execution Flow) -->
+    <div id="orderModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-white" id="modalOrderId">ORD-000</h2>
+                    <p class="text-slate-400 text-sm" id="modalShopName">Shop Name</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-grow" id="stagesContainer">
+                <!-- Stages built dynamically in JS -->
+            </div>
+        </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; // <--- PASTE YOUR GAS WEB APP URL HERE
+        const API_URL = "YOUR_NEW_GOOGLE_WEB_APP_URL_HERE"; // <--- PASTE DEPLOYED URL HERE
+        
+        const STAGE_NAMES = [
+            "Order Received (Accept)", "Balance Check (Tally Photo)", "Call 1 (Confirmation Audio)", 
+            "Processed (Stock Photo)", "Invoiced (Invoice Photo)", "Dispatched (Box/Bag Photo)", 
+            "Call 2 (Out-for-delivery Audio)", "Delivered (Transport Pauti Photo)", "Final Call (Feedback & Rating)"
+        ];
 
-        // Toggle file and rating inputs based on stage
-        function checkStage() {
-            const stage = document.getElementById('stage').value;
-            const fileDiv = document.getElementById('fileUploadDiv');
-            const fileLabel = document.getElementById('fileLabel');
-            const ratingDiv = document.getElementById('ratingDiv');
+        let currentActiveOrder = null;
+
+        // --- AUTHENTICATION ---
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const error = document.getElementById('loginError');
+            btn.innerText = "Authenticating...";
             
-            ratingDiv.classList.add('hidden');
-            
-            if (stage === "1") {
-                fileDiv.classList.add('hidden');
-            } else {
-                fileDiv.classList.remove('hidden');
-                if (["3", "7", "9"].includes(stage)) {
-                    fileLabel.innerText = "Upload Audio Recording (.mp3/.m4a)";
-                    document.getElementById('fileInput').accept = "audio/*";
-                } else {
-                    fileLabel.innerText = "Upload Photo Proof (.jpg/.png)";
-                    document.getElementById('fileInput').accept = "image/*";
-                }
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'login',
+                        phone: document.getElementById('loginPhone').value,
+                        password: document.getElementById('loginPass').value
+                    })
+                });
+                const data = await res.json();
                 
-                if (stage === "9") {
-                    ratingDiv.classList.remove('hidden');
+                if (data.status === 'success') {
+                    localStorage.setItem('yash_user', data.user.name);
+                    showDashboard(data.user.name);
+                } else {
+                    error.innerText = data.message;
+                    error.classList.remove('hidden');
+                    btn.innerText = "Initialize Protocol";
                 }
+            } catch (err) {
+                error.innerText = "Connection Error.";
+                error.classList.remove('hidden');
+                btn.innerText = "Initialize Protocol";
             }
+        });
+
+        function showDashboard(name) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('userName').innerText = name;
+            fetchOrders();
+        }
+
+        function logout() {
+            localStorage.removeItem('yash_user');
+            location.reload();
+        }
+
+        // Auto-login check
+        if (localStorage.getItem('yash_user')) {
+            showDashboard(localStorage.getItem('yash_user'));
+        }
+
+        // --- FETCH & RENDER DASHBOARD CARDS ---
+        async function fetchOrders() {
+            const grid = document.getElementById('orderGrid');
+            grid.innerHTML = '<p class="text-slate-400">Syncing with Control Tower...</p>';
+            
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getOrders' })
+                });
+                const response = await res.json();
+                
+                if (response.status === 'success') {
+                    grid.innerHTML = '';
+                    response.data.forEach(order => {
+                        const progress = (order.completedStages / 9) * 100;
+                        const dateString = new Date(order.date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                        
+                        grid.innerHTML += `
+                            <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-slate-800 border border-slate-700 rounded-xl p-5 stage-card shadow-lg flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="font-bold text-lg text-white">${order.orderId}</h3>
+                                        <span class="bg-slate-700 text-xs px-2 py-1 rounded text-slate-300">${dateString}</span>
+                                    </div>
+                                    <p class="text-emerald-400 font-semibold text-sm mb-4">${order.shopName}</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                        <span>Progress</span>
+                                        <span>${order.completedStages} / 9 Steps</span>
+                                    </div>
+                                    <div class="w-full bg-slate-700 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${progress}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                grid.innerHTML = '<p class="text-red-400">Failed to load orders.</p>';
+            }
+        }
+
+        // --- EXECUTION MODAL LOGIC ---
+        function openModal(order) {
+            currentActiveOrder = order;
+            document.getElementById('modalOrderId').innerText = order.orderId;
+            document.getElementById('modalShopName').innerText = order.shopName;
+            
+            const container = document.getElementById('stagesContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const stageNum = i + 1;
+                const isCompleted = i < order.completedStages;
+                const isActive = i === order.completedStages;
+                const isLocked = i > order.completedStages;
+                
+                let uiHtml = '';
+                
+                if (isCompleted) {
+                    uiHtml = `<div class="bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-4 mb-3 flex items-center justify-between">
+                                <span class="text-emerald-400 font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="text-emerald-500">✔ Done</span>
+                              </div>`;
+                } else if (isLocked) {
+                    uiHtml = `<div class="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-3 locked flex items-center justify-between">
+                                <span class="text-slate-500">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="text-slate-600">🔒 Locked</span>
+                              </div>`;
+                } else if (isActive) {
+                    let inputHtml = '';
+                    if (stageNum === 1) {
+                        inputHtml = `<button onclick="submitStage(${stageNum})" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Acknowledge & Accept</button>`;
+                    } else {
+                        const acceptType = [3, 7, 9].includes(stageNum) ? 'audio/*' : 'image/*';
+                        inputHtml = `<input type="file" id="fileUpload" accept="${acceptType}" class="w-full mt-3 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600">`;
+                        if (stageNum === 9) {
+                            inputHtml += `<input type="number" id="ratingInput" min="1" max="5" placeholder="Customer Rating (1-5)" class="w-full mt-3 bg-slate-900 border border-slate-600 rounded p-2 text-white">`;
+                        }
+                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Upload & Complete Stage</button>`;
+                    }
+                    
+                    uiHtml = `<div class="bg-slate-700 border border-blue-500 rounded-lg p-4 mb-3 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                    <span class="bg-blue-500 text-xs px-2 py-1 rounded text-white animate-pulse">ACTION REQUIRED</span>
+                                </div>
+                                <div id="actionArea_${stageNum}">${inputHtml}</div>
+                                <p id="status_${stageNum}" class="text-sm mt-2 hidden"></p>
+                              </div>`;
+                }
+                container.innerHTML += uiHtml;
+            }
+            
+            document.getElementById('orderModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+            fetchOrders(); // Refresh dashboard on close
         }
 
         // Convert file to Base64
@@ -102,57 +237,59 @@
             });
         }
 
-        document.getElementById('opsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const statusDiv = document.getElementById('status');
+        async function submitStage(stageNum) {
+            const btn = document.getElementById(`submitBtn_${stageNum}`);
+            const statusLabel = document.getElementById(`status_${stageNum}`);
             
-            btn.innerText = "Processing...";
-            btn.disabled = true;
-            statusDiv.classList.add('hidden');
-
-            const orderId = document.getElementById('orderId').value;
-            const stage = document.getElementById('stage').value;
-            const rating = document.getElementById('rating').value;
-            const fileInput = document.getElementById('fileInput');
-
-            let payload = { orderId, stage, rating };
-
-            if (stage !== "1" && fileInput.files.length > 0) {
+            let payload = { action: 'updateStage', orderId: currentActiveOrder.orderId, stage: stageNum };
+            
+            if (stageNum !== 1) {
+                const fileInput = document.getElementById('fileUpload');
+                if (fileInput.files.length === 0) {
+                    alert("Proof file is required to proceed.");
+                    return;
+                }
                 const file = fileInput.files[0];
+                btn.innerText = "Encoding File...";
+                btn.disabled = true;
+                
                 payload.fileName = file.name;
                 payload.mimeType = file.type;
                 payload.fileBase64 = await getBase64(file);
-            } else if (stage !== "1" && fileInput.files.length === 0) {
-                alert("Proof file is required for this stage.");
-                btn.innerText = "Update System";
-                btn.disabled = false;
-                return;
+                
+                if (stageNum === 9) {
+                    const rating = document.getElementById('ratingInput').value;
+                    if(!rating) { alert("Rating required."); btn.disabled = false; btn.innerText = "Upload & Complete Stage"; return;}
+                    payload.rating = rating;
+                }
+            } else {
+                if(btn) { btn.innerText = "Processing..."; btn.disabled = true; }
+            }
+            
+            if(statusLabel) {
+                statusLabel.innerText = "Transmitting to Control Tower...";
+                statusLabel.className = "text-sm mt-2 text-blue-400 block";
             }
 
             try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await res.json();
                 
-                statusDiv.innerText = result.message;
-                statusDiv.className = "mt-4 text-center text-sm font-semibold text-emerald-400";
-                document.getElementById('opsForm').reset();
-                checkStage();
-            } catch (error) {
-                statusDiv.innerText = "Error syncing with Control Tower.";
-                statusDiv.className = "mt-4 text-center text-sm font-semibold text-red-400";
+                if (data.status === 'success') {
+                    // Locally update the order object to immediately show the next step without fetching again
+                    currentActiveOrder.completedStages++; 
+                    openModal(currentActiveOrder); 
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (err) {
+                if(statusLabel) {
+                    statusLabel.innerText = "Error syncing. Try again.";
+                    statusLabel.className = "text-sm mt-2 text-red-400 block";
+                }
+                if(btn) { btn.innerText = "Upload & Complete Stage"; btn.disabled = false; }
             }
-
-            statusDiv.classList.remove('hidden');
-            btn.innerText = "Update System";
-            btn.disabled = false;
-        });
-
-        // Initialize UI state
-        checkStage();
+        }
     </script>
 </body>
 </html>
