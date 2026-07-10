@@ -97,7 +97,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'login',
-                        phone: document.getElementById('loginPhone').value,
+                        // Shifted from 'phone' to 'employeeId' to match the backend expectation
+                        employeeId: document.getElementById('loginEmpId').value,
                         password: document.getElementById('loginPass').value
                     })
                 });
