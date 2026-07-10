@@ -271,21 +271,26 @@
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
                     let imgTag = item.image 
-                        ? `<img src="${item.image}" class="w-14 h-14 object-cover rounded bg-white p-1">` 
-                        : `<div class="w-14 h-14 bg-slate-700 rounded flex items-center justify-center text-[10px] text-slate-400 font-mono text-center leading-tight">No Img</div>`;
+                        ? `<img src="${item.image}" class="w-16 h-16 object-contain rounded-lg bg-white p-1 shrink-0 shadow-sm">` 
+                        : `<div class="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-500 font-mono text-center leading-tight border border-slate-700 shrink-0">No Img</div>`;
                     
                     itemsHtml += `
-                        <div class="flex items-center gap-4 bg-slate-900/80 p-3 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors">
+                        <div class="flex items-start gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-700 hover:border-slate-500 transition-colors shadow-sm">
                             ${imgTag}
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-white font-semibold leading-tight truncate" title="${item.name}">${item.name}</p>
-                                <div class="mt-1 flex items-center gap-2">
-                                    <span class="text-xs text-slate-400">Qty:</span>
-                                    <span class="text-sm font-bold text-emerald-400 bg-emerald-900/30 px-2 rounded">${item.qty}</span>
+                            <div class="flex-1 min-w-0 pt-1">
+                                <!-- Truncate hataya gaya, break-words add kiya -->
+                                <p class="text-[13px] text-white font-semibold leading-snug break-words whitespace-normal">${item.name}</p>
+                                <div class="mt-2 flex items-center gap-2">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Qty:</span>
+                                    <span class="text-sm font-bold text-emerald-400 bg-emerald-900/40 px-2 py-0.5 rounded shadow-inner border border-emerald-500/20">${item.qty}</span>
                                 </div>
                             </div>
                         </div>
                     `;
+                });
+            } else {
+                itemsHtml += `<p class="text-sm text-slate-500 italic p-2">No products detected. Check Data format.</p>`;
+            }
                 });
             } else {
                 itemsHtml += `<p class="text-sm text-slate-500 italic">No products detected. Check Data format.</p>`;
