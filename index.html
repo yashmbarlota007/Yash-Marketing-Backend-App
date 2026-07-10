@@ -185,15 +185,31 @@
                 }
             });
 
-            // Render Stage Filter Pipeline
-            let filterHtml = `<button onclick="setStageFilter(null)" class="${activeStageFilter === null ? 'bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'bg-slate-800 hover:bg-slate-700'} px-5 py-2.5 rounded-xl whitespace-nowrap border border-slate-700 text-sm font-bold transition-all text-white shrink-0">Pipeline Overview (All)</button>`;
+            // Render Premium KPI Card Stage Filter Pipeline
+            let filterHtml = `
+                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3.5 rounded-xl border min-w-[130px] shrink-0 transition-all">
+                    <span class="${activeStageFilter === null ? 'text-blue-200' : 'text-slate-400'} text-[10px] font-bold uppercase tracking-wider mb-1">Overview</span>
+                    <span class="text-white text-sm font-bold mb-3">All Active</span>
+                    <div class="flex items-center justify-between mt-auto">
+                        <span class="text-xs ${activeStageFilter === null ? 'text-blue-200' : 'text-slate-500'} font-medium">Total Sprints</span>
+                        <span class="${activeStageFilter === null ? 'bg-white text-blue-900' : 'bg-slate-900 text-slate-400'} px-2 py-1 rounded text-[11px] font-black">${baseOrders.length}</span>
+                    </div>
+                </div>
+            `;
             
             STAGE_NAMES.forEach((name, idx) => {
                 let isActive = activeStageFilter === idx;
-                filterHtml += `<button onclick="setStageFilter(${idx})" class="${isActive ? 'bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'bg-slate-800 hover:bg-slate-700'} px-4 py-2.5 rounded-xl whitespace-nowrap border border-slate-700 text-sm flex gap-3 items-center transition-all text-slate-300 shrink-0">
-                    <span class="font-medium">Step ${idx+1}: ${name.split(' (')[0]}</span>
-                    <span class="${stageCounts[idx] > 0 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-900 text-slate-500'} px-2.5 py-0.5 rounded-full text-xs font-bold">${stageCounts[idx]}</span>
-                </button>`;
+                let orderCount = stageCounts[idx];
+                
+                filterHtml += `
+                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3.5 rounded-xl border min-w-[140px] shrink-0 transition-all">
+                    <span class="${isActive ? 'text-blue-200' : 'text-slate-500'} text-[10px] font-bold uppercase tracking-wider mb-1">Step ${idx+1}</span>
+                    <span class="${isActive ? 'text-white' : 'text-slate-300'} text-sm font-bold mb-3 leading-tight">${name.split(' (')[0]}</span>
+                    <div class="flex items-center justify-between mt-auto">
+                        <span class="text-[11px] ${isActive ? 'text-blue-200' : 'text-slate-500'} font-medium">Pending</span>
+                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-blue-900' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20') : (isActive ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-900 text-slate-600')} px-2 py-1 rounded text-[11px] font-black">${orderCount}</span>
+                    </div>
+                </div>`;
             });
             filterBar.innerHTML = filterHtml;
 
