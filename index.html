@@ -3,79 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing - Command Center</title>
+    <title>Yash Marketing - Enterprise Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { 
+            background-color: #0f172a; 
+            color: #f8fafc; 
+            font-family: 'Inter', sans-serif; 
+        }
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.7); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
         .stage-card { transition: all 0.2s; cursor: pointer; }
         .stage-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
-        .locked { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
+        
+        /* Custom Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Notification Toast Animation */
+        @keyframes slideDown { 
+            from { transform: translateY(-100%); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+        .toast-enter { animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-2 md:p-8">
 
-    <!-- Login Screen -->
-    <div id="loginScreen" class="flex h-[80vh] items-center justify-center">
+    <!-- Notification Radar Overlay -->
+    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+    <!-- Login Authentication Screen -->
+    <div id="loginScreen" class="flex h-[80vh] items-center justify-center p-4">
         <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
             <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">YASH MARKETING</h1>
-            <p class="text-slate-400 text-sm tracking-widest mb-8 uppercase">Staff Authentication</p>
+            <p class="text-slate-400 text-sm tracking-widest mb-8 uppercase">Staff Login Interface</p>
             <form id="loginForm" class="space-y-4">
                 <input type="text" id="loginEmpId" placeholder="Employee ID (e.g. YM001)" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
                 <input type="password" id="loginPass" placeholder="Password" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">Initialize Protocol</button>
+                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">Access System</button>
             </form>
             <p id="loginError" class="text-red-400 text-sm mt-4 hidden"></p>
         </div>
     </div>
 
-    <!-- Dashboard Screen -->
+    <!-- Main Operational Dashboard -->
     <div id="dashboardScreen" class="hidden max-w-7xl mx-auto">
+        
+        <!-- Header & Controls -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-white">Active Sprints</h1>
-                <p class="text-emerald-400 text-sm mt-1">Logged in as: <span id="userName" class="font-bold"></span></p>
+                <h1 class="text-2xl md:text-3xl font-bold text-white">Active Sprints</h1>
+                <p class="text-emerald-400 text-sm mt-1">Operator: <span id="userName" class="font-bold"></span></p>
             </div>
-            
-            <div class="flex items-center gap-4">
-                <div class="bg-slate-800 border border-slate-700 rounded-lg p-2 flex items-center">
-                    <label class="text-xs text-slate-400 mr-2 uppercase tracking-wider">Audit Date:</label>
-                    <input type="date" id="historyDate" onchange="renderDashboard()" class="bg-slate-900 text-sm text-white rounded p-1 border border-slate-600 focus:outline-none focus:border-blue-500">
-                    <button onclick="clearDateFilter()" class="ml-2 text-xs text-blue-400 hover:text-blue-300">Clear</button>
-                </div>
-                <button onclick="logout()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">Sign Out</button>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <input type="date" id="historyDate" onchange="renderDashboard()" class="bg-slate-800 text-sm text-white rounded-lg p-2 border border-slate-600 flex-1 md:flex-none outline-none focus:border-blue-500">
+                <button onclick="clearDateFilter()" class="text-sm font-semibold text-blue-400 hover:text-blue-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg border border-slate-700 transition">Clear</button>
+                <button onclick="logout()" class="text-red-400 hover:text-red-300 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold transition shadow-sm">Logout</button>
             </div>
         </div>
 
-        <!-- Filter Bar -->
-        <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar"></div>
+        <!-- Premium KPI Filter Bar -->
+        <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar">
+            <!-- Dynamically Populated by JavaScript -->
+        </div>
         
-        <div id="orderGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        <!-- Order Grid (Ensuring 4 Cards on Home Screen via grid-cols-2 mobile, 4 desktop) -->
+        <div id="orderGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Dynamically Populated by JavaScript -->
+        </div>
     </div>
 
-    <!-- Order Execution Modal -->
-    <div id="orderModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-95 backdrop-blur-md flex items-center justify-center p-4 z-50">
-        <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-[0_0_50px_rgba(0,0,0,0.6)]">
-            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
+    <!-- Order Execution Pipeline Modal -->
+    <div id="orderModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-95 backdrop-blur-sm flex items-center justify-center z-50 p-3">
+        <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-600">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800/90 shadow-md z-10">
                 <div>
-                    <h2 class="text-2xl font-bold text-white" id="modalOrderId">ORD-000</h2>
-                    <p class="text-emerald-400 text-sm font-semibold" id="modalShopName">Shop Name</p>
+                    <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
+                    <p class="text-emerald-400 text-sm font-bold mt-1" id="modalShopName">Shop Name</p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-3xl font-bold transition-colors">&times;</button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-4xl leading-none transition-colors">&times;</button>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-grow" id="stagesContainer"></div>
+            <!-- Modal Body -->
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-slate-900/50" id="stagesContainer">
+                <!-- Items List & Stages Populated Here -->
+            </div>
         </div>
     </div>
 
     <script>
-        // MUST UPDATE THIS WITH THE URL FROM THE FRESH DEPLOYMENT 
-        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; 
+        // ==========================================
+        // SYSTEM CONFIGURATION
+        // ==========================================
+        const API_URL = "YOUR_NEW_WEB_APP_URL_HERE"; // <--- UPDATE WITH FRESH DEPLOYMENT URL
         
         const STAGE_NAMES = [
             "Order Received", "Balance Check", "Call 1 (Confirmation)", 
@@ -86,37 +115,44 @@
         let allOrdersData = [];
         let currentActiveOrder = null;
         let activeStageFilter = null;
+        let latestOrderTimestamp = null;
+        let autoRefreshInterval = null;
 
-        // AUTHENTICATION
+        // ==========================================
+        // AUTHENTICATION LOGIC
+        // ==========================================
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const error = document.getElementById('loginError');
-            btn.innerText = "Authenticating...";
+            btn.innerText = "Authenticating Operator...";
             
             try {
+                const payload = {
+                    action: 'login', 
+                    employeeId: document.getElementById('loginEmpId').value, 
+                    password: document.getElementById('loginPass').value
+                };
+                
                 const res = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        action: 'login',
-                        employeeId: document.getElementById('loginEmpId').value,
-                        password: document.getElementById('loginPass').value
-                    })
+                    body: JSON.stringify(payload)
                 });
+                
                 const data = await res.json();
                 
                 if (data.status === 'success') {
                     localStorage.setItem('yash_user', data.user.name);
                     showDashboard(data.user.name);
                 } else {
-                    error.innerText = data.message;
-                    error.classList.remove('hidden');
-                    btn.innerText = "Initialize Protocol";
+                    error.innerText = data.message; 
+                    error.classList.remove('hidden'); 
+                    btn.innerText = "Access System";
                 }
             } catch (err) {
-                error.innerText = "Connection Error. Check API_URL.";
-                error.classList.remove('hidden');
-                btn.innerText = "Initialize Protocol";
+                error.innerText = "Network Error. Check internet connection or API_URL."; 
+                error.classList.remove('hidden'); 
+                btn.innerText = "Access System";
             }
         });
 
@@ -124,74 +160,131 @@
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboardScreen').classList.remove('hidden');
             document.getElementById('userName').innerText = name;
-            fetchOrders();
+            
+            // Initial Data Fetch
+            fetchOrders(false);
+            
+            // Set up Live Radar (Background Sync every 15 seconds)
+            if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(() => { fetchOrders(true); }, 15000);
         }
 
-        function logout() { localStorage.removeItem('yash_user'); location.reload(); }
-        if (localStorage.getItem('yash_user')) { showDashboard(localStorage.getItem('yash_user')); }
+        function logout() { 
+            localStorage.removeItem('yash_user'); 
+            location.reload(); 
+        }
+        
+        // Auto-login if session exists
+        if (localStorage.getItem('yash_user')) { 
+            showDashboard(localStorage.getItem('yash_user')); 
+        }
 
-        // DATA FETCHING
-        async function fetchOrders() {
+        // ==========================================
+        // NOTIFICATION & DATA FETCHING
+        // ==========================================
+        function showNotification(title, message) {
+            const area = document.getElementById('notificationArea');
+            const toast = document.createElement('div');
+            toast.className = "bg-slate-800 text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(37,99,235,0.4)] border border-blue-500 flex items-center gap-4 toast-enter pointer-events-auto";
+            toast.innerHTML = `
+                <span class="text-2xl animate-bounce">🚨</span>
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-400">${title}</p>
+                    <p class="text-sm font-bold text-white mt-0.5">${message}</p>
+                </div>
+            `;
+            area.appendChild(toast);
+            
+            // Remove notification gracefully after 6 seconds
+            setTimeout(() => { 
+                toast.style.opacity = '0'; 
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300); 
+            }, 6000);
+        }
+
+        async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
-            grid.innerHTML = '<p class="text-blue-400 font-bold animate-pulse">Syncing with Control Tower...</p>';
+            
+            if(!isSilent && allOrdersData.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-blue-400 text-center font-bold text-lg animate-pulse mt-10">📡 Fetching Radar Data from Control Tower...</p>';
+            }
             
             try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'getOrders' })
+                const res = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'getOrders' }) 
                 });
                 const response = await res.json();
                 
                 if (response.status === 'success') {
-                    allOrdersData = response.data;
+                    const newOrders = response.data;
+                    
+                    // Notification Logic checking for newly arrived order
+                    if (newOrders.length > 0 && latestOrderTimestamp !== null) {
+                        const incomingLatest = new Date(newOrders[0].date).getTime();
+                        if (incomingLatest > latestOrderTimestamp) {
+                            showNotification("New Order Detected", newOrders[0].shopName);
+                        }
+                    }
+                    if (newOrders.length > 0) {
+                        latestOrderTimestamp = new Date(newOrders[0].date).getTime();
+                    }
+                    
+                    allOrdersData = newOrders;
                     renderDashboard();
-                } else {
-                    grid.innerHTML = `<div class="col-span-full bg-red-900/30 border border-red-500/50 p-6 rounded-xl text-center shadow-lg"><p class="text-red-400 font-bold uppercase tracking-widest text-sm mb-2 flex items-center justify-center gap-2"><span>⚠</span> System Interruption</p><p class="text-white text-lg">${response.message}</p></div>`;
+
+                    // If modal is currently open, refresh it without kicking the user out
+                    if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
+                        const updatedOrder = allOrdersData.find(o => o.orderId === currentActiveOrder.orderId);
+                        if(updatedOrder) openModal(updatedOrder); 
+                    }
                 }
-            } catch (err) {
-                grid.innerHTML = `<div class="col-span-full bg-red-900/30 border border-red-500/50 p-6 rounded-xl text-center shadow-lg"><p class="text-red-400 font-bold uppercase tracking-widest text-sm mb-2 flex items-center justify-center gap-2"><span>⚠</span> Network Error</p><p class="text-white">Failed to connect to the Control Tower. Please check your API_URL string.</p></div>`;
+            } catch (err) { 
+                console.log("Background sync interrupted by network flutter."); 
             }
         }
 
-        function clearDateFilter() {
-            document.getElementById('historyDate').value = "";
-            renderDashboard();
+        function clearDateFilter() { 
+            document.getElementById('historyDate').value = ""; 
+            renderDashboard(); 
         }
         
-        function setStageFilter(stageIndex) {
-            activeStageFilter = stageIndex;
-            renderDashboard();
+        function setStageFilter(stageIndex) { 
+            activeStageFilter = stageIndex; 
+            renderDashboard(); 
         }
 
-        // RENDERING
+        // ==========================================
+        // UI RENDERING LOGIC
+        // ==========================================
         function renderDashboard() {
             const grid = document.getElementById('orderGrid');
             const filterBar = document.getElementById('stageFilterBar');
             const selectedDate = document.getElementById('historyDate').value;
             
+            // Date Filtering
             let baseOrders = allOrdersData.filter(order => {
                 if (selectedDate) {
-                    const orderDate = new Date(order.date).toISOString().split('T')[0];
-                    return orderDate === selectedDate;
-                } else {
-                    return !order.isFullyCompleted;
+                    return new Date(order.date).toISOString().split('T')[0] === selectedDate;
                 }
+                return !order.isFullyCompleted;
             });
 
+            // Count Calculation for KPI Cards
             let stageCounts = Array(9).fill(0);
-            baseOrders.forEach(o => {
-                if(o.completedStages < 9) {
-                    stageCounts[o.completedStages]++;
-                }
+            baseOrders.forEach(o => { 
+                if(o.completedStages < 9) stageCounts[o.completedStages]++; 
             });
 
+            // Build KPI Stage Filter Cards
             let filterHtml = `
-                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3.5 rounded-xl border min-w-[130px] shrink-0 transition-all">
+                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all">
                     <span class="${activeStageFilter === null ? 'text-blue-200' : 'text-slate-400'} text-[10px] font-bold uppercase tracking-wider mb-1">Overview</span>
-                    <span class="text-white text-sm font-bold mb-3">All Active</span>
-                    <div class="flex items-center justify-between mt-auto">
-                        <span class="text-xs ${activeStageFilter === null ? 'text-blue-200' : 'text-slate-500'} font-medium">Total Sprints</span>
-                        <span class="${activeStageFilter === null ? 'bg-white text-blue-900' : 'bg-slate-900 text-slate-400'} px-2 py-1 rounded text-[11px] font-black">${baseOrders.length}</span>
+                    <span class="text-white text-sm font-bold mb-2">All Active</span>
+                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-600/30">
+                        <span class="text-[10px] ${activeStageFilter === null ? 'text-blue-200' : 'text-slate-500'} font-bold uppercase">Total</span>
+                        <span class="${activeStageFilter === null ? 'bg-white text-blue-900' : 'bg-slate-900 text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${baseOrders.length}</span>
                     </div>
                 </div>
             `;
@@ -201,60 +294,61 @@
                 let orderCount = stageCounts[idx];
                 
                 filterHtml += `
-                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3.5 rounded-xl border min-w-[140px] shrink-0 transition-all">
+                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
                     <span class="${isActive ? 'text-blue-200' : 'text-slate-500'} text-[10px] font-bold uppercase tracking-wider mb-1">Step ${idx+1}</span>
-                    <span class="${isActive ? 'text-white' : 'text-slate-300'} text-sm font-bold mb-3 leading-tight">${name.split(' (')[0]}</span>
-                    <div class="flex items-center justify-between mt-auto">
-                        <span class="text-[11px] ${isActive ? 'text-blue-200' : 'text-slate-500'} font-medium">Pending</span>
-                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-blue-900' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20') : (isActive ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-900 text-slate-600')} px-2 py-1 rounded text-[11px] font-black">${orderCount}</span>
+                    <span class="${isActive ? 'text-white' : 'text-slate-300'} text-sm font-bold mb-2 leading-tight">${name.split(' (')[0]}</span>
+                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-600/30">
+                        <span class="text-[10px] ${isActive ? 'text-blue-200' : 'text-slate-500'} font-bold uppercase">Pending</span>
+                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-blue-900' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20') : (isActive ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-900 text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
                     </div>
                 </div>`;
             });
             filterBar.innerHTML = filterHtml;
 
-            let displayOrders = baseOrders;
-            if (activeStageFilter !== null) {
-                displayOrders = baseOrders.filter(o => o.completedStages === activeStageFilter);
-            }
-
+            // Render 4 Cards Grid Data
+            let displayOrders = activeStageFilter !== null ? baseOrders.filter(o => o.completedStages === activeStageFilter) : baseOrders;
             grid.innerHTML = '';
+            
             if(displayOrders.length === 0) {
-                grid.innerHTML = '<div class="col-span-full bg-slate-800/30 border border-slate-700/50 p-8 rounded-2xl text-center"><p class="text-slate-400 text-lg">No orders currently pending at this stage.</p></div>';
+                grid.innerHTML = '<div class="col-span-full bg-slate-800/30 border border-slate-700/50 p-8 rounded-2xl text-center"><p class="text-slate-400 text-lg font-medium">Inbox Zero. No orders pending here.</p></div>';
                 return;
             }
 
             displayOrders.forEach(order => {
                 const progress = (order.completedStages / 9) * 100;
-                let dateString = "Invalid Date";
+                let nextStepName = order.completedStages < 9 ? STAGE_NAMES[order.completedStages].split(' (')[0] : "Fully Completed";
+                
+                // Formatted Date Block
+                let dateStr = "";
                 if(order.date) {
                     const d = new Date(order.date);
-                    if(!isNaN(d)) dateString = d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                    if(!isNaN(d)) dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
                 }
-                
-                let nextStepName = order.completedStages < 9 ? STAGE_NAMES[order.completedStages] : "Fully Completed";
-                
+
                 grid.innerHTML += `
-                    <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-slate-800 border border-slate-700 rounded-xl p-5 stage-card shadow-lg flex flex-col justify-between relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-150"></div>
-                        <div>
-                            <div class="flex justify-between items-start mb-2 relative z-10">
-                                <h3 class="font-bold text-lg text-white">${order.orderId}</h3>
-                                <span class="bg-slate-900 text-[10px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono tracking-tighter">${dateString}</span>
+                    <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-slate-800 border border-slate-700 hover:border-blue-500 rounded-xl p-4 stage-card shadow-lg flex flex-col justify-between relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-12 h-12 bg-blue-500/10 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                        
+                        <div class="mb-3 relative z-10">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-black text-sm text-white">${order.orderId}</h3>
+                                <span class="bg-slate-900 text-[9px] px-1.5 py-0.5 rounded text-slate-400 font-mono tracking-tighter">${dateStr}</span>
                             </div>
-                            <p class="text-emerald-400 font-semibold text-sm mb-4 truncate">${order.shopName}</p>
-                            
-                            <div class="bg-slate-900/50 p-3 rounded-lg mb-4 border border-slate-700/50 flex items-center justify-between">
-                                <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Pending Action:</span>
-                                <span class="text-xs text-blue-400 font-bold bg-blue-900/30 px-2 py-1 rounded">${nextStepName}</span>
-                            </div>
+                            <p class="text-emerald-400 font-semibold text-[11px] leading-tight line-clamp-2" title="${order.shopName}">${order.shopName}</p>
                         </div>
+                        
                         <div>
-                            <div class="flex justify-between text-xs text-slate-400 mb-2 font-medium">
-                                <span>Pipeline Progress</span>
-                                <span class="text-white">${order.completedStages} / 9</span>
+                            <div class="bg-slate-900/70 p-2 rounded-lg mb-3 border border-slate-700 flex justify-between items-center">
+                                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Next Action:</span>
+                                <span class="text-[10px] text-blue-400 font-bold bg-blue-900/30 px-2 py-0.5 rounded truncate max-w-[50%]">${nextStepName}</span>
                             </div>
-                            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700">
-                                <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-2 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]" style="width: ${progress}%"></div>
+                            
+                            <div class="flex justify-between text-[10px] text-slate-400 mb-1 font-bold">
+                                <span>Progress</span>
+                                <span class="text-white">${order.completedStages}/9</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-700">
+                                <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-1.5 rounded-full" style="width: ${progress}%"></div>
                             </div>
                         </div>
                     </div>
@@ -262,7 +356,9 @@
             });
         }
 
-        // MODAL
+        // ==========================================
+        // MODAL AND EXECUTION WORKFLOW
+        // ==========================================
         function openModal(order) {
             currentActiveOrder = order;
             document.getElementById('modalOrderId').innerText = order.orderId;
@@ -271,98 +367,136 @@
             const container = document.getElementById('stagesContainer');
             container.innerHTML = '';
             
+            // Detailed Items to Pick List
             let itemsHtml = `
-                <div class="mb-8 bg-slate-800 border border-slate-600 rounded-xl p-5 shadow-inner">
-                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                        Items to Pick
+                <div class="mb-6 bg-slate-800 border border-slate-600 rounded-xl p-4 shadow-inner">
+                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span class="text-emerald-400 text-lg">📦</span> Items to Pick
                     </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-52 overflow-y-auto pr-2 hide-scrollbar">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto pr-2 hide-scrollbar">
             `;
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
                     let imgTag = item.image 
-                        ? `<img src="${item.image}" class="w-16 h-16 object-contain rounded-lg bg-white p-1 shrink-0 shadow-sm">` 
-                        : `<div class="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-500 font-mono text-center leading-tight border border-slate-700 shrink-0">No Img</div>`;
+                        ? `<img src="${item.image}" class="w-14 h-14 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` 
+                        : `<div class="w-14 h-14 bg-slate-700 rounded flex items-center justify-center text-[10px] text-slate-400 shrink-0 font-mono">No Img</div>`;
                     
                     itemsHtml += `
-                        <div class="flex items-start gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-700 hover:border-slate-500 transition-colors shadow-sm">
+                        <div class="flex items-center gap-3 bg-slate-900/80 p-2.5 rounded-lg border border-slate-700">
                             ${imgTag}
-                            <div class="flex-1 min-w-0 pt-1">
-                                <p class="text-[13px] text-white font-semibold leading-snug break-words whitespace-normal">${item.name}</p>
-                                <div class="mt-2 flex items-center gap-2">
-                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Qty:</span>
-                                    <span class="text-sm font-bold text-emerald-400 bg-emerald-900/40 px-2 py-0.5 rounded shadow-inner border border-emerald-500/20">${item.qty}</span>
+                            <div class="flex-1 min-w-0">
+                                <!-- Full names allowed to wrap onto multiple lines -->
+                                <p class="text-xs text-white font-semibold leading-tight break-words">${item.name}</p>
+                                <div class="mt-1.5 flex items-center gap-2">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qty:</span>
+                                    <span class="text-xs font-black text-emerald-400 bg-emerald-900/40 px-2 rounded border border-emerald-500/20">${item.qty}</span>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-            } else {
-                itemsHtml += `<p class="text-sm text-slate-500 italic p-2">No products detected. Check Data format.</p>`;
+            } else { 
+                itemsHtml += `<p class="text-sm text-slate-500 italic px-2">No products found in data.</p>`; 
             }
             itemsHtml += `</div></div>`;
             container.innerHTML += itemsHtml;
 
+            // Pipeline Stages List
             let stagesListHtml = '<div class="space-y-4">';
             for (let i = 0; i < 9; i++) {
-                const stageNum = i + 1;
-                const isCompleted = i < order.completedStages;
-                const isActive = i === order.completedStages;
+                const stageNum = i + 1; 
+                const isCompleted = i < order.completedStages; 
+                const isActive = i === order.completedStages; 
                 const isLocked = i > order.completedStages;
                 
                 let uiHtml = '';
                 
+                // COMPLETED STAGE VIEW
                 if (isCompleted) {
-                    let fileUrl = order.stageUrls ? order.stageUrls[i] : "";
-                    let previewHtml = "";
+                    let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : [];
+                    let previewHtml = `<div class="flex gap-3 mt-3 overflow-x-auto pb-2 hide-scrollbar">`;
                     
-                    if (fileUrl && fileUrl.includes("http")) {
-                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                            previewHtml = `<div class="mt-3 bg-slate-900/50 p-2 rounded-lg border border-slate-700"><audio controls src="${fileUrl}" class="w-full h-8 outline-none"></audio></div>`;
-                        } else { 
-                            previewHtml = `<a href="${fileUrl}" target="_blank" class="mt-3 inline-flex items-center text-xs font-bold text-blue-400 hover:text-blue-300 bg-blue-900/30 px-4 py-2 rounded-lg border border-blue-800 transition shadow-sm">View Uploaded Proof &rarr;</a>`;
+                    fileUrls.forEach(url => {
+                        url = url.trim();
+                        if (url.includes("http")) {
+                            if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
+                                previewHtml += `<audio controls src="${url}" class="h-8 min-w-[200px] outline-none"></audio>`;
+                            } else { 
+                                let previewUrl = url;
+                                if(url.includes("drive.google.com/file/d/")) {
+                                    let id = url.split("/d/")[1].split("/")[0];
+                                    previewUrl = `https://drive.google.com/uc?id=${id}`;
+                                }
+                                previewHtml += `<a href="${url}" target="_blank" class="shrink-0 transition hover:scale-105"><img src="${previewUrl}" class="h-20 w-20 object-cover rounded-lg border-2 border-emerald-500/50 bg-slate-900 shadow-lg" alt="Proof"></a>`;
+                            }
                         }
-                    }
+                    });
+                    previewHtml += `</div>`;
 
-                    uiHtml = `<div class="bg-emerald-900/10 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between opacity-80 hover:opacity-100 transition-opacity">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-emerald-400 font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                    <span class="text-emerald-500 font-bold bg-emerald-900/50 px-3 py-1 rounded text-xs shadow-inner">✔ COMPLETED</span>
-                                </div>
-                                ${previewHtml}
-                              </div>`;
-                } else if (isLocked) {
-                    uiHtml = `<div class="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4 locked flex items-center justify-between">
-                                <span class="text-slate-500">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="text-slate-600 font-mono text-xs tracking-widest">LOCKED</span>
-                              </div>`;
-                } else if (isActive) {
+                    uiHtml = `
+                        <div class="bg-emerald-900/10 border border-emerald-500/30 rounded-xl p-4 hover:bg-emerald-900/20 transition">
+                            <div class="flex justify-between items-center">
+                                <span class="text-emerald-400 text-base font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="bg-emerald-900/60 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
+                            </div>
+                            ${previewHtml}
+                        </div>`;
+                } 
+                // LOCKED STAGE VIEW
+                else if (isLocked) {
+                    uiHtml = `
+                        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 flex justify-between items-center grayscale opacity-60">
+                            <span class="text-slate-500 text-base font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
+                            <span class="text-slate-600 text-[10px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
+                        </div>`;
+                } 
+                // ACTIVE (ACTIONABLE) STAGE VIEW
+                else if (isActive) {
                     let inputHtml = '';
+                    
                     if (stageNum === 1) {
-                        inputHtml = `<button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-lg">Accept Task & Begin Processing</button>`;
+                        inputHtml = `<button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">Accept Task & Begin Process</button>`;
                     } else {
-                        let acceptType = "image/*";
-                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) acceptType = "audio/mp3,audio/wav,audio/m4a,audio/*"; 
+                        let acceptType = "image/*"; 
+                        let allowMultiple = "multiple";
+                        let instructionLabel = "Select Multiple Photos (Choose Camera or Gallery)";
                         
-                        inputHtml = `<input type="file" id="fileUpload" accept="${acceptType}" class="w-full mt-4 text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 file:transition-colors bg-slate-900 p-1.5 rounded-lg border border-slate-600 cursor-pointer">`;
+                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
+                            acceptType = "audio/*"; 
+                            allowMultiple = ""; 
+                            instructionLabel = "Record or Upload Audio";
+                        }
+                        
+                        inputHtml = `
+                            <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                <span class="text-blue-400">⚡</span> ${instructionLabel}
+                            </p>
+                            <!-- Multiple attribute allows batch upload. Accept attribute prompts OS camera/gallery intent -->
+                            <input type="file" id="fileUpload" accept="${acceptType}" ${allowMultiple} 
+                                class="w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-500 bg-slate-900 p-1.5 rounded-xl border border-slate-600 shadow-inner cursor-pointer transition">`;
                         
                         if (stageNum === 9) {
-                            inputHtml += `<input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Customer Rating (1-5)" class="w-full mt-4 bg-slate-900 border border-slate-600 rounded-lg p-3.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-bold">`;
+                            inputHtml += `
+                            <div class="mt-4">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 block">Customer Rating</label>
+                                <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-lg text-center">
+                            </div>`;
                         }
-                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">Upload Proof & Complete Task</button>`;
+                        
+                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">Upload Proof & Complete Task</button>`;
                     }
                     
-                    uiHtml = `<div class="bg-slate-800 border-2 border-blue-500 rounded-xl p-6 shadow-[0_0_30px_rgba(59,130,246,0.15)] relative overflow-hidden transform scale-[1.02] transition-transform">
-                                <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500 shadow-[0_0_10px_#3b82f6]"></div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-white font-bold text-xl">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                    <span class="bg-blue-500/20 text-blue-400 border border-blue-500/50 text-[10px] font-bold px-2 py-1 rounded animate-pulse tracking-widest uppercase">Action Required</span>
-                                </div>
-                                <div id="actionArea_${stageNum}">${inputHtml}</div>
-                                <p id="status_${stageNum}" class="text-sm mt-3 hidden font-mono"></p>
-                              </div>`;
+                    uiHtml = `
+                        <div class="bg-slate-800 border-[3px] border-blue-500 rounded-xl p-5 shadow-[0_0_30px_rgba(59,130,246,0.15)] relative overflow-hidden transform scale-[1.02]">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500 shadow-[0_0_15px_#3b82f6]"></div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-white font-black text-xl">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="bg-blue-500 text-white text-[10px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
+                            </div>
+                            <div id="actionArea_${stageNum}">${inputHtml}</div>
+                            <p id="status_${stageNum}" class="text-sm font-bold mt-3 hidden text-center"></p>
+                        </div>`;
                 }
                 stagesListHtml += uiHtml;
             }
@@ -372,73 +506,138 @@
             document.getElementById('orderModal').classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('orderModal').classList.add('hidden');
-            fetchOrders(); 
+        function closeModal() { 
+            document.getElementById('orderModal').classList.add('hidden'); 
+            fetchOrders(true);
         }
 
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
+        // ==========================================
+        // FAST CLIENT-SIDE COMPRESSION ENGINE
+        // ==========================================
+        function compressImage(file) {
+            return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        // Resize logic to prevent heavy uploads
+                        const MAX_WIDTH = 800; 
+                        let scale = 1;
+                        if(img.width > MAX_WIDTH) scale = MAX_WIDTH / img.width;
+                        canvas.width = img.width * scale; 
+                        canvas.height = img.height * scale;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        // Export as 60% quality JPEG (Usually under 100KB)
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
+                        resolve({ 
+                            name: file.name, 
+                            mimeType: 'image/jpeg', 
+                            base64: dataUrl.split(',')[1] 
+                        });
+                    };
+                };
+            });
+        }
+
+        // Fallback for Audio and non-image files
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader(); 
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve({
+                    name: file.name, 
+                    mimeType: file.type, 
+                    base64: reader.result.split(',')[1]
+                });
                 reader.onerror = error => reject(error);
             });
         }
 
+        // ==========================================
+        // SUBMISSION ENGINE
+        // ==========================================
         async function submitStage(stageNum) {
             const btn = document.getElementById(`submitBtn_${stageNum}`);
             const statusLabel = document.getElementById(`status_${stageNum}`);
-            let payload = { action: 'updateStage', orderId: currentActiveOrder.orderId, stage: stageNum };
+            
+            let payload = { 
+                action: 'updateStage', 
+                orderId: currentActiveOrder.orderId, 
+                stage: stageNum, 
+                files: [] 
+            };
             
             if (stageNum !== 1) {
                 const fileInput = document.getElementById('fileUpload');
-                if (fileInput.files.length === 0) { alert("Proof file is required to clear this stage."); return; }
+                if (fileInput.files.length === 0) { 
+                    alert("A file proof is mandatory to clear this stage."); 
+                    return; 
+                }
                 
-                const file = fileInput.files[0];
-                if ([3, 7, 9].includes(stageNum) && !file.type.startsWith('audio/')) {
-                    alert("System Restriction: Audio proof required for this task.");
-                    fileInput.value = ""; return;
+                btn.innerText = "Compressing & Transmitting..."; 
+                btn.disabled = true;
+                
+                // LOOP THROUGH MULTIPLE FILES
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    let f = fileInput.files[i];
+                    if (f.type.startsWith('image/')) {
+                        payload.files.push(await compressImage(f)); 
+                    } else {
+                        payload.files.push(await getBase64(f)); 
+                    }
                 }
-                if (![1, 3, 7, 9].includes(stageNum) && !file.type.startsWith('image/')) {
-                    alert("System Restriction: Image/Photo proof required for this task.");
-                    fileInput.value = ""; return;
-                }
-
-                btn.innerText = "Encoding & Transmitting..."; btn.disabled = true;
-                payload.fileName = file.name;
-                payload.mimeType = file.type;
-                payload.fileBase64 = await getBase64(file);
                 
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
-                    if(!rating) { alert("Customer Rating required."); btn.disabled = false; btn.innerText = "Upload Proof & Complete Task"; return;}
+                    if(!rating) { 
+                        alert("Customer Rating is mandatory for Final Call."); 
+                        btn.disabled = false; 
+                        btn.innerText = "Upload Proof & Complete Task";
+                        return;
+                    }
                     payload.rating = rating;
                 }
-            } else {
-                if(btn) { btn.innerText = "Initiating Process..."; btn.disabled = true; }
+            } else { 
+                if(btn) { 
+                    btn.innerText = "Processing Task Lock..."; 
+                    btn.disabled = true; 
+                } 
             }
             
-            if(statusLabel) {
-                statusLabel.innerText = "> Uplinking to Control Tower...";
-                statusLabel.className = "text-xs mt-3 text-blue-400 block animate-pulse";
+            if(statusLabel) { 
+                statusLabel.innerText = "📡 Uplinking to Control Tower..."; 
+                statusLabel.className = "text-[12px] font-bold tracking-widest mt-3 text-blue-400 block animate-pulse text-center"; 
             }
 
             try {
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload) 
+                });
                 const data = await res.json();
                 
                 if (data.status === 'success') {
-                    closeModal(); 
-                } else {
-                    throw new Error(data.message);
+                    if(btn) btn.innerText = "Execution Successful ✓";
+                    // Silently sync the background data so the modal automatically refreshes 
+                    // to show the completed stage without kicking the user out.
+                    fetchOrders(true); 
+                } else { 
+                    throw new Error(data.message); 
                 }
             } catch (err) {
-                if(statusLabel) {
-                    statusLabel.innerText = "> Sync Failed. Check network.";
-                    statusLabel.className = "text-xs mt-3 text-red-500 block font-bold";
+                if(statusLabel) { 
+                    statusLabel.innerText = "❌ Sync Failed. Verify connection and Retry."; 
+                    statusLabel.className = "text-[12px] font-bold mt-3 text-red-500 block text-center"; 
                 }
-                if(btn) { btn.innerText = "Retry Transmission"; btn.disabled = false; }
+                if(btn) { 
+                    btn.innerText = "Retry Transmission"; 
+                    btn.disabled = false; 
+                }
             }
         }
     </script>
