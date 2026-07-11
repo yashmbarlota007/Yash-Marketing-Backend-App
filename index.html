@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing - Enterprise Command Center</title>
+    <title>Yash Marketing - Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -16,100 +16,137 @@
             backdrop-filter: blur(10px); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
         }
-        .stage-card { transition: all 0.2s; cursor: pointer; }
-        .stage-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
-        
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Notification Toast Animation */
+        .stage-card { 
+            transition: all 0.2s; 
+            cursor: pointer; 
+        }
+        .stage-card:hover { 
+            transform: translateY(-2px); 
+            border-color: #3b82f6; 
+        }
+        ::-webkit-scrollbar { 
+            width: 6px; 
+            height: 6px; 
+        }
+        ::-webkit-scrollbar-track { 
+            background: #1e293b; 
+            border-radius: 4px; 
+        }
+        ::-webkit-scrollbar-thumb { 
+            background: #475569; 
+            border-radius: 4px; 
+        }
+        .hide-scrollbar::-webkit-scrollbar { 
+            display: none; 
+        }
+        .hide-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+        }
         @keyframes slideDown { 
             from { transform: translateY(-100%); opacity: 0; } 
             to { transform: translateY(0); opacity: 1; } 
         }
-        .toast-enter { animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-enter { 
+            animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
     </style>
 </head>
 <body class="min-h-screen p-2 md:p-8">
 
-    <!-- Notification Radar Overlay -->
-    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+    <!-- Notification Radar Area -->
+    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none">
+    </div>
 
     <!-- Login Authentication Screen -->
     <div id="loginScreen" class="flex h-[80vh] items-center justify-center p-4">
         <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">YASH MARKETING</h1>
-            <p class="text-slate-400 text-sm tracking-widest mb-8 uppercase">Staff Login Interface</p>
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
+                YASH MARKETING
+            </h1>
+            <p class="text-slate-400 text-sm tracking-widest mb-8 uppercase">
+                Staff Login Interface
+            </p>
             <form id="loginForm" class="space-y-4">
-                <input type="text" id="loginEmpId" placeholder="Employee ID (e.g. YM001)" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
-                <input type="password" id="loginPass" placeholder="Password" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">Access System</button>
+                <input type="text" id="loginEmpId" placeholder="Employee ID (e.g. YM001)" required 
+                       class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+                <input type="password" id="loginPass" placeholder="Password" required 
+                       class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">
+                    Access System
+                </button>
             </form>
             <p id="loginError" class="text-red-400 text-sm mt-4 hidden"></p>
         </div>
     </div>
 
-    <!-- Main Operational Dashboard -->
+    <!-- Main Operational Dashboard Screen -->
     <div id="dashboardScreen" class="hidden max-w-7xl mx-auto">
-        
-        <!-- Header & Controls -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-white">Active Sprints</h1>
                 <p class="text-emerald-400 text-sm mt-1">Operator: <span id="userName" class="font-bold"></span></p>
             </div>
             <div class="flex items-center gap-3 w-full md:w-auto">
-                <input type="date" id="historyDate" onchange="renderDashboard()" class="bg-slate-800 text-sm text-white rounded-lg p-2 border border-slate-600 flex-1 md:flex-none outline-none focus:border-blue-500">
-                <button onclick="clearDateFilter()" class="text-sm font-semibold text-blue-400 hover:text-blue-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg border border-slate-700 transition">Clear</button>
-                <button onclick="logout()" class="text-red-400 hover:text-red-300 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold transition shadow-sm">Logout</button>
+                <input type="date" id="historyDate" onchange="renderDashboard()" 
+                       class="bg-slate-800 text-sm text-white rounded-lg p-2 border border-slate-600 flex-1 md:flex-none outline-none focus:border-blue-500">
+                <button onclick="clearDateFilter()" 
+                        class="text-sm font-semibold text-blue-400 hover:text-blue-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg border border-slate-700 transition">
+                    Clear
+                </button>
+                <button onclick="logout()" 
+                        class="text-red-400 hover:text-red-300 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold transition shadow-sm">
+                    Logout
+                </button>
             </div>
         </div>
 
-        <!-- Premium KPI Filter Bar -->
+        <!-- Premium KPI Filter Pipeline -->
         <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar">
-            <!-- Dynamically Populated by JavaScript -->
+            <!-- Dynamically Populated via JS -->
         </div>
         
-        <!-- Order Grid (Ensuring 4 Cards on Home Screen via grid-cols-2 mobile, 4 desktop) -->
+        <!-- Order Cards Grid (Minimum 4 cards visible) -->
         <div id="orderGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <!-- Dynamically Populated by JavaScript -->
+            <!-- Dynamically Populated via JS -->
         </div>
     </div>
 
-    <!-- Order Execution Pipeline Modal -->
+    <!-- Order Execution Task Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-95 backdrop-blur-sm flex items-center justify-center z-50 p-3">
         <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-600">
-            
-            <!-- Modal Header -->
             <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800/90 shadow-md z-10">
                 <div>
                     <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
                     <p class="text-emerald-400 text-sm font-bold mt-1" id="modalShopName">Shop Name</p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-4xl leading-none transition-colors">&times;</button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-4xl leading-none transition-colors">
+                    &times;
+                </button>
             </div>
             
-            <!-- Modal Body -->
             <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-slate-900/50" id="stagesContainer">
-                <!-- Items List & Stages Populated Here -->
+                <!-- Items List & Execution Stages Populated Here -->
             </div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // SYSTEM CONFIGURATION
+        // CONFIGURATION AND GLOBAL STATE
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; // <--- UPDATE WITH FRESH DEPLOYMENT URL
+        const API_URL = "YOUR_NEW_WEB_APP_URL_HERE"; // <--- MENDATORY TO UPDATE
         
         const STAGE_NAMES = [
-            "Order Received", "Balance Check", "Call 1 (Confirmation)", 
-            "Processed (Stock)", "Invoiced", "Dispatched", 
-            "Call 2 (Out-for-delivery)", "Delivered", "Final Call (Rating)"
+            "Order Received", 
+            "Balance Check", 
+            "Call 1 (Confirmation)", 
+            "Processed (Stock)", 
+            "Invoiced", 
+            "Dispatched", 
+            "Call 2 (Out-for-delivery)", 
+            "Delivered", 
+            "Final Call (Rating)"
         ];
 
         let allOrdersData = [];
@@ -117,14 +154,16 @@
         let activeStageFilter = null;
         let latestOrderTimestamp = null;
         let autoRefreshInterval = null;
+        let queuedFiles = []; 
 
         // ==========================================
-        // AUTHENTICATION LOGIC
+        // LOGIN & AUTHENTICATION
         // ==========================================
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const error = document.getElementById('loginError');
+            
             btn.innerText = "Authenticating Operator...";
             
             try {
@@ -150,7 +189,7 @@
                     btn.innerText = "Access System";
                 }
             } catch (err) {
-                error.innerText = "Network Error. Check internet connection or API_URL."; 
+                error.innerText = "Network Error. Check API_URL."; 
                 error.classList.remove('hidden'); 
                 btn.innerText = "Access System";
             }
@@ -161,12 +200,14 @@
             document.getElementById('dashboardScreen').classList.remove('hidden');
             document.getElementById('userName').innerText = name;
             
-            // Initial Data Fetch
             fetchOrders(false);
             
-            // Set up Live Radar (Background Sync every 15 seconds)
-            if(autoRefreshInterval) clearInterval(autoRefreshInterval);
-            autoRefreshInterval = setInterval(() => { fetchOrders(true); }, 15000);
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(() => { 
+                fetchOrders(true); 
+            }, 15000); // 15 seconds live radar
         }
 
         function logout() { 
@@ -174,17 +215,17 @@
             location.reload(); 
         }
         
-        // Auto-login if session exists
         if (localStorage.getItem('yash_user')) { 
             showDashboard(localStorage.getItem('yash_user')); 
         }
 
         // ==========================================
-        // NOTIFICATION & DATA FETCHING
+        // NOTIFICATIONS
         // ==========================================
         function showNotification(title, message) {
             const area = document.getElementById('notificationArea');
             const toast = document.createElement('div');
+            
             toast.className = "bg-slate-800 text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(37,99,235,0.4)] border border-blue-500 flex items-center gap-4 toast-enter pointer-events-auto";
             toast.innerHTML = `
                 <span class="text-2xl animate-bounce">🚨</span>
@@ -193,9 +234,9 @@
                     <p class="text-sm font-bold text-white mt-0.5">${message}</p>
                 </div>
             `;
+            
             area.appendChild(toast);
             
-            // Remove notification gracefully after 6 seconds
             setTimeout(() => { 
                 toast.style.opacity = '0'; 
                 toast.style.transition = 'opacity 0.3s ease';
@@ -203,10 +244,13 @@
             }, 6000);
         }
 
+        // ==========================================
+        // DATA FETCHING & SYNCING
+        // ==========================================
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
             
-            if(!isSilent && allOrdersData.length === 0) {
+            if (!isSilent && allOrdersData.length === 0) {
                 grid.innerHTML = '<p class="col-span-full text-blue-400 text-center font-bold text-lg animate-pulse mt-10">📡 Fetching Radar Data from Control Tower...</p>';
             }
             
@@ -220,7 +264,6 @@
                 if (response.status === 'success') {
                     const newOrders = response.data;
                     
-                    // Notification Logic checking for newly arrived order
                     if (newOrders.length > 0 && latestOrderTimestamp !== null) {
                         const incomingLatest = new Date(newOrders[0].date).getTime();
                         if (incomingLatest > latestOrderTimestamp) {
@@ -234,14 +277,15 @@
                     allOrdersData = newOrders;
                     renderDashboard();
 
-                    // If modal is currently open, refresh it without kicking the user out
                     if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
                         const updatedOrder = allOrdersData.find(o => o.orderId === currentActiveOrder.orderId);
-                        if(updatedOrder) openModal(updatedOrder); 
+                        if (updatedOrder) {
+                            openModal(updatedOrder); 
+                        }
                     }
                 }
             } catch (err) { 
-                console.log("Background sync interrupted by network flutter."); 
+                console.log("Background sync error."); 
             }
         }
 
@@ -256,14 +300,13 @@
         }
 
         // ==========================================
-        // UI RENDERING LOGIC
+        // DASHBOARD RENDERING (GRIDS & PIPELINE)
         // ==========================================
         function renderDashboard() {
             const grid = document.getElementById('orderGrid');
             const filterBar = document.getElementById('stageFilterBar');
             const selectedDate = document.getElementById('historyDate').value;
             
-            // Date Filtering
             let baseOrders = allOrdersData.filter(order => {
                 if (selectedDate) {
                     return new Date(order.date).toISOString().split('T')[0] === selectedDate;
@@ -271,13 +314,13 @@
                 return !order.isFullyCompleted;
             });
 
-            // Count Calculation for KPI Cards
             let stageCounts = Array(9).fill(0);
             baseOrders.forEach(o => { 
-                if(o.completedStages < 9) stageCounts[o.completedStages]++; 
+                if (o.completedStages < 9) {
+                    stageCounts[o.completedStages]++; 
+                }
             });
 
-            // Build KPI Stage Filter Cards
             let filterHtml = `
                 <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all">
                     <span class="${activeStageFilter === null ? 'text-blue-200' : 'text-slate-400'} text-[10px] font-bold uppercase tracking-wider mb-1">Overview</span>
@@ -303,14 +346,17 @@
                     </div>
                 </div>`;
             });
+            
             filterBar.innerHTML = filterHtml;
 
-            // Render 4 Cards Grid Data
             let displayOrders = activeStageFilter !== null ? baseOrders.filter(o => o.completedStages === activeStageFilter) : baseOrders;
             grid.innerHTML = '';
             
-            if(displayOrders.length === 0) {
-                grid.innerHTML = '<div class="col-span-full bg-slate-800/30 border border-slate-700/50 p-8 rounded-2xl text-center"><p class="text-slate-400 text-lg font-medium">Inbox Zero. No orders pending here.</p></div>';
+            if (displayOrders.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-slate-800/30 border border-slate-700/50 p-8 rounded-2xl text-center">
+                        <p class="text-slate-400 text-lg font-medium">Inbox Zero. No orders pending here.</p>
+                    </div>`;
                 return;
             }
 
@@ -318,11 +364,12 @@
                 const progress = (order.completedStages / 9) * 100;
                 let nextStepName = order.completedStages < 9 ? STAGE_NAMES[order.completedStages].split(' (')[0] : "Fully Completed";
                 
-                // Formatted Date Block
                 let dateStr = "";
-                if(order.date) {
+                if (order.date) {
                     const d = new Date(order.date);
-                    if(!isNaN(d)) dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+                    if (!isNaN(d)) {
+                        dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+                    }
                 }
 
                 grid.innerHTML += `
@@ -357,37 +404,54 @@
         }
 
         // ==========================================
-        // MODAL AND EXECUTION WORKFLOW
+        // CUSTOM FILE SELECTION QUEUE LOGIC
+        // ==========================================
+        function handleFileSelection(inputElement, stageNum) {
+            queuedFiles = Array.from(inputElement.files);
+            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
+            
+            if (queuedFiles.length > 0) {
+                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Selected & Ready`;
+                statusLabel.classList.remove('hidden');
+            } else {
+                statusLabel.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // MODAL AND TASK EXECUTION
         // ==========================================
         function openModal(order) {
             currentActiveOrder = order;
+            queuedFiles = []; 
             document.getElementById('modalOrderId').innerText = order.orderId;
             document.getElementById('modalShopName').innerText = order.shopName;
             
             const container = document.getElementById('stagesContainer');
             container.innerHTML = '';
             
-            // Detailed Items to Pick List
+            // ------------------------------------------
+            // 1. DYNAMIC ITEMS TO PICK LIST (Showing 5+ easily)
+            // ------------------------------------------
             let itemsHtml = `
                 <div class="mb-6 bg-slate-800 border border-slate-600 rounded-xl p-4 shadow-inner">
                     <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 flex items-center gap-2">
                         <span class="text-emerald-400 text-lg">📦</span> Items to Pick
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto pr-2 hide-scrollbar">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
             `;
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
                     let imgTag = item.image 
                         ? `<img src="${item.image}" class="w-14 h-14 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` 
-                        : `<div class="w-14 h-14 bg-slate-700 rounded flex items-center justify-center text-[10px] text-slate-400 shrink-0 font-mono">No Img</div>`;
+                        : `<div class="w-14 h-14 bg-slate-700 rounded flex items-center justify-center text-[10px] text-slate-400 shrink-0 font-mono border border-slate-600">No Img</div>`;
                     
                     itemsHtml += `
                         <div class="flex items-center gap-3 bg-slate-900/80 p-2.5 rounded-lg border border-slate-700">
                             ${imgTag}
                             <div class="flex-1 min-w-0">
-                                <!-- Full names allowed to wrap onto multiple lines -->
-                                <p class="text-xs text-white font-semibold leading-tight break-words">${item.name}</p>
+                                <p class="text-xs text-white font-semibold leading-tight break-words whitespace-normal">${item.name}</p>
                                 <div class="mt-1.5 flex items-center gap-2">
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qty:</span>
                                     <span class="text-xs font-black text-emerald-400 bg-emerald-900/40 px-2 rounded border border-emerald-500/20">${item.qty}</span>
@@ -397,13 +461,20 @@
                     `;
                 });
             } else { 
-                itemsHtml += `<p class="text-sm text-slate-500 italic px-2">No products found in data.</p>`; 
+                itemsHtml += `<p class="text-sm text-slate-500 italic px-2">No products found in data format.</p>`; 
             }
-            itemsHtml += `</div></div>`;
+            
+            itemsHtml += `
+                    </div>
+                </div>
+            `;
             container.innerHTML += itemsHtml;
 
-            // Pipeline Stages List
+            // ------------------------------------------
+            // 2. PIPELINE STAGES LOGIC
+            // ------------------------------------------
             let stagesListHtml = '<div class="space-y-4">';
+            
             for (let i = 0; i < 9; i++) {
                 const stageNum = i + 1; 
                 const isCompleted = i < order.completedStages; 
@@ -412,23 +483,23 @@
                 
                 let uiHtml = '';
                 
-                // COMPLETED STAGE VIEW
                 if (isCompleted) {
                     let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : [];
-                    let previewHtml = `<div class="flex gap-3 mt-3 overflow-x-auto pb-2 hide-scrollbar">`;
+                    let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
                     
-                    fileUrls.forEach(url => {
+                    fileUrls.forEach((url, index) => {
                         url = url.trim();
                         if (url.includes("http")) {
                             if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                                previewHtml += `<audio controls src="${url}" class="h-8 min-w-[200px] outline-none"></audio>`;
+                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-900 rounded"></audio>`;
                             } else { 
-                                let previewUrl = url;
-                                if(url.includes("drive.google.com/file/d/")) {
-                                    let id = url.split("/d/")[1].split("/")[0];
-                                    previewUrl = `https://drive.google.com/uc?id=${id}`;
-                                }
-                                previewHtml += `<a href="${url}" target="_blank" class="shrink-0 transition hover:scale-105"><img src="${previewUrl}" class="h-20 w-20 object-cover rounded-lg border-2 border-emerald-500/50 bg-slate-900 shadow-lg" alt="Proof"></a>`;
+                                // Secure Button to open image in new tab to bypass cookie blocks
+                                previewHtml += `
+                                    <a href="${url}" target="_blank" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-3 text-sm font-bold text-blue-400 flex items-center justify-between transition shadow-sm">
+                                        <span>🖼️ View Uploaded Document ${index + 1}</span>
+                                        <span class="text-slate-500 text-lg">→</span>
+                                    </a>
+                                `;
                             }
                         }
                     });
@@ -441,50 +512,70 @@
                                 <span class="bg-emerald-900/60 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
                             </div>
                             ${previewHtml}
-                        </div>`;
+                        </div>
+                    `;
                 } 
-                // LOCKED STAGE VIEW
                 else if (isLocked) {
                     uiHtml = `
                         <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 flex justify-between items-center grayscale opacity-60">
                             <span class="text-slate-500 text-base font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
                             <span class="text-slate-600 text-[10px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
-                        </div>`;
+                        </div>
+                    `;
                 } 
-                // ACTIVE (ACTIONABLE) STAGE VIEW
                 else if (isActive) {
                     let inputHtml = '';
                     
                     if (stageNum === 1) {
-                        inputHtml = `<button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">Accept Task & Begin Process</button>`;
-                    } else {
-                        let acceptType = "image/*"; 
-                        let allowMultiple = "multiple";
-                        let instructionLabel = "Select Multiple Photos (Choose Camera or Gallery)";
-                        
-                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                            acceptType = "audio/*"; 
-                            allowMultiple = ""; 
-                            instructionLabel = "Record or Upload Audio";
-                        }
-                        
                         inputHtml = `
-                            <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                <span class="text-blue-400">⚡</span> ${instructionLabel}
-                            </p>
-                            <!-- Multiple attribute allows batch upload. Accept attribute prompts OS camera/gallery intent -->
-                            <input type="file" id="fileUpload" accept="${acceptType}" ${allowMultiple} 
-                                class="w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-500 bg-slate-900 p-1.5 rounded-xl border border-slate-600 shadow-inner cursor-pointer transition">`;
+                            <button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">
+                                Accept Task & Begin Process
+                            </button>
+                        `;
+                    } else {
+                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
+                            // AUDIO RECORDING UI
+                            inputHtml = `
+                                <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                    <span class="text-blue-400">🎤</span> Record Audio / Call
+                                </p>
+                                <input type="file" accept="audio/*" class="w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-black file:bg-blue-600 file:text-white bg-slate-900 p-1.5 rounded-xl border border-slate-600 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">
+                                <p id="fileStatusText_${stageNum}" class="text-xs font-bold text-emerald-400 mt-2 text-center hidden"></p>
+                            `;
+                        } else {
+                            // IMAGE RECORDING UI (SEPARATE CAMERA & GALLERY)
+                            inputHtml = `
+                                <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                    <span class="text-blue-400">⚡</span> Upload Proof (Required)
+                                </p>
+                                <div class="flex gap-2 w-full">
+                                    <label class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                        📸 Live Camera
+                                        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})">
+                                    </label>
+                                    <label class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                        🖼️ Multi Gallery
+                                        <input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})">
+                                    </label>
+                                </div>
+                                <p id="fileStatusText_${stageNum}" class="text-xs font-bold text-emerald-400 mt-3 text-center bg-emerald-900/20 py-1.5 rounded hidden border border-emerald-500/20"></p>
+                            `;
+                        }
                         
                         if (stageNum === 9) {
                             inputHtml += `
-                            <div class="mt-4">
-                                <label class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 block">Customer Rating</label>
-                                <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-lg text-center">
-                            </div>`;
+                                <div class="mt-4">
+                                    <label class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 block">Customer Rating</label>
+                                    <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-lg text-center">
+                                </div>
+                            `;
                         }
                         
-                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">Upload Proof & Complete Task</button>`;
+                        inputHtml += `
+                            <button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">
+                                Execute & Proceed
+                            </button>
+                        `;
                     }
                     
                     uiHtml = `
@@ -494,12 +585,17 @@
                                 <span class="text-white font-black text-xl">${stageNum}. ${STAGE_NAMES[i]}</span>
                                 <span class="bg-blue-500 text-white text-[10px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
                             </div>
-                            <div id="actionArea_${stageNum}">${inputHtml}</div>
+                            <div id="actionArea_${stageNum}">
+                                ${inputHtml}
+                            </div>
                             <p id="status_${stageNum}" class="text-sm font-bold mt-3 hidden text-center"></p>
-                        </div>`;
+                        </div>
+                    `;
                 }
+                
                 stagesListHtml += uiHtml;
             }
+            
             stagesListHtml += '</div>';
             container.innerHTML += stagesListHtml;
             
@@ -508,32 +604,38 @@
 
         function closeModal() { 
             document.getElementById('orderModal').classList.add('hidden'); 
-            fetchOrders(true);
+            fetchOrders(true); 
         }
 
         // ==========================================
-        // FAST CLIENT-SIDE COMPRESSION ENGINE
+        // DATA COMPRESSION & UPLOAD PROTOCOLS
         // ==========================================
         function compressImage(file) {
             return new Promise((resolve) => {
-                const reader = new FileReader();
+                const reader = new FileReader(); 
                 reader.readAsDataURL(file);
+                
                 reader.onload = (event) => {
-                    const img = new Image();
+                    const img = new Image(); 
                     img.src = event.target.result;
+                    
                     img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        // Resize logic to prevent heavy uploads
+                        const canvas = document.createElement('canvas'); 
                         const MAX_WIDTH = 800; 
                         let scale = 1;
-                        if(img.width > MAX_WIDTH) scale = MAX_WIDTH / img.width;
+                        
+                        if (img.width > MAX_WIDTH) {
+                            scale = MAX_WIDTH / img.width;
+                        }
+                        
                         canvas.width = img.width * scale; 
                         canvas.height = img.height * scale;
                         
-                        const ctx = canvas.getContext('2d');
+                        const ctx = canvas.getContext('2d'); 
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        // Export as 60% quality JPEG (Usually under 100KB)
+                        
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
+                        
                         resolve({ 
                             name: file.name, 
                             mimeType: 'image/jpeg', 
@@ -544,23 +646,21 @@
             });
         }
 
-        // Fallback for Audio and non-image files
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader(); 
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve({
+                
+                reader.onload = () => resolve({ 
                     name: file.name, 
                     mimeType: file.type, 
-                    base64: reader.result.split(',')[1]
+                    base64: reader.result.split(',')[1] 
                 });
+                
                 reader.onerror = error => reject(error);
             });
         }
 
-        // ==========================================
-        // SUBMISSION ENGINE
-        // ==========================================
         async function submitStage(stageNum) {
             const btn = document.getElementById(`submitBtn_${stageNum}`);
             const statusLabel = document.getElementById(`status_${stageNum}`);
@@ -573,45 +673,44 @@
             };
             
             if (stageNum !== 1) {
-                const fileInput = document.getElementById('fileUpload');
-                if (fileInput.files.length === 0) { 
-                    alert("A file proof is mandatory to clear this stage."); 
+                if (queuedFiles.length === 0) { 
+                    alert("A file proof is mandatory to clear this stage. Please select an image or audio."); 
                     return; 
                 }
                 
                 btn.innerText = "Compressing & Transmitting..."; 
                 btn.disabled = true;
                 
-                // LOOP THROUGH MULTIPLE FILES
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    let f = fileInput.files[i];
-                    if (f.type.startsWith('image/')) {
+                for (let i = 0; i < queuedFiles.length; i++) {
+                    let f = queuedFiles[i];
+                    if (f.type.startsWith('image/')) { 
                         payload.files.push(await compressImage(f)); 
-                    } else {
+                    } else { 
                         payload.files.push(await getBase64(f)); 
                     }
                 }
                 
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
-                    if(!rating) { 
-                        alert("Customer Rating is mandatory for Final Call."); 
+                    if (!rating) { 
+                        alert("Customer Rating is mandatory."); 
                         btn.disabled = false; 
-                        btn.innerText = "Upload Proof & Complete Task";
-                        return;
+                        btn.innerText = "Execute & Proceed"; 
+                        return; 
                     }
                     payload.rating = rating;
                 }
             } else { 
-                if(btn) { 
-                    btn.innerText = "Processing Task Lock..."; 
+                if (btn) { 
+                    btn.innerText = "Processing Lock..."; 
                     btn.disabled = true; 
                 } 
             }
             
-            if(statusLabel) { 
-                statusLabel.innerText = "📡 Uplinking to Control Tower..."; 
+            if (statusLabel) { 
+                statusLabel.innerText = "📡 Uplinking Data to Control Tower..."; 
                 statusLabel.className = "text-[12px] font-bold tracking-widest mt-3 text-blue-400 block animate-pulse text-center"; 
+                statusLabel.classList.remove('hidden');
             }
 
             try {
@@ -619,22 +718,24 @@
                     method: 'POST', 
                     body: JSON.stringify(payload) 
                 });
+                
                 const data = await res.json();
                 
                 if (data.status === 'success') {
-                    if(btn) btn.innerText = "Execution Successful ✓";
-                    // Silently sync the background data so the modal automatically refreshes 
-                    // to show the completed stage without kicking the user out.
+                    if (btn) {
+                        btn.innerText = "Successful ✓";
+                    }
+                    queuedFiles = []; 
                     fetchOrders(true); 
                 } else { 
                     throw new Error(data.message); 
                 }
             } catch (err) {
-                if(statusLabel) { 
-                    statusLabel.innerText = "❌ Sync Failed. Verify connection and Retry."; 
+                if (statusLabel) { 
+                    statusLabel.innerText = "❌ Sync Failed. Verify connection."; 
                     statusLabel.className = "text-[12px] font-bold mt-3 text-red-500 block text-center"; 
                 }
-                if(btn) { 
+                if (btn) { 
                     btn.innerText = "Retry Transmission"; 
                     btn.disabled = false; 
                 }
