@@ -86,7 +86,7 @@
         let currentActiveOrder = null;
         let activeStageFilter = null;
 
-        // --- AUTHENTICATION ---
+       // --- AUTHENTICATION ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
@@ -98,8 +98,7 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'login',
-                        // Shifted from 'phone' to 'employeeId' to match the backend expectation
-                        employeeId: document.getElementById('loginEmpId').value,
+                        employeeId: document.getElementById('loginEmpId').value, // Ye match hona zaruri hai
                         password: document.getElementById('loginPass').value
                     })
                 });
@@ -109,17 +108,17 @@
                     localStorage.setItem('yash_user', data.user.name);
                     showDashboard(data.user.name);
                 } else {
-                    error.innerText = data.message;
+                    error.innerText = data.message; // Invalid Credentials yaha show hoga
                     error.classList.remove('hidden');
                     btn.innerText = "Initialize Protocol";
                 }
             } catch (err) {
-                error.innerText = "Connection Error.";
+                // Agar API_URL galat hoga, toh ye error aayega
+                error.innerText = "Connection Error. Check API_URL deployment.";
                 error.classList.remove('hidden');
                 btn.innerText = "Initialize Protocol";
             }
         });
-
         function showDashboard(name) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboardScreen').classList.remove('hidden');
