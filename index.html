@@ -3,37 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing - Command Center</title>
+    <title>Yash Marketing - C-Level Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
-            background-color: #0f172a; 
+            background-color: #0B1121; 
             color: #f8fafc; 
             font-family: 'Inter', sans-serif; 
         }
         .glass-panel { 
-            background: rgba(30, 41, 59, 0.7); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            background: rgba(15, 23, 42, 0.7); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
         }
-        .stage-card { 
-            transition: all 0.2s; 
-            cursor: pointer; 
+        .chart-bar { 
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-        .stage-card:hover { 
-            transform: translateY(-2px); 
-            border-color: #3b82f6; 
+        .hover-card {
+            transition: all 0.3s ease;
+        }
+        .hover-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+            border-color: rgba(99, 102, 241, 0.4); 
         }
         ::-webkit-scrollbar { 
             width: 6px; 
             height: 6px; 
         }
         ::-webkit-scrollbar-track { 
-            background: #1e293b; 
-            border-radius: 4px; 
+            background: #0B1121; 
         }
         ::-webkit-scrollbar-thumb { 
-            background: #475569; 
+            background: #334155; 
             border-radius: 4px; 
         }
         .hide-scrollbar::-webkit-scrollbar { 
@@ -50,87 +52,107 @@
         .toast-enter { 
             animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
+        .active-filter { 
+            background: #4F46E5 !important; 
+            border-color: #6366F1 !important; 
+            color: white !important; 
+            font-weight: bold; 
+        }
     </style>
 </head>
-<body class="min-h-screen p-2 md:p-8">
+<body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
     <!-- Notification Radar Area -->
     <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none">
     </div>
 
     <!-- Login Authentication Screen -->
-    <div id="loginScreen" class="flex h-[80vh] items-center justify-center p-4">
-        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
+    <div id="loginScreen" class="flex h-[90vh] items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border-t-4 border-t-indigo-500">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2 tracking-tight">
                 YASH MARKETING
             </h1>
-            <p class="text-slate-400 text-sm tracking-widest mb-8 uppercase">
-                Staff Login Interface
+            <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
+                Enterprise OS Login
             </p>
             <form id="loginForm" class="space-y-4">
-                <input type="text" id="loginEmpId" placeholder="Employee ID (e.g. YM001)" required 
-                       class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
-                <input type="password" id="loginPass" placeholder="Password" required 
-                       class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">
-                    Access System
+                <input type="text" id="loginEmpId" placeholder="Access Code / Emp ID" required 
+                       class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner">
+                <input type="password" id="loginPass" placeholder="Security PIN" required 
+                       class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner">
+                <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform active:scale-[0.98]">
+                    INITIALIZE SYSTEM
                 </button>
             </form>
-            <p id="loginError" class="text-red-400 text-sm mt-4 hidden"></p>
+            <p id="loginError" class="text-pink-400 text-sm mt-4 font-semibold hidden animate-pulse"></p>
         </div>
     </div>
 
     <!-- Main Operational Dashboard Screen -->
-    <div id="dashboardScreen" class="hidden max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
+    <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto">
+        
+        <!-- Master Header & Date Controls -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-white">Active Sprints</h1>
-                <p class="text-emerald-400 text-sm mt-1">Operator: <span id="userName" class="font-bold"></span></p>
+                <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
+                    <span class="text-indigo-400">⚡</span> Mission Control
+                </h1>
+                <p class="text-slate-400 text-xs mt-1 font-mono">
+                    OP_ID: <span id="userName" class="text-emerald-400 font-bold"></span>
+                </p>
             </div>
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <input type="date" id="historyDate" onchange="renderDashboard()" 
-                       class="bg-slate-800 text-sm text-white rounded-lg p-2 border border-slate-600 flex-1 md:flex-none outline-none focus:border-blue-500">
-                <button onclick="clearDateFilter()" 
-                        class="text-sm font-semibold text-blue-400 hover:text-blue-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg border border-slate-700 transition">
-                    Clear
-                </button>
-                <button onclick="logout()" 
-                        class="text-red-400 hover:text-red-300 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold transition shadow-sm">
-                    Logout
+            
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
+                <button onclick="setDateRange('today', this)" class="date-filter-btn active-filter px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">Today</button>
+                <button onclick="setDateRange('7d', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">7 Days</button>
+                <button onclick="setDateRange('30d', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">30 Days</button>
+                <button onclick="setDateRange('all', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">All Time</button>
+                
+                <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
+                
+                <input type="date" id="customDateFilter" onchange="setDateRange('custom', this)" 
+                       class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1">
+                       
+                <button onclick="logout()" class="ml-auto lg:ml-2 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">
+                    LOGOUT
                 </button>
             </div>
         </div>
 
         <!-- MDO Command Center (Owner Exclusive) -->
-        <div id="mdoCommandCenter" class="hidden mb-6">
+        <div id="mdoCommandCenter" class="hidden mb-8 space-y-4">
             <!-- Populated via JS if user is Owner -->
         </div>
 
+        <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <span class="text-indigo-400">🌊</span> Operational Pipeline
+        </h3>
+        
         <!-- Premium KPI Filter Pipeline -->
         <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar">
             <!-- Dynamically Populated via JS -->
         </div>
         
-        <!-- Order Cards Grid (Minimum 4 cards visible) -->
-        <div id="orderGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- Order Cards Grid -->
+        <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <!-- Dynamically Populated via JS -->
         </div>
     </div>
 
     <!-- Order Execution Task Modal -->
-    <div id="orderModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-95 backdrop-blur-sm flex items-center justify-center z-50 p-3">
-        <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-600">
-            <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800/90 shadow-md z-10">
+    <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+        <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-700">
+            <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-[#131C31] shadow-md z-10">
                 <div>
                     <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
-                    <p class="text-emerald-400 text-sm font-bold mt-1" id="modalShopName">Shop Name</p>
+                    <p class="text-indigo-400 text-sm font-bold mt-1" id="modalShopName">Shop Name</p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-4xl leading-none transition-colors">
+                <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors">
                     &times;
                 </button>
             </div>
             
-            <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-slate-900/50" id="stagesContainer">
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-[#0B1121]" id="stagesContainer">
                 <!-- Items List & Execution Stages Populated Here -->
             </div>
         </div>
@@ -140,7 +162,7 @@
         // ==========================================
         // CONFIGURATION AND GLOBAL STATE
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; // <--- MENDATORY TO UPDATE
+        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; 
         
         const STAGE_NAMES = [
             "Order Received", 
@@ -155,8 +177,10 @@
         ];
 
         let allOrdersData = [];
+        let filteredData = [];
         let currentActiveOrder = null;
         let activeStageFilter = null;
+        let activeDateRange = 'today'; 
         let latestOrderTimestamp = null;
         let autoRefreshInterval = null;
         let queuedFiles = []; 
@@ -170,7 +194,7 @@
             const btn = document.getElementById('loginBtn');
             const error = document.getElementById('loginError');
             
-            btn.innerText = "Authenticating Operator...";
+            btn.innerText = "AUTHENTICATING...";
             
             try {
                 const payload = {
@@ -194,12 +218,12 @@
                 } else {
                     error.innerText = data.message; 
                     error.classList.remove('hidden'); 
-                    btn.innerText = "Access System";
+                    btn.innerText = "INITIALIZE SYSTEM";
                 }
             } catch (err) {
-                error.innerText = "Network Error. Check API_URL."; 
+                error.innerText = "Network Error. Check Connection."; 
                 error.classList.remove('hidden'); 
-                btn.innerText = "Access System";
+                btn.innerText = "INITIALIZE SYSTEM";
             }
         });
 
@@ -208,7 +232,7 @@
             
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboardScreen').classList.remove('hidden');
-            document.getElementById('userName').innerText = name;
+            document.getElementById('userName').innerText = name.toUpperCase();
             
             fetchOrders(false);
             
@@ -217,7 +241,7 @@
             }
             autoRefreshInterval = setInterval(() => { 
                 fetchOrders(true); 
-            }, 15000); // 15 seconds live radar
+            }, 15000); 
         }
 
         function logout() { 
@@ -237,11 +261,11 @@
             const area = document.getElementById('notificationArea');
             const toast = document.createElement('div');
             
-            toast.className = "bg-slate-800 text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(37,99,235,0.4)] border border-blue-500 flex items-center gap-4 toast-enter pointer-events-auto";
+            toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto";
             toast.innerHTML = `
-                <span class="text-2xl animate-bounce">🚨</span>
+                <span class="text-2xl animate-bounce">⚡</span>
                 <div>
-                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-400">${title}</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400">${title}</p>
                     <p class="text-sm font-bold text-white mt-0.5">${message}</p>
                 </div>
             `;
@@ -256,13 +280,18 @@
         }
 
         // ==========================================
-        // DATA FETCHING & SYNCING
+        // DATA FETCHING & FILTERING
         // ==========================================
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
             
             if (!isSilent && allOrdersData.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-blue-400 text-center font-bold text-lg animate-pulse mt-10">📡 Fetching Radar Data from Control Tower...</p>';
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center">
+                        <div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
+                        <p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">Syncing with Mainframe...</p>
+                    </div>
+                `;
             }
             
             try {
@@ -273,20 +302,18 @@
                 const response = await res.json();
                 
                 if (response.status === 'success') {
-                    const newOrders = response.data;
-                    
-                    if (newOrders.length > 0 && latestOrderTimestamp !== null) {
-                        const incomingLatest = new Date(newOrders[0].date).getTime();
+                    if (response.data.length > 0 && latestOrderTimestamp !== null) {
+                        const incomingLatest = new Date(response.data[0].date).getTime();
                         if (incomingLatest > latestOrderTimestamp) {
-                            showNotification("New Order Detected", newOrders[0].shopName);
+                            showNotification("New Order Incoming", response.data[0].shopName);
                         }
                     }
-                    if (newOrders.length > 0) {
-                        latestOrderTimestamp = new Date(newOrders[0].date).getTime();
+                    if (response.data.length > 0) {
+                        latestOrderTimestamp = new Date(response.data[0].date).getTime();
                     }
                     
-                    allOrdersData = newOrders;
-                    renderDashboard();
+                    allOrdersData = response.data;
+                    applyDateFilter(); 
 
                     if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
                         const updatedOrder = allOrdersData.find(o => o.orderId === currentActiveOrder.orderId);
@@ -300,14 +327,48 @@
             }
         }
 
-        function clearDateFilter() { 
-            document.getElementById('historyDate').value = ""; 
-            renderDashboard(); 
+        function setDateRange(range, btnElement) {
+            activeDateRange = range;
+            
+            if(range !== 'custom') {
+                document.getElementById('customDateFilter').value = '';
+            }
+            
+            if(btnElement && range !== 'custom') {
+                document.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+                btnElement.classList.add('active-filter');
+            }
+            
+            applyDateFilter();
         }
-        
-        function setStageFilter(stageIndex) { 
-            activeStageFilter = stageIndex; 
-            renderDashboard(); 
+
+        function applyDateFilter() {
+            let now = new Date();
+            now.setHours(0,0,0,0);
+
+            filteredData = allOrdersData.filter(o => {
+                let d = new Date(o.date);
+                d.setHours(0,0,0,0);
+                
+                if (activeDateRange === 'today') {
+                    return d.getTime() === now.getTime();
+                }
+                if (activeDateRange === '7d') {
+                    return (now - d) / (1000*60*60*24) <= 7;
+                }
+                if (activeDateRange === '30d') {
+                    return (now - d) / (1000*60*60*24) <= 30;
+                }
+                if (activeDateRange === 'custom') {
+                    let customVal = document.getElementById('customDateFilter').value;
+                    if(!customVal) return true;
+                    return new Date(customVal).getTime() === d.getTime();
+                }
+                return true; 
+            });
+
+            renderMdoDashboard();
+            renderPipeline();
         }
 
         // ==========================================
@@ -326,170 +387,199 @@
             
             mdoDiv.classList.remove('hidden');
 
-            // 1. Dealer LTV & 2. Pareto Matrix
+            let totalVolume = 0;
+            let totalCompleted = 0;
             let shopStats = {};
-            allOrdersData.forEach(o => {
-                if(!shopStats[o.shopName]) shopStats[o.shopName] = { count: 0, items: 0, lastOrder: new Date(0) };
-                shopStats[o.shopName].count++;
-                let d = new Date(o.date);
-                if(d > shopStats[o.shopName].lastOrder) shopStats[o.shopName].lastOrder = d;
+            let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
+            let stageStuck = Array(9).fill(0);
+
+            filteredData.forEach(o => {
+                if(o.isFullyCompleted) totalCompleted++;
+                if(!o.isFullyCompleted) stageStuck[o.completedStages]++;
+
+                if(!shopStats[o.shopName]) {
+                    shopStats[o.shopName] = { items: 0, revenueScore: 0 };
+                }
                 
                 o.items.forEach(i => {
-                    shopStats[o.shopName].items += parseInt(i.qty || 1);
-                });
-            });
-
-            let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
-            let top20Count = Math.max(1, Math.ceil(sortedShops.length * 0.2));
-            let vipShops = sortedShops.slice(0, top20Count);
-            
-            let now = new Date();
-            let vipAlerts = vipShops.filter(s => (now - s[1].lastOrder) / (1000*60*60*24) > 14);
-
-            // 3. Pipeline Friction
-            let stageStuck = Array(9).fill(0);
-            allOrdersData.forEach(o => {
-                if(!o.isFullyCompleted) stageStuck[o.completedStages]++;
-            });
-            let maxStuck = Math.max(...stageStuck);
-            let frictionStage = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)] : "All Clear";
-
-            // 4. Brand Asymmetry (Volume)
-            let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
-            allOrdersData.forEach(o => {
-                o.items.forEach(i => {
-                    let name = i.name.toLowerCase();
                     let qty = parseInt(i.qty || 1);
-                    if(name.includes('boat')) brandStats['boAt'] += qty;
-                    else if(name.includes('velocity')) brandStats['Velocity'] += qty;
-                    else if(name.includes('portronics')) brandStats['Portronics'] += qty;
-                    else if(name.includes('jbl')) brandStats['JBL'] += qty;
-                    else if(name.includes('hikvision')) brandStats['Hikvision'] += qty;
+                    totalVolume += qty;
+                    shopStats[o.shopName].items += qty;
+
+                    let n = i.name.toLowerCase();
+                    if(n.includes('boat')) brandStats['boAt'] += qty;
+                    else if(n.includes('velocity')) brandStats['Velocity'] += qty;
+                    else if(n.includes('portronics')) brandStats['Portronics'] += qty;
+                    else if(n.includes('jbl')) brandStats['JBL'] += qty;
+                    else if(n.includes('hikvision')) brandStats['Hikvision'] += qty;
                     else brandStats['Others'] += qty;
                 });
             });
 
-            // 5 & 6. Sprint Velocity & Accountability Scorecard
-            let staffBottlenecks = [
-                { role: 'Sales (Call 1/2)', stuck: stageStuck[2] + stageStuck[6] },
-                { role: 'Warehouse (Picking)', stuck: stageStuck[3] },
-                { role: 'Accounts (Invoicing)', stuck: stageStuck[4] },
-                { role: 'Dispatch (Logistics)', stuck: stageStuck[5] }
-            ].sort((a,b) => b.stuck - a.stuck);
-            let biggestLag = staffBottlenecks[0].stuck > 0 ? staffBottlenecks[0] : { role: 'System Optimal', stuck: 0 };
+            let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
+            let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
+            
+            let maxStuck = Math.max(...stageStuck);
+            let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
+            
+            let completionRate = filteredData.length > 0 ? Math.round((totalCompleted / filteredData.length) * 100) : 0;
+            let avgItems = filteredData.length > 0 ? (totalVolume / filteredData.length).toFixed(1) : 0;
+            let brandMax = Math.max(...Object.values(brandStats), 1);
 
-            // 7. S-30 MDO Pulse
-            let today = new Date().toDateString();
-            let todayOrders = allOrdersData.filter(o => new Date(o.date).toDateString() === today).length;
-            let totalPending = allOrdersData.filter(o => !o.isFullyCompleted).length;
-
-            mdoDiv.innerHTML = `
-                <div class="glass-panel border-l-4 border-l-purple-500 rounded-xl p-4 md:p-6 shadow-2xl">
-                    <h2 class="text-xl font-black text-purple-400 mb-4 flex items-center gap-2">
-                        <span class="text-2xl">👑</span> MDO Control Tower (S-30 Pulse)
-                    </h2>
+            let mdoHtml = `
+                <!-- Top KPI Row -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-panel p-5 rounded-2xl hover-card transition-all relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-6xl opacity-5 group-hover:scale-110 transition-transform">📦</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
+                        <div class="flex items-end gap-2">
+                            <span class="text-3xl font-black text-white">${totalVolume}</span>
+                            <span class="text-xs text-emerald-400 font-bold mb-1 pb-1 border-b border-emerald-500/30">Units</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-2 font-semibold">Across ${filteredData.length} Orders (Avg ${avgItems})</div>
+                    </div>
                     
-                    <!-- Pulse & KPI Grid -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 shadow-inner">
-                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Today's Pulse</div>
-                            <div class="text-3xl font-black text-white">${todayOrders} <span class="text-xs text-emerald-400 font-bold">Orders</span></div>
+                    <div class="glass-panel p-5 rounded-2xl hover-card transition-all relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-6xl opacity-5 group-hover:scale-110 transition-transform">⚡</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Completion Rate</div>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-3xl font-black ${completionRate > 70 ? 'text-emerald-400' : 'text-orange-400'}">${completionRate}%</span>
+                            <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r ${completionRate > 70 ? 'from-emerald-600 to-emerald-400' : 'from-orange-600 to-orange-400'}" style="width: ${completionRate}%"></div>
+                            </div>
                         </div>
-                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 shadow-inner">
-                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Pipeline</div>
-                            <div class="text-3xl font-black text-white">${totalPending} <span class="text-xs text-blue-400 font-bold">Active</span></div>
-                        </div>
-                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 border-l-2 border-l-red-500 shadow-inner">
-                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Friction Index</div>
-                            <div class="text-lg font-black text-red-400 truncate leading-tight" title="${frictionStage}">${frictionStage}</div>
-                            <div class="text-xs text-slate-500 mt-1 font-bold">${maxStuck} Orders Stuck</div>
-                        </div>
-                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 shadow-inner">
-                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Velocity Scorecard</div>
-                            <div class="text-sm font-black text-orange-400 truncate leading-tight">Lag: ${biggestLag.role}</div>
-                            <div class="text-xs text-slate-500 mt-1 font-bold">- ${biggestLag.stuck} Tasks Pending</div>
+                        <div class="text-[10px] text-slate-500 mt-2 font-semibold">${totalCompleted} fully delivered</div>
+                    </div>
+
+                    <div class="glass-panel border-b-4 border-b-pink-500 p-5 rounded-2xl hover-card transition-all">
+                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Friction Bottleneck</div>
+                        <div class="text-xl font-black text-pink-400 truncate mt-1 leading-tight" title="${frictionIndex}">${frictionIndex}</div>
+                        <div class="inline-block mt-2 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs font-bold px-2 py-1 rounded">
+                            ${maxStuck} Orders Stuck Here
                         </div>
                     </div>
 
-                    <!-- Matrix & Heatmap Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Pareto Dealer Matrix -->
-                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
-                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2">Pareto Matrix (80/20 VIPs)</h3>
-                            <div class="max-h-40 overflow-y-auto hide-scrollbar space-y-2 pr-1">
-                                ${vipAlerts.length > 0 ? vipAlerts.map(v => `
-                                    <div class="flex justify-between items-center bg-red-900/30 border border-red-500/50 p-2.5 rounded-lg animate-pulse">
-                                        <span class="text-xs font-black text-red-400 truncate w-2/3">🚨 ${v[0]}</span>
-                                        <span class="text-[9px] font-black text-slate-300 bg-red-950 px-2 py-1 rounded tracking-widest uppercase">No Order >14 Days</span>
-                                    </div>
-                                `).join('') : '<div class="text-xs text-emerald-500 font-bold p-2 bg-emerald-900/20 rounded border border-emerald-500/20">All VIPs are active and ordering.</div>'}
-                                
-                                ${vipShops.slice(0, 10).map((v, i) => `
-                                    <div class="flex justify-between items-center p-2 border-b border-slate-800 last:border-0 hover:bg-slate-800 rounded transition">
-                                        <span class="text-xs font-bold text-slate-300 truncate w-2/3"><span class="text-slate-500 mr-2">#${i+1}</span>${v[0]}</span>
-                                        <span class="text-xs font-black text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">LTV: ${v[1].items}</span>
-                                    </div>
-                                `).join('')}
+                    <div class="glass-panel p-5 rounded-2xl hover-card transition-all flex flex-col justify-center items-center text-center">
+                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Active VIP Dealers</div>
+                        <div class="text-4xl font-black text-indigo-400">${sortedShops.length}</div>
+                        <div class="text-[10px] text-slate-500 mt-1 font-semibold">Generating revenue in this period</div>
+                    </div>
+                </div>
+
+                <!-- Dual Visual Pane -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    
+                    <!-- LTV Visual Matrix -->
+                    <div class="glass-panel p-5 rounded-2xl">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <span class="text-emerald-400">👑</span> Top Dealers (Volume LTV)
+                        </h3>
+                        <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
+            `;
+
+            if (sortedShops.length > 0) {
+                sortedShops.slice(0, 8).forEach((v, i) => {
+                    let pct = (v[1].items / topShopVolume) * 100;
+                    mdoHtml += `
+                        <div class="relative w-full bg-[#0B1121] rounded-lg p-3 overflow-hidden border border-slate-800 group">
+                            <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
+                            <div class="relative z-10 flex justify-between items-center">
+                                <div class="flex items-center gap-3 w-2/3">
+                                    <span class="text-slate-600 font-black text-sm">#${i+1}</span>
+                                    <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white transition-colors">${v[0]}</span>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
+                                    <span class="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Units</span>
+                                </div>
                             </div>
                         </div>
+                    `;
+                });
+            } else {
+                mdoHtml += `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`;
+            }
 
-                        <!-- Brand Asymmetry Heatmap -->
-                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 flex flex-col">
-                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2 flex justify-between">
-                                <span>Brand Asymmetry</span>
-                                <span class="text-purple-400">Profit vs Vol</span>
-                            </h3>
-                            <div class="flex-1 flex items-end gap-3 mt-4 h-32 px-2">
-                                ${Object.entries(brandStats).filter(b => b[1] > 0).map(b => {
-                                    let total = Object.values(brandStats).reduce((a,c)=>a+c, 0);
-                                    let h = total > 0 ? Math.max(15, (b[1]/total)*100) : 0;
-                                    let color = b[0] === 'Velocity' ? 'bg-purple-500' : (b[0] === 'boAt' ? 'bg-red-500' : 'bg-blue-500'); 
-                                    return `
-                                    <div class="flex-1 flex flex-col items-center justify-end group relative cursor-pointer">
-                                        <div class="absolute -top-8 bg-slate-800 text-[10px] font-black text-white px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 border border-slate-600">${b[1]} Units</div>
-                                        <div class="w-full ${color} rounded-t-md transition-all shadow-[0_0_10px_rgba(0,0,0,0.5)]" style="height: ${h}%"></div>
-                                        <span class="text-[10px] text-slate-400 mt-2 font-bold truncate w-full text-center">${b[0]}</span>
-                                    </div>
-                                    `;
-                                }).join('')}
-                            </div>
+            mdoHtml += `
+                        </div>
+                    </div>
+
+                    <!-- Animated Brand Asymmetry -->
+                    <div class="glass-panel p-5 rounded-2xl flex flex-col">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
+                            <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Asymmetry</span>
+                            <span class="bg-[#0B1121] px-2 py-1 rounded text-[9px] text-slate-400 border border-slate-800">UNITS MOVED</span>
+                        </h3>
+                        
+                        <div class="flex-1 flex items-end justify-around gap-2 mt-4 pt-8 h-48 border-b border-slate-800 relative">
+            `;
+
+            Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).forEach(b => {
+                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0;
+                let color = 'from-blue-600 to-blue-400';
+                if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500';
+                if(b[0] === 'boAt') color = 'from-red-600 to-orange-500';
+                
+                mdoHtml += `
+                    <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1 sm:px-2">
+                        <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">
+                            ${b[1]} Units
+                        </div>
+                        <div class="w-full bg-gradient-to-t ${color} rounded-t-md chart-bar shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative overflow-hidden group-hover:brightness-125" style="height: ${Math.max(5, h)}%">
+                            <div class="absolute inset-0 bg-white/20 w-full h-1"></div>
+                        </div>
+                        <span class="text-[9px] sm:text-[10px] text-slate-400 mt-3 font-bold truncate w-full text-center group-hover:text-white transition-colors">${b[0]}</span>
+                    </div>
+                `;
+            });
+
+            mdoHtml += `
                         </div>
                     </div>
                 </div>
             `;
+            
+            mdoDiv.innerHTML = mdoHtml;
+            
+            setTimeout(() => {
+                document.querySelectorAll('.chart-bar').forEach(bar => {
+                    let target = bar.style.height;
+                    bar.style.height = '0%';
+                    requestAnimationFrame(() => { 
+                        bar.style.height = target; 
+                    });
+                });
+            }, 50);
         }
 
         // ==========================================
-        // DASHBOARD RENDERING (GRIDS & PIPELINE)
+        // PIPELINE & ORDER GRID RENDERING
         // ==========================================
-        function renderDashboard() {
-            renderMdoDashboard(); // Render MDO features if applicable
+        function setStageFilter(stageIndex) { 
+            activeStageFilter = stageIndex; 
+            renderPipeline(); 
+        }
 
+        function renderPipeline() {
             const grid = document.getElementById('orderGrid');
             const filterBar = document.getElementById('stageFilterBar');
-            const selectedDate = document.getElementById('historyDate').value;
             
-            let baseOrders = allOrdersData.filter(order => {
-                if (selectedDate) {
-                    return new Date(order.date).toISOString().split('T')[0] === selectedDate;
-                }
-                return !order.isFullyCompleted;
-            });
-
+            let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
+            
             let stageCounts = Array(9).fill(0);
-            baseOrders.forEach(o => { 
+            pendingOrders.forEach(o => { 
                 if (o.completedStages < 9) {
                     stageCounts[o.completedStages]++; 
                 }
             });
 
             let filterHtml = `
-                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all">
-                    <span class="${activeStageFilter === null ? 'text-blue-200' : 'text-slate-400'} text-[10px] font-bold uppercase tracking-wider mb-1">Overview</span>
-                    <span class="text-white text-sm font-bold mb-2">All Active</span>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-600/30">
-                        <span class="text-[10px] ${activeStageFilter === null ? 'text-blue-200' : 'text-slate-500'} font-bold uppercase">Total</span>
-                        <span class="${activeStageFilter === null ? 'bg-white text-blue-900' : 'bg-slate-900 text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${baseOrders.length}</span>
+                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all">
+                    <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Overview</span>
+                    <span class="text-white text-sm font-black mb-2">All Pending</span>
+                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
+                        <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">COUNT</span>
+                        <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${pendingOrders.length}</span>
                     </div>
                 </div>
             `;
@@ -499,26 +589,28 @@
                 let orderCount = stageCounts[idx];
                 
                 filterHtml += `
-                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-lg shadow-blue-500/30' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
-                    <span class="${isActive ? 'text-blue-200' : 'text-slate-500'} text-[10px] font-bold uppercase tracking-wider mb-1">Step ${idx+1}</span>
-                    <span class="${isActive ? 'text-white' : 'text-slate-300'} text-sm font-bold mb-2 leading-tight">${name.split(' (')[0]}</span>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-600/30">
-                        <span class="text-[10px] ${isActive ? 'text-blue-200' : 'text-slate-500'} font-bold uppercase">Pending</span>
-                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-blue-900' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20') : (isActive ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-900 text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
+                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
+                    <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
+                    <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${name.split(' (')[0]}</span>
+                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
+                        <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
+                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
                     </div>
                 </div>`;
             });
             
             filterBar.innerHTML = filterHtml;
 
-            let displayOrders = activeStageFilter !== null ? baseOrders.filter(o => o.completedStages === activeStageFilter) : baseOrders;
+            let displayOrders = activeStageFilter !== null ? pendingOrders.filter(o => o.completedStages === activeStageFilter) : pendingOrders;
             grid.innerHTML = '';
             
             if (displayOrders.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full bg-slate-800/30 border border-slate-700/50 p-8 rounded-2xl text-center">
-                        <p class="text-slate-400 text-lg font-medium">Inbox Zero. No orders pending here.</p>
-                    </div>`;
+                    <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center">
+                        <div class="text-4xl mb-3">🍃</div>
+                        <p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -533,31 +625,40 @@
                         dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
                     }
                 }
+                
+                let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
 
                 grid.innerHTML += `
-                    <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-slate-800 border border-slate-700 hover:border-blue-500 rounded-xl p-4 stage-card shadow-lg flex flex-col justify-between relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 w-12 h-12 bg-blue-500/10 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                    <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-[#131C31] border border-slate-800 hover:border-indigo-500 rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card cursor-pointer">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full transition-transform group-hover:scale-125"></div>
                         
-                        <div class="mb-3 relative z-10">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-black text-sm text-white">${order.orderId}</h3>
-                                <span class="bg-slate-900 text-[9px] px-1.5 py-0.5 rounded text-slate-400 font-mono tracking-tighter">${dateStr}</span>
+                        <div class="mb-4 relative z-10">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
+                                <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${dateStr}</span>
                             </div>
-                            <p class="text-emerald-400 font-semibold text-[11px] leading-tight line-clamp-2" title="${order.shopName}">${order.shopName}</p>
+                            <p class="text-indigo-300 font-bold text-xs leading-tight line-clamp-2" title="${order.shopName}">${order.shopName}</p>
+                            
+                            <div class="mt-2 text-[10px] text-slate-500 font-bold flex gap-2">
+                                <span class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">${order.items.length} SKUs</span>
+                                <span class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">${orderItemsCount} Units</span>
+                            </div>
                         </div>
                         
                         <div>
-                            <div class="bg-slate-900/70 p-2 rounded-lg mb-3 border border-slate-700 flex justify-between items-center">
-                                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Next Action:</span>
-                                <span class="text-[10px] text-blue-400 font-bold bg-blue-900/30 px-2 py-0.5 rounded truncate max-w-[50%]">${nextStepName}</span>
+                            <div class="bg-[#0B1121] p-2.5 rounded-lg mb-3 border border-slate-800 flex justify-between items-center group-hover:border-indigo-500/30 transition-colors">
+                                <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Next Action:</span>
+                                <span class="text-[10px] text-emerald-400 font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">${nextStepName}</span>
                             </div>
                             
-                            <div class="flex justify-between text-[10px] text-slate-400 mb-1 font-bold">
-                                <span>Progress</span>
-                                <span class="text-white">${order.completedStages}/9</span>
+                            <div class="flex justify-between text-[9px] text-slate-500 mb-1.5 font-black uppercase tracking-widest">
+                                <span>Pipeline Progress</span>
+                                <span class="text-indigo-400">${order.completedStages}/9</span>
                             </div>
-                            <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-700">
-                                <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-1.5 rounded-full" style="width: ${progress}%"></div>
+                            <div class="w-full bg-[#0B1121] rounded-full h-1.5 overflow-hidden border border-slate-800">
+                                <div class="bg-gradient-to-r from-indigo-600 to-purple-500 h-1.5 rounded-full relative" style="width: ${progress}%">
+                                    <div class="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_ease-in-out_infinite]"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -592,38 +693,36 @@
             const container = document.getElementById('stagesContainer');
             container.innerHTML = '';
             
-            // ------------------------------------------
-            // 1. DYNAMIC ITEMS TO PICK LIST (Showing 5+ easily)
-            // ------------------------------------------
+            // 1. ITEMS MANIFEST
             let itemsHtml = `
-                <div class="mb-6 bg-slate-800 border border-slate-600 rounded-xl p-4 shadow-inner">
-                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span class="text-emerald-400 text-lg">📦</span> Items to Pick
+                <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
+                    <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span class="text-indigo-400 text-lg">📦</span> Order Manifest
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
             `;
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
                     let imgTag = item.image 
-                        ? `<img src="${item.image}" class="w-14 h-14 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` 
-                        : `<div class="w-14 h-14 bg-slate-700 rounded flex items-center justify-center text-[10px] text-slate-400 shrink-0 font-mono border border-slate-600">No Img</div>`;
+                        ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` 
+                        : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
                     
                     itemsHtml += `
-                        <div class="flex items-center gap-3 bg-slate-900/80 p-2.5 rounded-lg border border-slate-700">
+                        <div class="flex items-center gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
                             ${imgTag}
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs text-white font-semibold leading-tight break-words whitespace-normal">${item.name}</p>
+                                <p class="text-xs text-slate-300 font-bold leading-tight truncate" title="${item.name}">${item.name}</p>
                                 <div class="mt-1.5 flex items-center gap-2">
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qty:</span>
-                                    <span class="text-xs font-black text-emerald-400 bg-emerald-900/40 px-2 rounded border border-emerald-500/20">${item.qty}</span>
+                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Qty:</span>
+                                    <span class="text-xs font-black text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded">${item.qty}</span>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
             } else { 
-                itemsHtml += `<p class="text-sm text-slate-500 italic px-2">No products found in data format.</p>`; 
+                itemsHtml += `<p class="text-sm text-slate-600 italic px-2">No SKU data found for this order.</p>`; 
             }
             
             itemsHtml += `
@@ -632,9 +731,7 @@
             `;
             container.innerHTML += itemsHtml;
 
-            // ------------------------------------------
-            // 2. PIPELINE STAGES LOGIC
-            // ------------------------------------------
+            // 2. PIPELINE STAGES
             let stagesListHtml = '<div class="space-y-4">';
             
             for (let i = 0; i < 9; i++) {
@@ -653,10 +750,10 @@
                         url = url.trim();
                         if (url.includes("http")) {
                             if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-900 rounded"></audio>`;
+                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>`;
                             } else { 
                                 previewHtml += `
-                                    <a href="${url}" target="_blank" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-3 text-sm font-bold text-blue-400 flex items-center justify-between transition shadow-sm">
+                                    <a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm">
                                         <span>🖼️ View Uploaded Document ${index + 1}</span>
                                         <span class="text-slate-500 text-lg">→</span>
                                     </a>
@@ -667,10 +764,10 @@
                     previewHtml += `</div>`;
 
                     uiHtml = `
-                        <div class="bg-emerald-900/10 border border-emerald-500/30 rounded-xl p-4 hover:bg-emerald-900/20 transition">
+                        <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition">
                             <div class="flex justify-between items-center">
-                                <span class="text-emerald-400 text-base font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="bg-emerald-900/60 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
+                                <span class="text-emerald-400 text-sm font-black">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
                             </div>
                             ${previewHtml}
                         </div>
@@ -678,9 +775,9 @@
                 } 
                 else if (isLocked) {
                     uiHtml = `
-                        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 flex justify-between items-center grayscale opacity-60">
-                            <span class="text-slate-500 text-base font-medium">${stageNum}. ${STAGE_NAMES[i]}</span>
-                            <span class="text-slate-600 text-[10px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
+                        <div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50">
+                            <span class="text-slate-500 text-sm font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
+                            <span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
                         </div>
                     `;
                 } 
@@ -689,65 +786,65 @@
                     
                     if (stageNum === 1) {
                         inputHtml = `
-                            <button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">
+                            <button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">
                                 Accept Task & Begin Process
                             </button>
                         `;
                     } else {
                         if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
                             inputHtml = `
-                                <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                    <span class="text-blue-400">🎤</span> Record Audio / Call
+                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                    <span class="text-indigo-400">🎤</span> Record Audio / Call
                                 </p>
-                                <input type="file" accept="audio/*" class="w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-black file:bg-blue-600 file:text-white bg-slate-900 p-1.5 rounded-xl border border-slate-600 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">
+                                <input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" onchange="handleFileSelection(this, ${stageNum})">
                                 <p id="fileStatusText_${stageNum}" class="text-xs font-bold text-emerald-400 mt-2 text-center hidden"></p>
                             `;
                         } else {
                             inputHtml = `
-                                <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                    <span class="text-blue-400">⚡</span> Upload Proof (Required)
+                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                    <span class="text-indigo-400">⚡</span> Upload Proof (Required)
                                 </p>
                                 <div class="flex gap-2 w-full">
-                                    <label class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                    <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
                                         📸 Live Camera
                                         <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})">
                                     </label>
-                                    <label class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                    <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
                                         🖼️ Multi Gallery
                                         <input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})">
                                     </label>
                                 </div>
-                                <p id="fileStatusText_${stageNum}" class="text-xs font-bold text-emerald-400 mt-3 text-center bg-emerald-900/20 py-1.5 rounded hidden border border-emerald-500/20"></p>
+                                <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 mt-3 text-center bg-emerald-900/20 py-2 rounded hidden border border-emerald-500/20"></p>
                             `;
                         }
                         
                         if (stageNum === 9) {
                             inputHtml += `
                                 <div class="mt-4">
-                                    <label class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 block">Customer Rating</label>
-                                    <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-lg text-center">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Customer Rating</label>
+                                    <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-lg text-center shadow-inner">
                                 </div>
                             `;
                         }
                         
                         inputHtml += `
-                            <button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-95 text-lg">
+                            <button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">
                                 Execute & Proceed
                             </button>
                         `;
                     }
                     
                     uiHtml = `
-                        <div class="bg-slate-800 border-[3px] border-blue-500 rounded-xl p-5 shadow-[0_0_30px_rgba(59,130,246,0.15)] relative overflow-hidden transform scale-[1.02]">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500 shadow-[0_0_15px_#3b82f6]"></div>
+                        <div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div>
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-white font-black text-xl">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="bg-blue-500 text-white text-[10px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
+                                <span class="text-white font-black text-lg">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
                             </div>
                             <div id="actionArea_${stageNum}">
                                 ${inputHtml}
                             </div>
-                            <p id="status_${stageNum}" class="text-sm font-bold mt-3 hidden text-center"></p>
+                            <p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p>
                         </div>
                     `;
                 }
@@ -833,7 +930,7 @@
             
             if (stageNum !== 1) {
                 if (queuedFiles.length === 0) { 
-                    alert("A file proof is mandatory to clear this stage. Please select an image or audio."); 
+                    alert("A file proof (Audio/Image) is mandatory to clear this stage."); 
                     return; 
                 }
                 
@@ -868,7 +965,7 @@
             
             if (statusLabel) { 
                 statusLabel.innerText = "📡 Uplinking Data to Control Tower..."; 
-                statusLabel.className = "text-[12px] font-bold tracking-widest mt-3 text-blue-400 block animate-pulse text-center"; 
+                statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
                 statusLabel.classList.remove('hidden');
             }
 
@@ -882,7 +979,7 @@
                 
                 if (data.status === 'success') {
                     if (btn) {
-                        btn.innerText = "Successful ✓";
+                        btn.innerText = "Transmission Successful ✓";
                     }
                     queuedFiles = []; 
                     fetchOrders(true); 
@@ -892,7 +989,7 @@
             } catch (err) {
                 if (statusLabel) { 
                     statusLabel.innerText = "❌ Sync Failed. Verify connection."; 
-                    statusLabel.className = "text-[12px] font-bold mt-3 text-red-500 block text-center"; 
+                    statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
                 }
                 if (btn) { 
                     btn.innerText = "Retry Transmission"; 
