@@ -101,6 +101,11 @@
             </div>
         </div>
 
+        <!-- MDO Command Center (Owner Exclusive) -->
+        <div id="mdoCommandCenter" class="hidden mb-6">
+            <!-- Populated via JS if user is Owner -->
+        </div>
+
         <!-- Premium KPI Filter Pipeline -->
         <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar">
             <!-- Dynamically Populated via JS -->
@@ -155,6 +160,7 @@
         let latestOrderTimestamp = null;
         let autoRefreshInterval = null;
         let queuedFiles = []; 
+        let currentUserRole = 'Staff';
 
         // ==========================================
         // LOGIN & AUTHENTICATION
@@ -182,7 +188,9 @@
                 
                 if (data.status === 'success') {
                     localStorage.setItem('yash_user', data.user.name);
-                    showDashboard(data.user.name);
+                    localStorage.setItem('yash_role', data.user.role || 'Staff');
+                    
+                    showDashboard(data.user.name, data.user.role);
                 } else {
                     error.innerText = data.message; 
                     error.classList.remove('hidden'); 
@@ -195,7 +203,9 @@
             }
         });
 
-        function showDashboard(name) {
+        function showDashboard(name, role) {
+            currentUserRole = role || 'Staff';
+            
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboardScreen').classList.remove('hidden');
             document.getElementById('userName').innerText = name;
@@ -212,11 +222,12 @@
 
         function logout() { 
             localStorage.removeItem('yash_user'); 
+            localStorage.removeItem('yash_role'); 
             location.reload(); 
         }
         
         if (localStorage.getItem('yash_user')) { 
-            showDashboard(localStorage.getItem('yash_user')); 
+            showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
         }
 
         // ==========================================
@@ -300,9 +311,160 @@
         }
 
         // ==========================================
+        // OWNER MDO DASHBOARD RENDERING
+        // ==========================================
+        function renderMdoDashboard() {
+            const userName = localStorage.getItem('yash_user') || "";
+            const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
+            
+            const mdoDiv = document.getElementById('mdoCommandCenter');
+            
+            if (!isOwner) {
+                mdoDiv.classList.add('hidden');
+                return;
+            }
+            
+            mdoDiv.classList.remove('hidden');
+
+            // 1. Dealer LTV & 2. Pareto Matrix
+            let shopStats = {};
+            allOrdersData.forEach(o => {
+                if(!shopStats[o.shopName]) shopStats[o.shopName] = { count: 0, items: 0, lastOrder: new Date(0) };
+                shopStats[o.shopName].count++;
+                let d = new Date(o.date);
+                if(d > shopStats[o.shopName].lastOrder) shopStats[o.shopName].lastOrder = d;
+                
+                o.items.forEach(i => {
+                    shopStats[o.shopName].items += parseInt(i.qty || 1);
+                });
+            });
+
+            let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
+            let top20Count = Math.max(1, Math.ceil(sortedShops.length * 0.2));
+            let vipShops = sortedShops.slice(0, top20Count);
+            
+            let now = new Date();
+            let vipAlerts = vipShops.filter(s => (now - s[1].lastOrder) / (1000*60*60*24) > 14);
+
+            // 3. Pipeline Friction
+            let stageStuck = Array(9).fill(0);
+            allOrdersData.forEach(o => {
+                if(!o.isFullyCompleted) stageStuck[o.completedStages]++;
+            });
+            let maxStuck = Math.max(...stageStuck);
+            let frictionStage = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)] : "All Clear";
+
+            // 4. Brand Asymmetry (Volume)
+            let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
+            allOrdersData.forEach(o => {
+                o.items.forEach(i => {
+                    let name = i.name.toLowerCase();
+                    let qty = parseInt(i.qty || 1);
+                    if(name.includes('boat')) brandStats['boAt'] += qty;
+                    else if(name.includes('velocity')) brandStats['Velocity'] += qty;
+                    else if(name.includes('portronics')) brandStats['Portronics'] += qty;
+                    else if(name.includes('jbl')) brandStats['JBL'] += qty;
+                    else if(name.includes('hikvision')) brandStats['Hikvision'] += qty;
+                    else brandStats['Others'] += qty;
+                });
+            });
+
+            // 5 & 6. Sprint Velocity & Accountability Scorecard
+            let staffBottlenecks = [
+                { role: 'Sales (Call 1/2)', stuck: stageStuck[2] + stageStuck[6] },
+                { role: 'Warehouse (Picking)', stuck: stageStuck[3] },
+                { role: 'Accounts (Invoicing)', stuck: stageStuck[4] },
+                { role: 'Dispatch (Logistics)', stuck: stageStuck[5] }
+            ].sort((a,b) => b.stuck - a.stuck);
+            let biggestLag = staffBottlenecks[0].stuck > 0 ? staffBottlenecks[0] : { role: 'System Optimal', stuck: 0 };
+
+            // 7. S-30 MDO Pulse
+            let today = new Date().toDateString();
+            let todayOrders = allOrdersData.filter(o => new Date(o.date).toDateString() === today).length;
+            let totalPending = allOrdersData.filter(o => !o.isFullyCompleted).length;
+
+            mdoDiv.innerHTML = `
+                <div class="glass-panel border-l-4 border-l-purple-500 rounded-xl p-4 md:p-6 shadow-2xl">
+                    <h2 class="text-xl font-black text-purple-400 mb-4 flex items-center gap-2">
+                        <span class="text-2xl">👑</span> MDO Control Tower (S-30 Pulse)
+                    </h2>
+                    
+                    <!-- Pulse & KPI Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 shadow-inner">
+                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Today's Pulse</div>
+                            <div class="text-3xl font-black text-white">${todayOrders} <span class="text-xs text-emerald-400 font-bold">Orders</span></div>
+                        </div>
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 shadow-inner">
+                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Pipeline</div>
+                            <div class="text-3xl font-black text-white">${totalPending} <span class="text-xs text-blue-400 font-bold">Active</span></div>
+                        </div>
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 border-l-2 border-l-red-500 shadow-inner">
+                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Friction Index</div>
+                            <div class="text-lg font-black text-red-400 truncate leading-tight" title="${frictionStage}">${frictionStage}</div>
+                            <div class="text-xs text-slate-500 mt-1 font-bold">${maxStuck} Orders Stuck</div>
+                        </div>
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 shadow-inner">
+                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Velocity Scorecard</div>
+                            <div class="text-sm font-black text-orange-400 truncate leading-tight">Lag: ${biggestLag.role}</div>
+                            <div class="text-xs text-slate-500 mt-1 font-bold">- ${biggestLag.stuck} Tasks Pending</div>
+                        </div>
+                    </div>
+
+                    <!-- Matrix & Heatmap Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Pareto Dealer Matrix -->
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2">Pareto Matrix (80/20 VIPs)</h3>
+                            <div class="max-h-40 overflow-y-auto hide-scrollbar space-y-2 pr-1">
+                                ${vipAlerts.length > 0 ? vipAlerts.map(v => `
+                                    <div class="flex justify-between items-center bg-red-900/30 border border-red-500/50 p-2.5 rounded-lg animate-pulse">
+                                        <span class="text-xs font-black text-red-400 truncate w-2/3">🚨 ${v[0]}</span>
+                                        <span class="text-[9px] font-black text-slate-300 bg-red-950 px-2 py-1 rounded tracking-widest uppercase">No Order >14 Days</span>
+                                    </div>
+                                `).join('') : '<div class="text-xs text-emerald-500 font-bold p-2 bg-emerald-900/20 rounded border border-emerald-500/20">All VIPs are active and ordering.</div>'}
+                                
+                                ${vipShops.slice(0, 10).map((v, i) => `
+                                    <div class="flex justify-between items-center p-2 border-b border-slate-800 last:border-0 hover:bg-slate-800 rounded transition">
+                                        <span class="text-xs font-bold text-slate-300 truncate w-2/3"><span class="text-slate-500 mr-2">#${i+1}</span>${v[0]}</span>
+                                        <span class="text-xs font-black text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">LTV: ${v[1].items}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Brand Asymmetry Heatmap -->
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 flex flex-col">
+                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2 flex justify-between">
+                                <span>Brand Asymmetry</span>
+                                <span class="text-purple-400">Profit vs Vol</span>
+                            </h3>
+                            <div class="flex-1 flex items-end gap-3 mt-4 h-32 px-2">
+                                ${Object.entries(brandStats).filter(b => b[1] > 0).map(b => {
+                                    let total = Object.values(brandStats).reduce((a,c)=>a+c, 0);
+                                    let h = total > 0 ? Math.max(15, (b[1]/total)*100) : 0;
+                                    let color = b[0] === 'Velocity' ? 'bg-purple-500' : (b[0] === 'boAt' ? 'bg-red-500' : 'bg-blue-500'); 
+                                    return `
+                                    <div class="flex-1 flex flex-col items-center justify-end group relative cursor-pointer">
+                                        <div class="absolute -top-8 bg-slate-800 text-[10px] font-black text-white px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 border border-slate-600">${b[1]} Units</div>
+                                        <div class="w-full ${color} rounded-t-md transition-all shadow-[0_0_10px_rgba(0,0,0,0.5)]" style="height: ${h}%"></div>
+                                        <span class="text-[10px] text-slate-400 mt-2 font-bold truncate w-full text-center">${b[0]}</span>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==========================================
         // DASHBOARD RENDERING (GRIDS & PIPELINE)
         // ==========================================
         function renderDashboard() {
+            renderMdoDashboard(); // Render MDO features if applicable
+
             const grid = document.getElementById('orderGrid');
             const filterBar = document.getElementById('stageFilterBar');
             const selectedDate = document.getElementById('historyDate').value;
@@ -493,7 +655,6 @@
                             if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
                                 previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-900 rounded"></audio>`;
                             } else { 
-                                // Secure Button to open image in new tab to bypass cookie blocks
                                 previewHtml += `
                                     <a href="${url}" target="_blank" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-3 text-sm font-bold text-blue-400 flex items-center justify-between transition shadow-sm">
                                         <span>🖼️ View Uploaded Document ${index + 1}</span>
@@ -534,7 +695,6 @@
                         `;
                     } else {
                         if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                            // AUDIO RECORDING UI
                             inputHtml = `
                                 <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
                                     <span class="text-blue-400">🎤</span> Record Audio / Call
@@ -543,7 +703,6 @@
                                 <p id="fileStatusText_${stageNum}" class="text-xs font-bold text-emerald-400 mt-2 text-center hidden"></p>
                             `;
                         } else {
-                            // IMAGE RECORDING UI (SEPARATE CAMERA & GALLERY)
                             inputHtml = `
                                 <p class="text-xs font-bold text-slate-300 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
                                     <span class="text-blue-400">⚡</span> Upload Proof (Required)
