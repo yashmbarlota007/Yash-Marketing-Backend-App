@@ -65,7 +65,14 @@ var cacheBypass = "?v=" + new Date().getTime();
 const API_URL = "https://script.google.com/macros/s/AKfycbzmsQSqrAi8bkGogOqylI_1O5vsTll9c5tEiV_8ptGrp2nXBjC362yZwOUlBqBUcFzMTg/exec";
 const LOGO_URL = "https://ui-avatars.com/api/?name=Yash+Marketing&background=1e3a8a&color=fff&size=256&rounded=true&bold=true";
 const PHONEPE_QR_URL = "https://drive.google.com/thumbnail?id=1LIuWXaMd_oNT-zT_ESFtYv5uQ37zUxsi&sz=w1000";
-const OFFICE_NUMBER = "918378811922"; // 📞 Official Contact Number
+const OFFICE_NUMBER = "918378811922"; 
+
+// 🛡️ BULLETPROOF NUMBER PARSER (Crash Preventer)
+const getNum = (val) => {
+  if (val === undefined || val === null || val === "") return 0;
+  const clean = String(val).replace(/,/g, '').replace(/[^\d.-]/g, '');
+  return Number(clean) || 0;
+};
 
 // Extremely robust case & space insensitive column reader helper
 function getProp(obj, propName) {
@@ -114,7 +121,7 @@ function ProgressBar(props) {
   var discounts = props.discounts;
 
   var sortedDiscounts = [...discounts]
-  .map(d => ({ minAmount: Number(d.minAmount), percent: Number(d.percent) }))
+  .map(d => ({ minAmount: getNum(d.minAmount), percent: getNum(d.percent) }))
   .filter(d => !isNaN(d.minAmount) && !isNaN(d.percent))
   .sort((a, b) => a.minAmount - b.minAmount);
 
@@ -173,7 +180,6 @@ function groupProductsByVariant(flatList) {
   var capacityRegex = /\b(\d+\s*?GB|\d+\s*?TB|\d+\s*?W|\d+\s*?MAH)\b/i;
 
   flatList.forEach(function(p) {
-    // BUG FIX: Wrapped everything in String() to prevent numeric crashes
     var name = String(getProp(p, "ProductName") || "");
     var brand = String(getProp(p, "Brand") || "");
     var type = String(getProp(p, "Type") || "");
@@ -257,8 +263,8 @@ function calculateSchemeProgress(cartItems, scheme) {
   });
   return {
     current: currentQty,
-    required: scheme.minQty,
-    isUnlocked: currentQty >= scheme.minQty
+    required: getNum(scheme.minQty),
+    isUnlocked: currentQty >= getNum(scheme.minQty)
   };
 }
 
@@ -482,7 +488,7 @@ function App() {
   const cartItems = Object.values(cart);
   const totalItems = cartItems.reduce((a, b) => a + b.qty, 0);
   const totalAmount = cartItems.reduce((a, b) => {
-    const itemPrice = Number(getProp(b, "DealerPrice") || 0);
+    const itemPrice = getNum(getProp(b, "DealerPrice"));
     return a + (itemPrice * b.qty);
   }, 0);
 
@@ -492,7 +498,7 @@ function App() {
         <div>
           <h1 className="font-extrabold text-sm flex items-center gap-1.5 select-none">
             <img src={LOGO_URL} className="w-6 h-6 rounded-full border border-blue-400" />
-            Yash Marketing <span className="text-[8px] bg-blue-800 text-blue-200 px-1 rounded font-normal select-none">v3.5</span>
+            Yash Marketing <span className="text-[8px] bg-blue-800 text-blue-200 px-1 rounded font-normal select-none">v4.0</span>
           </h1>
           <p className="text-[9px] text-blue-200 font-bold uppercase mt-0.5 truncate max-w-[120px]">{user.shopName}</p>
         </div>
@@ -633,7 +639,7 @@ function Catalog(props) {
   const cartItems = Object.values(cart);
   const totalItems = cartItems.reduce((a, b) => a + b.qty, 0);
   const totalAmount = cartItems.reduce((a, b) => {
-    const itemPrice = Number(getProp(b, "DealerPrice") || 0);
+    const itemPrice = getNum(getProp(b, "DealerPrice"));
     return a + (itemPrice * b.qty);
   }, 0);
 
@@ -655,7 +661,7 @@ function Catalog(props) {
 
   useEffect(() => {
     var sortedDiscounts = [...discounts]
-    .map(d => ({ minAmount: Number(d.minAmount), percent: Number(d.percent) }))
+    .map(d => ({ minAmount: getNum(d.minAmount), percent: getNum(d.percent) }))
     .filter(d => !isNaN(d.minAmount) && !isNaN(d.percent))
     .sort((a, b) => a.minAmount - b.minAmount);
 
@@ -721,7 +727,7 @@ function Catalog(props) {
     const brandStr = String(getProp(product, "Brand") || "").toUpperCase();
     const isAlwaysLiveBrand = brandStr.includes("HIKVISION") || brandStr.includes("VELOCITY");
 
-    const stockVal = parseInt(getProp(product, "Stock") || 0) || 0;
+    const stockVal = getNum(getProp(product, "Stock"));
     const currentQty = updated[itemCode] ? updated[itemCode].qty : 0;
     const newQty = currentQty + change;
     
@@ -738,8 +744,8 @@ function Catalog(props) {
   const inStockFlat = products.filter(p => {
     const brandStr = String(getProp(p, "Brand") || "").toUpperCase();
     const isAlwaysLive = brandStr.includes("HIKVISION") || brandStr.includes("VELOCITY");
-    const stockVal = getProp(p, "Stock") || 0;
-    return (stockVal && parseInt(stockVal) > 0) || isAlwaysLive;
+    const stockVal = getNum(getProp(p, "Stock"));
+    return (stockVal > 0) || isAlwaysLive;
   });
 
   const inStockProducts = groupProductsByVariant(inStockFlat);
@@ -758,22 +764,22 @@ function Catalog(props) {
         const currentQty = cart[itemCode] ? cart[itemCode].qty : 0;
         const smartImg = getSmartImage(activeVariant);
 
-        const mrpVal = Number(getProp(activeVariant, "MRP") || 0);
-        const dealerVal = Number(getProp(activeVariant, "DealerPrice") || 0);
-        const hasDiscount = !isNaN(mrpVal) && !isNaN(dealerVal) && mrpVal > dealerVal;
+        const mrpVal = getNum(getProp(activeVariant, "MRP"));
+        const dealerVal = getNum(getProp(activeVariant, "DealerPrice"));
+        const hasDiscount = mrpVal > dealerVal && dealerVal > 0;
         const discountPercent = hasDiscount ? Math.round(((mrpVal - dealerVal) / mrpVal) * 100) : 0;
 
-        const isValidPrice = !isNaN(dealerVal) && dealerVal > 0;
+        const isValidPrice = dealerVal > 0;
         const displayPrice = isValidPrice ? `₹${dealerVal}` : "Contact Us";
 
         const isNewItem = String(getProp(activeVariant, "IsNew")).toUpperCase() === "TRUE" || String(getProp(activeVariant, "Tags")).toUpperCase().includes("NEW");
         const activeBrandStr = String(getProp(activeVariant, "Brand") || "").toUpperCase();
         const isAlwaysLiveBrand = activeBrandStr.includes("HIKVISION") || activeBrandStr.includes("VELOCITY");
-        const stockVal = parseInt(getProp(activeVariant, "Stock") || 0);
+        const stockVal = getNum(getProp(activeVariant, "Stock"));
         const showOnOrder = isAlwaysLiveBrand && stockVal <= 0;
 
         return (
-          <div key={`${activeItemCode}-${idx}`} className="bg-white rounded-2xl p-3 shadow-sm flex flex-col justify-between border border-gray-50 relative overflow-hidden">
+          <div key={`${activeItemCode || Math.random()}-${idx}`} className="bg-white rounded-2xl p-3 shadow-sm flex flex-col justify-between border border-gray-50 relative overflow-hidden">
             
             {isNewItem && (
               <span className="absolute top-2 right-2 bg-pink-600 text-white text-[9px] font-black px-2 py-1 rounded-md shadow-md uppercase tracking-wider z-10 animate-bounce select-none">✨ NEW</span>
@@ -809,7 +815,7 @@ function Catalog(props) {
                   const vItemCode = String(getProp(v, "ItemCode") || "");
                   return (
                     <button
-                      key={vItemCode}
+                      key={vItemCode || Math.random()}
                       onClick={(e) => {
                         e.stopPropagation();
                         var nextActives = Object.assign({}, activeVariants);
@@ -830,12 +836,12 @@ function Catalog(props) {
                 <div>
                   {hasDiscount && isValidPrice ? (
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-[10px] text-gray-400 font-bold line-through tracking-tight">MRP: ₹{getProp(activeVariant, "MRP")}</span>
+                      <span className="text-[10px] text-gray-400 font-bold line-through tracking-tight">MRP: ₹{mrpVal}</span>
                       <span className="text-[9px] bg-green-100 text-green-700 font-black px-1.5 py-0.5 rounded shadow-sm">{discountPercent}% OFF</span>
                     </div>
                   ) : (
-                    getProp(activeVariant, "MRP") && (
-                      <div className="text-[10px] text-gray-400 font-bold line-through tracking-tight mb-1">MRP: ₹{getProp(activeVariant, "MRP")}</div>
+                    mrpVal > 0 && (
+                      <div className="text-[10px] text-gray-400 font-bold line-through tracking-tight mb-1">MRP: ₹{mrpVal}</div>
                     )
                   )}
                   <div className="font-black text-lg text-blue-950 mb-2 tracking-tight">{displayPrice}</div>
@@ -887,8 +893,8 @@ function Catalog(props) {
       const features = String(getProp(p, "Features") || "");
       const featuresExcerpt = (features !== "") ? `\n⚡ *Specs:* ${features.split(" | ").slice(0,2).join(", ")}` : "";
       const name = String(getProp(p, "ProductName") || "");
-      const mrp = getProp(p, "MRP") || 0;
-      const dealerPrice = getProp(p, "DealerPrice") || 0;
+      const mrp = getNum(getProp(p, "MRP"));
+      const dealerPrice = getNum(getProp(p, "DealerPrice"));
 
       if (globalProps.customerMode) {
         shareText += `${idx + 1}. *${name}*\n💰 Offer Price: ₹${mrp}${featuresExcerpt}\n🔗 Photo: ${cleanPhotoUrl}\n\n`;
@@ -965,11 +971,13 @@ function Catalog(props) {
       </div>
     );
   } else {
+    // 🔥 SAFELY SORTING BY PRICE USING getNum
     const filteredProducts = inStockProducts.filter(p => String(getProp(p, "Type") || "") === selectedType).sort((a, b) => {
-      const priceA = Number(getProp(a, "DealerPrice") || 0);
-      const priceB = Number(getProp(b, "DealerPrice") || 0);
+      const priceA = getNum(getProp(a, "DealerPrice"));
+      const priceB = getNum(getProp(b, "DealerPrice"));
       return priceB - priceA;
     });
+    
     mainContent = (
       <div>
         <div className="p-4 bg-white bg-opacity-95 z-20 border-b flex justify-between items-center shadow-sm">
@@ -1052,7 +1060,7 @@ function Cart(props) {
 
   const cartItems = Object.values(cart);
   const totalAmount = cartItems.reduce((acc, item) => {
-    const itemPrice = Number(getProp(item, "DealerPrice") || 0);
+    const itemPrice = getNum(getProp(item, "DealerPrice"));
     return acc + (itemPrice * item.qty);
   }, 0);
   const totalItems = cartItems.reduce((a, b) => a + b.qty, 0);
@@ -1084,7 +1092,7 @@ function Cart(props) {
   }, [totalItems]);
 
   var sortedDiscountsDesc = [...discounts]
-  .map(d => ({ minAmount: Number(d.minAmount), percent: Number(d.percent) }))
+  .map(d => ({ minAmount: getNum(d.minAmount), percent: getNum(d.percent) }))
   .filter(d => !isNaN(d.minAmount) && !isNaN(d.percent))
   .sort((a, b) => b.minAmount - a.minAmount);
 
@@ -1102,7 +1110,6 @@ function Cart(props) {
   const upiDiscountAmount = paymentMode === 'UPI' ? Math.round(afterBulkTotal * 0.02) : 0;
   const finalAmount = afterBulkTotal - upiDiscountAmount;
 
-  // Screenshot base64 conversion framework
   const handleScreenshotUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -1126,7 +1133,7 @@ function Cart(props) {
     const brandStr = String(getProp(product, "Brand") || "").toUpperCase();
     const isAlwaysLiveBrand = brandStr.includes("HIKVISION") || brandStr.includes("VELOCITY");
 
-    const stockVal = parseInt(getProp(product, "Stock") || 0) || 0;
+    const stockVal = getNum(getProp(product, "Stock"));
     const currentQty = updated[itemCode] ? updated[itemCode].qty : 0;
     const newQty = currentQty + change;
     const maxLimit = isAlwaysLiveBrand ? 99999 : stockVal;
@@ -1147,7 +1154,6 @@ function Cart(props) {
       return itemName + " x" + i.qty;
     }).join(" | ");
 
-    // Schemes metadata checking for explicit backend synchronization
     let unlockedRewardsList = schemes.filter(s => calculateSchemeProgress(cartItems, s).isUnlocked).map(s => s.reward);
     if (totalItems >= 25) {
       unlockedRewardsList.push("Target 25 Pcs Bumper Reward");
@@ -1218,11 +1224,10 @@ function Cart(props) {
           cartItems.map(item => {
             var smartImg = getSmartImage(item);
             var itemName = String(getProp(item, "ProductName") || "Premium Item");
-            var dealerPrice = Number(getProp(item, "DealerPrice") || 0);
+            var dealerPrice = getNum(getProp(item, "DealerPrice"));
             var itemCode = String(getProp(item, "ItemCode") || "");
             
-            // Checking if ON ORDER Tag is required in Cart
-            var stockVal = parseInt(getProp(item, "Stock") || 0);
+            var stockVal = getNum(getProp(item, "Stock"));
             var activeBrandStr = String(getProp(item, "Brand") || "").toUpperCase();
             var isAlwaysLiveBrand = activeBrandStr.includes("HIKVISION") || activeBrandStr.includes("VELOCITY");
             var showOnOrder = isAlwaysLiveBrand && stockVal <= 0;
@@ -1662,9 +1667,9 @@ function ProductDetailModal(props) {
     });
   }
 
-  const mrpVal = Number(getProp(activeVariant, "MRP") || 0);
-  const dealerVal = Number(getProp(activeVariant, "DealerPrice") || 0);
-  const hasDiscount = !isNaN(mrpVal) && !isNaN(dealerVal) && mrpVal > dealerVal;
+  const mrpVal = getNum(getProp(activeVariant, "MRP"));
+  const dealerVal = getNum(getProp(activeVariant, "DealerPrice"));
+  const hasDiscount = mrpVal > dealerVal && dealerVal > 0;
   const discountPercent = hasDiscount ? Math.round(((mrpVal - dealerVal) / mrpVal) * 100) : 0;
 
   const handleNextImage = () => {
@@ -1683,7 +1688,7 @@ function ProductDetailModal(props) {
   var activeStock = String(getProp(activeVariant, "Stock") || "Available");
 
   const isAlwaysLiveBrand = activeBrand.toUpperCase().includes("HIKVISION") || activeBrand.toUpperCase().includes("VELOCITY");
-  const stockValInt = parseInt(activeStock || 0);
+  const stockValInt = getNum(activeStock);
   const showOnOrder = isAlwaysLiveBrand && stockValInt <= 0;
 
   return (
@@ -1741,7 +1746,7 @@ function ProductDetailModal(props) {
                     const vItemCode = String(getProp(v, "ItemCode") || "");
                     return (
                       <button
-                        key={vItemCode}
+                        key={vItemCode || Math.random()}
                         onClick={() => {
                           var nextActives = Object.assign({}, activeVariants);
                           nextActives[String(getProp(product, "ItemCode") || "")] = vItemCode;
