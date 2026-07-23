@@ -16,9 +16,6 @@
             backdrop-filter: blur(12px); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
         }
-        .chart-bar { 
-            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
         .hover-card {
             transition: all 0.3s ease;
         }
@@ -57,6 +54,13 @@
             border-color: #6366F1 !important; 
             color: white !important; 
             font-weight: bold; 
+        }
+        /* New utility for text wrapping in tables/lists */
+        .wrap-text-safely {
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-word;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -121,7 +125,7 @@
 
         <!-- MDO Command Center (Owner Exclusive) -->
         <div id="mdoCommandCenter" class="hidden mb-8 space-y-4">
-            <!-- Populated via JS if user is Owner -->
+            <!-- Populated via JavaScript dynamically -->
         </div>
 
         <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
@@ -130,12 +134,10 @@
         
         <!-- Premium KPI Filter Pipeline -->
         <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar">
-            <!-- Dynamically Populated via JS -->
         </div>
         
         <!-- Order Cards Grid -->
         <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <!-- Dynamically Populated via JS -->
         </div>
     </div>
 
@@ -143,35 +145,41 @@
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
         <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-700">
             <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-[#131C31] shadow-md z-10">
-                <div>
-                    <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
-                    <p class="text-indigo-400 text-sm font-bold mt-1" id="modalShopName">Shop Name</p>
+                <div class="flex-grow">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
+                        <!-- Feature 6: Payment Mode Badge -->
+                        <span id="modalPaymentMode" class="text-xs font-black uppercase px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-600">COD</span>
+                    </div>
+                    <p class="text-indigo-400 text-sm font-bold mt-1 wrap-text-safely" id="modalShopName">Shop Name</p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors">
+                <div class="text-right flex flex-col items-end gap-1 mr-4">
+                    <!-- Feature 6: Total Value Display -->
+                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Value</span>
+                    <span id="modalTotalValue" class="text-lg font-black text-emerald-400">₹0</span>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors border-l border-slate-700 pl-4">
                     &times;
                 </button>
             </div>
             
             <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-[#0B1121]" id="stagesContainer">
-                <!-- Items List & Execution Stages Populated Here -->
+                <!-- Content Populated via JavaScript -->
             </div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // CONFIGURATION AND GLOBAL STATE
-        // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; 
         
         const STAGE_NAMES = [
             "Order Received", 
             "Balance Check", 
-            "Call 1 (Confirmation)", 
+            "Call 1 (Confirmation) [System Skipped]", // Name changed for clarity (Feature 1)
             "Processed (Stock)", 
             "Invoiced", 
             "Dispatched", 
-            "Call 2 (Out-for-delivery)", 
+            "WhatsApp (Out-for-delivery)", // Changed from Call 2 (Feature 5)
             "Delivered", 
             "Final Call (Rating)"
         ];
@@ -186,9 +194,7 @@
         let queuedFiles = []; 
         let currentUserRole = 'Staff';
 
-        // ==========================================
-        // LOGIN & AUTHENTICATION
-        // ==========================================
+        // --- AUTHENTICATION MODULE ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
@@ -254,9 +260,7 @@
             showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
         }
 
-        // ==========================================
-        // NOTIFICATIONS
-        // ==========================================
+        // --- NOTIFICATION SYSTEM ---
         function showNotification(title, message) {
             const area = document.getElementById('notificationArea');
             const toast = document.createElement('div');
@@ -279,9 +283,7 @@
             }, 6000);
         }
 
-        // ==========================================
-        // DATA FETCHING & FILTERING
-        // ==========================================
+        // --- DATA FETCHING & FILTERING ---
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
             
@@ -371,12 +373,9 @@
             renderPipeline();
         }
 
-                // ==========================================
-        // OWNER MDO DASHBOARD (WAR ROOM / WATCH TOWER)
-        // ==========================================
+        // --- FULL ORIGINAL MDO COMMAND CENTER RESTORED ---
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
-            // Check if user is owner/admin
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
             
             const mdoDiv = document.getElementById('mdoCommandCenter');
@@ -388,10 +387,9 @@
             
             mdoDiv.classList.remove('hidden');
 
-            // --- DATA AGGREGATION & CRUNCHING ---
             let totalVolume = 0;
             let totalCompleted = 0;
-            let slaBreaches = 0; // Orders stuck for more than 48 hours
+            let slaBreaches = 0;
             let shopStats = {};
             let skuStats = {};
             let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
@@ -403,7 +401,6 @@
                     totalCompleted++;
                 } else {
                     stageStuck[o.completedStages]++;
-                    // Calculate SLA Breach (> 48 hours old and not completed)
                     let orderDate = new Date(o.date).getTime();
                     if ((now - orderDate) > (48 * 60 * 60 * 1000)) {
                         slaBreaches++;
@@ -417,12 +414,10 @@
                     totalVolume += qty;
                     shopStats[o.shopName].items += qty;
 
-                    // SKU Tracking
                     let cleanName = i.name.trim();
                     if(!skuStats[cleanName]) skuStats[cleanName] = 0;
                     skuStats[cleanName] += qty;
 
-                    // Brand Tracking
                     let n = cleanName.toLowerCase();
                     if(n.includes('boat')) brandStats['boAt'] += qty;
                     else if(n.includes('velocity')) brandStats['Velocity'] += qty;
@@ -433,24 +428,20 @@
                 });
             });
 
-            // --- INSIGHTS CALCULATIONS ---
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
-            let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1] - a[1]).slice(0, 5); // Top 5 SKUs
+            let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1] - a[1]).slice(0, 5);
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
             
             let maxStuck = Math.max(...stageStuck);
             let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
             
             let completionRate = filteredData.length > 0 ? Math.round((totalCompleted / filteredData.length) * 100) : 0;
-            // Pipeline Health Score (Combination of completion and SLA breaches)
             let healthScore = Math.max(0, 100 - (slaBreaches * 5) - ((100 - completionRate) * 0.2)).toFixed(0);
             let healthColor = healthScore > 80 ? 'text-emerald-400' : (healthScore > 50 ? 'text-orange-400' : 'text-pink-500');
 
             let brandMax = Math.max(...Object.values(brandStats), 1);
 
-            // --- UI RENDERING (THE WATCH TOWER) ---
             let mdoHtml = `
-                <!-- WAR ROOM HEADER -->
                 <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
                     <div>
                         <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">
@@ -464,7 +455,6 @@
                     </div>
                 </div>
 
-                <!-- TOP KPI RADAR -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
@@ -501,561 +491,510 @@
                     </div>
                 </div>
 
-                <!-- DEEP INSIGHTS MATRIX -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    
-                    <!-- Top SKUs (New Watch Tower Feature) -->
-                    <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-yellow-400">🔥</span> Hot Movers (Top SKUs)
+                    <div class="glass-panel p-5 rounded-2xl">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+                            <span class="text-indigo-400">🔥</span> Top Performing SKUs
                         </h3>
                         <div class="space-y-3">
-            `;
-
-            if (sortedSKUs.length > 0) {
-                sortedSKUs.forEach((sku, i) => {
-                    mdoHtml += `
-                        <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
-                            </div>
-                            <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">${sku[1]} <span class="text-[9px] text-slate-500">QTY</span></span>
-                        </div>
-                    `;
-                });
-            } else {
-                mdoHtml += `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`;
-            }
-
-            mdoHtml += `
-                        </div>
-                    </div>
-
-                    <!-- Top Dealers LTV -->
-                    <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-emerald-400">👑</span> VIP Dealers
-                        </h3>
-                        <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-            `;
-
-            if (sortedShops.length > 0) {
-                sortedShops.slice(0, 6).forEach((v, i) => {
-                    let pct = (v[1].items / topShopVolume) * 100;
-                    mdoHtml += `
-                        <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
-                            <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
-                            <div class="relative z-10 flex justify-between items-center">
-                                <div class="flex items-center gap-2 w-2/3">
-                                    <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
+                            ${sortedSKUs.map(([sku, qty], idx) => `
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-1">
+                                        <span class="text-slate-300 wrap-text-safely pr-2 max-w-[200px]">${idx + 1}. ${sku}</span>
+                                        <span class="text-indigo-400">${qty} pcs</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-indigo-500 h-full rounded-full" style="width: ${(qty / (sortedSKUs[0][1] || 1)) * 100}%"></div>
+                                    </div>
                                 </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                mdoHtml += `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`;
-            }
-
-            mdoHtml += `
+                            `).join('')}
                         </div>
                     </div>
 
-                    <!-- Brand Market Share -->
-                    <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
-                            <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Matrix</span>
+                    <div class="glass-panel p-5 rounded-2xl">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+                            <span class="text-emerald-400">🏬</span> Top Client Outlets
                         </h3>
-                        <div class="flex-1 flex items-end justify-around gap-2 mt-2 pt-4 h-40 border-b border-slate-800 relative">
-            `;
-
-            Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).forEach(b => {
-                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0;
-                let color = 'from-blue-600 to-blue-400';
-                if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500';
-                if(b[0] === 'boAt') color = 'from-red-600 to-orange-500';
-                if(b[0] === 'Portronics') color = 'from-yellow-600 to-orange-400';
-                
-                mdoHtml += `
-                    <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1">
-                        <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">
-                            ${b[1]} Units
+                        <div class="space-y-3">
+                            ${sortedShops.slice(0, 5).map(([shop, sData], idx) => `
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-1">
+                                        <span class="text-slate-300 wrap-text-safely pr-2 max-w-[200px]">${idx + 1}. ${shop}</span>
+                                        <span class="text-emerald-400">${sData.items} units</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-emerald-500 h-full rounded-full" style="width: ${(sData.items / topShopVolume) * 100}%"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
-                        <div class="w-full bg-gradient-to-t ${color} rounded-t-sm chart-bar shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative overflow-hidden group-hover:brightness-125" style="height: ${Math.max(5, h)}%">
-                            <div class="absolute inset-0 bg-white/20 w-full h-1"></div>
-                        </div>
-                        <span class="text-[9px] text-slate-400 mt-2 font-bold truncate w-full text-center group-hover:text-white transition-colors">${b[0]}</span>
                     </div>
-                `;
-            });
 
-            mdoHtml += `
+                    <div class="glass-panel p-5 rounded-2xl">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+                            <span class="text-purple-400">🏷️</span> Brand Distribution
+                        </h3>
+                        <div class="space-y-3">
+                            ${Object.entries(brandStats).map(([brand, count]) => `
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-1">
+                                        <span class="text-slate-300">${brand}</span>
+                                        <span class="text-purple-400">${count} pcs</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-purple-500 h-full rounded-full" style="width: ${(count / brandMax) * 100}%"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 </div>
             `;
-            
+
             mdoDiv.innerHTML = mdoHtml;
-            
-            // Re-trigger animation for bars
-            setTimeout(() => {
-                document.querySelectorAll('.chart-bar').forEach(bar => {
-                    let target = bar.style.height;
-                    bar.style.height = '0%';
-                    requestAnimationFrame(() => { 
-                        bar.style.height = target; 
-                    });
-                });
-            }, 50);
         }
 
-        // ==========================================
-        // PIPELINE & ORDER GRID RENDERING
-        // ==========================================
-        function setStageFilter(stageIndex) { 
-            activeStageFilter = stageIndex; 
-            renderPipeline(); 
-        }
-
+        // --- PIPELINE & ORDER GRID ---
         function renderPipeline() {
-            const grid = document.getElementById('orderGrid');
-            const filterBar = document.getElementById('stageFilterBar');
-            
-            let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
+            const bar = document.getElementById('stageFilterBar');
             
             let stageCounts = Array(9).fill(0);
-            pendingOrders.forEach(o => { 
-                if (o.completedStages < 9) {
-                    stageCounts[o.completedStages]++; 
+            let totalActive = filteredData.length;
+
+            filteredData.forEach(o => {
+                if (!o.isFullyCompleted) {
+                    stageCounts[o.completedStages]++;
                 }
             });
 
-            let filterHtml = `
-                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all">
-                    <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Overview</span>
-                    <span class="text-white text-sm font-black mb-2">All Pending</span>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                        <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">COUNT</span>
-                        <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${pendingOrders.length}</span>
-                    </div>
-                </div>
+            let filterBarHtml = `
+                <button onclick="filterByStage(null)" 
+                        class="stage-chip ${activeStageFilter === null ? 'active-filter' : 'bg-[#131C31] text-slate-400'} px-4 py-3 rounded-xl border border-slate-800 flex items-center gap-2 whitespace-nowrap text-xs font-bold hover:border-indigo-500 transition-all">
+                    <span>All Pipeline</span>
+                    <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full text-[10px]">${totalActive}</span>
+                </button>
             `;
-            
-            STAGE_NAMES.forEach((name, idx) => {
-                let isActive = activeStageFilter === idx;
-                let orderCount = stageCounts[idx];
-                
-                filterHtml += `
-                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
-                    <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
-                    <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${name.split(' (')[0]}</span>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                        <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
-                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
-                    </div>
-                </div>`;
-            });
-            
-            filterBar.innerHTML = filterHtml;
 
-            let displayOrders = activeStageFilter !== null ? pendingOrders.filter(o => o.completedStages === activeStageFilter) : pendingOrders;
-            grid.innerHTML = '';
+            STAGE_NAMES.forEach((name, idx) => {
+                // Feature 1: Completely ignore Stage 3 (index 2) in Pipeline filters visually
+                if (idx === 2) return; 
+
+                const count = stageCounts[idx];
+                const isActive = activeStageFilter === idx;
+                filterBarHtml += `
+                    <button onclick="filterByStage(${idx})" 
+                            class="stage-chip ${isActive ? 'active-filter' : 'bg-[#131C31] text-slate-400'} px-4 py-3 rounded-xl border border-slate-800 flex items-center gap-2 whitespace-nowrap text-xs font-bold hover:border-indigo-500 transition-all">
+                        <span>${idx > 2 ? idx : idx + 1}. ${name.split(' (')[0]}</span>
+                        <span class="${count > 0 ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-500'} px-2 py-0.5 rounded-full text-[10px]">${count}</span>
+                    </button>
+                `;
+            });
+
+            bar.innerHTML = filterBarHtml;
+            renderOrdersGrid();
+        }
+
+        function filterByStage(stageIdx) {
+            activeStageFilter = stageIdx;
+            renderPipeline();
+        }
+
+        function renderOrdersGrid() {
+            const grid = document.getElementById('orderGrid');
             
+            let displayOrders = filteredData;
+            if (activeStageFilter !== null) {
+                displayOrders = filteredData.filter(o => !o.isFullyCompleted && o.completedStages === activeStageFilter);
+            }
+
             if (displayOrders.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center">
-                        <div class="text-4xl mb-3">🍃</div>
-                        <p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p>
+                    <div class="col-span-full py-16 text-center glass-panel rounded-2xl border border-slate-800">
+                        <p class="text-slate-500 font-bold uppercase text-xs tracking-widest">No active orders found in this operational segment</p>
                     </div>
                 `;
                 return;
             }
 
-            displayOrders.forEach(order => {
-                const progress = (order.completedStages / 9) * 100;
-                let nextStepName = order.completedStages < 9 ? STAGE_NAMES[order.completedStages].split(' (')[0] : "Fully Completed";
+            grid.innerHTML = displayOrders.map(order => {
+                const currentStageName = order.isFullyCompleted ? "Completed" : STAGE_NAMES[order.completedStages];
+                const progressPercent = Math.round((order.completedStages / 9) * 100);
                 
-                let dateStr = "";
-                if (order.date) {
-                    const d = new Date(order.date);
-                    if (!isNaN(d)) {
-                        dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-                    }
-                }
-                
-                let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
+                // Feature 6: Calculate Total Qty and get Payment Mode/Total Value
+                const paymentMode = order.paymentMode || 'COD'; 
+                const totalValue = order.totalValue || 'N/A';
+                let totalQty = 0;
+                order.items.forEach(i => totalQty += parseInt(i.qty || 1));
 
-                grid.innerHTML += `
-                    <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-[#131C31] border border-slate-800 hover:border-indigo-500 rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card cursor-pointer">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full transition-transform group-hover:scale-125"></div>
-                        
-                        <div class="mb-4 relative z-10">
-                            <div class="flex justify-between items-start mb-1.5">
-                                <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
-                                <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${dateStr}</span>
-                            </div>
-                            <p class="text-indigo-300 font-bold text-xs leading-tight line-clamp-2" title="${order.shopName}">${order.shopName}</p>
-                            
-                            <div class="mt-2 text-[10px] text-slate-500 font-bold flex gap-2">
-                                <span class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">${order.items.length} SKUs</span>
-                                <span class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">${orderItemsCount} Units</span>
-                            </div>
-                        </div>
+                return `
+                    <div onclick="openModalById('${order.orderId}')" class="glass-panel p-5 rounded-2xl hover-card cursor-pointer flex flex-col justify-between border border-slate-800 relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" style="width: ${progressPercent}%"></div>
                         
                         <div>
-                            <div class="bg-[#0B1121] p-2.5 rounded-lg mb-3 border border-slate-800 flex justify-between items-center group-hover:border-indigo-500/30 transition-colors">
-                                <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Next Action:</span>
-                                <span class="text-[10px] text-emerald-400 font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">${nextStepName}</span>
-                            </div>
-                            
-                            <div class="flex justify-between text-[9px] text-slate-500 mb-1.5 font-black uppercase tracking-widest">
-                                <span>Pipeline Progress</span>
-                                <span class="text-indigo-400">${order.completedStages}/9</span>
-                            </div>
-                            <div class="w-full bg-[#0B1121] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                                <div class="bg-gradient-to-r from-indigo-600 to-purple-500 h-1.5 rounded-full relative" style="width: ${progress}%">
-                                    <div class="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_ease-in-out_infinite]"></div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-xs font-black text-indigo-400 font-mono tracking-wider">${order.orderId}</span>
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-bold px-2 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                                        ${paymentMode}
+                                    </span>
+                                    <span class="text-[10px] font-bold px-2 py-1 rounded-md ${order.isFullyCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20'}">
+                                        ${order.isFullyCompleted ? 'DONE' : `STAGE ${order.completedStages + 1}/9`}
+                                    </span>
                                 </div>
                             </div>
+
+                            <h4 class="text-base font-black text-white group-hover:text-indigo-300 transition-colors wrap-text-safely mb-1">${order.shopName}</h4>
+                            
+                            <!-- Feature 6: Total Value & Qty Display -->
+                            <div class="flex justify-between items-center mb-4">
+                                <p class="text-[10px] text-slate-400 font-semibold">${new Date(order.date).toLocaleDateString()} • Qty: <span class="text-indigo-300">${totalQty}</span></p>
+                                <p class="text-xs font-bold text-emerald-400">₹${totalValue}</p>
+                            </div>
+
+                            <div class="space-y-1.5 mb-4">
+                                ${order.items.slice(0, 2).map(i => `
+                                    <div class="flex justify-between items-start text-xs text-slate-300 bg-[#0B1121]/50 p-1.5 rounded-lg border border-slate-800/50">
+                                        <!-- Feature 4: Text Wrap for long item names -->
+                                        <span class="wrap-text-safely pr-2 font-medium">${i.name}</span>
+                                        <span class="font-bold text-indigo-400 mt-0.5">x${i.qty}</span>
+                                    </div>
+                                `).join('')}
+                                ${order.items.length > 2 ? `<p class="text-[10px] text-slate-500 font-bold text-right">+${order.items.length - 2} more items</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-800/80 flex justify-between items-center">
+                            <span class="text-[11px] font-bold text-slate-400 truncate max-w-[180px]">${currentStageName}</span>
+                            <span class="text-indigo-400 text-xs font-black group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- ORDER MODAL LOGIC ---
+        function openModalById(orderId) {
+            const order = allOrdersData.find(o => o.orderId === orderId);
+            if (order) openModal(order);
+        }
+
+        function openModal(order) {
+            currentActiveOrder = order;
+            queuedFiles = [];
+
+            const paymentMode = order.paymentMode || 'COD';
+            const totalValue = order.totalValue || '0';
+
+            document.getElementById('modalOrderId').innerText = order.orderId;
+            document.getElementById('modalShopName').innerText = order.shopName;
+            document.getElementById('modalPaymentMode').innerText = paymentMode;
+            document.getElementById('modalTotalValue').innerText = `₹${totalValue}`;
+
+            const container = document.getElementById('stagesContainer');
+            
+            let html = `
+                <div class="bg-[#131C31] p-4 rounded-xl border border-slate-800 mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest">Order Items Manifest</h4>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${order.items.map(i => `
+                            <div class="flex items-center gap-3 bg-[#0B1121] p-2 rounded-lg border border-slate-800">
+                                ${i.image ? `<img src="${i.image}" class="w-10 h-10 rounded-md object-cover border border-slate-700 shrink-0">` : '<div class="w-10 h-10 rounded-md bg-slate-800 flex items-center justify-center text-xs shrink-0">📦</div>'}
+                                <div class="flex-grow">
+                                    <!-- Feature 4: Wrap Text -->
+                                    <p class="text-xs font-bold text-white wrap-text-safely">${i.name}</p>
+                                    <p class="text-[10px] font-bold text-indigo-400 mt-1">Quantity: ${i.qty}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Stage Execution Checklist</h4>
+            `;
+
+            STAGE_NAMES.forEach((name, idx) => {
+                // Feature 1: Completely Hide Stage 3 (Index 2 - Call 1)
+                if (idx === 2) return; 
+
+                // Feature 1: Hide Stage 7 (Index 6 - Call 2) if Prepaid
+                if (idx === 6 && paymentMode.toUpperCase() !== 'COD') return;
+
+                const isCompleted = idx < order.completedStages;
+                let isCurrent = idx === order.completedStages && !order.isFullyCompleted;
+
+                // Adjust current pointer if we are bypassing stages in backend
+                if (order.completedStages === 2 && idx === 3) isCurrent = true; // Auto skip Call 1
+                if (order.completedStages === 6 && paymentMode.toUpperCase() !== 'COD' && idx === 7) isCurrent = true; // Auto skip Call 2
+
+                const stageDataUrl = order.stageUrls[idx] || "";
+                const isWhatsAppStage = (idx === 6 || idx === 8); // Stage 7 & 9
+
+                html += `
+                    <div class="p-4 rounded-xl border ${isCompleted ? 'bg-emerald-500/5 border-emerald-500/20' : (isCurrent ? 'bg-indigo-500/10 border-indigo-500/40 shadow-lg' : 'bg-[#131C31]/50 border-slate-800 opacity-60')} flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${isCompleted ? 'bg-emerald-500 text-white' : (isCurrent ? 'bg-indigo-500 text-white animate-pulse' : 'bg-slate-800 text-slate-500')}">
+                                ${isCompleted ? '✓' : (idx > 2 ? idx : idx + 1)}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold ${isCompleted ? 'text-emerald-400' : (isCurrent ? 'text-white' : 'text-slate-400')}">${name}</p>
+                                ${stageDataUrl ? `<p class="text-[10px] ${stageDataUrl.includes('Call Not') ? 'text-amber-400' : 'text-slate-500'} font-mono mt-0.5 truncate max-w-[280px]">${stageDataUrl}</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div>
+                            ${isCompleted ? `
+                                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-lg">Completed</span>
+                            ` : (isCurrent ? `
+                                
+                                ${idx === 3 ? `
+                                    <!-- Feature 7: Partial Stock Check & Qty Logic -->
+                                    <div class="mb-4 bg-slate-900 p-4 rounded-lg border border-slate-700 w-full md:w-80">
+                                        <p class="text-[10px] text-indigo-300 font-bold mb-3 uppercase tracking-wider">Select Available Stock to Dispatch</p>
+                                        <div class="space-y-3">
+                                            ${order.items.map((i, iIdx) => `
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <label class="flex items-start gap-2 flex-grow min-w-0 cursor-pointer">
+                                                        <input type="checkbox" id="chk_${iIdx}" checked class="accent-indigo-500 w-4 h-4 rounded mt-0.5">
+                                                        <span class="text-xs text-white wrap-text-safely">${i.name}</span>
+                                                    </label>
+                                                    <div class="flex items-center gap-1 shrink-0">
+                                                        <span class="text-[10px] text-slate-400">Qty:</span>
+                                                        <input type="number" id="qty_${iIdx}" value="${i.qty}" max="${i.qty}" min="0" class="w-14 bg-slate-800 border border-slate-600 rounded text-xs p-1 text-center text-white focus:outline-none focus:border-indigo-500">
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                    ${idx === 8 ? `
+                                        <select id="stageRating" class="bg-[#0B1121] border border-slate-700 text-xs text-white p-2 rounded-lg outline-none">
+                                            <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                            <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                            <option value="3">⭐⭐⭐ (3/5)</option>
+                                            <option value="2">⭐⭐ (2/5)</option>
+                                            <option value="1">⭐ (1/5)</option>
+                                        </select>
+                                    ` : ''}
+
+                                    <!-- Feature 5: WhatsApp Integration & Call Not Received Option -->
+                                    ${isWhatsAppStage ? `
+                                        <a href="https://wa.me/?text=Hello%20from%20Yash%20Marketing!%20Update%20regarding%20your%20Order%20ID:%20${order.orderId}" target="_blank" class="bg-green-500/10 hover:bg-green-500 hover:text-white text-green-400 border border-green-500/30 text-xs font-black px-3 py-2 rounded-lg text-center transition-all flex items-center justify-center gap-1">
+                                            💬 WhatsApp Msg
+                                        </a>
+                                        <!-- Feature 2: Call Not Received + Upload combined functionality -->
+                                        <button onclick="logCallNotReceived(${idx + 1})" id="callNotRecBtn" class="bg-amber-500/10 hover:bg-amber-500 hover:text-black text-amber-400 border border-amber-500/30 text-xs font-black px-3 py-2 rounded-lg transition-all">
+                                            📞 No Reply
+                                        </button>
+                                    ` : ''}
+                                    
+                                    <!-- Feature 3: File Upload Button (Hidden for non-relevant stages) -->
+                                    ${idx > 0 ? `
+                                        <input type="file" id="stageFileInput" multiple accept="image/*,audio/*" onchange="handleFileSelect(event)" class="hidden">
+                                        <button onclick="document.getElementById('stageFileInput').click()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-3 py-2 rounded-lg border border-slate-700 transition-all">
+                                            📎 Attach Files
+                                        </button>
+                                    ` : ''}
+
+                                    <button onclick="executeStageUpdate(${idx + 1})" id="execBtn" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black px-4 py-2 rounded-lg shadow-md transition-all whitespace-nowrap">
+                                        ${idx === 3 ? 'PROCESS STOCK' : 'MARK COMPLETE'}
+                                    </button>
+                                </div>
+                                <div id="filePreviewList" class="mt-2 text-[10px] text-indigo-400 font-mono break-words"></div>
+                            ` : `
+                                <span class="text-xs font-semibold text-slate-600">Pending Stage</span>
+                            `}
                         </div>
                     </div>
                 `;
             });
-        }
 
-        // ==========================================
-        // CUSTOM FILE SELECTION QUEUE LOGIC
-        // ==========================================
-        function handleFileSelection(inputElement, stageNum) {
-            queuedFiles = Array.from(inputElement.files);
-            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
-            
-            if (queuedFiles.length > 0) {
-                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Selected & Ready`;
-                statusLabel.classList.remove('hidden');
-            } else {
-                statusLabel.classList.add('hidden');
-            }
-        }
-
-        // ==========================================
-        // MODAL AND TASK EXECUTION
-        // ==========================================
-        function openModal(order) {
-            currentActiveOrder = order;
-            queuedFiles = []; 
-            document.getElementById('modalOrderId').innerText = order.orderId;
-            document.getElementById('modalShopName').innerText = order.shopName;
-            
-            const container = document.getElementById('stagesContainer');
-            container.innerHTML = '';
-            
-            // 1. ITEMS MANIFEST
-            let itemsHtml = `
-                <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
-                    <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span class="text-indigo-400 text-lg">📦</span> Order Manifest
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
-            `;
-            
-            if (order.items && order.items.length > 0) {
-                order.items.forEach(item => {
-                    let imgTag = item.image 
-                        ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` 
-                        : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
-                    
-                    itemsHtml += `
-                        <div class="flex items-center gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            ${imgTag}
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-slate-300 font-bold leading-tight truncate" title="${item.name}">${item.name}</p>
-                                <div class="mt-1.5 flex items-center gap-2">
-                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Qty:</span>
-                                    <span class="text-xs font-black text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded">${item.qty}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else { 
-                itemsHtml += `<p class="text-sm text-slate-600 italic px-2">No SKU data found for this order.</p>`; 
-            }
-            
-            itemsHtml += `
-                    </div>
-                </div>
-            `;
-            container.innerHTML += itemsHtml;
-
-            // 2. PIPELINE STAGES
-            let stagesListHtml = '<div class="space-y-4">';
-            
-            for (let i = 0; i < 9; i++) {
-                const stageNum = i + 1; 
-                const isCompleted = i < order.completedStages; 
-                const isActive = i === order.completedStages; 
-                const isLocked = i > order.completedStages;
-                
-                let uiHtml = '';
-                
-                if (isCompleted) {
-                    let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : [];
-                    let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
-                    
-                    fileUrls.forEach((url, index) => {
-                        url = url.trim();
-                        if (url.includes("http")) {
-                            if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>`;
-                            } else { 
-                                previewHtml += `
-                                    <a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm">
-                                        <span>🖼️ View Uploaded Document ${index + 1}</span>
-                                        <span class="text-slate-500 text-lg">→</span>
-                                    </a>
-                                `;
-                            }
-                        }
-                    });
-                    previewHtml += `</div>`;
-
-                    uiHtml = `
-                        <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition">
-                            <div class="flex justify-between items-center">
-                                <span class="text-emerald-400 text-sm font-black">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
-                            </div>
-                            ${previewHtml}
-                        </div>
-                    `;
-                } 
-                else if (isLocked) {
-                    uiHtml = `
-                        <div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50">
-                            <span class="text-slate-500 text-sm font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
-                            <span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
-                        </div>
-                    `;
-                } 
-                else if (isActive) {
-                    let inputHtml = '';
-                    
-                    if (stageNum === 1) {
-                        inputHtml = `
-                            <button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">
-                                Accept Task & Begin Process
-                            </button>
-                        `;
-                    } else {
-                        if (stageNum === 3 || stageNum === 7 || stageNum === 9) { 
-                            inputHtml = `
-                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                    <span class="text-indigo-400">🎤</span> Record Audio / Call
-                                </p>
-                                <input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" onchange="handleFileSelection(this, ${stageNum})">
-                                <p id="fileStatusText_${stageNum}" class="text-xs font-bold text-emerald-400 mt-2 text-center hidden"></p>
-                            `;
-                        } else {
-                            inputHtml = `
-                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                    <span class="text-indigo-400">⚡</span> Upload Proof (Required)
-                                </p>
-                                <div class="flex gap-2 w-full">
-                                    <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                                        📸 Live Camera
-                                        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})">
-                                    </label>
-                                    <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                                        🖼️ Multi Gallery
-                                        <input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})">
-                                    </label>
-                                </div>
-                                <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 mt-3 text-center bg-emerald-900/20 py-2 rounded hidden border border-emerald-500/20"></p>
-                            `;
-                        }
-                        
-                        if (stageNum === 9) {
-                            inputHtml += `
-                                <div class="mt-4">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Customer Rating</label>
-                                    <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-lg text-center shadow-inner">
-                                </div>
-                            `;
-                        }
-                        
-                        inputHtml += `
-                            <button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">
-                                Execute & Proceed
-                            </button>
-                        `;
-                    }
-                    
-                    uiHtml = `
-                        <div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-white font-black text-lg">${stageNum}. ${STAGE_NAMES[i]}</span>
-                                <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
-                            </div>
-                            <div id="actionArea_${stageNum}">
-                                ${inputHtml}
-                            </div>
-                            <p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p>
-                        </div>
-                    `;
-                }
-                
-                stagesListHtml += uiHtml;
-            }
-            
-            stagesListHtml += '</div>';
-            container.innerHTML += stagesListHtml;
-            
+            html += `</div>`;
+            container.innerHTML = html;
             document.getElementById('orderModal').classList.remove('hidden');
         }
 
-        function closeModal() { 
-            document.getElementById('orderModal').classList.add('hidden'); 
-            fetchOrders(true); 
+        function closeModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+            currentActiveOrder = null;
+            queuedFiles = [];
         }
 
-        // ==========================================
-        // DATA COMPRESSION & UPLOAD PROTOCOLS
-        // ==========================================
-        function compressImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader(); 
-                reader.readAsDataURL(file);
-                
-                reader.onload = (event) => {
-                    const img = new Image(); 
-                    img.src = event.target.result;
-                    
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas'); 
-                        const MAX_WIDTH = 800; 
-                        let scale = 1;
-                        
-                        if (img.width > MAX_WIDTH) {
-                            scale = MAX_WIDTH / img.width;
-                        }
-                        
-                        canvas.width = img.width * scale; 
-                        canvas.height = img.height * scale;
-                        
-                        const ctx = canvas.getContext('2d'); 
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
-                        
-                        resolve({ 
-                            name: file.name, 
-                            mimeType: 'image/jpeg', 
-                            base64: dataUrl.split(',')[1] 
-                        });
-                    };
-                };
-            });
-        }
-
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader(); 
-                reader.readAsDataURL(file);
-                
-                reader.onload = () => resolve({ 
-                    name: file.name, 
-                    mimeType: file.type, 
-                    base64: reader.result.split(',')[1] 
-                });
-                
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        async function submitStage(stageNum) {
-            const btn = document.getElementById(`submitBtn_${stageNum}`);
-            const statusLabel = document.getElementById(`status_${stageNum}`);
+        // --- FEATURE 3: RELIABLE ASYNC FILE UPLOAD ---
+        async function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            const preview = document.getElementById('filePreviewList');
+            const execBtn = document.getElementById('execBtn');
             
-            let payload = { 
-                action: 'updateStage', 
-                orderId: currentActiveOrder.orderId, 
-                stage: stageNum, 
-                files: [] 
-            };
-            
-            if (stageNum !== 1) {
-                if (queuedFiles.length === 0) { 
-                    alert("A file proof (Audio/Image) is mandatory to clear this stage."); 
-                    return; 
-                }
-                
-                btn.innerText = "Compressing & Transmitting..."; 
-                btn.disabled = true;
-                
-                for (let i = 0; i < queuedFiles.length; i++) {
-                    let f = queuedFiles[i];
-                    if (f.type.startsWith('image/')) { 
-                        payload.files.push(await compressImage(f)); 
-                    } else { 
-                        payload.files.push(await getBase64(f)); 
-                    }
-                }
-                
-                if (stageNum === 9) {
-                    const rating = document.getElementById('ratingInput').value;
-                    if (!rating) { 
-                        alert("Customer Rating is mandatory."); 
-                        btn.disabled = false; 
-                        btn.innerText = "Execute & Proceed"; 
-                        return; 
-                    }
-                    payload.rating = rating;
-                }
-            } else { 
-                if (btn) { 
-                    btn.innerText = "Processing Lock..."; 
-                    btn.disabled = true; 
-                } 
-            }
-            
-            if (statusLabel) { 
-                statusLabel.innerText = "📡 Uplinking Data to Control Tower..."; 
-                statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
-                statusLabel.classList.remove('hidden');
-            }
+            // Show loading state
+            preview.innerHTML = `<span class="text-amber-400 animate-pulse">Processing ${files.length} file(s)... Please wait...</span>`;
+            execBtn.disabled = true;
+            execBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
             try {
-                const res = await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload) 
+                // Ensure all files are fully converted to Base64 before proceeding
+                queuedFiles = await Promise.all(files.map(file => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            resolve({
+                                name: file.name,
+                                mimeType: file.type,
+                                base64: e.target.result.split(',')[1]
+                            });
+                        };
+                        reader.onerror = () => reject("File read error");
+                        reader.readAsDataURL(file);
+                    });
+                }));
+                
+                preview.innerHTML = `<span class="text-emerald-400">✅ Ready: ${queuedFiles.length} file(s) attached and ready for upload.</span>`;
+            } catch (err) {
+                preview.innerHTML = `<span class="text-pink-500">❌ Error reading files. Please try again.</span>`;
+                queuedFiles = [];
+            } finally {
+                // Re-enable the execution button
+                execBtn.disabled = false;
+                execBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // --- FEATURE 2: CALL NOT RECEIVED LOGGING ---
+        async function logCallNotReceived(stageNum) {
+            const btn = document.getElementById('callNotRecBtn');
+            btn.innerText = "LOGGING...";
+            btn.disabled = true;
+
+            const payload = {
+                action: 'updateStage',
+                orderId: currentActiveOrder.orderId,
+                stage: stageNum,
+                isCallNotReceived: true,
+                files: queuedFiles // Include recording if uploaded
+            };
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
                 });
                 
-                const data = await res.json();
+                const response = await res.json();
                 
-                if (data.status === 'success') {
-                    if (btn) {
-                        btn.innerText = "Transmission Successful ✓";
-                    }
-                    queuedFiles = []; 
-                    fetchOrders(true); 
-                } else { 
-                    throw new Error(data.message); 
+                if (response.status === 'success') {
+                    showNotification("Call Logged", `Order ${currentActiveOrder.orderId}: Call Not Received saved.`);
+                    await fetchOrders(true);
+                } else {
+                    alert("Logging Failed: " + response.message);
                 }
             } catch (err) {
-                if (statusLabel) { 
-                    statusLabel.innerText = "❌ Sync Failed. Verify connection."; 
-                    statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
+                alert("Network execution error.");
+            }
+            if(btn) {
+                btn.innerText = "📞 No Reply";
+                btn.disabled = false;
+            }
+        }
+
+        // --- STAGE EXECUTION ENGINE ---
+        async function executeStageUpdate(stageNum) {
+            const btn = document.getElementById('execBtn');
+            btn.innerText = "UPDATING...";
+            btn.disabled = true;
+
+            let ratingVal = null;
+            let partialStockData = null;
+
+            if (stageNum === 9) {
+                const ratingSelect = document.getElementById('stageRating');
+                if (ratingSelect) ratingVal = ratingSelect.value;
+            }
+
+            // --- FEATURE 7: PARTIAL STOCK LOGIC GATHERING ---
+            if (stageNum === 4) { // Stage 4 is Stock Processed
+                let processedItems = [];
+                let shortItems = [];
+                let isFullOrder = true;
+
+                currentActiveOrder.items.forEach((item, iIdx) => {
+                    const chk = document.getElementById(`chk_${iIdx}`);
+                    const qtyInput = document.getElementById(`qty_${iIdx}`);
+                    
+                    const availableQty = chk.checked ? parseInt(qtyInput.value) : 0;
+                    const originalQty = parseInt(item.qty);
+
+                    if (availableQty > 0) {
+                        processedItems.push({ name: item.name, qty: availableQty });
+                    }
+                    if (availableQty < originalQty) {
+                        shortItems.push({ name: item.name, qty: originalQty - availableQty });
+                        isFullOrder = false;
+                    }
+                });
+                
+                if (processedItems.length === 0) {
+                    alert("Please select at least 1 item to process this order.");
+                    btn.innerText = "PROCESS STOCK";
+                    btn.disabled = false;
+                    return;
                 }
-                if (btn) { 
-                    btn.innerText = "Retry Transmission"; 
-                    btn.disabled = false; 
+
+                if (!isFullOrder) {
+                    partialStockData = {
+                        processedItems: processedItems,
+                        shortItems: shortItems
+                    };
                 }
+            }
+
+            // Determine if the backend should auto-skip the next stages visually
+            const paymentMode = currentActiveOrder.paymentMode || 'COD';
+            let autoSkipNext = null;
+            
+            if (stageNum === 2) {
+                autoSkipNext = 3; // Completing stage 2 automatically marks Stage 3 as skipped
+            } else if (stageNum === 6 && paymentMode.toUpperCase() !== 'COD') {
+                autoSkipNext = 7; // Completing stage 6 automatically marks Stage 7 as skipped for prepaid
+            }
+
+            const payload = {
+                action: 'updateStage',
+                orderId: currentActiveOrder.orderId,
+                stage: stageNum,
+                files: queuedFiles,
+                rating: ratingVal,
+                partialStock: partialStockData, 
+                autoSkipNext: autoSkipNext
+            };
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const response = await res.json();
+                
+                if (response.status === 'success') {
+                    if (partialStockData) {
+                        showNotification("Order Split Successful", `Short stock moved to a new order. ID: ${currentActiveOrder.orderId}`);
+                    } else {
+                        showNotification("Stage Updated", `Order ${currentActiveOrder.orderId} progressed.`);
+                    }
+                    await fetchOrders(true);
+                } else {
+                    alert("Execution Failed: " + response.message);
+                    btn.innerText = "MARK COMPLETE";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Network execution error.");
+                btn.innerText = "MARK COMPLETE";
+                btn.disabled = false;
             }
         }
     </script>
