@@ -170,6 +170,7 @@
     </div>
 
     <script>
+        // Update this URL if you create a "New Deployment" in Google Apps Script
         const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; 
         
         const STAGE_NAMES = [
@@ -201,6 +202,7 @@
             const error = document.getElementById('loginError');
             
             btn.innerText = "AUTHENTICATING...";
+            error.classList.add('hidden'); // Hide previous errors
             
             try {
                 const payload = {
@@ -209,8 +211,11 @@
                     password: document.getElementById('loginPass').value
                 };
                 
+                // Advanced Fetch configuration to prevent CORS/Redirect blocks
                 const res = await fetch(API_URL, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow', // Ensures GAS 302 redirects are followed automatically
                     body: JSON.stringify(payload)
                 });
                 
@@ -222,12 +227,14 @@
                     
                     showDashboard(data.user.name, data.user.role);
                 } else {
-                    error.innerText = data.message; 
+                    error.innerText = data.message || "Invalid Credentials. Try again."; 
                     error.classList.remove('hidden'); 
                     btn.innerText = "INITIALIZE SYSTEM";
                 }
             } catch (err) {
-                error.innerText = "Network Error. Check Connection."; 
+                // Better Error Logging to see exactly what failed
+                console.error("Login System Error:", err);
+                error.innerText = "Network Error: " + err.message + ". Please check API URL or Connection."; 
                 error.classList.remove('hidden'); 
                 btn.innerText = "INITIALIZE SYSTEM";
             }
@@ -256,6 +263,7 @@
             location.reload(); 
         }
         
+        // Auto-login check
         if (localStorage.getItem('yash_user')) { 
             showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
         }
@@ -298,7 +306,9 @@
             
             try {
                 const res = await fetch(API_URL, { 
-                    method: 'POST', 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow', 
                     body: JSON.stringify({ action: 'getOrders' }) 
                 });
                 const response = await res.json();
@@ -325,7 +335,7 @@
                     }
                 }
             } catch (err) { 
-                console.log("Background sync error."); 
+                console.log("Background sync error:", err); 
             }
         }
 
@@ -880,6 +890,8 @@
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow', 
                     body: JSON.stringify(payload)
                 });
                 
@@ -974,6 +986,8 @@
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow', 
                     body: JSON.stringify(payload)
                 });
                 
@@ -992,7 +1006,8 @@
                     btn.disabled = false;
                 }
             } catch (err) {
-                alert("Network execution error.");
+                console.error("Execution Error:", err);
+                alert("Network execution error: " + err.message);
                 btn.innerText = "MARK COMPLETE";
                 btn.disabled = false;
             }
