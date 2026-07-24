@@ -11,40 +11,53 @@
             color: #f8fafc; 
             font-family: 'Inter', sans-serif; 
         }
+        
         .glass-panel { 
             background: rgba(15, 23, 42, 0.7); 
             backdrop-filter: blur(12px); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
         }
+        
+        /* BRAND MATRIX ANIMATION CSS */
         .chart-bar { 
-            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); 
+            height: 0%; /* Initial state for animation */
+            width: 100%;
         }
+        
         .hover-card {
             transition: all 0.3s ease;
         }
+        
         .hover-card:hover { 
             transform: translateY(-3px); 
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
             border-color: rgba(99, 102, 241, 0.4); 
         }
+        
         ::-webkit-scrollbar { 
             width: 6px; 
             height: 6px; 
         }
+        
         ::-webkit-scrollbar-track { 
             background: #0B1121; 
         }
+        
         ::-webkit-scrollbar-thumb { 
             background: #334155; 
             border-radius: 4px; 
         }
+        
         .hide-scrollbar::-webkit-scrollbar { 
             display: none; 
         }
+        
         .hide-scrollbar { 
             -ms-overflow-style: none; 
             scrollbar-width: none; 
         }
+        
         @keyframes slideDown { 
             from { 
                 transform: translateY(-100%); 
@@ -55,15 +68,18 @@
                 opacity: 1; 
             } 
         }
+        
         .toast-enter { 
             animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
+        
         .active-filter { 
             background: #4F46E5 !important; 
             border-color: #6366F1 !important; 
             color: white !important; 
             font-weight: bold; 
         }
+        
         .text-wrap-custom {
             word-wrap: break-word;
             white-space: normal;
@@ -82,7 +98,7 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v7.0)
+                Enterprise OS Login (v8.0)
             </p>
             <form id="loginForm" class="space-y-4">
                 <input 
@@ -194,7 +210,8 @@
                 <div>
                     <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
                     <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom" id="modalShopName">Shop Name</p>
-                    <div class="flex gap-3 mt-2 items-center">
+                    
+                    <div class="flex gap-2 mt-2 items-center flex-wrap">
                         <span 
                             id="modalPaymentMode" 
                             class="text-[10px] bg-slate-800 px-2 py-1 rounded text-white font-black tracking-widest uppercase"
@@ -203,11 +220,20 @@
                             id="modalTotalValue" 
                             class="text-[10px] bg-emerald-900/30 border border-emerald-500/30 px-2 py-1 rounded text-emerald-400 font-black tracking-widest"
                         ></span>
+                    </div>
+                    
+                    <!-- NEW UI: Exact Date & Time Ago in Modal -->
+                    <div class="flex gap-2 mt-2 items-center flex-wrap">
+                        <span 
+                            id="modalReceiptDate" 
+                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono tracking-widest border border-slate-700"
+                        ></span>
                         <span 
                             id="modalTimeElapsed" 
-                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest"
+                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest border border-slate-700"
                         ></span>
                     </div>
+                    
                 </div>
                 <button 
                     onclick="closeModal()" 
@@ -230,7 +256,7 @@
         // ==========================================
         
         // REPLACE WITH YOUR NEW DEPLOYMENT URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbz3c0UXe_gtzvfh5RGn62NRkmx_yoHBdyyPUW9NaE3PcHGDkg3BdccM5syWOsP85BiA-A/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbw3ye5kfsC4y6_qUa6MobtitHsTcC9r5l30YDeDd9nnznfUiUPq4sd7riGNQA8e8r5wwQ/exec"; 
         
         const STAGE_NAMES = [
             "Order Received", 
@@ -255,31 +281,35 @@
         let currentUserRole = 'Staff';
 
         // ==========================================
-        // HELPER FUNCTIONS FOR IMAGES AND TIME
+        // HELPER FUNCTIONS FOR DATE AND TIME
         // ==========================================
-        function getDirectImageUrl(url) {
-            if (!url) return "";
-            if (url.includes("drive.google.com/file/d/")) {
-                let match = url.match(/\/d\/(.*?)\//);
-                if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-            }
-            return url;
-        }
-
-        // WhatsApp specific direct link formatter
-        function makeDirectDriveLink(url) {
-            let match = url.match(/\/d\/(.*?)\//);
-            if (match && match[1]) {
-                // Formatting it as an ID based link helps WhatsApp recognize it better sometimes
-                return `https://drive.google.com/uc?id=${match[1]}`;
-            }
-            return url;
+        
+        function formatExactDate(dateString) {
+            if (!dateString) return "";
+            const d = new Date(dateString);
+            if (isNaN(d)) return "";
+            // Example format: 22/07/2026, 14:30
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            
+            let hours = d.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            
+            return `${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
         }
 
         function getTimeAgoUI(dateString) {
             if (!dateString) return { text: "", color: "text-slate-400" };
             const orderDate = new Date(dateString);
             const diffInMs = new Date() - orderDate;
+            
+            // If negative (future date bug), just return 0
+            if (diffInMs < 0) return { text: "Just now", color: "text-emerald-400" };
+            
             const diffInHrs = Math.floor(diffInMs / (1000 * 60 * 60));
             const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
             
@@ -456,7 +486,6 @@
             now.setHours(0,0,0,0);
             
             if (activeDateRange === 'split') {
-                // FIXED: Robust SPLIT order check
                 filteredData = allOrdersData.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
             } else {
                 filteredData = allOrdersData.filter(o => {
@@ -678,18 +707,23 @@
 
             Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).forEach(b => {
                 let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0; 
+                if (b[1] > 0 && h < 5) h = 5; // Ensure minimum height is visible
+
                 let color = 'from-blue-600 to-blue-400';
-                
                 if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500'; 
                 if(b[0] === 'boAt') color = 'from-red-600 to-orange-500'; 
                 if(b[0] === 'Portronics') color = 'from-yellow-600 to-orange-400';
                 
+                // NEW LOGIC FOR ANIMATION: data-height used to trigger transition
                 mdoHtml += `
                     <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1">
                         <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">
                             ${b[1]} Units
                         </div>
-                        <div class="w-full bg-gradient-to-t ${color} rounded-t-sm chart-bar shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative overflow-hidden group-hover:brightness-125" style="height: ${Math.max(5, h)}%">
+                        <div 
+                            class="w-full bg-gradient-to-t ${color} rounded-t-sm chart-bar shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative overflow-hidden group-hover:brightness-125" 
+                            data-height="${h}%"
+                        >
                             <div class="absolute inset-0 bg-white/20 w-full h-1"></div>
                         </div>
                         <span class="text-[9px] text-slate-400 mt-2 font-bold truncate w-full text-center group-hover:text-white transition-colors">
@@ -707,15 +741,13 @@
             
             mdoDiv.innerHTML = mdoHtml;
             
+            // STRONG ANIMATION TRIGGER FOR BRAND MATRIX
             setTimeout(() => { 
                 document.querySelectorAll('.chart-bar').forEach(bar => { 
-                    let target = bar.style.height; 
-                    bar.style.height = '0%'; 
-                    requestAnimationFrame(() => { 
-                        bar.style.height = target; 
-                    }); 
+                    let targetHeight = bar.getAttribute('data-height');
+                    bar.style.height = targetHeight; 
                 }); 
-            }, 50);
+            }, 100);
         }
 
         // ==========================================
@@ -819,7 +851,10 @@
                     }
                 }
                 
+                // EXACT DATE & TIME AGO FIX
+                let exactDateStr = formatExactDate(order.date);
                 let timeData = getTimeAgoUI(order.date);
+                
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 
                 let splitBadge = "";
@@ -839,15 +874,21 @@
                                 <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
                                 <div class="flex gap-1 items-center">
                                     ${splitBadge}
-                                    <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
-                                        ⏱️ ${timeData.text}
-                                    </span>
                                 </div>
                             </div>
                             
-                            <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom">
+                            <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">
                                 ${order.shopName}
                             </p>
+                            
+                            <div class="flex gap-1 items-center flex-wrap mb-3">
+                                <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">
+                                    ${exactDateStr}
+                                </span>
+                                <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
+                                    ⏱️ ${timeData.text}
+                                </span>
+                            </div>
                             
                             <div class="mt-3 flex flex-wrap gap-2 items-center">
                                 <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${isCod ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">
@@ -984,15 +1025,15 @@
         }
 
         // ==========================================
-        // WHATSAPP SHARE TO GROUP (Fixing the Link Preview)
+        // WHATSAPP SHARE TO GROUP
         // ==========================================
         window.shareToGroup = function(stageNum, fileUrlsString) {
             const orderId = currentActiveOrder.orderId;
             const shop = currentActiveOrder.shopName;
             const stageName = STAGE_NAMES[stageNum - 1]; 
             
-            // Format Google Drive links to direct IDs to encourage WhatsApp thumbnail previews
-            let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
+            // Format links back to standard view URL for best WhatsApp preview results
+            let links = fileUrlsString.split(',').map(u => u.trim()).join('\n');
             
             let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
             
@@ -1009,9 +1050,14 @@
             document.getElementById('modalOrderId').innerText = order.orderId;
             document.getElementById('modalShopName').innerText = order.shopName;
             
+            // EXACT DATE & TIME AGO FIX FOR MODAL
+            let exactDateStr = formatExactDate(order.date);
             let timeData = getTimeAgoUI(order.date);
+            
+            document.getElementById('modalReceiptDate').innerText = exactDateStr;
+            
             document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
-            document.getElementById('modalTimeElapsed').className = `text-[10px] px-2 py-1 rounded font-black tracking-widest bg-slate-800 ${timeData.color}`;
+            document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
             let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
             
@@ -1039,11 +1085,10 @@
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
-                    let directImgUrl = getDirectImageUrl(item.image);
+                    // REVERTED TO ORIGINAL SIMPLE IMAGE TAG
                     let imgTag = "";
-                    
-                    if (directImgUrl) {
-                        imgTag = `<img src="${directImgUrl}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">`;
+                    if (item.image) {
+                        imgTag = `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">`;
                     } else {
                         imgTag = `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
                     }
