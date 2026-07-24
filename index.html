@@ -58,7 +58,6 @@
             color: white !important; 
             font-weight: bold; 
         }
-        /* Custom Utility for Force Text Wrapping */
         .text-wrap-custom {
             word-wrap: break-word;
             white-space: normal;
@@ -67,9 +66,8 @@
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
-    <!-- Notification Radar Area -->
-    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none">
-    </div>
+    <!-- Notification Area -->
+    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
 
     <!-- Login Authentication Screen -->
     <div id="loginScreen" class="flex h-[90vh] items-center justify-center p-4">
@@ -78,13 +76,11 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v4.0)
+                Enterprise OS Login (v5.0)
             </p>
             <form id="loginForm" class="space-y-4">
-                <input type="text" id="loginEmpId" placeholder="Access Code / Emp ID" required 
-                       class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner">
-                <input type="password" id="loginPass" placeholder="Security PIN" required 
-                       class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner">
+                <input type="text" id="loginEmpId" placeholder="Access Code / Emp ID" required class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner">
+                <input type="password" id="loginPass" placeholder="Security PIN" required class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner">
                 <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform active:scale-[0.98]">
                     INITIALIZE SYSTEM
                 </button>
@@ -95,8 +91,6 @@
 
     <!-- Main Operational Dashboard Screen -->
     <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto">
-        
-        <!-- Master Header & Date Controls -->
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
             <div>
                 <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
@@ -114,41 +108,26 @@
                 <button onclick="setDateRange('all', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">All Time</button>
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-                
-                <!-- NEW: Split Orders Filter Button -->
                 <button onclick="setDateRange('split', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all">
                     ✂️ Split Orders
                 </button>
-                
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
 
-                <input type="date" id="customDateFilter" onchange="setDateRange('custom', this)" 
-                       class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1">
-                       
+                <input type="date" id="customDateFilter" onchange="setDateRange('custom', this)" class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1">
                 <button onclick="logout()" class="ml-auto lg:ml-2 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">
                     LOGOUT
                 </button>
             </div>
         </div>
 
-        <!-- MDO Command Center (Owner Exclusive) -->
-        <div id="mdoCommandCenter" class="hidden mb-8 space-y-4">
-            <!-- Full dashboard populated dynamically via JS -->
-        </div>
+        <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
 
         <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
             <span class="text-indigo-400">🌊</span> Operational Pipeline
         </h3>
         
-        <!-- Premium KPI Filter Pipeline -->
-        <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar">
-            <!-- Dynamically Populated via JS -->
-        </div>
-        
-        <!-- Order Cards Grid -->
-        <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <!-- Dynamically Populated via JS -->
-        </div>
+        <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar"></div>
+        <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </div>
 
     <!-- Order Execution Task Modal -->
@@ -163,14 +142,9 @@
                         <span id="modalTotalValue" class="text-[10px] bg-emerald-900/30 border border-emerald-500/30 px-2 py-1 rounded text-emerald-400 font-black tracking-widest"></span>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors">
-                    &times;
-                </button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors">&times;</button>
             </div>
-            
-            <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-[#0B1121]" id="stagesContainer">
-                <!-- Items List & Execution Stages Populated Here -->
-            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-[#0B1121]" id="stagesContainer"></div>
         </div>
     </div>
 
@@ -180,7 +154,7 @@
         // ==========================================
         
         // REPLACE WITH YOUR NEW DEPLOYMENT URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbyJaNQwIGmiEZeALeYJoptKpFBIL0eiV1z62FKYhge4cw6M-BDB_3iMX5bvEYOaZuZTjA/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzzZZZ_REPLACE_WITH_YOUR_NEW_URL/exec"; 
         
         const STAGE_NAMES = [
             "Order Received", 
@@ -189,7 +163,7 @@
             "Processed (Stock)", 
             "Invoiced", 
             "Dispatched", 
-            "Dynamic Comms Stage", // This name will be injected dynamically (WhatsApp 2 or Call 2)
+            "Dynamic Comms Stage", 
             "Delivered", 
             "Final Call (Rating)"
         ];
@@ -205,33 +179,27 @@
         let currentUserRole = 'Staff';
 
         // ==========================================
-        // LOGIN & AUTHENTICATION
+        // LOGIN
         // ==========================================
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const error = document.getElementById('loginError');
-            
             btn.innerText = "AUTHENTICATING...";
             
             try {
-                const payload = {
-                    action: 'login', 
-                    employeeId: document.getElementById('loginEmpId').value, 
-                    password: document.getElementById('loginPass').value
-                };
-                
                 const res = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'login', 
+                        employeeId: document.getElementById('loginEmpId').value, 
+                        password: document.getElementById('loginPass').value 
+                    })
                 });
-                
                 const data = await res.json();
-                
                 if (data.status === 'success') {
-                    localStorage.setItem('yash_user', data.user.name);
+                    localStorage.setItem('yash_user', data.user.name); 
                     localStorage.setItem('yash_role', data.user.role || 'Staff');
-                    
                     showDashboard(data.user.name, data.user.role);
                 } else {
                     error.innerText = data.message; 
@@ -247,13 +215,11 @@
 
         function showDashboard(name, role) {
             currentUserRole = role || 'Staff';
-            
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboardScreen').classList.remove('hidden');
             document.getElementById('userName').innerText = name.toUpperCase();
             
             fetchOrders(false);
-            
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
             }
@@ -278,7 +244,6 @@
         function showNotification(title, message) {
             const area = document.getElementById('notificationArea');
             const toast = document.createElement('div');
-            
             toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto";
             toast.innerHTML = `
                 <span class="text-2xl animate-bounce">⚡</span>
@@ -287,12 +252,11 @@
                     <p class="text-sm font-bold text-white mt-0.5">${message}</p>
                 </div>
             `;
-            
             area.appendChild(toast);
             
             setTimeout(() => { 
                 toast.style.opacity = '0'; 
-                toast.style.transition = 'opacity 0.3s ease';
+                toast.style.transition = 'opacity 0.3s ease'; 
                 setTimeout(() => toast.remove(), 300); 
             }, 6000);
         }
@@ -302,7 +266,6 @@
         // ==========================================
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
-            
             if (!isSilent && allOrdersData.length === 0) {
                 grid.innerHTML = `
                     <div class="col-span-full py-20 text-center">
@@ -311,7 +274,6 @@
                     </div>
                 `;
             }
-            
             try {
                 const res = await fetch(API_URL, { 
                     method: 'POST', 
@@ -333,7 +295,6 @@
                     allOrdersData = response.data;
                     applyDateFilter(); 
 
-                    // Refresh open modal if order is updated
                     if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
                         const updatedOrder = allOrdersData.find(o => o.orderId === currentActiveOrder.orderId);
                         if (updatedOrder) {
@@ -341,48 +302,37 @@
                         }
                     }
                 }
-            } catch (err) { 
-                console.log("Background sync error."); 
+            } catch (err) {
+                console.log("Background sync error.");
             }
         }
 
         function setDateRange(range, btnElement) {
             activeDateRange = range;
-            
             if(range !== 'custom') {
                 document.getElementById('customDateFilter').value = '';
             }
-            
             if(btnElement && range !== 'custom') {
                 document.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active-filter'));
                 btnElement.classList.add('active-filter');
             }
-            
             applyDateFilter();
         }
 
         function applyDateFilter() {
-            let now = new Date();
+            let now = new Date(); 
             now.setHours(0,0,0,0);
-
+            
             if (activeDateRange === 'split') {
-                // Filter only orders that contain "-SPLIT-"
                 filteredData = allOrdersData.filter(o => o.orderId.includes('-SPLIT-'));
             } else {
-                // Normal Date Filtering
                 filteredData = allOrdersData.filter(o => {
-                    let d = new Date(o.date);
+                    let d = new Date(o.date); 
                     d.setHours(0,0,0,0);
                     
-                    if (activeDateRange === 'today') {
-                        return d.getTime() === now.getTime();
-                    }
-                    if (activeDateRange === '7d') {
-                        return (now - d) / (1000*60*60*24) <= 7;
-                    }
-                    if (activeDateRange === '30d') {
-                        return (now - d) / (1000*60*60*24) <= 30;
-                    }
+                    if (activeDateRange === 'today') return d.getTime() === now.getTime();
+                    if (activeDateRange === '7d') return (now - d) / (1000*60*60*24) <= 7;
+                    if (activeDateRange === '30d') return (now - d) / (1000*60*60*24) <= 30;
                     if (activeDateRange === 'custom') {
                         let customVal = document.getElementById('customDateFilter').value;
                         if(!customVal) return true;
@@ -391,8 +341,7 @@
                     return true; 
                 });
             }
-
-            renderMdoDashboard();
+            renderMdoDashboard(); 
             renderPipeline();
         }
 
@@ -402,33 +351,30 @@
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
-            
             const mdoDiv = document.getElementById('mdoCommandCenter');
             
-            if (!isOwner) {
-                mdoDiv.classList.add('hidden');
-                return;
+            if (!isOwner) { 
+                mdoDiv.classList.add('hidden'); 
+                return; 
             }
             
             mdoDiv.classList.remove('hidden');
 
-            // --- DATA AGGREGATION ---
-            let totalVolume = 0;
-            let totalCompleted = 0;
+            let totalVolume = 0; 
+            let totalCompleted = 0; 
             let slaBreaches = 0; 
-            let shopStats = {};
-            let skuStats = {};
+            let shopStats = {}; 
+            let skuStats = {}; 
             let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
-            let stageStuck = Array(9).fill(0);
+            let stageStuck = Array(9).fill(0); 
             const now = new Date().getTime();
 
             filteredData.forEach(o => {
                 if(o.isFullyCompleted) {
                     totalCompleted++;
-                } else {
-                    stageStuck[o.completedStages]++;
-                    let orderDate = new Date(o.date).getTime();
-                    if ((now - orderDate) > (48 * 60 * 60 * 1000)) {
+                } else { 
+                    stageStuck[o.completedStages]++; 
+                    if ((now - new Date(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
                         slaBreaches++;
                     }
                 }
@@ -436,14 +382,14 @@
                 if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0 };
                 
                 o.items.forEach(i => {
-                    let qty = parseInt(i.qty || 1);
-                    totalVolume += qty;
+                    let qty = parseInt(i.qty || 1); 
+                    totalVolume += qty; 
                     shopStats[o.shopName].items += qty;
-
-                    let cleanName = i.name.trim();
-                    if(!skuStats[cleanName]) skuStats[cleanName] = 0;
+                    
+                    let cleanName = i.name.trim(); 
+                    if(!skuStats[cleanName]) skuStats[cleanName] = 0; 
                     skuStats[cleanName] += qty;
-
+                    
                     let n = cleanName.toLowerCase();
                     if(n.includes('boat')) brandStats['boAt'] += qty;
                     else if(n.includes('velocity')) brandStats['Velocity'] += qty;
@@ -454,28 +400,20 @@
                 });
             });
 
-            // --- CALCULATIONS ---
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
             let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1] - a[1]).slice(0, 5); 
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
-            
             let maxStuck = Math.max(...stageStuck);
             let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
-            
             let completionRate = filteredData.length > 0 ? Math.round((totalCompleted / filteredData.length) * 100) : 0;
             let healthScore = Math.max(0, 100 - (slaBreaches * 5) - ((100 - completionRate) * 0.2)).toFixed(0);
             let healthColor = healthScore > 80 ? 'text-emerald-400' : (healthScore > 50 ? 'text-orange-400' : 'text-pink-500');
-
             let brandMax = Math.max(...Object.values(brandStats), 1);
 
-            // --- UI RENDERING (THE WATCH TOWER) ---
             let mdoHtml = `
-                <!-- WAR ROOM HEADER -->
                 <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
                     <div>
-                        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">
-                            🔴 Live War Room
-                        </h2>
+                        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">🔴 Live War Room</h2>
                         <p class="text-[10px] text-slate-500 font-mono mt-1">Real-time Business Telemetry</p>
                     </div>
                     <div class="text-right">
@@ -483,8 +421,6 @@
                         <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Pipeline Health</div>
                     </div>
                 </div>
-
-                <!-- TOP KPI RADAR -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
@@ -493,7 +429,6 @@
                             <span class="text-xs text-indigo-400 font-bold mb-1 pb-1">Units Moved</span>
                         </div>
                     </div>
-                    
                     <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-emerald-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Delivery Success</div>
                         <div class="flex items-center gap-3 mt-2">
@@ -501,7 +436,6 @@
                         </div>
                         <div class="text-[10px] text-slate-500 mt-2 font-semibold">${totalCompleted} / ${filteredData.length} Orders Delivered</div>
                     </div>
-
                     <div class="glass-panel p-5 rounded-2xl border-t-4 ${slaBreaches > 0 ? 'border-t-pink-500 bg-pink-500/5 shadow-[0_0_15px_rgba(236,72,153,0.1)]' : 'border-t-slate-700'} hover-card">
                         <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
                             ${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches
@@ -511,7 +445,6 @@
                         </div>
                         <div class="text-[10px] text-slate-500 mt-2 font-semibold">Orders pending > 48 hours</div>
                     </div>
-
                     <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-orange-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Core Bottleneck</div>
                         <div class="text-xl font-black text-orange-400 truncate mt-2 leading-tight" title="${frictionIndex}">${frictionIndex}</div>
@@ -520,11 +453,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- DEEP INSIGHTS MATRIX -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    
-                    <!-- Top SKUs -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-yellow-400">🔥</span> Hot Movers (Top SKUs)
@@ -533,7 +462,7 @@
             `;
 
             if (sortedSKUs.length > 0) {
-                sortedSKUs.forEach((sku, i) => {
+                sortedSKUs.forEach((sku, i) => { 
                     mdoHtml += `
                         <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
                             <div class="flex items-center gap-3 overflow-hidden">
@@ -542,17 +471,15 @@
                             </div>
                             <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">${sku[1]} <span class="text-[9px] text-slate-500">QTY</span></span>
                         </div>
-                    `;
+                    `; 
                 });
-            } else {
-                mdoHtml += `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`;
+            } else { 
+                mdoHtml += `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`; 
             }
 
             mdoHtml += `
                         </div>
                     </div>
-
-                    <!-- Top Dealers LTV -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-emerald-400">👑</span> VIP Dealers
@@ -561,8 +488,8 @@
             `;
 
             if (sortedShops.length > 0) {
-                sortedShops.slice(0, 6).forEach((v, i) => {
-                    let pct = (v[1].items / topShopVolume) * 100;
+                sortedShops.slice(0, 6).forEach((v, i) => { 
+                    let pct = (v[1].items / topShopVolume) * 100; 
                     mdoHtml += `
                         <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
                             <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
@@ -575,17 +502,15 @@
                                 </div>
                             </div>
                         </div>
-                    `;
+                    `; 
                 });
-            } else {
-                mdoHtml += `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`;
+            } else { 
+                mdoHtml += `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`; 
             }
 
             mdoHtml += `
                         </div>
                     </div>
-
-                    <!-- Brand Market Share -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
                             <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Matrix</span>
@@ -594,10 +519,10 @@
             `;
 
             Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).forEach(b => {
-                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0;
+                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0; 
                 let color = 'from-blue-600 to-blue-400';
-                if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500';
-                if(b[0] === 'boAt') color = 'from-red-600 to-orange-500';
+                if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500'; 
+                if(b[0] === 'boAt') color = 'from-red-600 to-orange-500'; 
                 if(b[0] === 'Portronics') color = 'from-yellow-600 to-orange-400';
                 
                 mdoHtml += `
@@ -613,23 +538,16 @@
                 `;
             });
 
-            mdoHtml += `
-                        </div>
-                    </div>
-                </div>
-            `;
+            mdoDiv.innerHTML = mdoHtml + `</div></div></div>`;
             
-            mdoDiv.innerHTML = mdoHtml;
-            
-            // Re-trigger animation for bars
-            setTimeout(() => {
-                document.querySelectorAll('.chart-bar').forEach(bar => {
-                    let target = bar.style.height;
-                    bar.style.height = '0%';
+            setTimeout(() => { 
+                document.querySelectorAll('.chart-bar').forEach(bar => { 
+                    let target = bar.style.height; 
+                    bar.style.height = '0%'; 
                     requestAnimationFrame(() => { 
                         bar.style.height = target; 
-                    });
-                });
+                    }); 
+                }); 
             }, 50);
         }
 
@@ -646,8 +564,8 @@
             const filterBar = document.getElementById('stageFilterBar');
             
             let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-            
             let stageCounts = Array(9).fill(0);
+            
             pendingOrders.forEach(o => { 
                 if (o.completedStages < 9) {
                     stageCounts[o.completedStages]++; 
@@ -666,22 +584,24 @@
             `;
             
             STAGE_NAMES.forEach((name, idx) => {
-                let isActive = activeStageFilter === idx;
+                let isActive = activeStageFilter === idx; 
                 let orderCount = stageCounts[idx];
                 
-                // Keep naming simple for the filter bar
-                let filterName = name.split(' (')[0];
-                if (idx === 6) filterName = "Delivery Comms";
+                let filterName = name.split(' (')[0]; 
+                if (idx === 6) {
+                    filterName = "Delivery Comms";
+                }
 
                 filterHtml += `
-                <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
-                    <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
-                    <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${filterName}</span>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                        <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
-                        <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
+                    <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
+                        <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
+                        <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${filterName}</span>
+                        <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
+                            <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
+                            <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
+                        </div>
                     </div>
-                </div>`;
+                `;
             });
             
             filterBar.innerHTML = filterHtml;
@@ -689,39 +609,38 @@
             let displayOrders = activeStageFilter !== null ? pendingOrders.filter(o => o.completedStages === activeStageFilter) : pendingOrders;
             grid.innerHTML = '';
             
-            if (displayOrders.length === 0) {
+            if (displayOrders.length === 0) { 
                 grid.innerHTML = `
                     <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center">
                         <div class="text-4xl mb-3">🍃</div>
                         <p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p>
                     </div>
-                `;
-                return;
+                `; 
+                return; 
             }
 
             displayOrders.forEach(order => {
                 const progress = (order.completedStages / 9) * 100;
+                let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
                 
                 let nextStepName = "Fully Completed";
                 if (order.completedStages < 9) {
                     if (order.completedStages === 6) {
-                        let isNextCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
-                        nextStepName = isNextCod ? "Call 2" : "WhatsApp 2";
+                        nextStepName = isCod ? "Call 2" : "WhatsApp 2";
                     } else {
                         nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
                     }
                 }
                 
                 let dateStr = "";
-                if (order.date) {
-                    const d = new Date(order.date);
+                if (order.date) { 
+                    const d = new Date(order.date); 
                     if (!isNaN(d)) {
-                        dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+                        dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; 
                     }
                 }
                 
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
-                let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
                 let splitBadge = order.orderId.includes('-SPLIT-') ? `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30">✂️ SPLIT ORDER</span>` : '';
 
                 grid.innerHTML += `
@@ -773,7 +692,7 @@
         }
 
         // ==========================================
-        // CUSTOM FILE APPEND QUEUE WITH THUMBNAILS
+        // UI INTERACTIONS & FILE SELECTION
         // ==========================================
         function handleFileSelection(inputElement, stageNum) {
             const newFiles = Array.from(inputElement.files);
@@ -790,18 +709,23 @@
                 if (clearBtn) clearBtn.classList.remove('hidden'); 
                 if (container) container.classList.remove('hidden');
                 
-                // Show Thumbnails dynamically
                 if (previewBox) {
-                    previewBox.innerHTML = '';
+                    previewBox.innerHTML = ''; 
                     previewBox.classList.remove('hidden');
+                    
                     queuedFiles.forEach(file => {
-                        // Display icon for audio files, otherwise thumbnail
-                        if (file.type.startsWith('audio/')) {
-                            previewBox.innerHTML += `<div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden">🎤<br/>Audio</div>`;
+                        if (file.type.startsWith('audio/')) { 
+                            previewBox.innerHTML += `
+                                <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden">
+                                    🎤<br/>Audio
+                                </div>
+                            `; 
                         } else {
                             const reader = new FileReader();
-                            reader.onload = function(e) {
-                                previewBox.innerHTML += `<img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">`;
+                            reader.onload = function(e) { 
+                                previewBox.innerHTML += `
+                                    <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
+                                `; 
                             }
                             reader.readAsDataURL(file);
                         }
@@ -812,44 +736,68 @@
         
         function clearQueuedFiles(stageNum) {
             queuedFiles = [];
-            document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden');
-            document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden');
-            document.getElementById(`fileStatusContainer_${stageNum}`).classList.add('hidden');
             
+            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
+            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
+            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
             const previewBox = document.getElementById(`previewBox_${stageNum}`);
+            
+            if(statusLabel) statusLabel.classList.add('hidden'); 
+            if(clearBtn) clearBtn.classList.add('hidden'); 
+            if(container) container.classList.add('hidden');
             if(previewBox) { 
                 previewBox.innerHTML = ''; 
                 previewBox.classList.add('hidden'); 
             }
         }
 
-        // WHATSAPP TRIGGER FUNCTION
+        // ==========================================
+        // WHATSAPP DIRECT CHAT (NO FILES)
+        // ==========================================
         window.openWhatsAppMsg = function(stageNum, isCod) {
             const orderId = currentActiveOrder.orderId;
             const shop = currentActiveOrder.shopName;
             const amt = currentActiveOrder.totalValue;
+            let phone = currentActiveOrder.phone; 
+            
             let msg = "";
             
             if(stageNum === 3) {
-                // WhatsApp 1 Message
                 msg = `Hello ${shop},\n\nYour order (${orderId}) with Yash Marketing is successfully processed and confirmed.\n\nPayment Mode: ${currentActiveOrder.paymentMode || 'N/A'}\nTotal Amount: Rs. ${amt}\n\nWe will dispatch it shortly. Thank you!`;
             } else if(stageNum === 7) {
-                // WhatsApp 2 / Call 2 Followup Message
                 if (isCod) {
                     msg = `Hello ${shop},\n\nGood News! Your order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today.\n\nPlease keep the exact COD amount Rs. ${amt} ready for a smooth handover.\n\nThank you for choosing Yash Marketing!`;
                 } else {
                     msg = `Hello ${shop},\n\nGood News! Your PREPAID order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today.\n\nOur delivery executive will reach you soon.\n\nThank you for choosing Yash Marketing!`;
                 }
             }
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+
+            let waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        // ==========================================
+        // WHATSAPP SHARE TO GROUP (WITH FILES)
+        // ==========================================
+        window.shareToGroup = function(stageNum, fileUrlsString) {
+            const orderId = currentActiveOrder.orderId;
+            const shop = currentActiveOrder.shopName;
+            const stageName = STAGE_NAMES[stageNum - 1]; 
+            
+            let links = fileUrlsString.split(',').map(u => u.trim()).join('\n');
+            
+            let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         // ==========================================
         // MODAL AND TASK EXECUTION
         // ==========================================
         function openModal(order) {
-            currentActiveOrder = order;
+            currentActiveOrder = order; 
             queuedFiles = []; 
+            
             document.getElementById('modalOrderId').innerText = order.orderId;
             document.getElementById('modalShopName').innerText = order.shopName;
             
@@ -861,10 +809,9 @@
             
             document.getElementById('modalTotalValue').innerText = `Amount: ₹${order.totalValue || '0'}`;
             
-            const container = document.getElementById('stagesContainer');
+            const container = document.getElementById('stagesContainer'); 
             container.innerHTML = '';
             
-            // 1. ITEMS MANIFEST
             let itemsHtml = `
                 <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
                     <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -875,10 +822,7 @@
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
-                    let imgTag = item.image 
-                        ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` 
-                        : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
-                    
+                    let imgTag = item.image ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
                     itemsHtml += `
                         <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
                             ${imgTag}
@@ -899,10 +843,9 @@
             itemsHtml += `
                     </div>
                 </div>
-            `;
+            `; 
             container.innerHTML += itemsHtml;
 
-            // 2. PIPELINE STAGES
             let stagesListHtml = '<div class="space-y-4">';
             
             for (let i = 0; i < 9; i++) {
@@ -911,7 +854,6 @@
                 const isActive = i === order.completedStages; 
                 const isLocked = i > order.completedStages;
                 
-                // Dynamic Stage Naming for Rendering
                 let displayStageName = STAGE_NAMES[i];
                 if (stageNum === 7) {
                     displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
@@ -921,23 +863,35 @@
                 
                 if (isCompleted) {
                     let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : [];
+                    let hasFiles = false;
                     let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
                     
                     fileUrls.forEach((url, index) => {
                         url = url.trim();
                         if (url.includes("http")) {
+                            hasFiles = true;
                             if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) { 
-                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>`;
+                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>`; 
                             } else { 
                                 previewHtml += `
                                     <a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm">
                                         <span>🖼️ View Uploaded Proof ${index + 1}</span>
                                         <span class="text-slate-500 text-lg">→</span>
                                     </a>
-                                `;
+                                `; 
                             }
                         }
                     });
+                    
+                    // Share to WhatsApp Group Feature
+                    if (hasFiles && (stageNum === 2 || stageNum === 4 || stageNum === 5 || stageNum === 6 || stageNum === 8)) {
+                        previewHtml += `
+                            <button onclick="shareToGroup(${stageNum}, '${order.stageUrls[i]}')" class="mt-2 w-full bg-[#128C7E] hover:bg-[#075E54] text-white text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border border-[#128C7E]">
+                                <span>📤</span> Share Details & Photos to WhatsApp Group
+                            </button>
+                        `;
+                    }
+                    
                     previewHtml += `</div>`;
 
                     uiHtml = `
@@ -968,9 +922,7 @@
                             </button>
                         `;
                     } 
-                    // STAGE 3 (Always WhatsApp) OR STAGE 7 (WhatsApp 2 / Call 2)
                     else if (stageNum === 3 || stageNum === 7) { 
-                        
                         inputHtml += `
                             <div class="mt-4 mb-4">
                                 <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 1: Communication</p>
@@ -986,7 +938,6 @@
                             </div>
                         `;
 
-                        // MANDATORY AUDIO UPLOAD FOR STAGE 7 IF COD
                         if (stageNum === 7 && isCod) {
                             inputHtml += `
                                 <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4">
@@ -1013,11 +964,13 @@
                         `;
                     }
                     else {
-                        // PARTIAL STOCK FEATURE FOR STAGE 4
+                        // PARTIAL STOCK FEATURE
                         if (stageNum === 4) {
                             inputHtml += `
                                 <div class="bg-[#0B1121] border border-slate-700 p-3 rounded-xl mt-4 mb-4 shadow-inner">
-                                    <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-base">☑</span> Confirm Available Stock</p>
+                                    <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2">
+                                        <span class="text-indigo-400 text-base">☑</span> Confirm Available Stock
+                                    </p>
                                     <div class="space-y-2 max-h-48 overflow-y-auto hide-scrollbar pr-1">
                                         ${order.items.map((item, idx) => `
                                             <div class="flex items-center justify-between bg-[#131C31] p-2.5 rounded-lg border border-slate-800">
@@ -1037,7 +990,6 @@
                             `;
                         }
 
-                        // UNIVERSAL FILE UPLOAD FOR STAGE 2, 4, 5, 6, 8, 9
                         if (stageNum === 9) {
                             inputHtml += `
                                 <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
@@ -1063,7 +1015,7 @@
                             `;
                         }
 
-                        // Thumbnail Box
+                        // Thumbnail Preview Area
                         inputHtml += `
                             <div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div>
                             
@@ -1073,7 +1025,7 @@
                             </div>
                         `;
 
-                        // RATING
+                        // Customer Rating Area
                         if (stageNum === 9) {
                             inputHtml += `
                                 <div class="mt-4">
@@ -1173,6 +1125,9 @@
             });
         }
 
+        // ==========================================
+        // SUBMIT STAGE
+        // ==========================================
         async function submitStage(stageNum) {
             const btn = document.getElementById(`submitBtn_${stageNum}`);
             const statusLabel = document.getElementById(`status_${stageNum}`);
@@ -1183,47 +1138,41 @@
                 action: 'updateStage', 
                 orderId: currentActiveOrder.orderId, 
                 stage: stageNum, 
-                files: [],
-                isNoResponse: false,
-                isWhatsAppOnly: false,
-                partialStock: null
+                files: [], 
+                isNoResponse: false, 
+                isWhatsAppOnly: false, 
+                partialStock: null 
             };
-
-            // Check if "No Response" is ticked
+            
             const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
-            if (noRespCheckbox && noRespCheckbox.checked) {
-                payload.isNoResponse = true;
+            if (noRespCheckbox && noRespCheckbox.checked) { 
+                payload.isNoResponse = true; 
             }
             
             if (stageNum !== 1) {
-                // Determine if file upload is required
-                // Files required UNLESS:
-                // 1. "No Response" is checked
-                // 2. It is Stage 9 (Optional rating)
-                // 3. It is Stage 3 (Purely WhatsApp)
-                // 4. It is Stage 7 AND Prepaid (Purely WhatsApp)
                 
                 let fileRequired = true;
-                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) {
-                    fileRequired = false;
+                
+                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) { 
+                    fileRequired = false; 
                 }
 
                 if (fileRequired && queuedFiles.length === 0) {
-                    if (stageNum === 7 && isCod) {
-                        alert("For COD Orders, Call Recording (Audio File) is MANDATORY to proceed. Or check 'Dealer Didn't Respond'.");
-                    } else {
-                        alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'.");
+                    if (stageNum === 7 && isCod) { 
+                        alert("For COD Orders, Call Recording (Audio File) is MANDATORY to proceed. Or check 'Dealer Didn't Respond'."); 
+                    } else { 
+                        alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'."); 
                     }
                     return; 
                 }
                 
-                if (!fileRequired && queuedFiles.length === 0) {
-                    payload.isWhatsAppOnly = true;
+                if (!fileRequired && queuedFiles.length === 0) { 
+                    payload.isWhatsAppOnly = true; 
                 }
-
-                if (btn) {
+                
+                if (btn) { 
                     btn.innerText = "Processing & Transmitting..."; 
-                    btn.disabled = true;
+                    btn.disabled = true; 
                 }
                 
                 for (let i = 0; i < queuedFiles.length; i++) {
@@ -1235,53 +1184,58 @@
                     }
                 }
                 
-                // Rating
+                // Final rating requirement
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
                     if (!rating) { 
                         alert("Customer Rating is mandatory."); 
-                        if(btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; }
+                        if(btn) { 
+                            btn.disabled = false; 
+                            btn.innerText = "Execute & Proceed"; 
+                        } 
                         return; 
                     }
                     payload.rating = rating;
                 }
 
-                // Partial Stock Extraction
+                // Gather Partial Stock Options
                 if (stageNum === 4) {
                     let processed = []; 
                     let short = [];
                     currentActiveOrder.items.forEach((item, idx) => {
-                        let chk = document.getElementById(`chk_item_${idx}`);
+                        let chk = document.getElementById(`chk_item_${idx}`); 
                         let qtyInput = document.getElementById(`qty_item_${idx}`);
                         
                         if (chk && qtyInput) {
-                            let isChecked = chk.checked;
-                            let userQty = parseInt(qtyInput.value) || 0;
+                            let isChecked = chk.checked; 
+                            let userQty = parseInt(qtyInput.value) || 0; 
                             let origQty = parseInt(item.qty);
                             
-                            if (isChecked && userQty > 0) {
-                                processed.push({name: item.name, qty: userQty});
-                                if (userQty < origQty) {
-                                    short.push({name: item.name, qty: origQty - userQty});
-                                }
-                            } else {
-                                short.push({name: item.name, qty: origQty});
+                            if (isChecked && userQty > 0) { 
+                                processed.push({name: item.name, qty: userQty}); 
+                                if (userQty < origQty) { 
+                                    short.push({name: item.name, qty: origQty - userQty}); 
+                                } 
+                            } else { 
+                                short.push({name: item.name, qty: origQty}); 
                             }
                         }
                     });
                     
-                    if (processed.length === 0) {
-                        alert("You must dispatch at least one item. If all are short, please cancel the order from the database directly.");
-                        if(btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; }
-                        return;
+                    if (processed.length === 0) { 
+                        alert("You must dispatch at least one item."); 
+                        if(btn) { 
+                            btn.disabled = false; 
+                            btn.innerText = "Execute & Proceed"; 
+                        } 
+                        return; 
                     }
                     
-                    if (short.length > 0) {
-                        payload.partialStock = { processedItems: processed, shortItems: short };
+                    if (short.length > 0) { 
+                        payload.partialStock = { processedItems: processed, shortItems: short }; 
                     }
                 }
-            } 
-            else if (btn) { 
+            } else if (btn) { 
                 btn.innerText = "Locking Process..."; 
                 btn.disabled = true; 
             }
@@ -1289,7 +1243,7 @@
             if (statusLabel) { 
                 statusLabel.innerText = "📡 Uplinking Data to Control Tower..."; 
                 statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
-                statusLabel.classList.remove('hidden');
+                statusLabel.classList.remove('hidden'); 
             }
 
             try {
@@ -1297,13 +1251,12 @@
                     method: 'POST', 
                     body: JSON.stringify(payload) 
                 });
-                
                 const data = await res.json();
                 
-                if (data.status === 'success') {
-                    if (btn) {
-                        btn.innerText = "Transmission Successful ✓";
-                    }
+                if (data.status === 'success') { 
+                    if (btn) { 
+                        btn.innerText = "Transmission Successful ✓"; 
+                    } 
                     queuedFiles = []; 
                     fetchOrders(true); 
                 } else { 
