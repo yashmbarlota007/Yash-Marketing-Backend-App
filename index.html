@@ -82,7 +82,7 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v5.5)
+                Enterprise OS Login (v7.0)
             </p>
             <form id="loginForm" class="space-y-4">
                 <input 
@@ -151,7 +151,6 @@
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
                 
-                <!-- NEW FEATURE: Split Orders -->
                 <button 
                     onclick="setDateRange('split', this)" 
                     class="date-filter-btn px-4 py-2 rounded-lg text-xs text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all"
@@ -195,7 +194,7 @@
                 <div>
                     <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
                     <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom" id="modalShopName">Shop Name</p>
-                    <div class="flex gap-3 mt-2">
+                    <div class="flex gap-3 mt-2 items-center">
                         <span 
                             id="modalPaymentMode" 
                             class="text-[10px] bg-slate-800 px-2 py-1 rounded text-white font-black tracking-widest uppercase"
@@ -203,6 +202,10 @@
                         <span 
                             id="modalTotalValue" 
                             class="text-[10px] bg-emerald-900/30 border border-emerald-500/30 px-2 py-1 rounded text-emerald-400 font-black tracking-widest"
+                        ></span>
+                        <span 
+                            id="modalTimeElapsed" 
+                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest"
                         ></span>
                     </div>
                 </div>
@@ -227,7 +230,7 @@
         // ==========================================
         
         // REPLACE WITH YOUR NEW DEPLOYMENT URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbzQB37EshbQcOvelkO_DWCI0BS7MM_W2mEpp0j4ImgZqaqerz7PgJESDk_1nW3JUoBrvg/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; 
         
         const STAGE_NAMES = [
             "Order Received", 
@@ -250,6 +253,45 @@
         let autoRefreshInterval = null;
         let queuedFiles = []; 
         let currentUserRole = 'Staff';
+
+        // ==========================================
+        // HELPER FUNCTIONS FOR IMAGES AND TIME
+        // ==========================================
+        function getDirectImageUrl(url) {
+            if (!url) return "";
+            if (url.includes("drive.google.com/file/d/")) {
+                let match = url.match(/\/d\/(.*?)\//);
+                if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+            return url;
+        }
+
+        // WhatsApp specific direct link formatter
+        function makeDirectDriveLink(url) {
+            let match = url.match(/\/d\/(.*?)\//);
+            if (match && match[1]) {
+                // Formatting it as an ID based link helps WhatsApp recognize it better sometimes
+                return `https://drive.google.com/uc?id=${match[1]}`;
+            }
+            return url;
+        }
+
+        function getTimeAgoUI(dateString) {
+            if (!dateString) return { text: "", color: "text-slate-400" };
+            const orderDate = new Date(dateString);
+            const diffInMs = new Date() - orderDate;
+            const diffInHrs = Math.floor(diffInMs / (1000 * 60 * 60));
+            const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let color = 'text-emerald-400';
+            if (diffInHrs >= 24) color = 'text-pink-500';
+            else if (diffInHrs >= 4) color = 'text-orange-400';
+
+            if (diffInHrs > 48) return { text: `${Math.floor(diffInHrs/24)}d ago`, color: color };
+            if (diffInHrs > 0) return { text: `${diffInHrs}h ${diffInMins}m ago`, color: color };
+            if (diffInMins > 0) return { text: `${diffInMins}m ago`, color: color };
+            return { text: `Just now`, color: color };
+        }
 
         // ==========================================
         // LOGIN
@@ -414,7 +456,8 @@
             now.setHours(0,0,0,0);
             
             if (activeDateRange === 'split') {
-                filteredData = allOrdersData.filter(o => o.orderId.includes('-SPLIT-'));
+                // FIXED: Robust SPLIT order check
+                filteredData = allOrdersData.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
             } else {
                 filteredData = allOrdersData.filter(o => {
                     let d = new Date(o.date); 
@@ -776,19 +819,12 @@
                     }
                 }
                 
-                let dateStr = "";
-                if (order.date) { 
-                    const d = new Date(order.date); 
-                    if (!isNaN(d)) {
-                        dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; 
-                    }
-                }
-                
+                let timeData = getTimeAgoUI(order.date);
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 
                 let splitBadge = "";
-                if(order.orderId.includes('-SPLIT-')) {
-                    splitBadge = `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30">✂️ SPLIT ORDER</span>`;
+                if(String(order.orderId).toUpperCase().includes('SPLIT')) {
+                    splitBadge = `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30">✂️ SPLIT</span>`;
                 }
 
                 grid.innerHTML += `
@@ -803,8 +839,8 @@
                                 <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
                                 <div class="flex gap-1 items-center">
                                     ${splitBadge}
-                                    <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">
-                                        ${dateStr}
+                                    <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
+                                        ⏱️ ${timeData.text}
                                     </span>
                                 </div>
                             </div>
@@ -948,14 +984,15 @@
         }
 
         // ==========================================
-        // WHATSAPP SHARE TO GROUP
+        // WHATSAPP SHARE TO GROUP (Fixing the Link Preview)
         // ==========================================
         window.shareToGroup = function(stageNum, fileUrlsString) {
             const orderId = currentActiveOrder.orderId;
             const shop = currentActiveOrder.shopName;
             const stageName = STAGE_NAMES[stageNum - 1]; 
             
-            let links = fileUrlsString.split(',').map(u => u.trim()).join('\n');
+            // Format Google Drive links to direct IDs to encourage WhatsApp thumbnail previews
+            let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
             
             let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
             
@@ -972,6 +1009,10 @@
             document.getElementById('modalOrderId').innerText = order.orderId;
             document.getElementById('modalShopName').innerText = order.shopName;
             
+            let timeData = getTimeAgoUI(order.date);
+            document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
+            document.getElementById('modalTimeElapsed').className = `text-[10px] px-2 py-1 rounded font-black tracking-widest bg-slate-800 ${timeData.color}`;
+
             let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
             
             let payBadge = document.getElementById('modalPaymentMode');
@@ -993,14 +1034,16 @@
                     <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
                         <span class="text-indigo-400 text-lg">📦</span> Order Manifest
                     </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
             `;
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
+                    let directImgUrl = getDirectImageUrl(item.image);
                     let imgTag = "";
-                    if (item.image) {
-                        imgTag = `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">`;
+                    
+                    if (directImgUrl) {
+                        imgTag = `<img src="${directImgUrl}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">`;
                     } else {
                         imgTag = `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
                     }
@@ -1204,7 +1247,7 @@
                                     <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2">
                                         <span class="text-indigo-400 text-base">☑</span> Confirm Available Stock
                                     </p>
-                                    <div class="space-y-2 max-h-48 overflow-y-auto hide-scrollbar pr-1">
+                                    <div class="space-y-2 max-h-[400px] overflow-y-auto hide-scrollbar pr-1">
                             `;
                                         
                             order.items.forEach((item, idx) => {
