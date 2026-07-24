@@ -26,7 +26,8 @@
         
         .chart-bar { 
             width: 100%;
-            animation: growUp 1s ease-out forwards;
+            height: 0%; /* Start at 0 */
+            transition: height 1s ease-out;
         }
         
         .hover-card {
@@ -102,7 +103,7 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v8.5)
+                Enterprise OS Login (v9.0)
             </p>
             <form id="loginForm" class="space-y-4">
                 <input 
@@ -226,6 +227,7 @@
                         ></span>
                     </div>
                     
+                    <!-- Exact Date & Time Ago -->
                     <div class="flex gap-2 mt-2 items-center flex-wrap">
                         <span 
                             id="modalReceiptDate" 
@@ -284,13 +286,45 @@
         let currentUserRole = 'Staff';
 
         // ==========================================
-        // HELPER FUNCTIONS FOR DATE AND TIME
+        // SMART DATE PARSER & TIME HELPERS
         // ==========================================
         
+        // This function handles the DD/MM/YYYY HH:mm:ss format correctly
+        function parseCustomDate(dateStr) {
+            if (!dateStr) return new Date();
+            
+            // Check if standard parse works
+            let d = new Date(dateStr);
+            if (!isNaN(d)) return d;
+
+            // Handle DD/MM/YYYY
+            let parts = String(dateStr).split(' ');
+            if (parts.length >= 1) {
+                let dateParts = parts[0].split(/[\/\-]/);
+                if (dateParts.length === 3) {
+                    let day = parseInt(dateParts[0]);
+                    let month = parseInt(dateParts[1]) - 1; // Months are 0-indexed
+                    let year = parseInt(dateParts[2]);
+                    
+                    if (year < 100) year += 2000;
+                    
+                    let hours = 0, mins = 0, secs = 0;
+                    if (parts.length >= 2) {
+                        let timeParts = parts[1].split(':');
+                        hours = parseInt(timeParts[0]) || 0;
+                        mins = parseInt(timeParts[1]) || 0;
+                        secs = parseInt(timeParts[2]) || 0;
+                    }
+                    return new Date(year, month, day, hours, mins, secs);
+                }
+            }
+            return new Date(); // fallback
+        }
+
         function formatExactDate(dateString) {
             if (!dateString) return "";
-            const d = new Date(dateString);
-            if (isNaN(d)) return "";
+            const d = parseCustomDate(dateString);
+            
             const day = String(d.getDate()).padStart(2, '0');
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const year = d.getFullYear();
@@ -301,12 +335,12 @@
             hours = hours ? hours : 12; 
             const mins = String(d.getMinutes()).padStart(2, '0');
             
-            return `${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
+            return `Received: ${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
         }
 
         function getTimeAgoUI(dateString) {
             if (!dateString) return { text: "", color: "text-slate-400" };
-            const orderDate = new Date(dateString);
+            const orderDate = parseCustomDate(dateString);
             const diffInMs = new Date() - orderDate;
             
             if (diffInMs < 0) return { text: "Just now", color: "text-emerald-400" };
@@ -322,6 +356,18 @@
             if (diffInHrs > 0) return { text: `${diffInHrs}h ${diffInMins}m ago`, color: color };
             if (diffInMins > 0) return { text: `${diffInMins}m ago`, color: color };
             return { text: `Just now`, color: color };
+        }
+
+        // ==========================================
+        // WHATSAPP LINK FORMATTER
+        // ==========================================
+        function makeDirectDriveLink(url) {
+            let match = url.match(/\/d\/(.*?)\//);
+            if (match && match[1]) {
+                // Secret format that WhatsApp robots prefer for fetching thumbnails
+                return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            }
+            return url;
         }
 
         // ==========================================
@@ -414,7 +460,7 @@
                 toast.style.opacity = '0'; 
                 toast.style.transition = 'opacity 0.3s ease'; 
                 setTimeout(() => toast.remove(), 300); 
-            }, 8000); // Kept visible slightly longer for split order readability
+            }, 8000); 
         }
 
         // ==========================================
@@ -442,14 +488,14 @@
                 
                 if (response.status === 'success') {
                     if (response.data.length > 0 && latestOrderTimestamp !== null) {
-                        const incomingLatest = new Date(response.data[0].date).getTime();
+                        const incomingLatest = parseCustomDate(response.data[0].date).getTime();
                         if (incomingLatest > latestOrderTimestamp) {
                             showNotification("New Order Incoming", response.data[0].shopName);
                         }
                     }
                     
                     if (response.data.length > 0) {
-                        latestOrderTimestamp = new Date(response.data[0].date).getTime();
+                        latestOrderTimestamp = parseCustomDate(response.data[0].date).getTime();
                     }
                     
                     allOrdersData = response.data;
@@ -490,7 +536,7 @@
                 filteredData = allOrdersData.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
             } else {
                 filteredData = allOrdersData.filter(o => {
-                    let d = new Date(o.date); 
+                    let d = parseCustomDate(o.date); 
                     d.setHours(0,0,0,0);
                     
                     if (activeDateRange === 'today') {
@@ -545,7 +591,7 @@
                     totalCompleted++;
                 } else { 
                     stageStuck[o.completedStages]++; 
-                    if ((now - new Date(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
+                    if ((now - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
                         slaBreaches++;
                     }
                 }
@@ -695,7 +741,6 @@
                 `; 
             }
 
-            // BRAND MATRIX UI - USING INLINE STYLE FOR GUARANTEED ANIMATION RENDER
             mdoHtml += `
                         </div>
                     </div>
@@ -716,14 +761,16 @@
                 if(b[0] === 'boAt') color = 'from-red-600 to-orange-500'; 
                 if(b[0] === 'Portronics') color = 'from-yellow-600 to-orange-400';
                 
+                // BRAND MATRIX ANIMATION FIX
                 mdoHtml += `
                     <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1">
                         <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">
                             ${b[1]} Units
                         </div>
                         <div 
-                            class="bg-gradient-to-t ${color} rounded-t-sm chart-bar shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative group-hover:brightness-125" 
-                            style="height: ${Math.max(5, h)}%"
+                            class="chart-bar-fill w-full bg-gradient-to-t ${color} rounded-t-sm shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative group-hover:brightness-125 transition-all duration-1000 ease-out" 
+                            style="height: 0%;"
+                            data-target="${Math.max(5, h)}%"
                         >
                             <div class="absolute inset-0 bg-white/20 w-full h-1"></div>
                         </div>
@@ -741,6 +788,13 @@
             `;
             
             mdoDiv.innerHTML = mdoHtml;
+            
+            // Trigger Animation
+            setTimeout(() => { 
+                document.querySelectorAll('.chart-bar-fill').forEach(bar => { 
+                    bar.style.height = bar.getAttribute('data-target'); 
+                }); 
+            }, 100);
         }
 
         // ==========================================
@@ -1023,7 +1077,8 @@
             const shop = currentActiveOrder.shopName;
             const stageName = STAGE_NAMES[stageNum - 1]; 
             
-            let links = fileUrlsString.split(',').map(u => u.trim()).join('\n');
+            // Uses the WhatsApp specific link formatter
+            let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
             
             let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
             
@@ -1271,7 +1326,6 @@
                         `;
                     }
                     else {
-                        // PARTIAL STOCK FEATURE
                         if (stageNum === 4) {
                             inputHtml += `
                                 <div class="bg-[#0B1121] border border-slate-700 p-3 rounded-xl mt-4 mb-4 shadow-inner">
@@ -1559,7 +1613,6 @@
                     }
                 }
                 
-                // Final rating requirement
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
                     if (!rating) { 
@@ -1573,7 +1626,6 @@
                     payload.rating = rating;
                 }
 
-                // Gather Partial Stock Options
                 if (stageNum === 4) {
                     let processed = []; 
                     let short = [];
@@ -1636,7 +1688,6 @@
                     } 
                     queuedFiles = []; 
                     
-                    // NEW SPLIT ORDER CONFIRMATION POPUP FEATURE
                     if (data.splitOrderId) {
                         alert(`✂️ SPLIT ORDER CREATED SUCCESSFULLY!\n\nNew Order ID: ${data.splitOrderId}\n\nThe remaining short stock has been automatically shifted to this new order in the database.`);
                         showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`);
