@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing - C-Level Dashboard v3.0</title>
+    <title>Yash Marketing - Enterprise OS Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -58,7 +58,7 @@
             color: white !important; 
             font-weight: bold; 
         }
-        /* Custom Text Wrap utility */
+        /* Custom Utility for Force Text Wrapping */
         .text-wrap-custom {
             word-wrap: break-word;
             white-space: normal;
@@ -78,7 +78,7 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v3.0)
+                Enterprise OS Login (v4.0)
             </p>
             <form id="loginForm" class="space-y-4">
                 <input type="text" id="loginEmpId" placeholder="Access Code / Emp ID" required 
@@ -115,6 +115,13 @@
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
                 
+                <!-- NEW: Split Orders Filter Button -->
+                <button onclick="setDateRange('split', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all">
+                    ✂️ Split Orders
+                </button>
+                
+                <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
+
                 <input type="date" id="customDateFilter" onchange="setDateRange('custom', this)" 
                        class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1">
                        
@@ -126,7 +133,7 @@
 
         <!-- MDO Command Center (Owner Exclusive) -->
         <div id="mdoCommandCenter" class="hidden mb-8 space-y-4">
-            <!-- Populated via JS if user is Owner -->
+            <!-- Full dashboard populated dynamically via JS -->
         </div>
 
         <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
@@ -171,9 +178,10 @@
         // ==========================================
         // CONFIGURATION AND GLOBAL STATE
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbyws0jd3sL7L3rp0nXsHxcnI3A8npsJldRuCeSV_BswzHsYB5Syzm9dLpFlSA_tIW0vsQ/exec"; 
         
-        // STAGE NAMES UPDATED FOR WHATSAPP INTEGRATION
+        // REPLACE WITH YOUR NEW DEPLOYMENT URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbzzZZZ_REPLACE_WITH_YOUR_NEW_URL/exec"; 
+        
         const STAGE_NAMES = [
             "Order Received", 
             "Balance Check", 
@@ -181,7 +189,7 @@
             "Processed (Stock)", 
             "Invoiced", 
             "Dispatched", 
-            "WhatsApp 2 (Out-for-delivery)", 
+            "Dynamic Comms Stage", // This name will be injected dynamically (WhatsApp 2 or Call 2)
             "Delivered", 
             "Final Call (Rating)"
         ];
@@ -325,6 +333,7 @@
                     allOrdersData = response.data;
                     applyDateFilter(); 
 
+                    // Refresh open modal if order is updated
                     if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
                         const updatedOrder = allOrdersData.find(o => o.orderId === currentActiveOrder.orderId);
                         if (updatedOrder) {
@@ -356,33 +365,39 @@
             let now = new Date();
             now.setHours(0,0,0,0);
 
-            filteredData = allOrdersData.filter(o => {
-                let d = new Date(o.date);
-                d.setHours(0,0,0,0);
-                
-                if (activeDateRange === 'today') {
-                    return d.getTime() === now.getTime();
-                }
-                if (activeDateRange === '7d') {
-                    return (now - d) / (1000*60*60*24) <= 7;
-                }
-                if (activeDateRange === '30d') {
-                    return (now - d) / (1000*60*60*24) <= 30;
-                }
-                if (activeDateRange === 'custom') {
-                    let customVal = document.getElementById('customDateFilter').value;
-                    if(!customVal) return true;
-                    return new Date(customVal).getTime() === d.getTime();
-                }
-                return true; 
-            });
+            if (activeDateRange === 'split') {
+                // Filter only orders that contain "-SPLIT-"
+                filteredData = allOrdersData.filter(o => o.orderId.includes('-SPLIT-'));
+            } else {
+                // Normal Date Filtering
+                filteredData = allOrdersData.filter(o => {
+                    let d = new Date(o.date);
+                    d.setHours(0,0,0,0);
+                    
+                    if (activeDateRange === 'today') {
+                        return d.getTime() === now.getTime();
+                    }
+                    if (activeDateRange === '7d') {
+                        return (now - d) / (1000*60*60*24) <= 7;
+                    }
+                    if (activeDateRange === '30d') {
+                        return (now - d) / (1000*60*60*24) <= 30;
+                    }
+                    if (activeDateRange === 'custom') {
+                        let customVal = document.getElementById('customDateFilter').value;
+                        if(!customVal) return true;
+                        return new Date(customVal).getTime() === d.getTime();
+                    }
+                    return true; 
+                });
+            }
 
             renderMdoDashboard();
             renderPipeline();
         }
 
         // ==========================================
-        // OWNER MDO DASHBOARD (RESTORED COMPLETELY)
+        // OWNER MDO DASHBOARD (WAR ROOM)
         // ==========================================
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
@@ -397,7 +412,7 @@
             
             mdoDiv.classList.remove('hidden');
 
-            // --- DATA AGGREGATION & CRUNCHING ---
+            // --- DATA AGGREGATION ---
             let totalVolume = 0;
             let totalCompleted = 0;
             let slaBreaches = 0; 
@@ -439,7 +454,7 @@
                 });
             });
 
-            // --- INSIGHTS CALCULATIONS ---
+            // --- CALCULATIONS ---
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
             let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1] - a[1]).slice(0, 5); 
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
@@ -654,10 +669,14 @@
                 let isActive = activeStageFilter === idx;
                 let orderCount = stageCounts[idx];
                 
+                // Keep naming simple for the filter bar
+                let filterName = name.split(' (')[0];
+                if (idx === 6) filterName = "Delivery Comms";
+
                 filterHtml += `
                 <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
                     <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
-                    <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${name.split(' (')[0]}</span>
+                    <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${filterName}</span>
                     <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
                         <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
                         <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
@@ -682,7 +701,16 @@
 
             displayOrders.forEach(order => {
                 const progress = (order.completedStages / 9) * 100;
-                let nextStepName = order.completedStages < 9 ? STAGE_NAMES[order.completedStages].split(' (')[0] : "Fully Completed";
+                
+                let nextStepName = "Fully Completed";
+                if (order.completedStages < 9) {
+                    if (order.completedStages === 6) {
+                        let isNextCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+                        nextStepName = isNextCod ? "Call 2" : "WhatsApp 2";
+                    } else {
+                        nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
+                    }
+                }
                 
                 let dateStr = "";
                 if (order.date) {
@@ -694,6 +722,7 @@
                 
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+                let splitBadge = order.orderId.includes('-SPLIT-') ? `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30">✂️ SPLIT ORDER</span>` : '';
 
                 grid.innerHTML += `
                     <div onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' class="bg-[#131C31] border border-slate-800 hover:border-indigo-500 rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card cursor-pointer">
@@ -702,7 +731,10 @@
                         <div class="mb-4 relative z-10">
                             <div class="flex justify-between items-start mb-1.5">
                                 <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
-                                <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${dateStr}</span>
+                                <div class="flex gap-1 items-center">
+                                    ${splitBadge}
+                                    <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${dateStr}</span>
+                                </div>
                             </div>
                             <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom">${order.shopName}</p>
                             
@@ -741,47 +773,73 @@
         }
 
         // ==========================================
-        // CUSTOM FILE APPEND QUEUE LOGIC
+        // CUSTOM FILE APPEND QUEUE WITH THUMBNAILS
         // ==========================================
         function handleFileSelection(inputElement, stageNum) {
-            // Append mode logic
             const newFiles = Array.from(inputElement.files);
             queuedFiles = queuedFiles.concat(newFiles);
             
             const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
             const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
             const container = document.getElementById(`fileStatusContainer_${stageNum}`);
+            const previewBox = document.getElementById(`previewBox_${stageNum}`);
             
             if (queuedFiles.length > 0) {
-                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready to Upload`;
-                statusLabel.classList.remove('hidden');
-                if(clearBtn) clearBtn.classList.remove('hidden');
-                if(container) container.classList.remove('hidden');
+                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`;
+                statusLabel.classList.remove('hidden'); 
+                if (clearBtn) clearBtn.classList.remove('hidden'); 
+                if (container) container.classList.remove('hidden');
+                
+                // Show Thumbnails dynamically
+                if (previewBox) {
+                    previewBox.innerHTML = '';
+                    previewBox.classList.remove('hidden');
+                    queuedFiles.forEach(file => {
+                        // Display icon for audio files, otherwise thumbnail
+                        if (file.type.startsWith('audio/')) {
+                            previewBox.innerHTML += `<div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden">🎤<br/>Audio</div>`;
+                        } else {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                previewBox.innerHTML += `<img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">`;
+                            }
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
             }
         }
         
         function clearQueuedFiles(stageNum) {
             queuedFiles = [];
-            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
-            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
-            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
+            document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden');
+            document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden');
+            document.getElementById(`fileStatusContainer_${stageNum}`).classList.add('hidden');
             
-            if(statusLabel) statusLabel.classList.add('hidden');
-            if(clearBtn) clearBtn.classList.add('hidden');
-            if(container) container.classList.add('hidden');
+            const previewBox = document.getElementById(`previewBox_${stageNum}`);
+            if(previewBox) { 
+                previewBox.innerHTML = ''; 
+                previewBox.classList.add('hidden'); 
+            }
         }
 
         // WHATSAPP TRIGGER FUNCTION
-        window.openWhatsAppMsg = function(stageNum) {
+        window.openWhatsAppMsg = function(stageNum, isCod) {
             const orderId = currentActiveOrder.orderId;
             const shop = currentActiveOrder.shopName;
             const amt = currentActiveOrder.totalValue;
             let msg = "";
             
             if(stageNum === 3) {
-                msg = `Hello ${shop},\n\nYour order (${orderId}) with Yash Marketing is successfully processed and confirmed. \n\nPayment Mode: COD\nTotal Amount: Rs. ${amt}\n\nWe will dispatch it shortly. Thank you!`;
+                // WhatsApp 1 Message
+                msg = `Hello ${shop},\n\nYour order (${orderId}) with Yash Marketing is successfully processed and confirmed.\n\nPayment Mode: ${currentActiveOrder.paymentMode || 'N/A'}\nTotal Amount: Rs. ${amt}\n\nWe will dispatch it shortly. Thank you!`;
             } else if(stageNum === 7) {
-                msg = `Hello ${shop},\n\nGood News! Your order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today. \n\nPlease keep the exact amount Rs. ${amt} ready for a smooth handover.\n\nThank you for choosing Yash Marketing!`;
+                // WhatsApp 2 / Call 2 Followup Message
+                if (isCod) {
+                    msg = `Hello ${shop},\n\nGood News! Your order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today.\n\nPlease keep the exact COD amount Rs. ${amt} ready for a smooth handover.\n\nThank you for choosing Yash Marketing!`;
+                } else {
+                    msg = `Hello ${shop},\n\nGood News! Your PREPAID order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today.\n\nOur delivery executive will reach you soon.\n\nThank you for choosing Yash Marketing!`;
+                }
             }
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
@@ -853,23 +911,27 @@
                 const isActive = i === order.completedStages; 
                 const isLocked = i > order.completedStages;
                 
+                // Dynamic Stage Naming for Rendering
+                let displayStageName = STAGE_NAMES[i];
+                if (stageNum === 7) {
+                    displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
+                }
+                
                 let uiHtml = '';
                 
                 if (isCompleted) {
-                    // ORIGINAL FILE PREVIEW LOGIC RESTORED
                     let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : [];
                     let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
                     
                     fileUrls.forEach((url, index) => {
                         url = url.trim();
                         if (url.includes("http")) {
-                            // If it's old audio from call recording, it will still play
-                            if (stageNum === 9 || url.toLowerCase().includes("audio")) { 
+                            if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) { 
                                 previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>`;
                             } else { 
                                 previewHtml += `
                                     <a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm">
-                                        <span>🖼️ View Uploaded Document ${index + 1}</span>
+                                        <span>🖼️ View Uploaded Proof ${index + 1}</span>
                                         <span class="text-slate-500 text-lg">→</span>
                                     </a>
                                 `;
@@ -881,7 +943,7 @@
                     uiHtml = `
                         <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition">
                             <div class="flex justify-between items-center">
-                                <span class="text-emerald-400 text-sm font-black">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="text-emerald-400 text-sm font-black">${stageNum}. ${displayStageName}</span>
                                 <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
                             </div>
                             ${previewHtml}
@@ -891,7 +953,7 @@
                 else if (isLocked) {
                     uiHtml = `
                         <div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50">
-                            <span class="text-slate-500 text-sm font-bold">${stageNum}. ${STAGE_NAMES[i]}</span>
+                            <span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span>
                             <span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
                         </div>
                     `;
@@ -899,26 +961,59 @@
                 else if (isActive) {
                     let inputHtml = '';
                     
-                    // NEW PREPAID LOGIC: Auto bypass WhatsApp if not COD
-                    if ((stageNum === 3 || stageNum === 7) && !isCod) {
-                        inputHtml = `
-                            <div class="p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-xl mt-3 text-center shadow-inner">
-                                <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">Prepaid Order - No COD confirmation needed</p>
-                                <button onclick="submitStage(${stageNum}, true)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-lg shadow-lg active:scale-95 transition-transform">
-                                    Bypass Stage Automatically
-                                </button>
-                            </div>
-                        `;
-                    } 
-                    else if (stageNum === 1) {
+                    if (stageNum === 1) {
                         inputHtml = `
                             <button onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">
                                 Accept Task & Begin Process
                             </button>
                         `;
                     } 
+                    // STAGE 3 (Always WhatsApp) OR STAGE 7 (WhatsApp 2 / Call 2)
+                    else if (stageNum === 3 || stageNum === 7) { 
+                        
+                        inputHtml += `
+                            <div class="mt-4 mb-4">
+                                <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 1: Communication</p>
+                                <button onclick="window.openWhatsAppMsg(${stageNum}, ${isCod})" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 mb-3">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"></path></svg>
+                                    Send WhatsApp Message
+                                </button>
+                                
+                                <label class="flex items-center gap-3 cursor-pointer bg-pink-500/10 border border-pink-500/30 p-3 rounded-xl hover:bg-pink-500/20 transition-colors">
+                                    <input type="checkbox" id="noResponse_${stageNum}" class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 focus:ring-pink-500 focus:ring-offset-slate-900 cursor-pointer shrink-0">
+                                    <span class="text-[11px] text-pink-400 font-black uppercase tracking-widest text-wrap-custom">Dealer Didn't Respond / Ignore Comms</span>
+                                </label>
+                            </div>
+                        `;
+
+                        // MANDATORY AUDIO UPLOAD FOR STAGE 7 IF COD
+                        if (stageNum === 7 && isCod) {
+                            inputHtml += `
+                                <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4">
+                                    <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                        <span class="text-indigo-400">🎤</span> Upload Call Recording (Mandatory for COD)
+                                    </p>
+                                    <input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" onchange="handleFileSelection(this, ${stageNum})">
+                                    
+                                    <div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div>
+                                    
+                                    <div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}">
+                                        <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
+                                        <button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        inputHtml += `
+                            <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 2: Submit</p>
+                            <button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">
+                                Mark as Completed
+                            </button>
+                        `;
+                    }
                     else {
-                        // NEW PARTIAL STOCK FEATURE
+                        // PARTIAL STOCK FEATURE FOR STAGE 4
                         if (stageNum === 4) {
                             inputHtml += `
                                 <div class="bg-[#0B1121] border border-slate-700 p-3 rounded-xl mt-4 mb-4 shadow-inner">
@@ -942,24 +1037,7 @@
                             `;
                         }
 
-                        // NEW WHATSAPP TRIGGER & NO RESPONSE OPTIONS
-                        if (stageNum === 3 || stageNum === 7) { 
-                            inputHtml += `
-                                <div class="mt-4 mb-4">
-                                    <button onclick="window.openWhatsAppMsg(${stageNum})" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 mb-3">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"></path></svg>
-                                        Send WhatsApp Update
-                                    </button>
-                                    
-                                    <label class="flex items-center gap-3 cursor-pointer bg-pink-500/10 border border-pink-500/30 p-3 rounded-xl hover:bg-pink-500/20 transition-colors">
-                                        <input type="checkbox" id="noResponse_${stageNum}" class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 focus:ring-pink-500 focus:ring-offset-slate-900 cursor-pointer shrink-0">
-                                        <span class="text-[11px] text-pink-400 font-black uppercase tracking-widest text-wrap-custom">Dealer Didn't Respond / Ignore Check</span>
-                                    </label>
-                                </div>
-                            `;
-                        }
-
-                        // UNIVERSAL FILE UPLOAD (APPEND MODE UI)
+                        // UNIVERSAL FILE UPLOAD FOR STAGE 2, 4, 5, 6, 8, 9
                         if (stageNum === 9) {
                             inputHtml += `
                                 <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
@@ -985,9 +1063,11 @@
                             `;
                         }
 
-                        // Append Status visualizer
+                        // Thumbnail Box
                         inputHtml += `
-                            <div class="flex items-center justify-between mt-3 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}">
+                            <div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div>
+                            
+                            <div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}">
                                 <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
                                 <button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button>
                             </div>
@@ -1014,7 +1094,7 @@
                         <div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]">
                             <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div>
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-white font-black text-lg">${stageNum}. ${STAGE_NAMES[i]}</span>
+                                <span class="text-white font-black text-lg">${stageNum}. ${displayStageName}</span>
                                 <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
                             </div>
                             <div id="actionArea_${stageNum}">
@@ -1093,17 +1173,19 @@
             });
         }
 
-        async function submitStage(stageNum, isAutoSkip = false) {
+        async function submitStage(stageNum) {
             const btn = document.getElementById(`submitBtn_${stageNum}`);
             const statusLabel = document.getElementById(`status_${stageNum}`);
             
+            let isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
+
             let payload = { 
                 action: 'updateStage', 
                 orderId: currentActiveOrder.orderId, 
                 stage: stageNum, 
                 files: [],
-                autoSkipped: isAutoSkip,
                 isNoResponse: false,
+                isWhatsAppOnly: false,
                 partialStock: null
             };
 
@@ -1113,15 +1195,34 @@
                 payload.isNoResponse = true;
             }
             
-            if (stageNum !== 1 && !isAutoSkip) {
-                // Validation: Only allow submit if Files uploaded, OR "No Response" is checked, OR it is stage 9
-                if (queuedFiles.length === 0 && !payload.isNoResponse && stageNum !== 9) { 
-                    alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'."); 
+            if (stageNum !== 1) {
+                // Determine if file upload is required
+                // Files required UNLESS:
+                // 1. "No Response" is checked
+                // 2. It is Stage 9 (Optional rating)
+                // 3. It is Stage 3 (Purely WhatsApp)
+                // 4. It is Stage 7 AND Prepaid (Purely WhatsApp)
+                
+                let fileRequired = true;
+                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) {
+                    fileRequired = false;
+                }
+
+                if (fileRequired && queuedFiles.length === 0) {
+                    if (stageNum === 7 && isCod) {
+                        alert("For COD Orders, Call Recording (Audio File) is MANDATORY to proceed. Or check 'Dealer Didn't Respond'.");
+                    } else {
+                        alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'.");
+                    }
                     return; 
                 }
                 
+                if (!fileRequired && queuedFiles.length === 0) {
+                    payload.isWhatsAppOnly = true;
+                }
+
                 if (btn) {
-                    btn.innerText = "Compressing & Transmitting..."; 
+                    btn.innerText = "Processing & Transmitting..."; 
                     btn.disabled = true;
                 }
                 
@@ -1134,6 +1235,7 @@
                     }
                 }
                 
+                // Rating
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
                     if (!rating) { 
