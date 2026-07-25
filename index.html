@@ -103,7 +103,7 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v9.0)
+                Enterprise OS Login (v11.0)
             </p>
             <form id="loginForm" class="space-y-4">
                 <input 
@@ -286,6 +286,50 @@
         let currentUserRole = 'Staff';
 
         // ==========================================
+        // AUTO-LOGIN (SSO) LOGIC FOR VERCEL/GITHUB
+        // ==========================================
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const portalEmpId = urlParams.get('empId');
+
+            if (portalEmpId && portalEmpId.trim() !== "") {
+                // Trigger auto login without asking for password
+                document.getElementById('loginEmpId').value = portalEmpId;
+                document.getElementById('loginPass').value = "SSO_BYPASS";
+                
+                const btn = document.getElementById('loginBtn');
+                btn.innerText = "AUTHENTICATING...";
+                
+                fetch(API_URL, {
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'login', 
+                        employeeId: portalEmpId, 
+                        password: 'SSO_BYPASS' 
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // SSO bypass successful, load dashboard directly
+                        showDashboard(data.user.name, data.user.role);
+                    } else {
+                        document.getElementById('loginError').innerText = "SSO Failed: " + data.message;
+                        document.getElementById('loginError').classList.remove('hidden');
+                        btn.innerText = "INITIALIZE SYSTEM";
+                    }
+                }).catch(err => {
+                    document.getElementById('loginError').innerText = "Network error during SSO login.";
+                    document.getElementById('loginError').classList.remove('hidden');
+                    btn.innerText = "INITIALIZE SYSTEM";
+                });
+            } else if (localStorage.getItem('yash_user')) { 
+                // Normal local cache check
+                showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
+            }
+        };
+
+        // ==========================================
         // SMART DATE PARSER & TIME HELPERS
         // ==========================================
         
@@ -371,7 +415,7 @@
         }
 
         // ==========================================
-        // LOGIN
+        // NORMAL LOGIN SUBMIT
         // ==========================================
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -395,6 +439,7 @@
                 const data = await res.json();
                 
                 if (data.status === 'success') {
+                    // Normal login sets local storage (SSO bypass doesn't save fake password)
                     localStorage.setItem('yash_user', data.user.name); 
                     localStorage.setItem('yash_role', data.user.role || 'Staff');
                     showDashboard(data.user.name, data.user.role);
@@ -431,10 +476,6 @@
             localStorage.removeItem('yash_user'); 
             localStorage.removeItem('yash_role'); 
             location.reload(); 
-        }
-        
-        if (localStorage.getItem('yash_user')) { 
-            showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
         }
 
         // ==========================================
