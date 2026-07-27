@@ -26,7 +26,7 @@
         
         .chart-bar { 
             width: 100%;
-            height: 0%; /* Start at 0 */
+            height: 0%; 
             transition: height 1s ease-out;
         }
         
@@ -64,14 +64,8 @@
         }
         
         @keyframes slideDown { 
-            from { 
-                transform: translateY(-100%); 
-                opacity: 0; 
-            } 
-            to { 
-                transform: translateY(0); 
-                opacity: 1; 
-            } 
+            from { transform: translateY(-100%); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
         }
         
         .toast-enter { 
@@ -89,12 +83,116 @@
             word-wrap: break-word;
             white-space: normal;
         }
+
+        /* FEATURE: VIP AMBULANCE CORRIDOR CSS */
+        .vip-corridor {
+            animation: pulse-red-glow 2s infinite;
+            border: 1px solid #ef4444 !important;
+        }
+        @keyframes pulse-red-glow {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 15px 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* FEATURE: A6 PRINT CSS FOR SHIPPING LABELS */
+        @media print {
+            body * { display: none !important; }
+            #shippingLabelScreen, #shippingLabelScreen * { display: block !important; }
+            #shippingLabelScreen {
+                position: absolute; left: 0; top: 0; width: 105mm; height: 148mm;
+                background: white !important; color: black !important; padding: 5mm;
+                box-sizing: border-box; font-family: sans-serif;
+            }
+        }
     </style>
 </head>
-<body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white relative">
+
+    <!-- Dealer Tracking Self-Service Mode (Google Apps Script Template Router) -->
+    <? if (typeof trackingMode !== 'undefined' && trackingMode) { ?>
+        <div id="trackingScreen" class="max-w-md mx-auto mt-10 p-6 glass-panel rounded-2xl border-t-4 border-t-emerald-500 text-center shadow-2xl">
+            <h1 class="text-3xl font-black text-white mb-2 tracking-tight">Order Tracker</h1>
+            <p class="text-slate-400 text-sm mb-8 font-mono">ID: <?= trackOrderId ?></p>
+            
+            <div id="trackingLoader" class="animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            
+            <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
+                <!-- Dynamically injected timeline -->
+            </div>
+            
+            <div id="trackingError" class="hidden text-pink-500 font-bold mt-4"></div>
+        </div>
+        
+        <script>
+            window.onload = () => {
+                fetch('https://script.google.com/macros/s/AKfycbw3ye5kfsC4y6_qUa6MobtitHsTcC9r5l30YDeDd9nnznfUiUPq4sd7riGNQA8e8r5wwQ/exec', {
+                    method: 'POST', body: JSON.stringify({action: 'getTrackingData', orderId: '<?= trackOrderId ?>'})
+                }).then(res => res.json()).then(data => {
+                    document.getElementById('trackingLoader').style.display = 'none';
+                    if(data.status === 'success') {
+                        let html = '';
+                        const customerStages = ["Order Placed", "Confirmed & Processing", "Packed & Ready", "Invoiced", "Dispatched", "Out for Delivery", "Delivered Successfully"];
+                        // Map internal 9 stages to 7 customer stages
+                        let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.3), 6);
+                        
+                        customerStages.forEach((stageName, idx) => {
+                            let isCompleted = idx <= mappedStage;
+                            let isActive = idx === mappedStage;
+                            let color = isCompleted ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-700';
+                            let textColor = isCompleted ? 'text-white' : 'text-slate-500';
+                            let icon = isCompleted ? '✓' : '';
+                            if(isActive && idx !== 6) icon = '⏳';
+                            
+                            html += `
+                                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full border-4 border-[#0B1121] ${color} text-white font-black text-xs z-10 shrink-0">
+                                        ${icon}
+                                    </div>
+                                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border ${isCompleted ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-slate-800 bg-[#131C31]'} shadow">
+                                        <h3 class="font-bold text-sm ${textColor}">${stageName}</h3>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        document.getElementById('trackingTimeline').innerHTML = html;
+                        document.getElementById('trackingTimeline').classList.remove('hidden');
+                    } else {
+                        document.getElementById('trackingError').innerText = data.message || "Invalid Tracking ID";
+                        document.getElementById('trackingError').classList.remove('hidden');
+                    }
+                }).catch(err => {
+                    document.getElementById('trackingLoader').style.display = 'none';
+                    document.getElementById('trackingError').innerText = "Network error while fetching tracking data.";
+                    document.getElementById('trackingError').classList.remove('hidden');
+                });
+            }
+        </script>
+    <? } else { ?>
+    <!-- ====================================================================== -->
+    <!-- MAIN ENTERPRISE APP UI STARTS HERE -->
+    <!-- ====================================================================== -->
+
+    <!-- Global Cmd+K Search Modal -->
+    <div id="searchModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-start justify-center pt-20 px-4 transition-all">
+        <div class="bg-[#131C31] w-full max-w-2xl rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-800 flex items-center gap-3">
+                <span class="text-indigo-400 text-xl">🔍</span>
+                <input type="text" id="searchInput" onkeyup="performSearch()" placeholder="Search Order ID, Dealer Name or Phone Number..." class="w-full bg-transparent text-white text-lg outline-none font-bold placeholder-slate-500">
+                <button onclick="closeSearch()" class="text-slate-500 text-xs border border-slate-700 px-2 py-1 rounded hover:bg-slate-800">ESC</button>
+            </div>
+            <div id="searchResults" class="max-h-[60vh] overflow-y-auto p-2 bg-[#0B1121] hide-scrollbar">
+                <div class="p-8 text-center text-slate-500 font-bold">Start typing to search main database...</div>
+            </div>
+        </div>
+    </div>
 
     <!-- Notification Area -->
     <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+    <!-- Dynamic Shipping Label Printable Area (Hidden normally) -->
+    <div id="shippingLabelScreen" class="hidden"></div>
 
     <!-- Login Authentication Screen -->
     <div id="loginScreen" class="flex h-[90vh] items-center justify-center p-4">
@@ -103,26 +201,19 @@
                 YASH MARKETING
             </h1>
             <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v11.0)
+                Enterprise OS Login (v12.0)
             </p>
             <form id="loginForm" class="space-y-4">
                 <input 
-                    type="text" 
-                    id="loginEmpId" 
-                    placeholder="Access Code / Emp ID" 
-                    required 
+                    type="text" id="loginEmpId" placeholder="Access Code / Emp ID" required 
                     class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner"
                 >
                 <input 
-                    type="password" 
-                    id="loginPass" 
-                    placeholder="Security PIN" 
-                    required 
+                    type="password" id="loginPass" placeholder="Security PIN" required 
                     class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"
                 >
                 <button 
-                    type="submit" 
-                    id="loginBtn" 
+                    type="submit" id="loginBtn" 
                     class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform active:scale-[0.98]"
                 >
                     INITIALIZE SYSTEM
@@ -133,7 +224,7 @@
     </div>
 
     <!-- Main Operational Dashboard Screen -->
-    <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto">
+    <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto pb-20">
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
             <div>
                 <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
@@ -145,52 +236,27 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
-                <button 
-                    onclick="setDateRange('today', this)" 
-                    class="date-filter-btn active-filter px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    Today
+                <!-- FEATURE: Global Search Button -->
+                <button onclick="openSearch()" class="bg-indigo-900/30 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 mr-2">
+                    <span>🔍</span> Search (Cmd+K)
                 </button>
-                <button 
-                    onclick="setDateRange('7d', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    7 Days
-                </button>
-                <button 
-                    onclick="setDateRange('30d', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    30 Days
-                </button>
-                <button 
-                    onclick="setDateRange('all', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    All Time
-                </button>
+
+                <button onclick="setDateRange('today', this)" class="date-filter-btn active-filter px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">Today</button>
+                <button onclick="setDateRange('7d', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">7 Days</button>
+                <button onclick="setDateRange('30d', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">30 Days</button>
+                <button onclick="setDateRange('all', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all">All Time</button>
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
                 
-                <button 
-                    onclick="setDateRange('split', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all"
-                >
+                <button onclick="setDateRange('split', this)" class="date-filter-btn px-4 py-2 rounded-lg text-xs text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all">
                     ✂️ Split Orders
                 </button>
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
 
-                <input 
-                    type="date" 
-                    id="customDateFilter" 
-                    onchange="setDateRange('custom', this)" 
-                    class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1"
-                >
-                <button 
-                    onclick="logout()" 
-                    class="ml-auto lg:ml-2 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
-                >
+                <input type="date" id="customDateFilter" onchange="setDateRange('custom', this)" class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1">
+                
+                <button onclick="logout()" class="ml-auto lg:ml-2 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">
                     LOGOUT
                 </button>
             </div>
@@ -207,43 +273,29 @@
         <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </div>
 
-    <!-- Order Execution Task Modal -->
-    <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+    <!-- Order Execution Task Modal (Fully Detailed V11 & V12 combined UI) -->
+    <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
         <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-700">
             
             <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-[#131C31] shadow-md z-10">
                 <div>
-                    <h2 class="text-2xl font-black text-white tracking-tight" id="modalOrderId">ORD-000</h2>
+                    <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                        <span id="modalOrderId">ORD-000</span>
+                        <span id="modalVipBadge" class="hidden bg-red-500 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase shadow-[0_0_10px_red] animate-pulse">🔥 VIP</span>
+                    </h2>
                     <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom" id="modalShopName">Shop Name</p>
                     
                     <div class="flex gap-2 mt-2 items-center flex-wrap">
-                        <span 
-                            id="modalPaymentMode" 
-                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-white font-black tracking-widest uppercase"
-                        ></span>
-                        <span 
-                            id="modalTotalValue" 
-                            class="text-[10px] bg-emerald-900/30 border border-emerald-500/30 px-2 py-1 rounded text-emerald-400 font-black tracking-widest"
-                        ></span>
+                        <span id="modalPaymentMode" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-white font-black tracking-widest uppercase"></span>
+                        <span id="modalTotalValue" class="text-[10px] bg-emerald-900/30 border border-emerald-500/30 px-2 py-1 rounded text-emerald-400 font-black tracking-widest"></span>
                     </div>
                     
-                    <!-- Exact Date & Time Ago -->
                     <div class="flex gap-2 mt-2 items-center flex-wrap">
-                        <span 
-                            id="modalReceiptDate" 
-                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono tracking-widest border border-slate-700"
-                        ></span>
-                        <span 
-                            id="modalTimeElapsed" 
-                            class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest border border-slate-700"
-                        ></span>
+                        <span id="modalReceiptDate" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono tracking-widest border border-slate-700"></span>
+                        <span id="modalTimeElapsed" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest border border-slate-700"></span>
                     </div>
-                    
                 </div>
-                <button 
-                    onclick="closeModal()" 
-                    class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors"
-                >
+                <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors">
                     &times;
                 </button>
             </div>
@@ -259,8 +311,6 @@
         // ==========================================
         // CONFIGURATION AND GLOBAL STATE
         // ==========================================
-        
-        // REPLACE WITH YOUR NEW DEPLOYMENT URL
         const API_URL = "https://script.google.com/macros/s/AKfycbw3ye5kfsC4y6_qUa6MobtitHsTcC9r5l30YDeDd9nnznfUiUPq4sd7riGNQA8e8r5wwQ/exec"; 
         
         const STAGE_NAMES = [
@@ -270,12 +320,20 @@
             "Processed (Stock)", 
             "Invoiced", 
             "Dispatched", 
-            "Dynamic Comms Stage", 
+            "Delivery Comms (Call/WA)", 
             "Delivered", 
             "Final Call (Rating)"
         ];
 
-        let allOrdersData = [];
+        // BUG FIX: Global Data Dictionary to avoid JSON parse errors on modal clicks
+        window.appData = {
+            rawArray: [],
+            orders: {}
+        };
+        
+        // Settings Manager State
+        window.appSettings = {};
+
         let filteredData = [];
         let currentActiveOrder = null;
         let activeStageFilter = null;
@@ -284,34 +342,89 @@
         let autoRefreshInterval = null;
         let queuedFiles = []; 
         let currentUserRole = 'Staff';
+        let currentUserName = '';
 
         // ==========================================
-        // AUTO-LOGIN (SSO) LOGIC FOR VERCEL/GITHUB
+        // GLOBAL HOTKEY FOR SEARCH (Cmd+K / Ctrl+K)
+        // ==========================================
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                openSearch();
+            }
+            if (e.key === 'Escape') {
+                closeSearch();
+            }
+        });
+
+        function openSearch() {
+            document.getElementById('searchModal').classList.remove('hidden');
+            document.getElementById('searchInput').focus();
+        }
+
+        function closeSearch() {
+            document.getElementById('searchModal').classList.add('hidden');
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '<div class="p-8 text-center text-slate-500 font-bold">Start typing to search main database...</div>';
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (query.length < 2) { 
+                resultsDiv.innerHTML = '<div class="p-8 text-center text-slate-500 font-bold">Type at least 2 characters...</div>'; 
+                return; 
+            }
+            
+            const matches = window.appData.rawArray.filter(o => 
+                (o.orderId && o.orderId.toLowerCase().includes(query)) || 
+                (o.shopName && o.shopName.toLowerCase().includes(query)) ||
+                (o.phone && o.phone.includes(query))
+            ).slice(0, 10); // Limit to 10 results for speed
+
+            if (matches.length === 0) { 
+                resultsDiv.innerHTML = '<p class="text-pink-500 font-bold p-4 text-center">No matching orders found.</p>'; 
+                return; 
+            }
+
+            resultsDiv.innerHTML = matches.map(o => {
+                let badge = o.isVIP ? '<span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">VIP</span>' : '';
+                return `
+                <div onclick="closeSearch(); openModal('${o.orderId}')" class="p-3 border-b border-slate-800 hover:bg-slate-800 cursor-pointer flex justify-between items-center transition-colors rounded-lg mb-1">
+                    <div>
+                        <div class="font-black text-white text-sm flex items-center">${o.orderId} ${badge}</div>
+                        <div class="text-xs text-indigo-400 font-bold">${o.shopName}</div>
+                        <div class="text-[9px] text-slate-500 mt-1">${o.date}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] bg-indigo-900/50 border border-indigo-500/30 px-2 py-1 rounded text-indigo-300 font-black mb-1">Stage ${o.completedStages}/9</div>
+                        <div class="text-[9px] text-emerald-400 font-black uppercase">${o.paymentMode}</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // ==========================================
+        // AUTO-LOGIN (SSO) LOGIC
         // ==========================================
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const portalEmpId = urlParams.get('empId');
 
             if (portalEmpId && portalEmpId.trim() !== "") {
-                // Trigger auto login without asking for password
                 document.getElementById('loginEmpId').value = portalEmpId;
                 document.getElementById('loginPass').value = "SSO_BYPASS";
-                
                 const btn = document.getElementById('loginBtn');
-                btn.innerText = "AUTHENTICATING...";
+                btn.innerText = "AUTHENTICATING SSO...";
                 
                 fetch(API_URL, {
                     method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'login', 
-                        employeeId: portalEmpId, 
-                        password: 'SSO_BYPASS' 
-                    })
+                    body: JSON.stringify({ action: 'login', employeeId: portalEmpId, password: 'SSO_BYPASS' })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // SSO bypass successful, load dashboard directly
                         showDashboard(data.user.name, data.user.role);
                     } else {
                         document.getElementById('loginError').innerText = "SSO Failed: " + data.message;
@@ -324,7 +437,6 @@
                     btn.innerText = "INITIALIZE SYSTEM";
                 });
             } else if (localStorage.getItem('yash_user')) { 
-                // Normal local cache check
                 showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
             }
         };
@@ -332,24 +444,18 @@
         // ==========================================
         // SMART DATE PARSER & TIME HELPERS
         // ==========================================
-        
-        // This function handles the DD/MM/YYYY HH:mm:ss format correctly
         function parseCustomDate(dateStr) {
             if (!dateStr) return new Date();
-            
-            // Check if standard parse works
             let d = new Date(dateStr);
             if (!isNaN(d)) return d;
 
-            // Handle DD/MM/YYYY
             let parts = String(dateStr).split(' ');
             if (parts.length >= 1) {
                 let dateParts = parts[0].split(/[\/\-]/);
                 if (dateParts.length === 3) {
                     let day = parseInt(dateParts[0]);
-                    let month = parseInt(dateParts[1]) - 1; // Months are 0-indexed
+                    let month = parseInt(dateParts[1]) - 1;
                     let year = parseInt(dateParts[2]);
-                    
                     if (year < 100) year += 2000;
                     
                     let hours = 0, mins = 0, secs = 0;
@@ -362,55 +468,49 @@
                     return new Date(year, month, day, hours, mins, secs);
                 }
             }
-            return new Date(); // fallback
+            return new Date();
         }
 
         function formatExactDate(dateString) {
             if (!dateString) return "";
             const d = parseCustomDate(dateString);
-            
             const day = String(d.getDate()).padStart(2, '0');
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const year = d.getFullYear();
-            
             let hours = d.getHours();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
             hours = hours ? hours : 12; 
             const mins = String(d.getMinutes()).padStart(2, '0');
-            
             return `Received: ${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
         }
 
         function getTimeAgoUI(dateString) {
-            if (!dateString) return { text: "", color: "text-slate-400" };
+            if (!dateString) return { text: "", color: "text-slate-400", isSLAWarning: false };
             const orderDate = parseCustomDate(dateString);
             const diffInMs = new Date() - orderDate;
             
-            if (diffInMs < 0) return { text: "Just now", color: "text-emerald-400" };
+            if (diffInMs < 0) return { text: "Just now", color: "text-emerald-400", isSLAWarning: false };
             
             const diffInHrs = Math.floor(diffInMs / (1000 * 60 * 60));
             const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
             
             let color = 'text-emerald-400';
-            if (diffInHrs >= 24) color = 'text-pink-500';
+            let isSLAWarning = false;
+            
+            if (diffInHrs >= 48) color = 'text-pink-500';
+            else if (diffInHrs >= 46) { color = 'text-yellow-400'; isSLAWarning = true; } // FEATURE: SLA Predictor
             else if (diffInHrs >= 4) color = 'text-orange-400';
 
-            if (diffInHrs > 48) return { text: `${Math.floor(diffInHrs/24)}d ago`, color: color };
-            if (diffInHrs > 0) return { text: `${diffInHrs}h ${diffInMins}m ago`, color: color };
-            if (diffInMins > 0) return { text: `${diffInMins}m ago`, color: color };
-            return { text: `Just now`, color: color };
+            if (diffInHrs > 48) return { text: `${Math.floor(diffInHrs/24)}d ago`, color: color, isSLAWarning };
+            if (diffInHrs > 0) return { text: `${diffInHrs}h ${diffInMins}m ago`, color: color, isSLAWarning };
+            if (diffInMins > 0) return { text: `${diffInMins}m ago`, color: color, isSLAWarning };
+            return { text: `Just now`, color: color, isSLAWarning };
         }
 
-        // ==========================================
-        // WHATSAPP LINK FORMATTER
-        // ==========================================
         function makeDirectDriveLink(url) {
             let match = url.match(/\/d\/(.*?)\//);
-            if (match && match[1]) {
-                // Secret format that WhatsApp robots prefer for fetching thumbnails
-                return `https://lh3.googleusercontent.com/d/${match[1]}`;
-            }
+            if (match && match[1]) return `https://lh3.googleusercontent.com/d/${match[1]}`;
             return url;
         }
 
@@ -421,42 +521,28 @@
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const error = document.getElementById('loginError');
-            
             btn.innerText = "AUTHENTICATING...";
             
             try {
-                const payload = { 
-                    action: 'login', 
-                    employeeId: document.getElementById('loginEmpId').value, 
-                    password: document.getElementById('loginPass').value 
-                };
-
-                const res = await fetch(API_URL, {
-                    method: 'POST', 
-                    body: JSON.stringify(payload)
-                });
-                
+                const payload = { action: 'login', employeeId: document.getElementById('loginEmpId').value, password: document.getElementById('loginPass').value };
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const data = await res.json();
                 
                 if (data.status === 'success') {
-                    // Normal login sets local storage (SSO bypass doesn't save fake password)
                     localStorage.setItem('yash_user', data.user.name); 
                     localStorage.setItem('yash_role', data.user.role || 'Staff');
                     showDashboard(data.user.name, data.user.role);
                 } else {
-                    error.innerText = data.message; 
-                    error.classList.remove('hidden'); 
-                    btn.innerText = "INITIALIZE SYSTEM";
+                    error.innerText = data.message; error.classList.remove('hidden'); btn.innerText = "INITIALIZE SYSTEM";
                 }
             } catch (err) {
-                error.innerText = "Network Error. Check Connection."; 
-                error.classList.remove('hidden'); 
-                btn.innerText = "INITIALIZE SYSTEM";
+                error.innerText = "Network Error. Check Connection."; error.classList.remove('hidden'); btn.innerText = "INITIALIZE SYSTEM";
             }
         });
 
         function showDashboard(name, role) {
             currentUserRole = role || 'Staff';
+            currentUserName = name;
             
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboardScreen').classList.remove('hidden');
@@ -464,17 +550,13 @@
             
             fetchOrders(false);
             
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-            autoRefreshInterval = setInterval(() => { 
-                fetchOrders(true); 
-            }, 15000); 
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            // Increased to 30s for Quota safety
+            autoRefreshInterval = setInterval(() => { fetchOrders(true); }, 30000); 
         }
 
         function logout() { 
-            localStorage.removeItem('yash_user'); 
-            localStorage.removeItem('yash_role'); 
+            localStorage.clear(); 
             location.reload(); 
         }
 
@@ -484,9 +566,7 @@
         function showNotification(title, message) {
             const area = document.getElementById('notificationArea');
             const toast = document.createElement('div');
-            
-            toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto";
-            
+            toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto mb-2";
             toast.innerHTML = `
                 <span class="text-2xl animate-bounce">⚡</span>
                 <div>
@@ -494,14 +574,8 @@
                     <p class="text-sm font-bold text-white mt-0.5">${message}</p>
                 </div>
             `;
-            
             area.appendChild(toast);
-            
-            setTimeout(() => { 
-                toast.style.opacity = '0'; 
-                toast.style.transition = 'opacity 0.3s ease'; 
-                setTimeout(() => toast.remove(), 300); 
-            }, 8000); 
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 5000); 
         }
 
         // ==========================================
@@ -510,7 +584,7 @@
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
             
-            if (!isSilent && allOrdersData.length === 0) {
+            if (!isSilent && window.appData.rawArray.length === 0) {
                 grid.innerHTML = `
                     <div class="col-span-full py-20 text-center">
                         <div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
@@ -520,75 +594,55 @@
             }
             
             try {
-                const res = await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'getOrders' }) 
-                });
-                
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getOrders' }) });
                 const response = await res.json();
                 
                 if (response.status === 'success') {
+                    // Update Settings
+                    if(response.settings) window.appSettings = response.settings;
+
                     if (response.data.length > 0 && latestOrderTimestamp !== null) {
                         const incomingLatest = parseCustomDate(response.data[0].date).getTime();
-                        if (incomingLatest > latestOrderTimestamp) {
-                            showNotification("New Order Incoming", response.data[0].shopName);
-                        }
+                        if (incomingLatest > latestOrderTimestamp) showNotification("New Order Incoming", response.data[0].shopName);
                     }
+                    if (response.data.length > 0) latestOrderTimestamp = parseCustomDate(response.data[0].date).getTime();
                     
-                    if (response.data.length > 0) {
-                        latestOrderTimestamp = parseCustomDate(response.data[0].date).getTime();
-                    }
+                    window.appData.rawArray = response.data;
+                    window.appData.orders = {}; 
+                    response.data.forEach(o => { window.appData.orders[o.orderId] = o; });
                     
-                    allOrdersData = response.data;
                     applyDateFilter(); 
 
+                    // Keep modal updated if open
                     if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
-                        const updatedOrder = allOrdersData.find(o => o.orderId === currentActiveOrder.orderId);
-                        if (updatedOrder) {
-                            openModal(updatedOrder); 
-                        }
+                        openModal(currentActiveOrder.orderId); 
                     }
                 }
-            } catch (err) {
-                console.log("Background sync error.");
-            }
+            } catch (err) { console.log("Background sync error."); }
         }
 
         function setDateRange(range, btnElement) {
             activeDateRange = range;
-            
-            if(range !== 'custom') {
-                document.getElementById('customDateFilter').value = '';
-            }
+            if(range !== 'custom') document.getElementById('customDateFilter').value = '';
             
             if(btnElement && range !== 'custom') {
                 document.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active-filter'));
                 btnElement.classList.add('active-filter');
             }
-            
             applyDateFilter();
         }
 
         function applyDateFilter() {
-            let now = new Date(); 
-            now.setHours(0,0,0,0);
+            let now = new Date(); now.setHours(0,0,0,0);
             
             if (activeDateRange === 'split') {
-                filteredData = allOrdersData.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
+                filteredData = window.appData.rawArray.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
             } else {
-                filteredData = allOrdersData.filter(o => {
-                    let d = parseCustomDate(o.date); 
-                    d.setHours(0,0,0,0);
-                    
-                    if (activeDateRange === 'today') {
-                        return d.getTime() === now.getTime();
-                    }
-                    if (activeDateRange === '7d') {
-                        return (now - d) / (1000*60*60*24) <= 7;
-                    }
-                    if (activeDateRange === '30d') {
-                        return (now - d) / (1000*60*60*24) <= 30;
-                    }
+                filteredData = window.appData.rawArray.filter(o => {
+                    let d = parseCustomDate(o.date); d.setHours(0,0,0,0);
+                    if (activeDateRange === 'today') return d.getTime() === now.getTime();
+                    if (activeDateRange === '7d') return (now - d) / (1000*60*60*24) <= 7;
+                    if (activeDateRange === '30d') return (now - d) / (1000*60*60*24) <= 30;
                     if (activeDateRange === 'custom') {
                         let customVal = document.getElementById('customDateFilter').value;
                         if(!customVal) return true;
@@ -597,59 +651,42 @@
                     return true; 
                 });
             }
-            
             renderMdoDashboard(); 
             renderPipeline();
         }
 
         // ==========================================
-        // OWNER MDO DASHBOARD (WAR ROOM)
+        // OWNER MDO DASHBOARD (V11 + Staff Leaderboard V12)
         // ==========================================
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
             
             const mdoDiv = document.getElementById('mdoCommandCenter');
-            
-            if (!isOwner) { 
-                mdoDiv.classList.add('hidden'); 
-                return; 
-            }
-            
+            if (!isOwner) { mdoDiv.classList.add('hidden'); return; }
             mdoDiv.classList.remove('hidden');
 
-            let totalVolume = 0; 
-            let totalCompleted = 0; 
-            let slaBreaches = 0; 
-            let shopStats = {}; 
-            let skuStats = {}; 
+            let totalVolume = 0; let totalCompleted = 0; let slaBreaches = 0; 
+            let shopStats = {}; let skuStats = {}; let staffScores = {};
             let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
             let stageStuck = Array(9).fill(0); 
             const now = new Date().getTime();
 
             filteredData.forEach(o => {
-                if(o.isFullyCompleted) {
-                    totalCompleted++;
-                } else { 
+                if(o.isFullyCompleted) totalCompleted++;
+                else { 
                     stageStuck[o.completedStages]++; 
-                    if ((now - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
-                        slaBreaches++;
-                    }
+                    if ((now - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
                 }
 
-                if(!shopStats[o.shopName]) {
-                    shopStats[o.shopName] = { items: 0 };
-                }
+                if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0 };
                 
                 o.items.forEach(i => {
                     let qty = parseInt(i.qty || 1); 
                     totalVolume += qty; 
                     shopStats[o.shopName].items += qty;
-                    
                     let cleanName = i.name.trim(); 
-                    if(!skuStats[cleanName]) {
-                        skuStats[cleanName] = 0; 
-                    }
+                    if(!skuStats[cleanName]) skuStats[cleanName] = 0; 
                     skuStats[cleanName] += qty;
                     
                     let n = cleanName.toLowerCase();
@@ -660,10 +697,17 @@
                     else if(n.includes('hikvision')) brandStats['Hikvision'] += qty;
                     else brandStats['Others'] += qty;
                 });
+
+                // Track Staff Score (V12 Leaderboard)
+                if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
+                    staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
+                }
             });
 
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
             let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1] - a[1]).slice(0, 5); 
+            let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
             let maxStuck = Math.max(...stageStuck);
             let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
@@ -686,69 +730,66 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                    <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
                         <div class="flex items-end gap-2 mt-2">
-                            <span class="text-4xl font-black text-white">${totalVolume}</span>
-                            <span class="text-xs text-indigo-400 font-bold mb-1 pb-1">Units Moved</span>
+                            <span class="text-3xl font-black text-white">${totalVolume}</span>
+                            <span class="text-[10px] text-indigo-400 font-bold mb-1 pb-1">Units</span>
                         </div>
                     </div>
                     
-                    <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-emerald-500 hover-card">
+                    <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-emerald-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Delivery Success</div>
                         <div class="flex items-center gap-3 mt-2">
-                            <span class="text-4xl font-black text-emerald-400">${completionRate}%</span>
+                            <span class="text-3xl font-black text-emerald-400">${completionRate}%</span>
                         </div>
-                        <div class="text-[10px] text-slate-500 mt-2 font-semibold">${totalCompleted} / ${filteredData.length} Orders Delivered</div>
+                        <div class="text-[9px] text-slate-500 mt-1 font-semibold">${totalCompleted} Delivered</div>
                     </div>
                     
-                    <div class="glass-panel p-5 rounded-2xl border-t-4 ${slaBreaches > 0 ? 'border-t-pink-500 bg-pink-500/5 shadow-[0_0_15px_rgba(236,72,153,0.1)]' : 'border-t-slate-700'} hover-card">
+                    <div class="glass-panel p-4 rounded-2xl border-t-4 ${slaBreaches > 0 ? 'border-t-pink-500 bg-pink-500/5' : 'border-t-slate-700'} hover-card">
                         <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
                             ${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches
                         </div>
                         <div class="flex items-end gap-2 mt-2">
-                            <span class="text-4xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'}">${slaBreaches}</span>
+                            <span class="text-3xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'}">${slaBreaches}</span>
                         </div>
-                        <div class="text-[10px] text-slate-500 mt-2 font-semibold">Orders pending > 48 hours</div>
+                        <div class="text-[9px] text-slate-500 mt-1 font-semibold">Orders pending > 48h</div>
                     </div>
                     
-                    <div class="glass-panel p-5 rounded-2xl border-t-4 border-t-orange-500 hover-card">
+                    <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-orange-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Core Bottleneck</div>
-                        <div class="text-xl font-black text-orange-400 truncate mt-2 leading-tight" title="${frictionIndex}">${frictionIndex}</div>
-                        <div class="inline-block mt-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold px-2 py-1 rounded">
-                            ${maxStuck} Orders Stuck Here
+                        <div class="text-base font-black text-orange-400 truncate mt-2 leading-tight">${frictionIndex}</div>
+                        <div class="inline-block mt-2 bg-orange-500/10 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded">
+                            ${maxStuck} Stuck
+                        </div>
+                    </div>
+
+                    <!-- FEATURE: Staff Leaderboard added to top bar -->
+                    <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-yellow-400 hover-card flex flex-col">
+                        <div class="text-[10px] text-yellow-400 uppercase font-black tracking-widest mb-2 flex gap-1 items-center">🏆 Top Staff</div>
+                        <div class="flex-grow flex flex-col gap-1 justify-center">
+                            ${sortedStaff.length > 0 ? sortedStaff.map((s,i) => `<div class="flex justify-between text-xs"><span class="text-white font-bold">#${i+1} ${s[0].split(' ')[0]}</span><span class="text-indigo-400 font-black">${s[1]}</span></div>`).join('') : '<span class="text-slate-500 text-xs italic">No activity yet</span>'}
                         </div>
                     </div>
                 </div>
                 
+                <!-- Bottom 3 panels (Hot Movers, VIP Dealers, Brand Matrix) exactly as V11 -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-yellow-400">🔥</span> Hot Movers (Top SKUs)
                         </h3>
                         <div class="space-y-3">
-            `;
-
-            if (sortedSKUs.length > 0) {
-                sortedSKUs.forEach((sku, i) => { 
-                    mdoHtml += `
-                        <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
-                            </div>
-                            <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">${sku[1]} <span class="text-[9px] text-slate-500">QTY</span></span>
-                        </div>
-                    `; 
-                });
-            } else { 
-                mdoHtml += `
-                    <p class="text-slate-500 text-sm italic">No SKU data available.</p>
-                `; 
-            }
-
-            mdoHtml += `
+                            ${sortedSKUs.length > 0 ? sortedSKUs.map((sku, i) => `
+                                <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                    <div class="flex items-center gap-3 overflow-hidden">
+                                        <span class="text-slate-600 font-black text-sm">#${i+1}</span>
+                                        <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
+                                    </div>
+                                    <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">${sku[1]} <span class="text-[9px] text-slate-500">QTY</span></span>
+                                </div>
+                            `).join('') : `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`}
                         </div>
                     </div>
                     
@@ -757,32 +798,15 @@
                             <span class="text-emerald-400">👑</span> VIP Dealers
                         </h3>
                         <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-            `;
-
-            if (sortedShops.length > 0) {
-                sortedShops.slice(0, 6).forEach((v, i) => { 
-                    let pct = (v[1].items / topShopVolume) * 100; 
-                    mdoHtml += `
-                        <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
-                            <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
-                            <div class="relative z-10 flex justify-between items-center">
-                                <div class="flex items-center gap-2 w-2/3">
-                                    <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
+                            ${sortedShops.length > 0 ? sortedShops.slice(0, 6).map(v => `
+                                <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
+                                    <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${(v[1].items/topShopVolume)*100}%"></div>
+                                    <div class="relative z-10 flex justify-between items-center">
+                                        <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
+                                        <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
+                                    </div>
                                 </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `; 
-                });
-            } else { 
-                mdoHtml += `
-                    <p class="text-slate-500 text-sm italic">No dealer data for this period.</p>
-                `; 
-            }
-
-            mdoHtml += `
+                            `).join('') : `<p class="text-slate-500 text-sm italic">No dealer data.</p>`}
                         </div>
                     </div>
                     
@@ -791,60 +815,31 @@
                             <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Matrix</span>
                         </h3>
                         <div class="flex-1 flex items-end justify-around gap-2 mt-2 pt-4 h-40 border-b border-slate-800 relative">
-            `;
-
-            Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).forEach(b => {
-                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0; 
-                if (b[1] > 0 && h < 5) h = 5; 
-
-                let color = 'from-blue-600 to-blue-400';
-                if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500'; 
-                if(b[0] === 'boAt') color = 'from-red-600 to-orange-500'; 
-                if(b[0] === 'Portronics') color = 'from-yellow-600 to-orange-400';
-                
-                // BRAND MATRIX ANIMATION FIX
-                mdoHtml += `
-                    <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1">
-                        <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">
-                            ${b[1]} Units
-                        </div>
-                        <div 
-                            class="chart-bar-fill w-full bg-gradient-to-t ${color} rounded-t-sm shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative group-hover:brightness-125 transition-all duration-1000 ease-out" 
-                            style="height: 0%;"
-                            data-target="${Math.max(5, h)}%"
-                        >
-                            <div class="absolute inset-0 bg-white/20 w-full h-1"></div>
-                        </div>
-                        <span class="text-[9px] text-slate-400 mt-2 font-bold truncate w-full text-center group-hover:text-white transition-colors">
-                            ${b[0]}
-                        </span>
-                    </div>
-                `;
-            });
-
-            mdoHtml += `
+                            ${Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).map(b => {
+                                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0; 
+                                if (b[1] > 0 && h < 5) h = 5; 
+                                let color = b[0]==='Velocity'?'from-purple-600 to-pink-500':b[0]==='boAt'?'from-red-600 to-orange-500':b[0]==='Portronics'?'from-yellow-600 to-orange-400':'from-blue-600 to-blue-400';
+                                return `
+                                <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1">
+                                    <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">${b[1]} Units</div>
+                                    <div class="chart-bar-fill w-full bg-gradient-to-t ${color} rounded-t-sm shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative group-hover:brightness-125 transition-all duration-1000 ease-out" style="height: 0%;" data-target="${Math.max(5, h)}%"><div class="absolute inset-0 bg-white/20 w-full h-1"></div></div>
+                                    <span class="text-[9px] text-slate-400 mt-2 font-bold truncate w-full text-center group-hover:text-white transition-colors">${b[0]}</span>
+                                </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 </div>
             `;
             
             mdoDiv.innerHTML = mdoHtml;
-            
-            // Trigger Animation
-            setTimeout(() => { 
-                document.querySelectorAll('.chart-bar-fill').forEach(bar => { 
-                    bar.style.height = bar.getAttribute('data-target'); 
-                }); 
-            }, 100);
+            setTimeout(() => { document.querySelectorAll('.chart-bar-fill').forEach(bar => { bar.style.height = bar.getAttribute('data-target'); }); }, 100);
         }
 
         // ==========================================
         // PIPELINE & ORDER GRID RENDERING
         // ==========================================
-        function setStageFilter(stageIndex) { 
-            activeStageFilter = stageIndex; 
-            renderPipeline(); 
-        }
+        function setStageFilter(stageIndex) { activeStageFilter = stageIndex; renderPipeline(); }
 
         function renderPipeline() {
             const grid = document.getElementById('orderGrid');
@@ -853,28 +848,23 @@
             let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
             let stageCounts = Array(9).fill(0);
             
+            // FEATURE: Smart Order Merging Detector
+            let shopPendingCount = {};
+
             pendingOrders.forEach(o => { 
-                if (o.completedStages < 9) {
-                    stageCounts[o.completedStages]++; 
+                if (o.completedStages < 9) stageCounts[o.completedStages]++; 
+                if (o.completedStages < 4) { // Pre-dispatch orders are mergeable
+                    shopPendingCount[o.shopName] = (shopPendingCount[o.shopName] || 0) + 1;
                 }
             });
 
             let filterHtml = `
-                <div 
-                    onclick="setStageFilter(null)" 
-                    class="cursor-pointer ${activeStageFilter === null ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all"
-                >
-                    <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">
-                        Overview
-                    </span>
+                <div onclick="setStageFilter(null)" class="cursor-pointer ${activeStageFilter === null ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all">
+                    <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Overview</span>
                     <span class="text-white text-sm font-black mb-2">All Pending</span>
                     <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                        <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">
-                            COUNT
-                        </span>
-                        <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">
-                            ${pendingOrders.length}
-                        </span>
+                        <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">COUNT</span>
+                        <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${pendingOrders.length}</span>
                     </div>
                 </div>
             `;
@@ -882,30 +872,16 @@
             STAGE_NAMES.forEach((name, idx) => {
                 let isActive = activeStageFilter === idx; 
                 let orderCount = stageCounts[idx];
-                
                 let filterName = name.split(' (')[0]; 
-                if (idx === 6) {
-                    filterName = "Delivery Comms";
-                }
+                if (idx === 6) filterName = "Delivery Comms";
 
                 filterHtml += `
-                    <div 
-                        onclick="setStageFilter(${idx})" 
-                        class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all"
-                    >
-                        <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">
-                            Step ${idx+1}
-                        </span>
-                        <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">
-                            ${filterName}
-                        </span>
+                    <div onclick="setStageFilter(${idx})" class="cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all">
+                        <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
+                        <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${filterName}</span>
                         <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                            <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">
-                                STUCK
-                            </span>
-                            <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">
-                                ${orderCount}
-                            </span>
+                            <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
+                            <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
                         </div>
                     </div>
                 `;
@@ -917,12 +893,7 @@
             grid.innerHTML = '';
             
             if (displayOrders.length === 0) { 
-                grid.innerHTML = `
-                    <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center">
-                        <div class="text-4xl mb-3">🍃</div>
-                        <p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p>
-                    </div>
-                `; 
+                grid.innerHTML = `<div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center"><div class="text-4xl mb-3">🍃</div><p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p></div>`; 
                 return; 
             }
 
@@ -932,69 +903,54 @@
                 
                 let nextStepName = "Fully Completed";
                 if (order.completedStages < 9) {
-                    if (order.completedStages === 6) {
-                        nextStepName = isCod ? "Call 2" : "WhatsApp 2";
-                    } else {
-                        nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
-                    }
+                    if (order.completedStages === 6) nextStepName = isCod ? "Call 2" : "WhatsApp 2";
+                    else nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
                 }
                 
                 let exactDateStr = formatExactDate(order.date);
-                let timeData = getTimeAgoUI(order.date);
+                let timeData = getTimeAgoUI(order.date); // Returns {text, color, isSLAWarning}
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 
-                let splitBadge = "";
-                if(String(order.orderId).toUpperCase().includes('SPLIT')) {
-                    splitBadge = `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30">✂️ SPLIT</span>`;
-                }
+                let splitBadge = String(order.orderId).toUpperCase().includes('SPLIT') ? `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30 shrink-0">✂️ SPLIT</span>` : "";
+                
+                // FEATURE: VIP Ambulance Glow & Merge Indicators
+                let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
+                let vipBadge = order.isVIP ? `<span class="bg-red-500 text-white text-[9px] px-2 py-1 rounded font-black uppercase shadow-[0_0_10px_red] animate-pulse shrink-0">🔥 VIP</span>` : "";
+                let slaBadge = timeData.isSLAWarning ? `<span class="text-[9px] bg-yellow-500/20 text-yellow-400 font-black border border-yellow-500 px-2 py-1 rounded animate-pulse tracking-widest shrink-0">⏳ NEAR BREACH</span>` : "";
+                let mergeBadge = (order.completedStages < 4 && shopPendingCount[order.shopName] > 1) ? `<span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0">🔗 MERGE AVAIL</span>` : "";
 
                 grid.innerHTML += `
-                    <div 
-                        onclick='openModal(${JSON.stringify(order).replace(/'/g, "\\'")})' 
-                        class="bg-[#131C31] border border-slate-800 hover:border-indigo-500 rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card cursor-pointer"
-                    >
+                    <div onclick="openModal('${order.orderId}')" class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card cursor-pointer border">
                         <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full transition-transform group-hover:scale-125"></div>
                         
                         <div class="mb-4 relative z-10">
                             <div class="flex justify-between items-start mb-1.5">
                                 <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
-                                <div class="flex gap-1 items-center">
-                                    ${splitBadge}
+                                <div class="flex gap-1 flex-col items-end">
+                                    <div class="flex gap-1">${vipBadge}${splitBadge}</div>
                                 </div>
                             </div>
                             
-                            <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">
-                                ${order.shopName}
-                            </p>
+                            <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">${order.shopName}</p>
                             
                             <div class="flex gap-1 items-center flex-wrap mb-3">
-                                <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">
-                                    ${exactDateStr}
-                                </span>
-                                <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
-                                    ⏱️ ${timeData.text}
-                                </span>
+                                <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${exactDateStr}</span>
+                                <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">⏱️ ${timeData.text}</span>
+                                ${slaBadge}
+                                ${mergeBadge}
                             </div>
                             
                             <div class="mt-3 flex flex-wrap gap-2 items-center">
-                                <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${isCod ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">
-                                    ${order.paymentMode || 'N/A'}
-                                </span>
-                                <span class="text-[10px] font-black text-yellow-400 bg-yellow-900/20 px-2 py-1 rounded border border-yellow-500/20">
-                                    ₹${order.totalValue || '0'}
-                                </span>
-                                <span class="text-[10px] font-black text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700">
-                                    Qty: ${orderItemsCount}
-                                </span>
+                                <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${isCod ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">${order.paymentMode || 'N/A'}</span>
+                                <span class="text-[10px] font-black text-yellow-400 bg-yellow-900/20 px-2 py-1 rounded border border-yellow-500/20">₹${order.totalValue || '0'}</span>
+                                <span class="text-[10px] font-black text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700">Qty: ${orderItemsCount}</span>
                             </div>
                         </div>
                         
                         <div>
                             <div class="bg-[#0B1121] p-2.5 rounded-lg mb-3 border border-slate-800 flex justify-between items-center group-hover:border-indigo-500/30 transition-colors">
                                 <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Next Action:</span>
-                                <span class="text-[10px] text-emerald-400 font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">
-                                    ${nextStepName}
-                                </span>
+                                <span class="text-[10px] text-emerald-400 font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">${nextStepName}</span>
                             </div>
                             
                             <div class="flex justify-between text-[9px] text-slate-500 mb-1.5 font-black uppercase tracking-widest">
@@ -1003,9 +959,7 @@
                             </div>
                             
                             <div class="w-full bg-[#0B1121] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                                <div class="bg-gradient-to-r from-indigo-600 to-purple-500 h-1.5 rounded-full relative" style="width: ${progress}%">
-                                    <div class="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_ease-in-out_infinite]"></div>
-                                </div>
+                                <div class="bg-gradient-to-r from-indigo-600 to-purple-500 h-1.5 rounded-full relative" style="width: ${progress}%"><div class="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_ease-in-out_infinite]"></div></div>
                             </div>
                         </div>
                     </div>
@@ -1028,33 +982,18 @@
             if (queuedFiles.length > 0) {
                 statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`;
                 statusLabel.classList.remove('hidden'); 
-                
-                if (clearBtn) {
-                    clearBtn.classList.remove('hidden'); 
-                }
-                
-                if (container) {
-                    container.classList.remove('hidden');
-                }
+                if (clearBtn) clearBtn.classList.remove('hidden'); 
+                if (container) container.classList.remove('hidden');
                 
                 if (previewBox) {
                     previewBox.innerHTML = ''; 
                     previewBox.classList.remove('hidden');
-                    
                     queuedFiles.forEach(file => {
                         if (file.type.startsWith('audio/')) { 
-                            previewBox.innerHTML += `
-                                <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
-                                    🎤<br/>Audio
-                                </div>
-                            `; 
+                            previewBox.innerHTML += `<div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">🎤<br/>Audio</div>`; 
                         } else {
                             const reader = new FileReader();
-                            reader.onload = function(e) { 
-                                previewBox.innerHTML += `
-                                    <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
-                                `; 
-                            }
+                            reader.onload = function(e) { previewBox.innerHTML += `<img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">`; }
                             reader.readAsDataURL(file);
                         }
                     });
@@ -1064,77 +1003,122 @@
         
         function clearQueuedFiles(stageNum) {
             queuedFiles = [];
-            
             const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
             const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
             const container = document.getElementById(`fileStatusContainer_${stageNum}`);
             const previewBox = document.getElementById(`previewBox_${stageNum}`);
             
-            if(statusLabel) {
-                statusLabel.classList.add('hidden'); 
-            }
-            if(clearBtn) {
-                clearBtn.classList.add('hidden'); 
-            }
-            if(container) {
-                container.classList.add('hidden');
-            }
-            if(previewBox) { 
-                previewBox.innerHTML = ''; 
-                previewBox.classList.add('hidden'); 
-            }
+            if(statusLabel) statusLabel.classList.add('hidden'); 
+            if(clearBtn) clearBtn.classList.add('hidden'); 
+            if(container) container.classList.add('hidden');
+            if(previewBox) { previewBox.innerHTML = ''; previewBox.classList.add('hidden'); }
         }
 
-        // ==========================================
-        // WHATSAPP DIRECT CHAT
-        // ==========================================
-        window.openWhatsAppMsg = function(stageNum, isCod) {
-            const orderId = currentActiveOrder.orderId;
-            const shop = currentActiveOrder.shopName;
-            const amt = currentActiveOrder.totalValue;
-            let phone = currentActiveOrder.phone; 
-            
-            let msg = "";
-            
-            if(stageNum === 3) {
-                msg = `Hello ${shop},\n\nYour order (${orderId}) with Yash Marketing is successfully processed and confirmed.\n\nPayment Mode: ${currentActiveOrder.paymentMode || 'N/A'}\nTotal Amount: Rs. ${amt}\n\nWe will dispatch it shortly. Thank you!`;
-            } else if(stageNum === 7) {
-                if (isCod) {
-                    msg = `Hello ${shop},\n\nGood News! Your order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today.\n\nPlease keep the exact COD amount Rs. ${amt} ready for a smooth handover.\n\nThank you for choosing Yash Marketing!`;
-                } else {
-                    msg = `Hello ${shop},\n\nGood News! Your PREPAID order (${orderId}) from Yash Marketing is OUT FOR DELIVERY today.\n\nOur delivery executive will reach you soon.\n\nThank you for choosing Yash Marketing!`;
-                }
-            }
-
-            let waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-            window.open(waUrl, '_blank');
-        }
-
-        // ==========================================
-        // WHATSAPP SHARE TO GROUP
-        // ==========================================
         window.shareToGroup = function(stageNum, fileUrlsString) {
             const orderId = currentActiveOrder.orderId;
             const shop = currentActiveOrder.shopName;
             const stageName = STAGE_NAMES[stageNum - 1]; 
-            
-            // Uses the WhatsApp specific link formatter
             let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
-            
             let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
-            
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         // ==========================================
-        // MODAL AND TASK EXECUTION
+        // FEATURE: Client-Side Tally SO CSV Generator
         // ==========================================
-        function openModal(order) {
+        function generateTallyCSV(orderId) {
+            const order = window.appData.orders[orderId];
+            if(!order) return;
+            
+            // Standard Tally Sales Order CSV format headers
+            let csvContent = "Date,Voucher Type,Voucher Number,Party Name,Item Name,Quantity,Rate,Amount\n";
+            let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); // DD/MM/YYYY
+            
+            order.items.forEach(item => {
+                // Rate and Amount left 0 by default to allow Tally to auto-fill or remain 0 as per SO standards
+                csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Tally_SO_${order.orderId}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showNotification("Tally SO Exported", `File downloaded for ${order.orderId}. Ready for import.`);
+        }
+
+        // ==========================================
+        // FEATURE: Dynamic Shipping Label (A6 Print)
+        // ==========================================
+        function generateShippingLabel(orderId) {
+            const order = window.appData.orders[orderId];
+            const printDiv = document.getElementById('shippingLabelScreen');
+            
+            // Generate HTML for A6 print layout (Hidden in normal view, shown in @media print)
+            printDiv.innerHTML = `
+                <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="margin:0; font-size: 24px; font-weight: 900; letter-spacing: 2px;">YASH MARKETING</h2>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold;">OFFICIAL SHIPPING & DISPATCH LABEL</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 10px; font-weight: bold; color: #555;">ORDER ID</div>
+                        <div style="font-size: 22px; font-weight: 900;">${order.orderId}</div>
+                        <div style="font-size: 10px; margin-top: 5px;"><strong>Date:</strong> ${order.date.split(' ')[0]}</div>
+                    </div>
+                    <img src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=${order.orderId}" style="width: 80px; height: 80px; border: 1px solid #ddd;" alt="QR Code">
+                </div>
+                
+                <div style="border: 2px solid black; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-size: 10px; font-weight: bold; background: black; color: white; display: inline-block; padding: 3px 8px; margin-top: -20px; border-radius: 4px;">TO (CONSIGNEE)</div>
+                    <div style="font-size: 18px; font-weight: 900; margin-top: 10px;">${order.shopName}</div>
+                    <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">📞 ${order.phone || 'Phone number not provided'}</div>
+                    <div style="font-size: 12px; margin-top: 5px; line-height: 1.4;">${order.address || 'Address not provided in database'}</div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1; border: 1px solid #aaa; padding: 8px; border-radius: 6px;">
+                        <div style="font-size: 9px; font-weight: bold; color: #666;">PAYMENT MODE</div>
+                        <div style="font-size: 14px; font-weight: 900;">${order.paymentMode}</div>
+                    </div>
+                    <div style="flex: 1; border: 1px solid #aaa; padding: 8px; border-radius: 6px;">
+                        <div style="font-size: 9px; font-weight: bold; color: #666;">LOGISTICS / TRANSPORT</div>
+                        <div style="font-size: 14px; font-weight: 900;">${order.transporter}</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">Total Packages: 1</div>
+                <div style="font-size: 12px; font-weight: bold;">Total Items: ${order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0)}</div>
+
+                <div style="font-size: 9px; text-align: center; margin-top: 30px; color: #666; border-top: 1px dashed #ccc; padding-top: 10px;">
+                    * This is a system-generated label via Enterprise OS v12.0<br>
+                    Scan QR code for internal verification.
+                </div>
+            `;
+            
+            window.print(); // Triggers browser print dialog
+        }
+
+        // ==========================================
+        // MODAL AND TASK EXECUTION (V11 UI with V12 JSON Bug Fix)
+        // ==========================================
+        function openModal(orderId) {
+            const order = window.appData.orders[orderId];
+            if(!order) return;
+            
             currentActiveOrder = order; 
             queuedFiles = []; 
             
             document.getElementById('modalOrderId').innerText = order.orderId;
             document.getElementById('modalShopName').innerText = order.shopName;
+            
+            if (order.isVIP) document.getElementById('modalVipBadge').classList.remove('hidden');
+            else document.getElementById('modalVipBadge').classList.add('hidden');
             
             let exactDateStr = formatExactDate(order.date);
             let timeData = getTimeAgoUI(order.date);
@@ -1148,17 +1132,15 @@
             let payBadge = document.getElementById('modalPaymentMode');
             payBadge.innerText = order.paymentMode || 'N/A';
             
-            if (isCod) {
-                payBadge.className = `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-500/10 text-orange-400 border-orange-500/20`;
-            } else {
-                payBadge.className = `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
-            }
+            if (isCod) payBadge.className = `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-500/10 text-orange-400 border-orange-500/20`;
+            else payBadge.className = `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
             
             document.getElementById('modalTotalValue').innerText = `Amount: ₹${order.totalValue || '0'}`;
             
             const container = document.getElementById('stagesContainer'); 
             container.innerHTML = '';
             
+            // INVENTORY MANIFEST (V11)
             let itemsHtml = `
                 <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
                     <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -1169,13 +1151,7 @@
             
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
-                    let imgTag = "";
-                    if (item.image) {
-                        imgTag = `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">`;
-                    } else {
-                        imgTag = `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
-                    }
-                    
+                    let imgTag = item.image ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
                     itemsHtml += `
                         <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
                             ${imgTag}
@@ -1189,19 +1165,11 @@
                         </div>
                     `;
                 });
-            } else { 
-                itemsHtml += `
-                    <p class="text-sm text-slate-600 italic px-2">No SKU data found for this order.</p>
-                `; 
-            }
-            
-            itemsHtml += `
-                    </div>
-                </div>
-            `; 
-            
+            } else itemsHtml += `<p class="text-sm text-slate-600 italic px-2">No SKU data found for this order.</p>`; 
+            itemsHtml += `</div></div>`; 
             container.innerHTML += itemsHtml;
 
+            // STAGE ENGINE LOOP
             let stagesListHtml = '<div class="space-y-4">';
             
             for (let i = 0; i < 9; i++) {
@@ -1211,9 +1179,7 @@
                 const isLocked = i > order.completedStages;
                 
                 let displayStageName = STAGE_NAMES[i];
-                if (stageNum === 7) {
-                    displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
-                }
+                if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
                 
                 let uiHtml = '';
                 
@@ -1227,40 +1193,23 @@
                         if (url.includes("http")) {
                             hasFiles = true;
                             if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) { 
-                                previewHtml += `
-                                    <audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
-                                `; 
+                                previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>`; 
                             } else { 
-                                previewHtml += `
-                                    <a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm">
-                                        <span>🖼️ View Uploaded Proof ${index + 1}</span>
-                                        <span class="text-slate-500 text-lg">→</span>
-                                    </a>
-                                `; 
+                                previewHtml += `<a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm"><span>🖼️ View Uploaded Proof ${index + 1}</span><span class="text-slate-500 text-lg">→</span></a>`; 
                             }
                         }
                     });
                     
                     if (hasFiles && (stageNum === 2 || stageNum === 4 || stageNum === 5 || stageNum === 6 || stageNum === 8)) {
-                        previewHtml += `
-                            <button 
-                                onclick="shareToGroup(${stageNum}, '${order.stageUrls[i]}')" 
-                                class="mt-2 w-full bg-[#128C7E] hover:bg-[#075E54] text-white text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border border-[#128C7E]"
-                            >
-                                <span>📤</span> Share Details & Photos to WhatsApp Group
-                            </button>
-                        `;
+                        previewHtml += `<button onclick="shareToGroup(${stageNum}, '${order.stageUrls[i]}')" class="mt-2 w-full bg-[#128C7E] hover:bg-[#075E54] text-white text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border border-[#128C7E]"><span>📤</span> Share to WhatsApp Group</button>`;
                     }
-                    
                     previewHtml += `</div>`;
 
                     uiHtml = `
                         <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition">
                             <div class="flex justify-between items-center">
                                 <span class="text-emerald-400 text-sm font-black">${stageNum}. ${displayStageName}</span>
-                                <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">
-                                    ✔ COMPLETED
-                                </span>
+                                <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">✔ COMPLETED</span>
                             </div>
                             ${previewHtml}
                         </div>
@@ -1270,9 +1219,7 @@
                     uiHtml = `
                         <div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50">
                             <span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span>
-                            <span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">
-                                🔒 LOCKED
-                            </span>
+                            <span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span>
                         </div>
                     `;
                 } 
@@ -1280,40 +1227,38 @@
                     let inputHtml = '';
                     
                     if (stageNum === 1) {
-                        inputHtml = `
-                            <button 
-                                onclick="submitStage(${stageNum})" 
-                                class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
-                            >
-                                Accept Task & Begin Process
-                            </button>
-                        `;
+                        inputHtml = `<button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Accept Task & Begin Process</button>`;
                     } 
+                    else if (stageNum === 2) {
+                        // FEATURE: Tally SO Export Button + Generic Proof
+                        inputHtml = `
+                            <button onclick="generateTallyCSV('${order.orderId}')" class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
+                                <span>📊</span> Generate Tally Sales Order (CSV)
+                            </button>
+                            <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)</p>
+                            <input type="file" accept="image/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" onchange="handleFileSelection(this, ${stageNum})">
+                            <div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div>
+                            <div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear</button></div>
+                            <button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Mark as Completed</button>
+                        `;
+                    }
                     else if (stageNum === 3 || stageNum === 7) { 
+                        // FEATURE: Settings Manager WA Parser
+                        let msgTemplate = stageNum === 3 ? (window.appSettings.waMsgStage3 || "") : (isCod ? (window.appSettings.waMsgStage7COD || "") : (window.appSettings.waMsgStage7Prepaid || ""));
+                        let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
+                        let waUrl = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(finalMsg)}` : `https://wa.me/?text=${encodeURIComponent(finalMsg)}`;
+
                         inputHtml += `
                             <div class="mt-4 mb-4">
-                                <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">
-                                    Step 1: Communication
-                                </p>
-                                <button 
-                                    onclick="window.openWhatsAppMsg(${stageNum}, ${isCod})" 
-                                    class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 mb-3"
-                                >
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"></path>
-                                    </svg>
+                                <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 1: Communication</p>
+                                <a href="${waUrl}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 mb-3">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"></path></svg>
                                     Send WhatsApp Message
-                                </button>
+                                </a>
                                 
                                 <label class="flex items-center gap-3 cursor-pointer bg-pink-500/10 border border-pink-500/30 p-3 rounded-xl hover:bg-pink-500/20 transition-colors">
-                                    <input 
-                                        type="checkbox" 
-                                        id="noResponse_${stageNum}" 
-                                        class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 focus:ring-pink-500 focus:ring-offset-slate-900 cursor-pointer shrink-0"
-                                    >
-                                    <span class="text-[11px] text-pink-400 font-black uppercase tracking-widest text-wrap-custom">
-                                        Dealer Didn't Respond / Ignore Comms
-                                    </span>
+                                    <input type="checkbox" id="noResponse_${stageNum}" class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 focus:ring-pink-500 focus:ring-offset-slate-900 cursor-pointer shrink-0">
+                                    <span class="text-[11px] text-pink-400 font-black uppercase tracking-widest text-wrap-custom">Dealer Didn't Respond / Ignore</span>
                                 </label>
                             </div>
                         `;
@@ -1321,90 +1266,41 @@
                         if (stageNum === 7 && isCod) {
                             inputHtml += `
                                 <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4">
-                                    <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                        <span class="text-indigo-400">🎤</span> Upload Call Recording (Mandatory for COD)
-                                    </p>
-                                    <input 
-                                        type="file" 
-                                        accept="audio/*" 
-                                        class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" 
-                                        onchange="handleFileSelection(this, ${stageNum})"
-                                    >
-                                    
-                                    <div 
-                                        id="previewBox_${stageNum}" 
-                                        class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"
-                                    ></div>
-                                    
-                                    <div 
-                                        class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" 
-                                        id="fileStatusContainer_${stageNum}"
-                                    >
-                                        <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
-                                        <button 
-                                            id="clearFilesBtn_${stageNum}" 
-                                            onclick="clearQueuedFiles(${stageNum})" 
-                                            class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
-                                        >
-                                            Clear
-                                        </button>
-                                    </div>
+                                    <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2"><span class="text-indigo-400">🎤</span> Upload Call Recording (Mandatory for COD)</p>
+                                    <input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">
+                                    <div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div>
+                                    <div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear</button></div>
                                 </div>
                             `;
                         }
 
                         inputHtml += `
-                            <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">
-                                Step 2: Submit
-                            </p>
-                            <button 
-                                id="submitBtn_${stageNum}" 
-                                onclick="submitStage(${stageNum})" 
-                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
-                            >
-                                Mark as Completed
-                            </button>
+                            <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 2: Submit</p>
+                            <button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Mark as Completed</button>
                         `;
                     }
                     else {
                         if (stageNum === 4) {
+                            // SPLIT ORDER ENGINE V11 (No changes, fully retained)
                             inputHtml += `
                                 <div class="bg-[#0B1121] border border-slate-700 p-3 rounded-xl mt-4 mb-4 shadow-inner">
-                                    <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2">
-                                        <span class="text-indigo-400 text-base">☑</span> Confirm Available Stock
-                                    </p>
+                                    <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-base">☑</span> Confirm Available Stock</p>
                                     <div class="space-y-2 max-h-[400px] overflow-y-auto hide-scrollbar pr-1">
                             `;
-                                        
                             order.items.forEach((item, idx) => {
                                 inputHtml += `
                                     <div class="flex items-center justify-between bg-[#131C31] p-2.5 rounded-lg border border-slate-800">
                                         <label class="flex items-start gap-2.5 text-xs font-bold text-white cursor-pointer w-2/3 text-wrap-custom">
-                                            <input 
-                                                type="checkbox" 
-                                                id="chk_item_${idx}" 
-                                                checked 
-                                                class="mt-0.5 rounded border-slate-600 bg-slate-800 text-indigo-500 w-4 h-4 cursor-pointer shrink-0"
-                                            >
+                                            <input type="checkbox" id="chk_item_${idx}" checked class="mt-0.5 rounded border-slate-600 bg-slate-800 text-indigo-500 w-4 h-4 cursor-pointer shrink-0">
                                             <span class="leading-tight">${item.name}</span>
                                         </label>
                                         <div class="flex flex-col items-end">
-                                            <span class="text-[8px] text-slate-500 mb-1 uppercase font-black tracking-widest">
-                                                Dispatch Qty
-                                            </span>
-                                            <input 
-                                                type="number" 
-                                                id="qty_item_${idx}" 
-                                                value="${item.qty}" 
-                                                max="${item.qty}" 
-                                                min="0" 
-                                                class="w-16 bg-[#0B1121] text-white text-xs font-black p-1.5 rounded border border-slate-600 text-center focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            >
+                                            <span class="text-[8px] text-slate-500 mb-1 uppercase font-black tracking-widest">Dispatch Qty</span>
+                                            <input type="number" id="qty_item_${idx}" value="${item.qty}" max="${item.qty}" min="0" class="w-16 bg-[#0B1121] text-white text-xs font-black p-1.5 rounded border border-slate-600 text-center outline-none">
                                         </div>
                                     </div>
                                 `;
                             });
-                                        
                             inputHtml += `
                                     </div>
                                     <p class="text-[9px] text-orange-400 mt-3 font-bold leading-tight bg-orange-900/10 p-2 rounded border border-orange-500/20">
@@ -1414,167 +1310,88 @@
                             `;
                         }
 
+                        if (stageNum === 5) {
+                            // FEATURE: Dynamic A6 Label Print Button
+                            inputHtml += `
+                                <button onclick="generateShippingLabel('${order.orderId}')" class="w-full mt-4 mb-2 bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
+                                    🖨️ Print Dynamic A6 Shipping Label
+                                </button>
+                            `;
+                        }
+
                         if (stageNum === 9) {
                             inputHtml += `
-                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                    <span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)
-                                </p>
-                                <input 
-                                    type="file" 
-                                    accept="audio/*" 
-                                    class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" 
-                                    onchange="handleFileSelection(this, ${stageNum})"
-                                >
+                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)</p>
+                                <input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">
                             `;
                         } else {
                             inputHtml += `
-                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                    <span class="text-indigo-400">⚡</span> Upload Proof (Required)
-                                </p>
+                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p>
                                 <div class="flex gap-2 w-full">
                                     <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                                        📸 Live Camera
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            capture="environment" 
-                                            class="hidden" 
-                                            onchange="handleFileSelection(this, ${stageNum})"
-                                        >
+                                        📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})">
                                     </label>
                                     <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                                        🖼️ Multi Gallery
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            multiple 
-                                            class="hidden" 
-                                            onchange="handleFileSelection(this, ${stageNum})"
-                                        >
+                                        🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})">
                                     </label>
                                 </div>
                             `;
                         }
 
-                        // Thumbnail Preview Area
                         inputHtml += `
-                            <div 
-                                id="previewBox_${stageNum}" 
-                                class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"
-                            ></div>
-                            
-                            <div 
-                                class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" 
-                                id="fileStatusContainer_${stageNum}"
-                            >
+                            <div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div>
+                            <div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}">
                                 <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
-                                <button 
-                                    id="clearFilesBtn_${stageNum}" 
-                                    onclick="clearQueuedFiles(${stageNum})" 
-                                    class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
-                                >
-                                    Clear Files
-                                </button>
+                                <button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button>
                             </div>
                         `;
 
-                        // Customer Rating Area
                         if (stageNum === 9) {
                             inputHtml += `
                                 <div class="mt-4">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">
-                                        Customer Rating
-                                    </label>
-                                    <input 
-                                        type="number" 
-                                        id="ratingInput" 
-                                        min="1" 
-                                        max="5" 
-                                        placeholder="Enter Score (1-5)" 
-                                        class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-lg text-center shadow-inner"
-                                    >
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Customer Rating</label>
+                                    <input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white outline-none font-bold text-lg text-center shadow-inner">
                                 </div>
                             `;
                         }
                         
-                        inputHtml += `
-                            <button 
-                                id="submitBtn_${stageNum}" 
-                                onclick="submitStage(${stageNum})" 
-                                class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
-                            >
-                                Execute & Proceed
-                            </button>
-                        `;
+                        inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Execute & Proceed</button>`;
                     }
                     
                     uiHtml = `
                         <div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]">
                             <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div>
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-white font-black text-lg">
-                                    ${stageNum}. ${displayStageName}
-                                </span>
-                                <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">
-                                    ACTION REQUIRED
-                                </span>
+                                <span class="text-white font-black text-lg">${stageNum}. ${displayStageName}</span>
+                                <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span>
                             </div>
-                            <div id="actionArea_${stageNum}">
-                                ${inputHtml}
-                            </div>
+                            <div id="actionArea_${stageNum}">${inputHtml}</div>
                             <p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p>
                         </div>
                     `;
                 }
-                
                 stagesListHtml += uiHtml;
             }
-            
             stagesListHtml += '</div>';
             container.innerHTML += stagesListHtml;
             
             document.getElementById('orderModal').classList.remove('hidden');
         }
 
-        function closeModal() { 
-            document.getElementById('orderModal').classList.add('hidden'); 
-            fetchOrders(true); 
-        }
-
         // ==========================================
-        // DATA COMPRESSION & UPLOAD PROTOCOLS
+        // DATA COMPRESSION & UPLOAD PROTOCOLS (V11 Retained)
         // ==========================================
         function compressImage(file) {
             return new Promise((resolve) => {
-                const reader = new FileReader(); 
-                reader.readAsDataURL(file);
-                
+                const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = (event) => {
-                    const img = new Image(); 
-                    img.src = event.target.result;
-                    
+                    const img = new Image(); img.src = event.target.result;
                     img.onload = () => {
-                        const canvas = document.createElement('canvas'); 
-                        const MAX_WIDTH = 800; 
-                        let scale = 1;
-                        
-                        if (img.width > MAX_WIDTH) {
-                            scale = MAX_WIDTH / img.width;
-                        }
-                        
-                        canvas.width = img.width * scale; 
-                        canvas.height = img.height * scale;
-                        
-                        const ctx = canvas.getContext('2d'); 
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
-                        
-                        resolve({ 
-                            name: file.name, 
-                            mimeType: 'image/jpeg', 
-                            base64: dataUrl.split(',')[1] 
-                        });
+                        const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; let scale = 1;
+                        if (img.width > MAX_WIDTH) scale = MAX_WIDTH / img.width;
+                        canvas.width = img.width * scale; canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve({ name: file.name, mimeType: 'image/jpeg', base64: canvas.toDataURL('image/jpeg', 0.6).split(',')[1] });
                     };
                 };
             });
@@ -1582,132 +1399,70 @@
 
         function getBase64(file) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader(); 
-                reader.readAsDataURL(file);
-                
-                reader.onload = () => resolve({ 
-                    name: file.name, 
-                    mimeType: file.type, 
-                    base64: reader.result.split(',')[1] 
-                });
-                
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
                 reader.onerror = error => reject(error);
             });
         }
 
         // ==========================================
-        // SUBMIT STAGE
+        // SUBMIT STAGE (V11 + FEATURE: One-Tap Retry)
         // ==========================================
         async function submitStage(stageNum) {
             const btn = document.getElementById(`submitBtn_${stageNum}`);
             const statusLabel = document.getElementById(`status_${stageNum}`);
-            
             let isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
 
             let payload = { 
-                action: 'updateStage', 
-                orderId: currentActiveOrder.orderId, 
-                stage: stageNum, 
-                files: [], 
-                isNoResponse: false, 
-                isWhatsAppOnly: false, 
-                partialStock: null 
+                action: 'updateStage', orderId: currentActiveOrder.orderId, stage: stageNum, files: [], 
+                isNoResponse: false, isWhatsAppOnly: false, partialStock: null, 
+                staffName: currentUserName // FEATURE: Leaderboard tracker
             };
             
             const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
-            if (noRespCheckbox && noRespCheckbox.checked) { 
-                payload.isNoResponse = true; 
-            }
+            if (noRespCheckbox && noRespCheckbox.checked) payload.isNoResponse = true; 
             
             if (stageNum !== 1) {
-                
                 let fileRequired = true;
-                
-                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) { 
-                    fileRequired = false; 
-                }
+                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) fileRequired = false; 
 
                 if (fileRequired && queuedFiles.length === 0) {
-                    if (stageNum === 7 && isCod) { 
-                        alert("For COD Orders, Call Recording (Audio File) is MANDATORY to proceed. Or check 'Dealer Didn't Respond'."); 
-                    } else { 
-                        alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'."); 
-                    }
+                    if (stageNum === 7 && isCod) alert("For COD Orders, Call Recording (Audio File) is MANDATORY. Or check 'Dealer Didn't Respond'."); 
+                    else alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'."); 
                     return; 
                 }
-                
-                if (!fileRequired && queuedFiles.length === 0) { 
-                    payload.isWhatsAppOnly = true; 
-                }
-                
-                if (btn) { 
-                    btn.innerText = "Processing & Transmitting..."; 
-                    btn.disabled = true; 
-                }
+                if (!fileRequired && queuedFiles.length === 0) payload.isWhatsAppOnly = true; 
+                if (btn) { btn.innerText = "Processing & Transmitting..."; btn.disabled = true; }
                 
                 for (let i = 0; i < queuedFiles.length; i++) {
                     let f = queuedFiles[i];
-                    if (f.type.startsWith('image/')) { 
-                        payload.files.push(await compressImage(f)); 
-                    } else { 
-                        payload.files.push(await getBase64(f)); 
-                    }
+                    if (f.type.startsWith('image/')) payload.files.push(await compressImage(f)); 
+                    else payload.files.push(await getBase64(f)); 
                 }
                 
                 if (stageNum === 9) {
                     const rating = document.getElementById('ratingInput').value;
-                    if (!rating) { 
-                        alert("Customer Rating is mandatory."); 
-                        if(btn) { 
-                            btn.disabled = false; 
-                            btn.innerText = "Execute & Proceed"; 
-                        } 
-                        return; 
-                    }
+                    if (!rating) { alert("Customer Rating is mandatory."); if(btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; } return; }
                     payload.rating = rating;
                 }
 
-                if (stageNum === 4) {
-                    let processed = []; 
-                    let short = [];
-                    
+                if (stageNum === 4) { // Split Order Checking V11
+                    let processed = []; let short = [];
                     currentActiveOrder.items.forEach((item, idx) => {
-                        let chk = document.getElementById(`chk_item_${idx}`); 
-                        let qtyInput = document.getElementById(`qty_item_${idx}`);
-                        
+                        let chk = document.getElementById(`chk_item_${idx}`); let qtyInput = document.getElementById(`qty_item_${idx}`);
                         if (chk && qtyInput) {
-                            let isChecked = chk.checked; 
-                            let userQty = parseInt(qtyInput.value) || 0; 
-                            let origQty = parseInt(item.qty);
-                            
+                            let isChecked = chk.checked; let userQty = parseInt(qtyInput.value) || 0; let origQty = parseInt(item.qty);
                             if (isChecked && userQty > 0) { 
                                 processed.push({name: item.name, qty: userQty}); 
-                                if (userQty < origQty) { 
-                                    short.push({name: item.name, qty: origQty - userQty}); 
-                                } 
-                            } else { 
-                                short.push({name: item.name, qty: origQty}); 
-                            }
+                                if (userQty < origQty) short.push({name: item.name, qty: origQty - userQty}); 
+                            } else short.push({name: item.name, qty: origQty}); 
                         }
                     });
                     
-                    if (processed.length === 0) { 
-                        alert("You must dispatch at least one item."); 
-                        if(btn) { 
-                            btn.disabled = false; 
-                            btn.innerText = "Execute & Proceed"; 
-                        } 
-                        return; 
-                    }
-                    
-                    if (short.length > 0) { 
-                        payload.partialStock = { processedItems: processed, shortItems: short }; 
-                    }
+                    if (processed.length === 0) { alert("You must dispatch at least one item."); if(btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; } return; }
+                    if (short.length > 0) payload.partialStock = { processedItems: processed, shortItems: short }; 
                 }
-            } else if (btn) { 
-                btn.innerText = "Locking Process..."; 
-                btn.disabled = true; 
-            }
+            } else if (btn) { btn.innerText = "Locking Process..."; btn.disabled = true; }
             
             if (statusLabel) { 
                 statusLabel.innerText = "📡 Uplinking Data to Control Tower..."; 
@@ -1716,39 +1471,34 @@
             }
 
             try {
-                const res = await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload) 
-                });
-                
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const data = await res.json();
                 
                 if (data.status === 'success') { 
-                    if (btn) { 
-                        btn.innerText = "Transmission Successful ✓"; 
-                    } 
+                    if (btn) btn.innerText = "Transmission Successful ✓"; 
                     queuedFiles = []; 
-                    
                     if (data.splitOrderId) {
-                        alert(`✂️ SPLIT ORDER CREATED SUCCESSFULLY!\n\nNew Order ID: ${data.splitOrderId}\n\nThe remaining short stock has been automatically shifted to this new order in the database.`);
+                        alert(`✂️ SPLIT ORDER CREATED SUCCESSFULLY!\n\nNew ID: ${data.splitOrderId}`);
                         showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`);
                     }
-                    
+                    closeModal();
                     fetchOrders(true); 
-                } else { 
-                    throw new Error(data.message); 
-                }
+                } else throw new Error(data.message); 
             } catch (err) {
+                // FEATURE: One-Tap Retry Upload Logic
                 if (statusLabel) { 
-                    statusLabel.innerText = "❌ Sync Failed. Verify connection."; 
+                    statusLabel.innerText = "❌ Sync Failed (Network Error)."; 
                     statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
                 }
                 if (btn) { 
-                    btn.innerText = "Retry Transmission"; 
+                    btn.innerText = "Retry Transmission (Tap Again)"; 
+                    btn.classList.replace('bg-indigo-600', 'bg-pink-600');
+                    btn.classList.replace('hover:bg-indigo-500', 'hover:bg-pink-500');
                     btn.disabled = false; 
                 }
             }
         }
     </script>
+    <? } ?>
 </body>
 </html>
