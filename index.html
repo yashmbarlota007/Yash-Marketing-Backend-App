@@ -962,34 +962,27 @@
             
             if (filteredData.length === 0) healthScore = 0; // Show 0 if no data
             let healthColor = healthScore >= 80 ? 'text-emerald-400' : (healthScore >= 50 ? 'text-orange-400' : 'text-pink-500');
-            let mdoHtml = `
+let mdoHtml = `
                 <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
-                    <div>
-                        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">
-                            🔴 LIVE WAR ROOM
-                        </h2>
-                        <p class="text-[10px] text-slate-500 font-mono mt-1">Real-time Business Telemetry</p>
-                    </div>
+                    <div><h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">🔴 LIVE WAR ROOM</h2></div>
                     <div class="text-right">
                         <div class="text-3xl font-black ${healthColor} drop-shadow-[0_0_10px_currentColor]">${healthScore}%</div>
                         <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Pipeline Health</div>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
-                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume & Value</div>
                         <div class="flex items-end gap-2 mt-2">
-                            <span class="text-3xl font-black text-white">${totalVolume}</span>
-                            <span class="text-[10px] text-indigo-400 font-bold mb-1 pb-1">Units</span>
+                            <span class="text-2xl font-black text-white">${totalVolume} U</span>
+                            <span class="text-xs text-indigo-400 font-bold mb-1 pb-1">₹${totalOrderValue.toLocaleString()}</span>
                         </div>
                     </div>
                     
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-emerald-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Delivery Success</div>
-                        <div class="flex items-center gap-3 mt-2">
-                            <span class="text-3xl font-black text-emerald-400">${completionRate}%</span>
-                        </div>
+                        <span class="text-2xl font-black text-emerald-400 mt-2 block">${Math.round(completionRate)}%</span>
                         <div class="text-[9px] text-slate-500 mt-1 font-semibold">${totalCompleted} out of ${filteredData.length} Delivered</div>
                     </div>
                     
@@ -997,114 +990,71 @@
                         <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
                             ${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches
                         </div>
-                        <div class="flex items-end gap-2 mt-2">
-                            <span class="text-3xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'}">${slaBreaches}</span>
-                        </div>
+                        <span class="text-2xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'} mt-2 block">${slaBreaches}</span>
                         <div class="text-[9px] text-slate-500 mt-1 font-semibold">Orders pending > 48h</div>
                     </div>
                     
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-orange-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Core Bottleneck</div>
-                        <div class="text-base font-black text-orange-400 truncate mt-2 leading-tight">${frictionIndex}</div>
-                        <div class="inline-block mt-2 bg-orange-500/10 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded">
-                            ${maxStuck} Stuck Here
-                        </div>
-                    </div>
-                    
-                    <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-yellow-400 hover-card flex flex-col">
-                        <div class="text-[10px] text-yellow-400 uppercase font-black tracking-widest mb-2 flex gap-1 items-center">
-                            🏆 Top Staff
-                        </div>
-                        <div class="flex-grow flex flex-col gap-1 justify-center">
-                            ${sortedStaff.length > 0 ? 
-                                sortedStaff.map((s,i) => `
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-white font-bold">#${i+1} ${s[0].split(' ')[0]}</span>
-                                        <span class="text-indigo-400 font-black">${s[1]}</span>
-                                    </div>
-                                `).join('') 
-                                : '<span class="text-slate-500 text-xs italic">No activity yet</span>'
-                            }
-                        </div>
+                        <div class="text-sm font-black text-orange-400 truncate mt-2 leading-tight">${frictionIndex}</div>
+                        <div class="inline-block mt-2 bg-orange-500/10 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded">${maxStuck} Stuck Here</div>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     
+                    <!-- 1. Hot Movers (SKU + Qty + Value) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-yellow-400">🔥</span> Hot Movers
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><span class="text-yellow-400">🔥</span> Hot Movers</h3>
                         <div class="space-y-3">
-                            ${sortedSKUs.length > 0 ? 
-                                sortedSKUs.map((sku, i) => `
-                                    <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                                        <div class="flex items-center gap-3 overflow-hidden">
-                                            <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                            <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
-                                        </div>
-                                        <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">
-                                            ${sku[1]} <span class="text-[9px] text-slate-500">QTY</span>
-                                        </span>
+                            ${sortedSKUs.length > 0 ? sortedSKUs.map((sku, i) => `
+                                <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                    <div class="text-xs font-bold text-slate-300 truncate mb-1">${i+1}. ${sku[0]}</div>
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-sm font-black text-yellow-400">${sku[1].qty} <span class="text-[9px] text-slate-500">QTY</span></span>
+                                        <span class="text-xs font-black text-emerald-400">₹${sku[1].value.toLocaleString()}</span>
                                     </div>
-                                `).join('') 
-                                : `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`
-                            }
+                                </div>
+                            `).join('') : `<p class="text-slate-500 text-sm italic">No SKU data.</p>`}
                         </div>
                     </div>
                     
+                    <!-- 2. VIP Dealers (Name + Area + Value) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-emerald-400">👑</span> VIP Dealers
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><span class="text-emerald-400">👑</span> VIP Dealers</h3>
                         <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-                            ${sortedShops.length > 0 ? 
-                                sortedShops.slice(0, 6).map((v, i) => `
-                                    <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
-                                        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${(v[1].items / topShopVolume) * 100}%"></div>
-                                        <div class="relative z-10 flex justify-between items-center">
-                                            <div class="flex items-center gap-2 w-2/3">
-                                                <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
-                                            </div>
-                                            <div class="flex flex-col items-end">
-                                                <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
-                                            </div>
-                                        </div>
+                            ${sortedShops.length > 0 ? sortedShops.slice(0, 6).map((v, i) => `
+                                <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
+                                    <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent" style="width: ${(v[1].value / topShopVolume) * 100}%"></div>
+                                    <div class="relative z-10">
+                                        <div class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</div>
+                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest mb-1">📍 ${v[1].area}</div>
+                                        <div class="text-sm font-black text-emerald-400">₹${v[1].value.toLocaleString()}</div>
                                     </div>
-                                `).join('') 
-                                : `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`
-                            }
+                                </div>
+                            `).join('') : `<p class="text-slate-500 text-sm italic">No dealer data.</p>`}
                         </div>
                     </div>
                     
-                    <!-- NEW FEATURE: Area Heatmap Data -->
+                    <!-- 3. Area Heatmap (Orders + Value) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-blue-400">📍</span> Area Heatmap
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><span class="text-blue-400">📍</span> Area Heatmap</h3>
                         <div class="space-y-3">
-                            ${sortedCities.length > 0 ? 
-                                sortedCities.map((city, i) => `
-                                    <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                                        <div class="flex items-center gap-3 overflow-hidden">
-                                            <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                            <span class="text-xs font-bold text-slate-300 truncate">${city[0]}</span>
-                                        </div>
-                                        <span class="text-sm font-black text-blue-400 ml-2 shrink-0">
-                                            ${city[1]} <span class="text-[9px] text-slate-500">Orders</span>
-                                        </span>
+                            ${sortedCities.length > 0 ? sortedCities.map((city, i) => `
+                                <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                    <div class="text-xs font-bold text-slate-300 truncate mb-1">#${i+1} ${city[0]}</div>
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-sm font-black text-blue-400">${city[1].orders} <span class="text-[9px] text-slate-500">ORD</span></span>
+                                        <span class="text-xs font-black text-emerald-400">₹${city[1].value.toLocaleString()}</span>
                                     </div>
-                                `).join('') 
-                                : `<p class="text-slate-500 text-sm italic">No area data available.</p>`
-                            }
+                                </div>
+                            `).join('') : `<p class="text-slate-500 text-sm italic">No area data.</p>`}
                         </div>
                     </div>
                     
-                    <!-- NEW FEATURE: Interactive Pie Chart for Brand Matrix -->
+                    <!-- 4. Dynamic Brand Matrix Chart -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
-                            <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Matrix</span>
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center"><span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Matrix (Value)</span></h3>
                         <div class="flex-1 w-full h-40 relative flex justify-center items-center">
                             <canvas id="brandPieChart"></canvas>
                         </div>
@@ -1114,21 +1064,17 @@
             
             mdoDiv.innerHTML = mdoHtml;
             
-            // Render Chart.js Pie Chart
+            // Render Chart.js with Dynamic Brands, Value & Percentage
             setTimeout(() => { 
                 const ctx = document.getElementById('brandPieChart');
                 if (ctx) {
-                    if (brandChartInstance) {
-                        brandChartInstance.destroy();
-                    }
+                    if (brandChartInstance) brandChartInstance.destroy();
                     
                     const labels = Object.keys(brandStats).filter(k => brandStats[k] > 0);
                     const dataVals = Object.values(brandStats).filter(v => v > 0);
+                    const totalMatrixValue = dataVals.reduce((a, b) => a + b, 0);
                     
-                    if (labels.length === 0) {
-                        labels.push("No Data");
-                        dataVals.push(1);
-                    }
+                    if (labels.length === 0) { labels.push("No Data"); dataVals.push(1); }
 
                     brandChartInstance = new Chart(ctx.getContext('2d'), {
                         type: 'doughnut',
@@ -1136,37 +1082,25 @@
                             labels: labels,
                             datasets: [{
                                 data: dataVals,
-                                backgroundColor: [
-                                    '#ef4444', // Red
-                                    '#ec4899', // Pink
-                                    '#f59e0b', // Yellow
-                                    '#3b82f6', // Blue
-                                    '#10b981', // Green
-                                    '#64748b'  // Gray
-                                ],
-                                borderWidth: 0,
-                                hoverOffset: 5
+                                backgroundColor: ['#ef4444', '#ec4899', '#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#06b6d4', '#64748b'],
+                                borderWidth: 0, hoverOffset: 5
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        color: '#94a3b8',
-                                        font: { size: 10, family: "'Inter', sans-serif" },
-                                        boxWidth: 10
-                                    }
-                                },
+                                legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 } },
                                 tooltip: {
-                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                    titleFont: { size: 11 },
-                                    bodyFont: { size: 13, weight: 'bold' },
-                                    padding: 10,
-                                    borderColor: '#6366F1',
-                                    borderWidth: 1
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            let val = context.raw || 0;
+                                            let percent = totalMatrixValue > 0 ? Math.round((val / totalMatrixValue) * 100) : 0;
+                                            return `${label}: ₹${val.toLocaleString()} (${percent}%)`;
+                                        }
+                                    },
+                                    backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 11 }, bodyFont: { size: 13, weight: 'bold' },
+                                    padding: 10, borderColor: '#6366F1', borderWidth: 1
                                 }
                             }
                         }
