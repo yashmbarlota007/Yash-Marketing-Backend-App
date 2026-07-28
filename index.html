@@ -259,30 +259,30 @@
                 </p>
             </div>
             
-            <!-- Expanded Global Search in Header -->
-            <div class="w-full lg:w-1/4 relative z-30">
-                <button onclick="openSearch()" class="w-full bg-[#0B1121] border border-slate-700 hover:border-indigo-500 text-slate-400 flex justify-between items-center px-4 py-3 rounded-xl transition-all shadow-inner group cursor-pointer">
-                    <span class="flex items-center gap-2 text-sm"><span class="text-indigo-400">🔍</span> Search orders...</span>
-                    <span class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded hidden sm:block">Cmd+K</span>
-                </button>
-            </div>
-
-            <!-- Naye Filter Buttons (Today, This Week, This Month etc) -->
+            <!-- Naye Filter Buttons (Today, This Week, This Month etc & Exact Date Range) -->
             <div class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 w-full lg:w-auto bg-[#0B1121] p-2 rounded-xl border border-slate-800 relative z-30">
                 <button onclick="setDateRange('today', this)" class="date-filter-btn active-filter px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer">Today</button>
                 <button onclick="setDateRange('thisWeek', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer">This Week</button>
                 <button onclick="setDateRange('lastWeek', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer">Last Week</button>
-                <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer hidden md:block">This Month</button>
-                <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer hidden md:block">Last Month</button>
+                
+                <!-- Fixed: Removed 'hidden' class so it shows on all screens -->
+                <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer">This Month</button>
+                <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer">Last Month</button>
                 <button onclick="setDateRange('all', this)" class="date-filter-btn px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all cursor-pointer">All</button>
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-                <input type="date" id="customDateFilter" onchange="setDateRange('custom', this)" class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1 border border-slate-700 rounded" title="Date Range">
+                
+                <!-- Fixed: Date Range Inputs (Start Date to End Date) -->
+                <div class="flex items-center gap-1 bg-[#131C31] p-1 rounded-lg border border-slate-700">
+                    <span class="text-[10px] text-slate-500 font-bold px-1">FROM</span>
+                    <input type="date" id="startDateFilter" onchange="setDateRange('customRange', this)" class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer">
+                    <span class="text-[10px] text-slate-500 font-bold px-1">TO</span>
+                    <input type="date" id="endDateFilter" onchange="setDateRange('customRange', this)" class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer">
+                </div>
                 
                 <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
                 <button onclick="logout()" class="bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ml-auto lg:ml-0">LOGOUT</button>
             </div>
-        </div>
             ✂️ Split
                     </button>
                     
@@ -836,29 +836,34 @@
                 console.log("Background sync error: ", err); 
             }
         }
-
-        function setDateRange(range, btnElement) {
+function setDateRange(range, btnElement) {
             activeDateRange = range;
-            if(range !== 'custom') document.getElementById('customDateFilter').value = '';
             
-            if(btnElement && range !== 'custom') {
+            if(range !== 'customRange') {
+                document.getElementById('startDateFilter').value = '';
+                document.getElementById('endDateFilter').value = '';
+            }
+            
+            if(btnElement && range !== 'customRange') {
                 document.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active-filter'));
                 btnElement.classList.add('active-filter');
+            } else if (range === 'customRange') {
+                document.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active-filter'));
             }
+            
             applyDateFilter();
         }
 
         function applyDateFilter() {
             let now = new Date(); 
             now.setHours(0,0,0,0);
-            
             let todayTime = now.getTime();
             
-            // Calculate date boundaries
             let dayOfWeek = now.getDay() || 7; 
             let startOfThisWeek = new Date(now); startOfThisWeek.setDate(now.getDate() - dayOfWeek + 1);
             let startOfLastWeek = new Date(startOfThisWeek); startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
             let endOfLastWeek = new Date(startOfThisWeek); endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+            
             let startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             let startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
             let endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -875,21 +880,26 @@
                     if (activeDateRange === 'lastWeek') return dTime >= startOfLastWeek.getTime() && dTime <= endOfLastWeek.getTime();
                     if (activeDateRange === 'thisMonth') return dTime >= startOfThisMonth.getTime();
                     if (activeDateRange === 'lastMonth') return dTime >= startOfLastMonth.getTime() && dTime <= endOfLastMonth.getTime();
-                    if (activeDateRange === '7d') return (now - d) / (1000*60*60*24) <= 7;
-                    if (activeDateRange === '30d') return (now - d) / (1000*60*60*24) <= 30;
-                    if (activeDateRange === 'custom') {
-                        let customVal = document.getElementById('customDateFilter').value;
-                        if(!customVal) return true;
-                        return new Date(customVal).getTime() === dTime;
+                    
+                    if (activeDateRange === 'customRange') {
+                        let startVal = document.getElementById('startDateFilter').value;
+                        let endVal = document.getElementById('endDateFilter').value;
+                        
+                        if(!startVal && !endVal) return true;
+                        
+                        let startTarget = startVal ? new Date(startVal).getTime() : 0;
+                        let endTarget = endVal ? new Date(endVal).getTime() : Infinity;
+                        
+                        return dTime >= startTarget && dTime <= endTarget;
                     }
-                    return true; // "all"
+                    return true; 
                 });
             }
             renderMdoDashboard(); 
             renderPipeline();
         }
 
-        // MDO WAR ROOM DASHBOARD (WITH DYNAMIC PIE CHART)
+        // MDO WAR ROOM DASHBOARD (WITH EXACT VALUE PIE CHART)
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
@@ -900,7 +910,10 @@
 
             let totalVolume = 0; let totalCompleted = 0; let slaBreaches = 0; 
             let shopStats = {}; let skuStats = {}; let staffScores = {}; let cityStats = {};
-            let brandValueStats = {}; // New Dynamic Brand Stats
+            
+            // New Brand Data Structures
+            let brandValueStats = {}; 
+            let brandVolumeStats = {};
             
             let stageStuck = Array(9).fill(0); 
             const now = new Date().getTime();
@@ -914,7 +927,7 @@
 
                 if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0 };
                 
-                // Extract Order Value for proportional brand pie chart
+                // Exact order value parsing
                 let orderTotalValue = parseFloat(String(o.totalValue).replace(/,/g, '').replace(/[^\d.-]/g, '')) || 0;
                 let orderTotalQty = o.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 
@@ -927,13 +940,18 @@
                     if(!skuStats[cleanName]) skuStats[cleanName] = 0; 
                     skuStats[cleanName] += qty;
                     
-                    // Dynamic Brand Extraction (First word of product name)
+                    // Dynamic Brand Extraction
                     let brand = cleanName.split(' ')[0].toUpperCase();
-                    if(!brandValueStats[brand]) brandValueStats[brand] = 0;
+                    if(!brandValueStats[brand]) {
+                        brandValueStats[brand] = 0;
+                        brandVolumeStats[brand] = 0;
+                    }
                     
-                    // Proportional Value assignment
+                    // Calculating exact proportional value for this brand based on quantity ratio in the order
                     let proportionalValue = orderTotalQty > 0 ? (qty / orderTotalQty) * orderTotalValue : 0;
+                    
                     brandValueStats[brand] += proportionalValue;
+                    brandVolumeStats[brand] += qty;
                 });
 
                 if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
@@ -1017,6 +1035,7 @@
                         </div>
                     </div>
                     
+                    <!-- DYNAMIC PIE CHART (ALL BRANDS, BASED ON VALUE) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
                             <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Sales by Brand (Value)</span>
@@ -1036,44 +1055,82 @@
                 if (ctx) {
                     if (brandChartInstance) brandChartInstance.destroy();
                     
-                    // Sort brands by value and group small ones into "Others"
+                    // Sort brands directly by exact calculated VALUE (No "Others" grouping)
                     let sortedBrands = Object.entries(brandValueStats).sort((a,b)=>b[1]-a[1]);
-                    let finalLabels = []; let finalData = [];
-                    let otherValue = 0;
                     
-                    sortedBrands.forEach((b, i) => {
-                        if(i < 6) { finalLabels.push(b[0]); finalData.push(b[1]); }
-                        else { otherValue += b[1]; }
-                    });
-                    if(otherValue > 0) { finalLabels.push("OTHERS"); finalData.push(otherValue); }
-                    if(finalLabels.length === 0) { finalLabels.push("No Data"); finalData.push(1); }
+                    let finalLabels = sortedBrands.map(b => b[0]);
+                    let finalValueData = sortedBrands.map(b => b[1]);
+                    let finalVolumeData = sortedBrands.map(b => brandVolumeStats[b[0]]);
+                    
+                    if(finalLabels.length === 0) { 
+                        finalLabels.push("No Data"); 
+                        finalValueData.push(1); 
+                        finalVolumeData.push(0);
+                    }
 
-                    let totalPieValue = finalData.reduce((a,b)=>a+b, 0);
+                    let totalPieValue = finalValueData.reduce((a,b)=>a+b, 0);
+                    
+                    // Dynamically generate colors for unlimited brands
+                    let colorPalette = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#eab308', '#6366f1', '#14b8a6', '#f43f5e', '#84cc16'];
+                    let bgColors = finalLabels.map((l, i) => colorPalette[i % colorPalette.length]);
 
                     brandChartInstance = new Chart(ctx.getContext('2d'), {
                         type: 'doughnut',
                         data: {
                             labels: finalLabels,
                             datasets: [{
-                                data: finalData,
-                                backgroundColor: ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#64748b'],
-                                borderWidth: 0, hoverOffset: 5
+                                data: finalValueData,
+                                backgroundColor: bgColors,
+                                borderWidth: 0, 
+                                hoverOffset: 5
                             }]
                         },
                         options: {
-                            responsive: true, maintainAspectRatio: false,
+                            responsive: true, 
+                            maintainAspectRatio: false,
                             plugins: {
-                                legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 } },
+                                legend: { 
+                                    position: 'right', 
+                                    labels: { 
+                                        color: '#94a3b8', 
+                                        font: { size: 9 }, 
+                                        boxWidth: 8,
+                                        generateLabels: function(chart) {
+                                            return chart.data.labels.map((label, i) => {
+                                                // Shorten very long brand names in legend to save space
+                                                let shortLabel = label.length > 10 ? label.substring(0, 10) + '..' : label;
+                                                return {
+                                                    text: shortLabel,
+                                                    fillStyle: chart.data.datasets[0].backgroundColor[i],
+                                                    hidden: false,
+                                                    index: i
+                                                };
+                                            });
+                                        }
+                                    } 
+                                },
                                 tooltip: {
-                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                    titleFont: { size: 12 },
+                                    bodyFont: { size: 12 },
+                                    padding: 12,
+                                    borderColor: '#6366F1',
+                                    borderWidth: 1,
                                     callbacks: {
                                         label: function(context) {
                                             let val = context.raw;
                                             if (finalLabels[0] === "No Data") return "No sales yet";
+                                            
+                                            let brandName = context.label;
+                                            let volume = finalVolumeData[context.dataIndex];
                                             let percentage = totalPieValue > 0 ? ((val / totalPieValue) * 100).toFixed(1) + "%" : "0%";
-                                            // Indian comma format for rupees
                                             let formattedVal = new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(val);
-                                            return ` ${context.label}: ₹${formattedVal} (${percentage})`;
+                                            
+                                            return [
+                                                ` Value: ₹${formattedVal}`,
+                                                ` Volume: ${volume} Units`,
+                                                ` Share: ${percentage}`
+                                            ];
                                         }
                                     }
                                 }
@@ -1083,7 +1140,6 @@
                 }
             }, 100);
         }
-
         // PIPELINE RENDERING (DOM BATCHING SPEED FIX - 100x Faster)
         function setStageFilter(stageIndex) { activeStageFilter = stageIndex; renderPipeline(); }
 
