@@ -165,95 +165,7 @@
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
-    <!-- =======================================================
-         DEALER TRACKING SELF-SERVICE MODE
-         ======================================================= -->
-    <? if (typeof trackingMode !== 'undefined' && trackingMode) { ?>
-        <div id="trackingScreen" class="max-w-md mx-auto mt-10 p-6 glass-panel rounded-2xl border-t-4 border-t-emerald-500 text-center shadow-2xl">
-            <h1 class="text-3xl font-black text-white mb-2 tracking-tight">
-                Live Order Tracker
-            </h1>
-            <p class="text-slate-400 text-sm mb-8 font-mono">
-                Tracking ID: <span id="displayTrackId"><?= trackOrderId ?></span>
-            </p>
-            
-            <div id="trackingLoader" class="inline-block animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            
-            <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
-                <!-- Dynamically injected timeline via JS below -->
-            </div>
-            
-            <div id="trackingError" class="hidden text-pink-500 font-bold mt-4"></div>
-        </div>
-        
-        <script>
-            window.onload = () => {
-                fetch('https://script.google.com/macros/s/AKfycbw3ye5kfsC4y6_qUa6MobtitHsTcC9r5l30YDeDd9nnznfUiUPq4sd7riGNQA8e8r5wwQ/exec', {
-                    method: 'POST', 
-                    body: JSON.stringify({action: 'getTrackingData', orderId: '<?= trackOrderId ?>'})
-                })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('trackingLoader').style.display = 'none';
-                    if(data.status === 'success') {
-                        let html = '';
-                        const customerStages = [
-                            "Order Placed", 
-                            "Confirmed & Processing", 
-                            "Packed & Ready", 
-                            "Invoiced", 
-                            "Dispatched", 
-                            "Out for Delivery", 
-                            "Delivered Successfully"
-                        ];
-                        
-                        let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.3), 6);
-                        
-                        customerStages.forEach((stageName, idx) => {
-                            let isCompleted = idx <= mappedStage;
-                            let isActive = idx === mappedStage;
-                            let color = isCompleted ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-700';
-                            let textColor = isCompleted ? 'text-white' : 'text-slate-500';
-                            
-                            let icon = "";
-                            if (isCompleted) {
-                                icon = '✓';
-                            } else if (isActive && idx !== 6) {
-                                icon = '⏳';
-                            }
-                            
-                            html += `
-                                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                    <div class="flex items-center justify-center w-8 h-8 rounded-full border-4 border-[#0B1121] ${color} text-white font-black text-xs z-10 shrink-0">
-                                        ${icon}
-                                    </div>
-                                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border ${isCompleted ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-slate-800 bg-[#131C31]'} shadow">
-                                        <h3 class="font-bold text-sm ${textColor}">
-                                            ${stageName}
-                                        </h3>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        document.getElementById('trackingTimeline').innerHTML = html;
-                        document.getElementById('trackingTimeline').classList.remove('hidden');
-                    } else {
-                        document.getElementById('trackingError').innerText = data.message || "Invalid Tracking ID";
-                        document.getElementById('trackingError').classList.remove('hidden');
-                    }
-                }).catch(err => {
-                    document.getElementById('trackingLoader').style.display = 'none';
-                    document.getElementById('trackingError').innerText = "Network error while fetching tracking data.";
-                    document.getElementById('trackingError').classList.remove('hidden');
-                });
-            }
-        </script>
-    <? } else { ?>
-    <!-- =======================================================
-         MAIN ENTERPRISE APP UI
-         ======================================================= -->
-    <div id="mainAppWrapper">
+    
 
         <!-- Global Cmd+K Search Modal -->
         <div id="searchModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-start justify-center pt-20 px-4 transition-all">
@@ -1013,84 +925,48 @@
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
             const mdoDiv = document.getElementById('mdoCommandCenter');
             
-            if (!isOwner) { 
-                mdoDiv.classList.add('hidden'); 
-                return; 
-            }
+            if (!isOwner) { mdoDiv.classList.add('hidden'); return; }
             mdoDiv.classList.remove('hidden');
 
-            let totalVolume = 0; 
-            let totalCompleted = 0; 
-            let slaBreaches = 0; 
-            let shopStats = {}; 
-            let skuStats = {}; 
-            let staffScores = {}; 
-            
-            // Advanced Metrics (V12.2)
-            let areaStats = {}; 
-            let brandValueStats = {}; 
-            let brandVolumeStats = {};
-            let totalRevenueOverall = 0;
-            
-            let stageStuck = Array(9).fill(0); 
-            const now = new Date().getTime();
+            let totalVolume = 0; let totalCompleted = 0; let slaBreaches = 0; 
+            let shopStats = {}; let skuStats = {}; let staffScores = {}; let areaStats = {};
+            let brandValueStats = {}; let brandVolumeStats = {}; let totalRevenueOverall = 0;
+            let stageStuck = Array(9).fill(0); const now = new Date().getTime();
 
             filteredData.forEach(o => {
-                if(o.isFullyCompleted) {
-                    totalCompleted++;
-                } else { 
+                if(o.isFullyCompleted) totalCompleted++;
+                else { 
                     stageStuck[o.completedStages]++; 
-                    if ((now - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
-                        slaBreaches++;
-                    }
+                    if ((now - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
                 }
 
-                if(!shopStats[o.shopName]) {
-                    shopStats[o.shopName] = { items: 0 };
-                }
+                if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0 };
                 
-                // Exact order value parsing (Removing commas and Rs)
                 let orderTotalValue = parseFloat(String(o.totalValue).replace(/,/g, '').replace(/[^\d.-]/g, '')) || 0;
                 let orderTotalQty = o.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
-                
                 totalRevenueOverall += orderTotalValue;
                 
-                // Area Mapping & Value Storing
                 let city = o.area && o.area !== "Unknown Area" ? o.area : o.shopName;
-                if(!areaStats[city]) {
-                    areaStats[city] = { orders: 0, value: 0, volume: 0 };
-                }
-                areaStats[city].orders += 1;
-                areaStats[city].value += orderTotalValue;
+                if(!areaStats[city]) areaStats[city] = { orders: 0, value: 0, volume: 0 };
+                areaStats[city].orders += 1; areaStats[city].value += orderTotalValue;
                 
                 o.items.forEach(i => {
                     let qty = parseInt(i.qty || 1); 
-                    totalVolume += qty; 
-                    shopStats[o.shopName].items += qty;
-                    areaStats[city].volume += qty; 
+                    totalVolume += qty; shopStats[o.shopName].items += qty; areaStats[city].volume += qty; 
                     
                     let cleanName = i.name.trim(); 
-                    if(!skuStats[cleanName]) {
-                        skuStats[cleanName] = 0; 
-                    }
+                    if(!skuStats[cleanName]) skuStats[cleanName] = 0; 
                     skuStats[cleanName] += qty;
                     
-                    // Dynamic Brand Extraction
-                    let brand = cleanName.split(' ')[0].toUpperCase();
-                    if(!brandValueStats[brand]) {
-                        brandValueStats[brand] = 0;
-                        brandVolumeStats[brand] = 0;
-                    }
+                    // FETCHING EXACT BRAND FROM BACKEND PRODUCT SHEET
+                    let brand = (i.brand || "Unknown").toUpperCase();
+                    if(!brandValueStats[brand]) { brandValueStats[brand] = 0; brandVolumeStats[brand] = 0; }
                     
                     let proportionalValue = orderTotalQty > 0 ? (qty / orderTotalQty) * orderTotalValue : 0;
-                    
-                    brandValueStats[brand] += proportionalValue;
-                    brandVolumeStats[brand] += qty;
+                    brandValueStats[brand] += proportionalValue; brandVolumeStats[brand] += qty;
                 });
 
-                if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
-                    staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
-                }
+                if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
             });
 
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
@@ -1101,17 +977,14 @@
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
             let maxStuck = Math.max(...stageStuck);
             let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
-            
             let completionRate = filteredData.length > 0 ? Math.round((totalCompleted / filteredData.length) * 100) : 0;
             let healthScore = Math.max(0, 100 - (slaBreaches * 1.5) - ((100 - completionRate) * 0.1)).toFixed(0);
             let healthColor = healthScore > 80 ? 'text-emerald-400' : (healthScore > 50 ? 'text-orange-400' : 'text-pink-500');
 
-            let mdoHtml = `
+            mdoDiv.innerHTML = `
                 <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
                     <div>
-                        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">
-                            🔴 LIVE WAR ROOM
-                        </h2>
+                        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">🔴 LIVE WAR ROOM</h2>
                         <p class="text-[10px] text-slate-500 font-mono mt-1">Real-time Business Telemetry</p>
                     </div>
                     <div class="text-right">
@@ -1123,134 +996,66 @@
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
-                        <div class="flex items-end gap-2 mt-2">
-                            <span class="text-3xl font-black text-white">${totalVolume}</span>
-                            <span class="text-[10px] text-indigo-400 font-bold mb-1 pb-1">Units</span>
-                        </div>
+                        <div class="flex items-end gap-2 mt-2"><span class="text-3xl font-black text-white">${totalVolume}</span><span class="text-[10px] text-indigo-400 font-bold mb-1 pb-1">Units</span></div>
                     </div>
-                    
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-emerald-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Delivery Success</div>
-                        <div class="flex items-center gap-3 mt-2">
-                            <span class="text-3xl font-black text-emerald-400">${completionRate}%</span>
-                        </div>
+                        <div class="flex items-center gap-3 mt-2"><span class="text-3xl font-black text-emerald-400">${completionRate}%</span></div>
                         <div class="text-[9px] text-slate-500 mt-1 font-semibold">${totalCompleted} out of ${filteredData.length} Delivered</div>
                     </div>
-                    
                     <div class="glass-panel p-4 rounded-2xl border-t-4 ${slaBreaches > 0 ? 'border-t-pink-500 bg-pink-500/5' : 'border-t-slate-700'} hover-card">
-                        <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
-                            ${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches
-                        </div>
-                        <div class="flex items-end gap-2 mt-2">
-                            <span class="text-3xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'}">${slaBreaches}</span>
-                        </div>
+                        <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches</div>
+                        <div class="flex items-end gap-2 mt-2"><span class="text-3xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'}">${slaBreaches}</span></div>
                         <div class="text-[9px] text-slate-500 mt-1 font-semibold">Orders pending > 48h</div>
                     </div>
-                    
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-orange-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Core Bottleneck</div>
                         <div class="text-base font-black text-orange-400 truncate mt-2 leading-tight">${frictionIndex}</div>
-                        <div class="inline-block mt-2 bg-orange-500/10 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded">
-                            ${maxStuck} Stuck Here
-                        </div>
+                        <div class="inline-block mt-2 bg-orange-500/10 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded">${maxStuck} Stuck Here</div>
                     </div>
-                    
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-yellow-400 hover-card flex flex-col">
-                        <div class="text-[10px] text-yellow-400 uppercase font-black tracking-widest mb-2 flex gap-1 items-center">
-                            🏆 Top Staff
-                        </div>
+                        <div class="text-[10px] text-yellow-400 uppercase font-black tracking-widest mb-2 flex gap-1 items-center">🏆 Top Staff</div>
                         <div class="flex-grow flex flex-col gap-1 justify-center">
-                            ${sortedStaff.length > 0 ? 
-                                sortedStaff.map((s,i) => `
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-white font-bold">#${i+1} ${s[0].split(' ')[0]}</span>
-                                        <span class="text-indigo-400 font-black">${s[1]}</span>
-                                    </div>
-                                `).join('') 
-                                : '<span class="text-slate-500 text-xs italic">No activity yet</span>'
-                            }
+                            ${sortedStaff.length > 0 ? sortedStaff.map((s,i) => `<div class="flex justify-between text-xs"><span class="text-white font-bold">#${i+1} ${s[0].split(' ')[0]}</span><span class="text-indigo-400 font-black">${s[1]}</span></div>`).join('') : '<span class="text-slate-500 text-xs italic">No activity yet</span>'}
                         </div>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-yellow-400">🔥</span> Hot Movers
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><span class="text-yellow-400">🔥</span> Hot Movers</h3>
                         <div class="space-y-3">
-                            ${sortedSKUs.length > 0 ? 
-                                sortedSKUs.map((sku, i) => `
-                                    <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                                        <div class="flex items-center gap-3 overflow-hidden">
-                                            <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                            <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
-                                        </div>
-                                        <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">
-                                            ${sku[1]} <span class="text-[9px] text-slate-500">QTY</span>
-                                        </span>
-                                    </div>
-                                `).join('') 
-                                : `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`
-                            }
+                            ${sortedSKUs.length > 0 ? sortedSKUs.map((sku, i) => `<div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800"><div class="flex items-center gap-3 overflow-hidden"><span class="text-slate-600 font-black text-sm">#${i+1}</span><span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span></div><span class="text-sm font-black text-yellow-400 ml-2 shrink-0">${sku[1]} <span class="text-[9px] text-slate-500">QTY</span></span></div>`).join('') : `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`}
                         </div>
                     </div>
                     
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-emerald-400">👑</span> VIP Dealers
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><span class="text-emerald-400">👑</span> VIP Dealers</h3>
                         <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-                            ${sortedShops.length > 0 ? 
-                                sortedShops.slice(0, 6).map((v, i) => `
-                                    <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
-                                        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${(v[1].items / topShopVolume) * 100}%"></div>
-                                        <div class="relative z-10 flex justify-between items-center">
-                                            <div class="flex items-center gap-2 w-2/3">
-                                                <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
-                                            </div>
-                                            <div class="flex flex-col items-end">
-                                                <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('') 
-                                : `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`
-                            }
+                            ${sortedShops.length > 0 ? sortedShops.slice(0, 6).map((v, i) => `<div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group"><div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${(v[1].items / topShopVolume) * 100}%"></div><div class="relative z-10 flex justify-between items-center"><div class="flex items-center gap-2 w-2/3"><span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span></div><div class="flex flex-col items-end"><span class="text-sm font-black text-emerald-400">${v[1].items}</span></div></div></div>`).join('') : `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`}
                         </div>
                     </div>
                     
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-blue-400">📍</span> Area Heatmap
-                        </h3>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><span class="text-blue-400">📍</span> Area Heatmap</h3>
                         <div class="space-y-3">
-                            ${sortedAreas.length > 0 ? 
-                                sortedAreas.map((area, i) => {
-                                    let areaName = area[0]; 
-                                    let aVal = area[1].value; 
-                                    let aVol = area[1].volume; 
-                                    let aOrd = area[1].orders;
-                                    
-                                    let pct = totalRevenueOverall > 0 ? ((aVal/totalRevenueOverall)*100).toFixed(1) : 0;
-                                    let fmtVal = new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(aVal);
-                                    
-                                    return `
-                                        <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                                            <div class="flex items-center gap-3 overflow-hidden w-[45%]">
-                                                <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                                <span class="text-xs font-bold text-slate-300 truncate" title="${areaName}">${areaName}</span>
-                                            </div>
-                                            <div class="flex flex-col items-end w-[55%]">
-                                                <span class="text-sm font-black text-blue-400">₹${fmtVal} <span class="text-[9px] text-slate-500">(${pct}%)</span></span>
-                                                <span class="text-[9px] text-slate-400 font-bold">${aVol} Qty | ${aOrd} Orders</span>
-                                            </div>
+                            ${sortedAreas.length > 0 ? sortedAreas.map((area, i) => {
+                                let areaName = area[0]; let aVal = area[1].value; let aVol = area[1].volume; let aOrd = area[1].orders;
+                                let pct = totalRevenueOverall > 0 ? ((aVal/totalRevenueOverall)*100).toFixed(1) : 0;
+                                let fmtVal = new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(aVal);
+                                return `
+                                    <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                        <div class="flex items-center gap-3 overflow-hidden w-[45%]">
+                                            <span class="text-slate-600 font-black text-sm">#${i+1}</span>
+                                            <span class="text-xs font-bold text-slate-300 truncate" title="${areaName}">${areaName}</span>
                                         </div>
-                                    `;
-                                }).join('') 
-                                : `<p class="text-slate-500 text-sm italic">No area data available.</p>`
-                            }
+                                        <div class="flex flex-col items-end w-[55%]">
+                                            <span class="text-sm font-black text-blue-400">₹${fmtVal} <span class="text-[9px] text-slate-500">(${pct}%)</span></span>
+                                            <span class="text-[9px] text-slate-400 font-bold">${aVol} Qty | ${aOrd} Orders</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('') : `<p class="text-slate-500 text-sm italic">No area data available.</p>`}
                         </div>
                     </div>
                     
@@ -1267,29 +1072,22 @@
             
             mdoDiv.innerHTML = mdoHtml;
             
-            // DYNAMIC EXACT VALUE PIE CHART RENDERING
             setTimeout(() => { 
                 const ctx = document.getElementById('brandPieChart');
                 if (ctx) {
-                    if (brandChartInstance) {
-                        brandChartInstance.destroy();
-                    }
+                    if (brandChartInstance) brandChartInstance.destroy();
                     
                     let sortedBrands = Object.entries(brandValueStats).sort((a,b)=>b[1]-a[1]);
-                    
                     let finalLabels = sortedBrands.map(b => b[0]);
                     let finalValueData = sortedBrands.map(b => b[1]);
                     let finalVolumeData = sortedBrands.map(b => brandVolumeStats[b[0]]);
                     
                     if(finalLabels.length === 0) { 
-                        finalLabels.push("No Data"); 
-                        finalValueData.push(1); 
-                        finalVolumeData.push(0);
+                        finalLabels.push("No Data"); finalValueData.push(1); finalVolumeData.push(0);
                     }
 
                     let totalPieValue = finalValueData.reduce((a,b)=>a+b, 0);
-                    
-                    let colorPalette = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#eab308', '#6366f1', '#14b8a6', '#f43f5e', '#84cc16'];
+                    let colorPalette = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#eab308', '#6366f1'];
                     let bgColors = finalLabels.map((l, i) => colorPalette[i % colorPalette.length]);
 
                     brandChartInstance = new Chart(ctx.getContext('2d'), {
@@ -1299,53 +1097,26 @@
                             datasets: [{
                                 data: finalValueData,
                                 backgroundColor: bgColors,
-                                borderWidth: 0, 
-                                hoverOffset: 5
+                                borderWidth: 0, hoverOffset: 5
                             }]
                         },
                         options: {
-                            responsive: true, 
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: {
                                 legend: { 
                                     position: 'right', 
-                                    labels: { 
-                                        color: '#94a3b8', 
-                                        font: { size: 9 }, 
-                                        boxWidth: 8,
-                                        generateLabels: function(chart) {
-                                            return chart.data.labels.map((label, i) => {
-                                                return {
-                                                    text: label.length > 10 ? label.substring(0, 10) + '..' : label,
-                                                    fillStyle: chart.data.datasets[0].backgroundColor[i],
-                                                    hidden: false,
-                                                    index: i
-                                                };
-                                            });
-                                        }
-                                    } 
+                                    labels: { color: '#94a3b8', font: { size: 9 }, boxWidth: 8, generateLabels: function(chart) { return chart.data.labels.map((label, i) => { return { text: label.length > 10 ? label.substring(0, 10) + '..' : label, fillStyle: chart.data.datasets[0].backgroundColor[i], hidden: false, index: i }; }); } } 
                                 },
                                 tooltip: {
-                                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                                    titleFont: { size: 12 },
-                                    bodyFont: { size: 12 },
-                                    padding: 12,
-                                    borderColor: '#6366F1',
-                                    borderWidth: 1,
-                                    callbacks: {
-                                        label: function(context) {
-                                            if (finalLabels[0] === "No Data") return "No sales yet";
-                                            let val = context.raw;
-                                            let volume = finalVolumeData[context.dataIndex];
-                                            let percentage = totalPieValue > 0 ? ((val / totalPieValue) * 100).toFixed(1) + "%" : "0%";
-                                            let formattedVal = new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(val);
-                                            
-                                            return [
-                                                ` Value: ₹${formattedVal}`,
-                                                ` Volume: ${volume} Qty`,
-                                                ` Share: ${percentage}`
-                                            ];
-                                        }
+                                    backgroundColor: 'rgba(15, 23, 42, 0.95)', titleFont: { size: 12 }, bodyFont: { size: 12 }, padding: 12, borderColor: '#6366F1', borderWidth: 1,
+                                    callbacks: { 
+                                        label: function(context) { 
+                                            if (finalLabels[0] === "No Data") return "No sales yet"; 
+                                            let val = context.raw; let volume = finalVolumeData[context.dataIndex]; 
+                                            let percentage = totalPieValue > 0 ? ((val / totalPieValue) * 100).toFixed(1) + "%" : "0%"; 
+                                            let formattedVal = new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(val); 
+                                            return [ ` Value: ₹${formattedVal}`, ` Volume: ${volume} Qty`, ` Share: ${percentage}` ]; 
+                                        } 
                                     }
                                 }
                             }
