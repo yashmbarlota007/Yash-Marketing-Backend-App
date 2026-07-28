@@ -274,55 +274,24 @@
                     </button>
                 </div>
 
-                <div class="flex flex-wrap items-center justify-end gap-2 w-full lg:w-1/3 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
-                    <button 
-                        onclick="setDateRange('today', this)" 
-                        class="date-filter-btn active-filter px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                    >
-                        Today
-                    </button>
+               <div class="flex flex-wrap items-center justify-end gap-1.5 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
+                    <button onclick="setDateRange('today', this)" class="date-filter-btn active-filter px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
+                    <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
+                    <button onclick="setDateRange('thisWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Week</button>
+                    <button onclick="setDateRange('lastWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Week</button>
+                    <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Month</button>
+                    <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     
-                    <button 
-                        onclick="setDateRange('7d', this)" 
-                        class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                    >
-                        7 Days
-                    </button>
+                    <div class="w-px h-5 bg-slate-700 mx-1"></div>
                     
-                    <button 
-                        onclick="setDateRange('30d', this)" 
-                        class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                    >
-                        30 Days
-                    </button>
-                    
-                    <button 
-                        onclick="setDateRange('all', this)" 
-                        class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                    >
-                        All
-                    </button>
-                    
-                    <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-                    
-                    <button 
-                        onclick="setDateRange('split', this)" 
-                        class="date-filter-btn px-3 py-2 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest"
-                    >
+                    <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">
                         ✂️ Split
                     </button>
                     
-                    <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-                    
-                    <button 
-                        onclick="logout()" 
-                        class="bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
-                    >
+                    <button onclick="logout()" class="ml-1 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
                         LOGOUT
                     </button>
                 </div>
-            </div>
-
             <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
 
             <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
@@ -865,23 +834,34 @@
 
         function setDateRange(range, btnElement) {
             activeDateRange = range;
-            
-            if(range !== 'custom') {
-                document.getElementById('customDateFilter').value = '';
-            }
-            
-            if(btnElement && range !== 'custom') {
-                document.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+            if (btnElement) {
+                document.querySelectorAll('.date-filter-btn').forEach(btn => {
+                    btn.classList.remove('active-filter', 'bg-[#4F46E5]', 'text-white', 'border-indigo-500');
+                });
                 btnElement.classList.add('active-filter');
             }
-            
             applyDateFilter();
         }
 
         function applyDateFilter() {
             let now = new Date(); 
             now.setHours(0,0,0,0);
+
+            // Helpers for exact boundaries
+            let today = new Date(now);
+            let yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
             
+            let dayOfWeek = now.getDay(); // 0 is Sunday
+            let diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            let startOfThisWeek = new Date(now); startOfThisWeek.setDate(diffToMonday);
+            
+            let startOfLastWeek = new Date(startOfThisWeek); startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+            let endOfLastWeek = new Date(startOfThisWeek); endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+            
+            let startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            let startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            let endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
             if (activeDateRange === 'split') {
                 filteredData = window.appData.rawArray.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
             } else {
@@ -889,29 +869,19 @@
                     let d = parseCustomDate(o.date); 
                     d.setHours(0,0,0,0);
                     
-                    if (activeDateRange === 'today') {
-                        return d.getTime() === now.getTime();
-                    }
-                    if (activeDateRange === '7d') {
-                        return (now - d) / (1000*60*60*24) <= 7;
-                    }
-                    if (activeDateRange === '30d') {
-                        return (now - d) / (1000*60*60*24) <= 30;
-                    }
-                    if (activeDateRange === 'custom') {
-                        let customVal = document.getElementById('customDateFilter').value;
-                        if(!customVal) {
-                            return true;
-                        }
-                        return new Date(customVal).getTime() === d.getTime();
-                    }
-                    return true; 
+                    if (activeDateRange === 'today') return d.getTime() === today.getTime();
+                    if (activeDateRange === 'yesterday') return d.getTime() === yesterday.getTime();
+                    if (activeDateRange === 'thisWeek') return d >= startOfThisWeek && d <= now;
+                    if (activeDateRange === 'lastWeek') return d >= startOfLastWeek && d <= endOfLastWeek;
+                    if (activeDateRange === 'thisMonth') return d >= startOfThisMonth && d <= now;
+                    if (activeDateRange === 'lastMonth') return d >= startOfLastMonth && d <= endOfLastMonth;
+                    
+                    return true; // fallback for 'all'
                 });
             }
             renderMdoDashboard(); 
             renderPipeline();
         }
-
         // MDO WAR ROOM DASHBOARD
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
