@@ -1,10 +1,528 @@
+// ==============================================================================
+// YASH MARKETING - ENTERPRISE OS BACKEND (ADVANCED PIPELINE EDITION)
+// VERSION: 12.2 (Fully Expanded, VIP Logic, Tracking Router, Tally, Settings, Dealer Area)
+// ==============================================================================
+
+const SHEET_ID = '1np1XfpYjqXcbbNwT7_Q3XzmxxGrcYKacXQV04p1ilYw'; 
+const FOLDER_ID = '1EzpnJ0Elc7KcnKe0GV9KjexwjvTbFgYK';
+
+function standardizeName(name) {
+    if (!name) {
+        return "";
+    }
+    return name.toString().toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function parseBackendDate(dateStr) {
+    if (!dateStr) {
+        return 0;
+    }
+    let d = new Date(dateStr);
+    if (!isNaN(d) && typeof dateStr !== 'string') {
+        return d.getTime();
+    }
+    
+    let str = String(dateStr).trim();
+    let parts = str.split(' ');
+    let dParts = parts[0].split(/[\/\-]/);
+    
+    if (dParts.length === 3) {
+        let day = parseInt(dParts[0], 10);
+        let month = parseInt(dParts[1], 10) - 1;
+        let year = parseInt(dParts[2], 10);
+        
+        if (year < 100) {
+            year += 2000;
+        }
+        
+        let h = 0, m = 0, s = 0;
+        if (parts.length > 1) {
+            let tParts = parts[1].split(':');
+            h = parseInt(tParts[0], 10) || 0;
+            m = parseInt(tParts[1], 10) || 0;
+            s = parseInt(tParts[2], 10) || 0;
+        }
+        return new Date(year, month, day, h, m, s).getTime();
+    }
+    return new Date(str).getTime() || 0;
+}
+
+function doGet(e) { 
+    var template = HtmlService.createTemplateFromFile('Index');
+    
+    if (e.parameter.track) {
+        template.trackingMode = true;
+        template.trackOrderId = e.parameter.track;
+    } else {
+        template.trackingMode = false;
+        template.trackOrderId = null;
+    }
+    
+    return template.evaluate()
+        .setTitle('Yash Marketing OS')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function doPost(e) {
+    try {
+        if (!e || !e.postData || !e.postData.contents) {
+            throw new Error("Critical Error: No payload received from the frontend.");
+        }
+
+        const request = JSON.parse(e.postData.contents);
+        const action = request.action;
+
+        if (action === "login") {
+            return handleLogin(request.employeeId, request.password);
+        }
+        
+        if (action === "getOrders") {
+            return fetchActiveOrders();
+        }
+
+        if (action === "getTrackingData") {
+            return fetchTrackingData(request.orderId);
+        }
+        
+        if (action === "updateStage") {
+            return processOrderUpdate(request);
+        }
+
+        throw new Error("Invalid Action Command Received: " + action);
+
+    } catch (error) {
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", 
+            message: error.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function handleLogin(employeeId, password) {
+    try {
+        const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Staff');
+        if (!sheet) {
+            throw new Error("Staff sheet missing from database.");
+        }
+        
+        const data = sheet.getDataRange().getValues();
+
+        for (let i = 1; i < data.length; i++) {
+            let sheetEmpId = data[i][0] ? data[i][0].toString().trim().toUpperCase() : ""; 
+            let sheetPass = data[i][4] ? data[i][4].toString().trim() : ""; 
+            let inputEmpId = employeeId ? employeeId.toString().trim().toUpperCase() : "";
+            let inputPass = password ? password.toString().trim() : "";
+
+            if (sheetEmpId !== "" && sheetEmpId === inputEmpId && (sheetPass === inputPass || inputPass === "SSO_BYPASS")) { 
+                return ContentService.createTextOutput(JSON.stringify({
+                    status: "success", 
+                    user: { 
+                        name: data[i][1], 
+                        role: data[i][5] || 'Staff'
+                    } 
+                })).setMimeType(ContentService.MimeType.JSON);
+            }
+        }
+
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", 
+            message: "Invalid Credentials or Access Denied."
+        })).setMimeType(ContentService.MimeType.JSON);
+        
+    } catch (err) {
+        throw new Error("Login Processing Error: " + err.message);
+    }
+}
+
+function fetchActiveOrders() {
+    try {
+        const ss = SpreadsheetApp.openById(SHEET_ID);
+        let productSheet = ss.getSheetByName('Product') || ss.getSheetByName('Products');
+        let orderSheet = ss.getSheetByName('Orders') || ss.getSheetByName('Order');
+        let settingsSheet = ss.getSheetByName('Settings'); 
+        let dealerSheet = ss.getSheetByName('Dealer Data') || ss.getSheetByName('Dealers'); // NEW: Dealer Sheet
+
+        if (!orderSheet) {
+            throw new Error("CRITICAL: 'Orders' tab not found in the database.");
+        }
+
+        // 1. Fetch App Settings (WhatsApp Templates)
+        let appSettings = {
+            waMsgStage3: "Hello {{shop}},\n\nYour order ({{orderId}}) with Yash Marketing is successfully processed.\n\nPayment Mode: {{paymentMode}}\nTotal Amount: Rs. {{amount}}\n\nWe will dispatch it shortly. Thank you!",
+            waMsgStage7COD: "Hello {{shop}},\n\nGood News! Your order ({{orderId}}) from Yash Marketing is OUT FOR DELIVERY today.\n\nPlease keep the exact COD amount Rs. {{amount}} ready for a smooth handover.\n\nThank you for choosing Yash Marketing!",
+            waMsgStage7Prepaid: "Hello {{shop}},\n\nGood News! Your PREPAID order ({{orderId}}) from Yash Marketing is OUT FOR DELIVERY today.\n\nOur delivery executive will reach you soon.\n\nThank you for choosing Yash Marketing!"
+        };
+
+        if (settingsSheet) {
+            let settingsData = settingsSheet.getDataRange().getValues();
+            for (let i = 1; i < settingsData.length; i++) {
+                let key = settingsData[i][0] ? settingsData[i][0].toString().trim() : "";
+                let val = settingsData[i][1] ? settingsData[i][1].toString() : "";
+                if (key && val) {
+                    appSettings[key] = val;
+                }
+            }
+        }
+
+        // 2. Fetch Dealer Area Data
+        let dealerAreaMap = {};
+        if (dealerSheet) {
+            let dData = dealerSheet.getDataRange().getValues();
+            let dHeaders = dData[0];
+            let nameCol = -1, areaCol = -1;
+            
+            for (let c = 0; c < dHeaders.length; c++) {
+                let h = dHeaders[c].toString().toLowerCase();
+                if (h.includes("shop name") || h.includes("dealer name")) nameCol = c;
+                if (h.includes("area") || h.includes("taluka") || h.includes("city")) areaCol = c;
+            }
+            
+            if (nameCol !== -1 && areaCol !== -1) {
+                for (let i = 1; i < dData.length; i++) {
+                    let dName = dData[i][nameCol] ? dData[i][nameCol].toString().trim().toLowerCase() : "";
+                    let dArea = dData[i][areaCol] ? dData[i][areaCol].toString().trim() : "Unknown";
+                    if (dName) {
+                        dealerAreaMap[dName] = dArea;
+                    }
+                }
+            }
+        }
+
+        // 3. Build Product Image Map
+        const productMap = {};
+        if (productSheet) {
+            const productData = productSheet.getDataRange().getValues();
+            for (let i = 1; i < productData.length; i++) {
+                let pNameRaw = productData[i][2] ? productData[i][2].toString() : "";
+                let pImage = productData[i][9] ? productData[i][9].toString().trim() : "";
+                
+                let cleanedName = standardizeName(pNameRaw);
+                if (cleanedName) {
+                    productMap[cleanedName] = pImage;
+                }
+            }
+        }
+
+        // 4. Fetch and Parse Orders
+        const data = orderSheet.getDataRange().getValues();
+        const headers = data[0];
+        
+        let paymentModeCol = -1, totalValueCol = -1, phoneCol = -1, addressCol = -1, transporterCol = -1, updatedByCol = -1;
+
+        for (let c = 0; c < headers.length; c++) {
+            let hName = headers[c].toString().toLowerCase();
+            if (hName.includes("payment") || hName.includes("mode") || hName === "cod/prepaid") {
+                paymentModeCol = c;
+            }
+            if (hName.includes("total") || hName.includes("value") || hName.includes("amount")) {
+                totalValueCol = c;
+            }
+            if (hName.includes("phone") || hName.includes("mobile") || hName.includes("contact") || hName.includes("whatsapp")) {
+                phoneCol = c;
+            }
+            if (hName.includes("address") || hName.includes("location") || hName.includes("city")) {
+                addressCol = c;
+            }
+            if (hName.includes("transport") || hName.includes("courier") || hName.includes("logistics")) {
+                transporterCol = c;
+            }
+            if (hName.includes("updated by") || hName.includes("staff")) {
+                updatedByCol = c;
+            }
+        }
+
+        let orders = [];
+
+        for (let i = 1; i < data.length; i++) {
+            if (data[i][1]) { 
+                let currentStage = 0; 
+                let stageUrls = [];
+                
+                for (let s = 9; s <= 17; s++) {
+                    const cellValue = data[i][s] ? data[i][s].toString().trim() : "";
+                    if (cellValue !== "") { 
+                        currentStage++; 
+                        stageUrls.push(cellValue); 
+                    } else { 
+                        stageUrls.push(""); 
+                    }
+                }
+
+                let orderItemsRaw = data[i][4] ? data[i][4].toString() : ""; 
+                let parsedItems = [];
+                let totalQtyCounter = 0;
+
+                if (orderItemsRaw) {
+                    let itemsList = orderItemsRaw.split('|');
+                    itemsList.forEach(itemStr => {
+                        let item = itemStr.trim(); 
+                        if (!item) {
+                            return;
+                        }
+                        
+                        let match = item.match(/^(.*?)(?:\s*x\s*(\d+))?$/i);
+                        if (match) {
+                            let pNameOriginal = match[1].trim();
+                            let qty = match[2] ? parseInt(match[2], 10) : 1;
+                            totalQtyCounter += qty;
+                            
+                            let cleanedSearchName = standardizeName(pNameOriginal);
+                            let imgUrl = productMap[cleanedSearchName] || "";
+                            
+                            parsedItems.push({ 
+                                name: pNameOriginal, 
+                                qty: qty.toString(), 
+                                image: imgUrl 
+                            });
+                        }
+                    });
+                }
+
+                let dPhone = "";
+                if (phoneCol !== -1 && data[i][phoneCol]) {
+                    let rawPhone = data[i][phoneCol].toString().replace(/\D/g, ''); 
+                    if (rawPhone.length === 10) {
+                        dPhone = "91" + rawPhone; 
+                    } else if (rawPhone.length > 10) {
+                        dPhone = rawPhone;
+                    }
+                }
+
+                let pMode = paymentModeCol !== -1 && data[i][paymentModeCol] ? data[i][paymentModeCol].toString().trim().toUpperCase() : "COD";
+                let tValue = totalValueCol !== -1 && data[i][totalValueCol] ? data[i][totalValueCol].toString().trim() : "0";
+
+                let numericTotalValue = parseFloat(tValue.replace(/,/g, '')) || 0;
+                let isVIPOrder = numericTotalValue >= 50000;
+
+                let shopNameClean = data[i][2] ? data[i][2].toString().trim() : "";
+                let shopArea = dealerAreaMap[shopNameClean.toLowerCase()] || "Unknown Area";
+
+                orders.push({
+                    date: data[i][0], 
+                    orderId: data[i][1], 
+                    shopName: shopNameClean, 
+                    paymentMode: pMode,
+                    totalValue: tValue,
+                    totalQuantity: totalQtyCounter,
+                    phone: dPhone, 
+                    address: addressCol !== -1 && data[i][addressCol] ? data[i][addressCol].toString().trim() : "",
+                    area: shopArea, 
+                    transporter: transporterCol !== -1 && data[i][transporterCol] ? data[i][transporterCol].toString().trim() : "",
+                    lastUpdatedBy: updatedByCol !== -1 && data[i][updatedByCol] ? data[i][updatedByCol].toString().trim() : "System",
+                    isVIP: isVIPOrder,
+                    items: parsedItems, 
+                    completedStages: currentStage,
+                    stageUrls: stageUrls, 
+                    isFullyCompleted: currentStage === 9 
+                });
+            }
+        }
+
+        orders.sort((a, b) => {
+            if (a.isVIP && !b.isVIP) {
+                return -1;
+            }
+            if (!a.isVIP && b.isVIP) {
+                return 1;
+            }
+            return parseBackendDate(b.date) - parseBackendDate(a.date);
+        });
+
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "success", 
+            data: orders,
+            settings: appSettings
+        })).setMimeType(ContentService.MimeType.JSON);
+
+    } catch (error) {
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", 
+            message: error.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function fetchTrackingData(orderId) {
+    try {
+        const response = fetchActiveOrders();
+        const parsedResponse = JSON.parse(response.getContent());
+        
+        if (parsedResponse.status === "success") {
+            const order = parsedResponse.data.find(o => o.orderId === orderId);
+            if (order) {
+                let publicOrderData = {
+                    orderId: order.orderId,
+                    shopName: order.shopName,
+                    completedStages: order.completedStages,
+                    date: order.date
+                };
+                return ContentService.createTextOutput(JSON.stringify({
+                    status: "success", 
+                    data: publicOrderData
+                })).setMimeType(ContentService.MimeType.JSON);
+            }
+        }
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", 
+            message: "Order not found in active database."
+        })).setMimeType(ContentService.MimeType.JSON);
+    } catch(e) {
+         return ContentService.createTextOutput(JSON.stringify({
+             status: "error", 
+             message: e.toString()
+         })).setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function processOrderUpdate(data) {
+    try {
+        const orderId = data.orderId;
+        const stage = parseInt(data.stage);
+        let fileUrl = "Completed - System Authorized (" + new Date().toLocaleString() + ")";
+        let generatedSplitId = null;
+
+        if (data.isNoResponse) {
+            fileUrl = "Action Skipped: Dealer Didn't Respond - " + new Date().toLocaleString();
+        } 
+        else if (data.isWhatsAppOnly) {
+            fileUrl = "WhatsApp Communication Sent - " + new Date().toLocaleString();
+        }
+        else if (data.files && data.files.length > 0) {
+            const folder = DriveApp.getFolderById(FOLDER_ID);
+            let uploadedUrls = [];
+            
+            data.files.forEach((f, idx) => {
+                try {
+                    const decodedFile = Utilities.base64Decode(f.base64);
+                    const blob = Utilities.newBlob(decodedFile, f.mimeType, `${orderId}_Stage${stage}_Part${idx+1}_${f.name}`);
+                    const newFile = folder.createFile(blob);
+                    
+                    try {
+                        newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+                    } catch (sharingErr) {}
+                    
+                    uploadedUrls.push(newFile.getUrl());
+                    Utilities.sleep(300); 
+                } catch (fileErr) {
+                    throw new Error("File Upload Failed for " + f.name + ": " + fileErr.message);
+                }
+            });
+            fileUrl = uploadedUrls.join(","); 
+        }
+
+        const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Orders');
+        const sheetData = sheet.getDataRange().getValues();
+        let rowIndex = -1;
+
+        for (let i = 1; i < sheetData.length; i++) {
+            if (sheetData[i][1] == orderId) { 
+                rowIndex = i + 1; 
+                break; 
+            }
+        }
+
+        if (rowIndex !== -1) {
+            
+            if (data.partialStock) {
+                if (data.partialStock.processedItems && data.partialStock.processedItems.length > 0) {
+                    let processedItemsString = data.partialStock.processedItems.map(item => `${item.name} x ${item.qty}`).join(" | ");
+                    sheet.getRange(rowIndex, 5).setValue(processedItemsString);
+                }
+
+                if (data.partialStock.shortItems && data.partialStock.shortItems.length > 0) {
+                    let shortItemsString = data.partialStock.shortItems.map(item => `${item.name} x ${item.qty}`).join(" | ");
+                    
+                    let originalRowData = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
+                    let newRowData = [...originalRowData];
+                    
+                    let now = new Date();
+                    let dd = String(now.getDate()).padStart(2, '0');
+                    let mm = String(now.getMonth() + 1).padStart(2, '0');
+                    let yyyy = now.getFullYear();
+                    let hh = String(now.getHours()).padStart(2, '0');
+                    let min = String(now.getMinutes()).padStart(2, '0');
+                    let ss = String(now.getSeconds()).padStart(2, '0');
+                    let formattedDate = `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
+                    
+                    newRowData[0] = formattedDate; 
+                    
+                    const randomSuffix = Math.floor(Math.random() * 9000) + 1000;
+                    generatedSplitId = originalRowData[1] + "-SPLIT-" + randomSuffix; 
+                    newRowData[1] = generatedSplitId; 
+                    newRowData[4] = shortItemsString; 
+                    
+                    for (let col = 9; col <= 18; col++) {
+                        newRowData[col] = "";
+                    }
+                    
+                    sheet.appendRow(newRowData);
+                }
+            }
+
+            const targetColumn = 9 + stage; 
+            sheet.getRange(rowIndex, targetColumn).setValue(fileUrl);
+
+            if (stage === 9 && data.rating) { 
+                sheet.getRange(rowIndex, 19).setValue(data.rating);
+            }
+
+            if (data.staffName) {
+                let headers = sheetData[0];
+                for (let c = 0; c < headers.length; c++) {
+                    let hName = headers[c].toString().toLowerCase();
+                    if (hName.includes("updated by") || hName.includes("staff")) {
+                        sheet.getRange(rowIndex, c + 1).setValue(data.staffName);
+                        break;
+                    }
+                }
+            }
+
+            return ContentService.createTextOutput(JSON.stringify({
+                status: "success",
+                splitOrderId: generatedSplitId
+            })).setMimeType(ContentService.MimeType.JSON);
+        }
+
+        throw new Error("Order ID not found in database.");
+
+    } catch (error) {
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", 
+            message: "Update Error: " + error.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function doOptions(e) {
+    const headers = { 
+        "Access-Control-Allow-Origin": "*", 
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS", 
+        "Access-Control-Allow-Headers": "Content-Type", 
+        "Access-Control-Max-Age": "86400" 
+    };
+    return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON).setHeaders(headers);
+}
+```
+
+---
+
+### 2. FULLY EXPANDED FRONTEND (`Index.html`)
+*(Isme Chart.js Pie Chart add kiya gaya hai, CSS/HTML/JS 100% expanded hain)*
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yash Marketing - Enterprise OS Dashboard</title>
+    <title>Yash Marketing - Order Processing OS</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for Interactive Pie Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         body { 
             background-color: #0B1121; 
@@ -18,20 +536,8 @@
             border: 1px solid rgba(255, 255, 255, 0.08); 
         }
         
-        /* BRAND MATRIX ANIMATION CSS FIX */
-        @keyframes growUp {
-            from { height: 0%; opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .chart-bar { 
-            width: 100%;
-            height: 0%; /* Start at 0 */
-            transition: height 1s ease-out;
-        }
-        
-        .hover-card {
-            transition: all 0.3s ease;
+        .hover-card { 
+            transition: all 0.3s ease; 
         }
         
         .hover-card:hover { 
@@ -85,27 +591,29 @@
             font-weight: bold; 
         }
         
-        .text-wrap-custom {
-            word-wrap: break-word;
-            white-space: normal;
+        .text-wrap-custom { 
+            word-wrap: break-word; 
+            white-space: normal; 
         }
 
-        /* ==========================================
-           NEW FEATURE: VIP AMBULANCE CORRIDOR CSS
-           ========================================== */
-        .vip-corridor {
-            animation: pulse-red-glow 2s infinite;
-            border: 1px solid #ef4444 !important;
+        .vip-corridor { 
+            animation: pulse-red-glow 2s infinite; 
+            border: 1px solid #ef4444 !important; 
         }
+        
         @keyframes pulse-red-glow {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 20px 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            0% { 
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); 
+            }
+            70% { 
+                box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0); 
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); 
+            }
         }
 
-        /* ==========================================
-           NEW FEATURE: A6 PRINT CSS FOR SHIPPING LABELS
-           ========================================== */
+        /* EXACT A4 (4-STICKER) PRINT LAYOUT */
         @media print {
             body * { 
                 display: none !important; 
@@ -113,17 +621,39 @@
             #shippingLabelScreen, #shippingLabelScreen * { 
                 display: block !important; 
             }
+            
+            @page { 
+                size: A4; 
+                margin: 0; 
+            }
+            
             #shippingLabelScreen {
                 position: absolute; 
                 left: 0; 
                 top: 0; 
-                width: 105mm; 
-                height: 148mm;
+                width: 210mm; 
+                height: 297mm; 
                 background: white !important; 
-                color: black !important; 
+                color: black !important;
+                display: grid !important; 
+                grid-template-columns: 1fr 1fr; /* 2 Columns */
+                grid-template-rows: 1fr 1fr; /* 2 Rows */
+                box-sizing: border-box;
+                padding: 10mm;
+                gap: 10mm;
+            }
+            
+            .sticker-label {
+                border: 1px dashed #ccc; 
                 padding: 5mm;
-                box-sizing: border-box; 
-                font-family: sans-serif;
+                box-sizing: border-box;
+                width: 100%; 
+                height: 100%;
+                overflow: hidden;
+            }
+
+            .empty-sticker { 
+                border: none; 
             }
         }
     </style>
@@ -131,248 +661,193 @@
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
     <!-- =======================================================
-         NEW FEATURE: DEALER TRACKING SELF-SERVICE MODE (ROUTER)
+         DEALER TRACKING SELF-SERVICE MODE
          ======================================================= -->
-    <? if (typeof trackingMode !== 'undefined' && trackingMode) { ?>
-        <div id="trackingScreen" class="max-w-md mx-auto mt-10 p-6 glass-panel rounded-2xl border-t-4 border-t-emerald-500 text-center shadow-2xl">
-            <h1 class="text-3xl font-black text-white mb-2 tracking-tight">Live Order Tracker</h1>
-            <p class="text-slate-400 text-sm mb-8 font-mono">Tracking ID: <?= trackOrderId ?></p>
-            
-            <div id="trackingLoader" class="inline-block animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            
-            <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
-                <!-- Dynamically injected timeline via JS below -->
-            </div>
-            
-            <div id="trackingError" class="hidden text-pink-500 font-bold mt-4"></div>
+    <div id="trackingScreen" class="hidden max-w-md mx-auto mt-10 p-6 glass-panel rounded-2xl border-t-4 border-t-emerald-500 text-center shadow-2xl">
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">
+            Live Order Tracker
+        </h1>
+        <p class="text-slate-400 text-sm mb-8 font-mono">
+            Tracking ID: <span id="displayTrackId"></span>
+        </p>
+        
+        <div id="trackingLoader" class="inline-block animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+        
+        <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
         </div>
         
-        <script>
-            window.onload = () => {
-                fetch('https://script.google.com/macros/s/AKfycbw3ye5kfsC4y6_qUa6MobtitHsTcC9r5l30YDeDd9nnznfUiUPq4sd7riGNQA8e8r5wwQ/exec', {
-                    method: 'POST', 
-                    body: JSON.stringify({action: 'getTrackingData', orderId: '<?= trackOrderId ?>'})
-                })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('trackingLoader').style.display = 'none';
-                    if(data.status === 'success') {
-                        let html = '';
-                        const customerStages = [
-                            "Order Placed", 
-                            "Confirmed & Processing", 
-                            "Packed & Ready", 
-                            "Invoiced", 
-                            "Dispatched", 
-                            "Out for Delivery", 
-                            "Delivered Successfully"
-                        ];
-                        
-                        // Map internal 9 stages to 7 customer stages
-                        let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.3), 6);
-                        
-                        customerStages.forEach((stageName, idx) => {
-                            let isCompleted = idx <= mappedStage;
-                            let isActive = idx === mappedStage;
-                            let color = isCompleted ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-700';
-                            let textColor = isCompleted ? 'text-white' : 'text-slate-500';
-                            let icon = isCompleted ? '✓' : '';
-                            if(isActive && idx !== 6) icon = '⏳';
-                            
-                            html += `
-                                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                    <div class="flex items-center justify-center w-8 h-8 rounded-full border-4 border-[#0B1121] ${color} text-white font-black text-xs z-10 shrink-0">
-                                        ${icon}
-                                    </div>
-                                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border ${isCompleted ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-slate-800 bg-[#131C31]'} shadow">
-                                        <h3 class="font-bold text-sm ${textColor}">${stageName}</h3>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        document.getElementById('trackingTimeline').innerHTML = html;
-                        document.getElementById('trackingTimeline').classList.remove('hidden');
-                    } else {
-                        document.getElementById('trackingError').innerText = data.message || "Invalid Tracking ID";
-                        document.getElementById('trackingError').classList.remove('hidden');
-                    }
-                }).catch(err => {
-                    document.getElementById('trackingLoader').style.display = 'none';
-                    document.getElementById('trackingError').innerText = "Network error while fetching tracking data.";
-                    document.getElementById('trackingError').classList.remove('hidden');
-                });
-            }
-        </script>
-    <? } else { ?>
-    <!-- =======================================================
-         MAIN ENTERPRISE APP UI (If not in tracking mode)
-         ======================================================= -->
+        <div id="trackingError" class="hidden text-pink-500 font-bold mt-4"></div>
+    </div>
 
-    <!-- NEW FEATURE: Global Cmd+K Search Modal -->
-    <div id="searchModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-start justify-center pt-20 px-4 transition-all">
-        <div class="bg-[#131C31] w-full max-w-2xl rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
-            <div class="p-4 border-b border-slate-800 flex items-center gap-3">
-                <span class="text-indigo-400 text-xl">🔍</span>
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    onkeyup="performSearch()" 
-                    placeholder="Search Order ID, Dealer Name or Phone Number..." 
-                    class="w-full bg-transparent text-white text-lg outline-none font-bold placeholder-slate-500"
-                >
-                <button 
-                    onclick="closeSearch()" 
-                    class="text-slate-500 text-xs border border-slate-700 px-2 py-1 rounded hover:bg-slate-800"
-                >
-                    ESC
-                </button>
+    <!-- MAIN APP WRAPPER -->
+    <div id="mainAppWrapper">
+
+        <!-- Global Cmd+K Search Modal -->
+        <div id="searchModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-start justify-center pt-20 px-4 transition-all">
+            <div class="bg-[#131C31] w-full max-w-2xl rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
+                
+                <div class="p-4 border-b border-slate-800 flex items-center gap-3">
+                    <span class="text-indigo-400 text-xl">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        onkeyup="performSearch()" 
+                        placeholder="Search Order ID, Dealer Name or Phone Number..." 
+                        class="w-full bg-transparent text-white text-lg outline-none font-bold placeholder-slate-500"
+                    >
+                    <button 
+                        onclick="closeSearch()" 
+                        class="text-slate-500 text-xs border border-slate-700 px-2 py-1 rounded hover:bg-slate-800"
+                    >
+                        ESC
+                    </button>
+                </div>
+                
+                <div id="searchResults" class="max-h-[60vh] overflow-y-auto p-2 bg-[#0B1121] hide-scrollbar">
+                    <div class="p-8 text-center text-slate-500 font-bold">
+                        Start typing to search main database...
+                    </div>
+                </div>
+                
             </div>
-            <div id="searchResults" class="max-h-[60vh] overflow-y-auto p-2 bg-[#0B1121] hide-scrollbar">
-                <div class="p-8 text-center text-slate-500 font-bold">
-                    Start typing to search main database...
+        </div>
+
+        <!-- Notification Area -->
+        <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+        <!-- Dynamic Shipping Label Printable Area -->
+        <div id="shippingLabelScreen" class="hidden"></div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="flex h-[90vh] items-center justify-center p-4">
+            <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border-t-4 border-t-indigo-500">
+                <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2 tracking-tight">
+                    YASH MARKETING
+                </h1>
+                <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
+                    Enterprise OS Login (v12.2)
+                </p>
+                
+                <form id="loginForm" class="space-y-4">
+                    <input 
+                        type="text" 
+                        id="loginEmpId" 
+                        placeholder="Access Code / Emp ID" 
+                        required 
+                        class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner"
+                    >
+                    <input 
+                        type="password" 
+                        id="loginPass" 
+                        placeholder="Security PIN" 
+                        required 
+                        class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"
+                    >
+                    <button 
+                        type="submit" 
+                        id="loginBtn" 
+                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform active:scale-[0.98]"
+                    >
+                        INITIALIZE SYSTEM
+                    </button>
+                </form>
+                
+                <p id="loginError" class="text-pink-400 text-sm mt-4 font-semibold hidden animate-pulse"></p>
+            </div>
+        </div>
+
+        <!-- Main Operational Dashboard Screen -->
+        <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto pb-20">
+            
+            <!-- Top Navigation Bar -->
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
+                
+                <div class="w-full lg:w-1/3">
+                    <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
+                        <span class="text-indigo-400">⚡</span> Order Processing
+                    </h1>
+                    <p class="text-slate-400 text-xs mt-1 font-mono">
+                        OP_ID: <span id="userName" class="text-emerald-400 font-bold"></span>
+                    </p>
+                </div>
+                
+                <!-- Expanded Global Search in Header -->
+                <div class="w-full lg:w-1/3">
+                    <button 
+                        onclick="openSearch()" 
+                        class="w-full bg-[#0B1121] border border-slate-700 hover:border-indigo-500 text-slate-400 flex justify-between items-center px-4 py-2.5 rounded-xl transition-all shadow-inner group"
+                    >
+                        <span class="flex items-center gap-2 text-sm">
+                            <span class="text-indigo-400">🔍</span> Search orders, dealers...
+                        </span>
+                        <span class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded group-hover:text-white">
+                            Cmd+K
+                        </span>
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-end gap-2 w-full lg:w-1/3 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
+                    <button 
+                        onclick="setDateRange('today', this)" 
+                        class="date-filter-btn active-filter px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
+                    >
+                        Today
+                    </button>
+                    
+                    <button 
+                        onclick="setDateRange('7d', this)" 
+                        class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
+                    >
+                        7 Days
+                    </button>
+                    
+                    <button 
+                        onclick="setDateRange('30d', this)" 
+                        class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
+                    >
+                        30 Days
+                    </button>
+                    
+                    <button 
+                        onclick="setDateRange('all', this)" 
+                        class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
+                    >
+                        All
+                    </button>
+                    
+                    <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
+                    
+                    <button 
+                        onclick="setDateRange('split', this)" 
+                        class="date-filter-btn px-3 py-2 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest"
+                    >
+                        ✂️ Split
+                    </button>
+                    
+                    <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
+                    
+                    <button 
+                        onclick="logout()" 
+                        class="bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                    >
+                        LOGOUT
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Notification Area -->
-    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+            <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
 
-    <!-- NEW FEATURE: Dynamic Shipping Label Printable Area (Hidden normally) -->
-    <div id="shippingLabelScreen" class="hidden"></div>
-
-    <!-- Login Authentication Screen -->
-    <div id="loginScreen" class="flex h-[90vh] items-center justify-center p-4">
-        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border-t-4 border-t-indigo-500">
-            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2 tracking-tight">
-                YASH MARKETING
-            </h1>
-            <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                Enterprise OS Login (v12.0)
-            </p>
-            <form id="loginForm" class="space-y-4">
-                <input 
-                    type="text" 
-                    id="loginEmpId" 
-                    placeholder="Access Code / Emp ID" 
-                    required 
-                    class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner"
-                >
-                <input 
-                    type="password" 
-                    id="loginPass" 
-                    placeholder="Security PIN" 
-                    required 
-                    class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"
-                >
-                <button 
-                    type="submit" 
-                    id="loginBtn" 
-                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform active:scale-[0.98]"
-                >
-                    INITIALIZE SYSTEM
-                </button>
-            </form>
-            <p id="loginError" class="text-pink-400 text-sm mt-4 font-semibold hidden animate-pulse"></p>
-        </div>
-    </div>
-
-    <!-- Main Operational Dashboard Screen -->
-    <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto pb-20">
-        
-        <!-- Top Navigation Bar -->
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
-            <div>
-                <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
-                    <span class="text-indigo-400">⚡</span> Mission Control
-                </h1>
-                <p class="text-slate-400 text-xs mt-1 font-mono">
-                    OP_ID: <span id="userName" class="text-emerald-400 font-bold"></span>
-                </p>
-            </div>
+            <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+                <span class="text-indigo-400">🌊</span> Operational Pipeline
+            </h3>
             
-            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
-                
-                <!-- NEW FEATURE: Global Search Button -->
-                <button 
-                    onclick="openSearch()" 
-                    class="bg-indigo-900/30 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 mr-2"
-                >
-                    <span>🔍</span> Search (Cmd+K)
-                </button>
-
-                <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-
-                <button 
-                    onclick="setDateRange('today', this)" 
-                    class="date-filter-btn active-filter px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    Today
-                </button>
-                <button 
-                    onclick="setDateRange('7d', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    7 Days
-                </button>
-                <button 
-                    onclick="setDateRange('30d', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    30 Days
-                </button>
-                <button 
-                    onclick="setDateRange('all', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-white transition-all"
-                >
-                    All Time
-                </button>
-                
-                <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-                
-                <!-- Split Orders Filter -->
-                <button 
-                    onclick="setDateRange('split', this)" 
-                    class="date-filter-btn px-4 py-2 rounded-lg text-xs text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all"
-                >
-                    ✂️ Split Orders
-                </button>
-                
-                <div class="w-px h-6 bg-slate-700 mx-1 hidden sm:block"></div>
-
-                <!-- Custom Date Filter -->
-                <input 
-                    type="date" 
-                    id="customDateFilter" 
-                    onchange="setDateRange('custom', this)" 
-                    class="bg-transparent text-xs text-indigo-300 outline-none cursor-pointer p-1"
-                >
-                
-                <button 
-                    onclick="logout()" 
-                    class="ml-auto lg:ml-2 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
-                >
-                    LOGOUT
-                </button>
-            </div>
+            <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar"></div>
+            
+            <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </div>
+    </div> <!-- End Main App Wrapper -->
 
-        <!-- MDO Command Center (War Room) -->
-        <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
-
-        <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
-            <span class="text-indigo-400">🌊</span> Operational Pipeline
-        </h3>
-        
-        <!-- Stage Filters -->
-        <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar"></div>
-        
-        <!-- Order Grid -->
-        <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-    </div>
-
-    <!-- Order Execution Task Modal (Fully Expanded with all features) -->
+    <!-- Order Execution Task Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
         <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-700">
             
@@ -380,8 +855,6 @@
                 <div>
                     <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
                         <span id="modalOrderId">ORD-000</span>
-                        
-                        <!-- NEW FEATURE: VIP Badge in Modal -->
                         <span 
                             id="modalVipBadge" 
                             class="hidden bg-red-500 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase shadow-[0_0_10px_red] animate-pulse"
@@ -390,7 +863,9 @@
                         </span>
                     </h2>
                     
-                    <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom" id="modalShopName">Shop Name</p>
+                    <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom" id="modalShopName">
+                        Shop Name
+                    </p>
                     
                     <div class="flex gap-2 mt-2 items-center flex-wrap">
                         <span 
@@ -403,7 +878,6 @@
                         ></span>
                     </div>
                     
-                    <!-- Exact Date & Time Ago -->
                     <div class="flex gap-2 mt-2 items-center flex-wrap">
                         <span 
                             id="modalReceiptDate" 
@@ -427,7 +901,6 @@
             <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-[#0B1121]" id="stagesContainer">
                 <!-- Dynamically Generated Stages Here -->
             </div>
-            
         </div>
     </div>
 
@@ -435,9 +908,6 @@
     <!-- MAIN JAVASCRIPT LOGIC START                                                    -->
     <!-- ============================================================================== -->
     <script>
-        // ==========================================
-        // CONFIGURATION AND GLOBAL STATE
-        // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbw3ye5kfsC4y6_qUa6MobtitHsTcC9r5l30YDeDd9nnznfUiUPq4sd7riGNQA8e8r5wwQ/exec"; 
         
         const STAGE_NAMES = [
@@ -452,15 +922,11 @@
             "Final Call (Rating)"
         ];
 
-        // BUG FIX & DATA STRUCTURE ENHANCEMENT
-        // Instead of stringifying full objects into HTML attributes (which breaks on quotes),
-        // we store them globally in a dictionary.
-        window.appData = {
-            rawArray: [],
-            orders: {}
+        window.appData = { 
+            rawArray: [], 
+            orders: {} 
         };
         
-        // NEW FEATURE: Template Settings Manager State
         window.appSettings = {};
 
         let filteredData = [];
@@ -470,36 +936,151 @@
         let latestOrderTimestamp = null;
         let autoRefreshInterval = null;
         let queuedFiles = []; 
-        
         let currentUserRole = 'Staff';
-        let currentUserName = ''; // Used for Leaderboard tracking
+        let currentUserName = ''; 
+        let brandChartInstance = null; // Used for destroying and redrawing Chart.js
 
-        // ==========================================
-        // NEW FEATURE: GLOBAL HOTKEY FOR SEARCH (Cmd+K / Ctrl+K)
-        // ==========================================
+        // ROUTING LOGIC: Checks if the user is a Dealer tracking an order
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackId = urlParams.get('track');
+            const portalEmpId = urlParams.get('empId');
+
+            if (trackId) {
+                // DEALER TRACKING VIEW
+                document.getElementById('mainAppWrapper').classList.add('hidden');
+                document.getElementById('trackingScreen').classList.remove('hidden');
+                document.getElementById('displayTrackId').innerText = trackId;
+                
+                runTrackerMode(trackId);
+            } else {
+                // STAFF OS VIEW
+                if (portalEmpId && portalEmpId.trim() !== "") {
+                    document.getElementById('loginEmpId').value = portalEmpId;
+                    document.getElementById('loginPass').value = "SSO_BYPASS";
+                    const btn = document.getElementById('loginBtn');
+                    btn.innerText = "AUTHENTICATING SSO...";
+                    
+                    fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            action: 'login', 
+                            employeeId: portalEmpId, 
+                            password: 'SSO_BYPASS' 
+                        }) 
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showDashboard(data.user.name, data.user.role);
+                        } else {
+                            document.getElementById('loginError').innerText = "SSO Failed: " + data.message;
+                            document.getElementById('loginError').classList.remove('hidden');
+                            btn.innerText = "INITIALIZE SYSTEM";
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('loginError').innerText = "Network error during SSO login.";
+                        document.getElementById('loginError').classList.remove('hidden');
+                        btn.innerText = "INITIALIZE SYSTEM";
+                    });
+                } else if (localStorage.getItem('yash_user')) { 
+                    showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
+                }
+            }
+        };
+
+        // TRACKER FETCH LOGIC
+        function runTrackerMode(trackId) {
+            fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({
+                    action: 'getTrackingData', 
+                    orderId: trackId
+                }) 
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('trackingLoader').style.display = 'none';
+                if(data.status === 'success') {
+                    let html = '';
+                    const customerStages = [
+                        "Order Placed", 
+                        "Confirmed & Processing", 
+                        "Packed & Ready", 
+                        "Invoiced", 
+                        "Dispatched", 
+                        "Out for Delivery", 
+                        "Delivered Successfully"
+                    ];
+                    
+                    let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.3), 6);
+                    
+                    customerStages.forEach((stageName, idx) => {
+                        let isCompleted = idx <= mappedStage;
+                        let isActive = idx === mappedStage;
+                        let color = isCompleted ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-700';
+                        let textColor = isCompleted ? 'text-white' : 'text-slate-500';
+                        
+                        let icon = "";
+                        if (isCompleted) {
+                            icon = '✓';
+                        } else if (isActive && idx !== 6) {
+                            icon = '⏳';
+                        }
+                        
+                        html += `
+                            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full border-4 border-[#0B1121] ${color} text-white font-black text-xs z-10 shrink-0">
+                                    ${icon}
+                                </div>
+                                <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border ${isCompleted ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-slate-800 bg-[#131C31]'} shadow">
+                                    <h3 class="font-bold text-sm ${textColor}">
+                                        ${stageName}
+                                    </h3>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('trackingTimeline').innerHTML = html;
+                    document.getElementById('trackingTimeline').classList.remove('hidden');
+                } else {
+                    document.getElementById('trackingError').innerText = data.message || "Invalid Tracking ID";
+                    document.getElementById('trackingError').classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                document.getElementById('trackingLoader').style.display = 'none';
+                document.getElementById('trackingError').innerText = "Network error while fetching tracking data.";
+                document.getElementById('trackingError').classList.remove('hidden');
+            });
+        }
+
+        // CMD+K SEARCH LOGIC
         document.addEventListener('keydown', (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                openSearch();
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { 
+                e.preventDefault(); 
+                openSearch(); 
             }
             if (e.key === 'Escape') {
                 closeSearch();
             }
         });
 
-        function openSearch() {
-            document.getElementById('searchModal').classList.remove('hidden');
-            document.getElementById('searchInput').focus();
+        function openSearch() { 
+            document.getElementById('searchModal').classList.remove('hidden'); 
+            document.getElementById('searchInput').focus(); 
         }
-
-        function closeSearch() {
-            document.getElementById('searchModal').classList.add('hidden');
-            document.getElementById('searchInput').value = '';
+        
+        function closeSearch() { 
+            document.getElementById('searchModal').classList.add('hidden'); 
+            document.getElementById('searchInput').value = ''; 
             document.getElementById('searchResults').innerHTML = `
                 <div class="p-8 text-center text-slate-500 font-bold">
                     Start typing to search main database...
                 </div>
-            `;
+            `; 
         }
 
         function performSearch() {
@@ -517,9 +1098,9 @@
             
             const matches = window.appData.rawArray.filter(o => 
                 (o.orderId && o.orderId.toLowerCase().includes(query)) || 
-                (o.shopName && o.shopName.toLowerCase().includes(query)) ||
+                (o.shopName && o.shopName.toLowerCase().includes(query)) || 
                 (o.phone && o.phone.includes(query))
-            ).slice(0, 10); // Limit to 10 results for UI performance
+            ).slice(0, 10);
 
             if (matches.length === 0) { 
                 resultsDiv.innerHTML = `
@@ -531,7 +1112,10 @@
             }
 
             resultsDiv.innerHTML = matches.map(o => {
-                let badge = o.isVIP ? '<span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">VIP</span>' : '';
+                let badge = "";
+                if (o.isVIP) {
+                    badge = '<span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">VIP</span>';
+                }
                 return `
                 <div 
                     onclick="closeSearch(); openModal('${o.orderId}')" 
@@ -543,9 +1127,6 @@
                         </div>
                         <div class="text-xs text-indigo-400 font-bold">
                             ${o.shopName}
-                        </div>
-                        <div class="text-[9px] text-slate-500 mt-1">
-                            ${o.date}
                         </div>
                     </div>
                     <div class="text-right">
@@ -561,56 +1142,16 @@
             }).join('');
         }
 
-        // ==========================================
-        // AUTO-LOGIN (SSO) LOGIC
-        // ==========================================
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const portalEmpId = urlParams.get('empId');
-
-            if (portalEmpId && portalEmpId.trim() !== "") {
-                // Trigger auto login without asking for password
-                document.getElementById('loginEmpId').value = portalEmpId;
-                document.getElementById('loginPass').value = "SSO_BYPASS";
-                
-                const btn = document.getElementById('loginBtn');
-                btn.innerText = "AUTHENTICATING SSO...";
-                
-                fetch(API_URL, {
-                    method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'login', 
-                        employeeId: portalEmpId, 
-                        password: 'SSO_BYPASS' 
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        showDashboard(data.user.name, data.user.role);
-                    } else {
-                        document.getElementById('loginError').innerText = "SSO Failed: " + data.message;
-                        document.getElementById('loginError').classList.remove('hidden');
-                        btn.innerText = "INITIALIZE SYSTEM";
-                    }
-                }).catch(err => {
-                    document.getElementById('loginError').innerText = "Network error during SSO login.";
-                    document.getElementById('loginError').classList.remove('hidden');
-                    btn.innerText = "INITIALIZE SYSTEM";
-                });
-            } else if (localStorage.getItem('yash_user')) { 
-                showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
-            }
-        };
-
-        // ==========================================
-        // SMART DATE PARSER & TIME HELPERS
-        // ==========================================
+        // DATE PARSERS & HELPERS
         function parseCustomDate(dateStr) {
-            if (!dateStr) return new Date();
+            if (!dateStr) {
+                return new Date();
+            }
             let d = new Date(dateStr);
-            if (!isNaN(d)) return d;
-
+            if (!isNaN(d)) {
+                return d;
+            }
+            
             let parts = String(dateStr).split(' ');
             if (parts.length >= 1) {
                 let dateParts = parts[0].split(/[\/\-]/);
@@ -619,13 +1160,15 @@
                     let month = parseInt(dateParts[1]) - 1;
                     let year = parseInt(dateParts[2]);
                     
-                    if (year < 100) year += 2000;
+                    if (year < 100) {
+                        year += 2000;
+                    }
                     
                     let hours = 0, mins = 0, secs = 0;
                     if (parts.length >= 2) {
                         let timeParts = parts[1].split(':');
-                        hours = parseInt(timeParts[0]) || 0;
-                        mins = parseInt(timeParts[1]) || 0;
+                        hours = parseInt(timeParts[0]) || 0; 
+                        mins = parseInt(timeParts[1]) || 0; 
                         secs = parseInt(timeParts[2]) || 0;
                     }
                     return new Date(year, month, day, hours, mins, secs);
@@ -635,28 +1178,35 @@
         }
 
         function formatExactDate(dateString) {
-            if (!dateString) return "";
+            if (!dateString) {
+                return "";
+            }
             const d = parseCustomDate(dateString);
-            
             const day = String(d.getDate()).padStart(2, '0');
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const year = d.getFullYear();
             
-            let hours = d.getHours();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
-            const mins = String(d.getMinutes()).padStart(2, '0');
+            let hours = d.getHours(); 
+            const ampm = hours >= 12 ? 'PM' : 'AM'; 
             
+            hours = hours % 12; 
+            hours = hours ? hours : 12; 
+            
+            const mins = String(d.getMinutes()).padStart(2, '0');
             return `Received: ${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
         }
 
         function getTimeAgoUI(dateString) {
-            if (!dateString) return { text: "", color: "text-slate-400", isSLAWarning: false };
+            if (!dateString) {
+                return { text: "", color: "text-slate-400", isSLAWarning: false };
+            }
+            
             const orderDate = parseCustomDate(dateString);
             const diffInMs = new Date() - orderDate;
             
-            if (diffInMs < 0) return { text: "Just now", color: "text-emerald-400", isSLAWarning: false };
+            if (diffInMs < 0) {
+                return { text: "Just now", color: "text-emerald-400", isSLAWarning: false };
+            }
             
             const diffInHrs = Math.floor(diffInMs / (1000 * 60 * 60));
             const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -664,22 +1214,25 @@
             let color = 'text-emerald-400';
             let isSLAWarning = false;
             
-            // NEW FEATURE: SLA Breach Predictor Logic
             if (diffInHrs >= 48) {
                 color = 'text-pink-500';
-            }
-            else if (diffInHrs >= 46) { 
+            } else if (diffInHrs >= 46) { 
                 color = 'text-yellow-400'; 
                 isSLAWarning = true; 
-            }
-            else if (diffInHrs >= 4) {
+            } else if (diffInHrs >= 4) {
                 color = 'text-orange-400';
             }
 
-            if (diffInHrs > 48) return { text: `${Math.floor(diffInHrs/24)}d ago`, color: color, isSLAWarning };
-            if (diffInHrs > 0) return { text: `${diffInHrs}h ${diffInMins}m ago`, color: color, isSLAWarning };
-            if (diffInMins > 0) return { text: `${diffInMins}m ago`, color: color, isSLAWarning };
-            return { text: `Just now`, color: color, isSLAWarning };
+            if (diffInHrs > 48) {
+                return { text: `${Math.floor(diffInHrs/24)}d ago`, color, isSLAWarning };
+            }
+            if (diffInHrs > 0) {
+                return { text: `${diffInHrs}h ${diffInMins}m ago`, color, isSLAWarning };
+            }
+            if (diffInMins > 0) {
+                return { text: `${diffInMins}m ago`, color, isSLAWarning };
+            }
+            return { text: `Just now`, color, isSLAWarning };
         }
 
         function makeDirectDriveLink(url) {
@@ -690,14 +1243,11 @@
             return url;
         }
 
-        // ==========================================
-        // NORMAL LOGIN SUBMIT
-        // ==========================================
+        // LOGIN SYSTEM
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const error = document.getElementById('loginError');
-            
             btn.innerText = "AUTHENTICATING...";
             
             try {
@@ -706,10 +1256,10 @@
                     employeeId: document.getElementById('loginEmpId').value, 
                     password: document.getElementById('loginPass').value 
                 };
-
-                const res = await fetch(API_URL, {
+                
+                const res = await fetch(API_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload) 
                 });
                 
                 const data = await res.json();
@@ -718,20 +1268,20 @@
                     localStorage.setItem('yash_user', data.user.name); 
                     localStorage.setItem('yash_role', data.user.role || 'Staff');
                     showDashboard(data.user.name, data.user.role);
-                } else {
+                } else { 
                     error.innerText = data.message; 
                     error.classList.remove('hidden'); 
-                    btn.innerText = "INITIALIZE SYSTEM";
+                    btn.innerText = "INITIALIZE SYSTEM"; 
                 }
-            } catch (err) {
-                error.innerText = "Network Error. Check Connection."; 
+            } catch (err) { 
+                error.innerText = "Network Error."; 
                 error.classList.remove('hidden'); 
-                btn.innerText = "INITIALIZE SYSTEM";
+                btn.innerText = "INITIALIZE SYSTEM"; 
             }
         });
 
         function showDashboard(name, role) {
-            currentUserRole = role || 'Staff';
+            currentUserRole = role || 'Staff'; 
             currentUserName = name;
             
             document.getElementById('loginScreen').classList.add('hidden');
@@ -739,14 +1289,10 @@
             document.getElementById('userName').innerText = name.toUpperCase();
             
             fetchOrders(false);
-            
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
             }
-            // NEW OPTIMIZATION: Polling set to 30 seconds to respect Google Apps Script Quota Limits
-            autoRefreshInterval = setInterval(() => { 
-                fetchOrders(true); 
-            }, 30000); 
+            autoRefreshInterval = setInterval(() => { fetchOrders(true); }, 30000); 
         }
 
         function logout() { 
@@ -754,15 +1300,11 @@
             location.reload(); 
         }
 
-        // ==========================================
-        // NOTIFICATIONS
-        // ==========================================
         function showNotification(title, message) {
             const area = document.getElementById('notificationArea');
             const toast = document.createElement('div');
             
             toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto mb-2";
-            
             toast.innerHTML = `
                 <span class="text-2xl animate-bounce">⚡</span>
                 <div>
@@ -780,9 +1322,7 @@
             }, 5000); 
         }
 
-        // ==========================================
-        // DATA FETCHING & FILTERING
-        // ==========================================
+        // FETCH ORDERS
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
             
@@ -790,7 +1330,9 @@
                 grid.innerHTML = `
                     <div class="col-span-full py-20 text-center">
                         <div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
-                        <p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">Syncing with Mainframe...</p>
+                        <p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">
+                            Syncing with Mainframe...
+                        </p>
                     </div>
                 `;
             }
@@ -804,38 +1346,32 @@
                 const response = await res.json();
                 
                 if (response.status === 'success') {
-                    
-                    // NEW FEATURE: Receive Settings Template from Backend
                     if(response.settings) {
                         window.appSettings = response.settings;
                     }
-
-                    if (response.data.length > 0 && latestOrderTimestamp !== null) {
-                        const incomingLatest = parseCustomDate(response.data[0].date).getTime();
-                        if (incomingLatest > latestOrderTimestamp) {
-                            showNotification("New Order Incoming", response.data[0].shopName);
+                    
+                    response.data.forEach(o => {
+                        let amount = parseFloat(String(o.totalValue).replace(/,/g, '').replace(/[^\d.-]/g, '')) || 0;
+                        if(amount >= 50000) {
+                            o.isVIP = true;
                         }
-                    }
-                    
-                    if (response.data.length > 0) {
-                        latestOrderTimestamp = parseCustomDate(response.data[0].date).getTime();
-                    }
-                    
-                    // BUG FIX: Store globally instead of replacing raw HTML
+                    });
+
                     window.appData.rawArray = response.data;
                     window.appData.orders = {}; 
+                    
                     response.data.forEach(o => { 
                         window.appData.orders[o.orderId] = o; 
                     });
                     
                     applyDateFilter(); 
-
+                    
                     if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
                         openModal(currentActiveOrder.orderId); 
                     }
                 }
-            } catch (err) {
-                console.log("Background sync error: ", err);
+            } catch (err) { 
+                console.log("Background sync error: ", err); 
             }
         }
 
@@ -876,24 +1412,22 @@
                     }
                     if (activeDateRange === 'custom') {
                         let customVal = document.getElementById('customDateFilter').value;
-                        if(!customVal) return true;
+                        if(!customVal) {
+                            return true;
+                        }
                         return new Date(customVal).getTime() === d.getTime();
                     }
                     return true; 
                 });
             }
-            
             renderMdoDashboard(); 
             renderPipeline();
         }
 
-        // ==========================================
-        // OWNER MDO DASHBOARD (WAR ROOM)
-        // ==========================================
+        // MDO WAR ROOM DASHBOARD
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
-            
             const mdoDiv = document.getElementById('mdoCommandCenter');
             
             if (!isOwner) { 
@@ -906,13 +1440,10 @@
             let totalVolume = 0; 
             let totalCompleted = 0; 
             let slaBreaches = 0; 
-            
             let shopStats = {}; 
             let skuStats = {}; 
-            
-            // NEW FEATURE: Staff Performance Tracker
-            let staffScores = {};
-            
+            let staffScores = {}; 
+            let cityStats = {};
             let brandStats = { 'boAt': 0, 'Velocity': 0, 'Portronics': 0, 'JBL': 0, 'Hikvision': 0, 'Others': 0 };
             let stageStuck = Array(9).fill(0); 
             const now = new Date().getTime();
@@ -951,29 +1482,33 @@
                     else brandStats['Others'] += qty;
                 });
 
-                // Tallying Staff scores for Leaderboard
                 if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
                     staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
                 }
+                
+                // AREA HEATMAP LOGIC (Source from Backend Dealer Data Map)
+                let city = o.area && o.area !== "Unknown" ? o.area : o.shopName;
+                cityStats[city] = (cityStats[city] || 0) + 1;
             });
 
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].items - a[1].items);
             let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1] - a[1]).slice(0, 5); 
-            let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 3); // Top 3 Staff
+            let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 3);
+            let sortedCities = Object.entries(cityStats).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].items : 1;
             let maxStuck = Math.max(...stageStuck);
             let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
+            
             let completionRate = filteredData.length > 0 ? Math.round((totalCompleted / filteredData.length) * 100) : 0;
-            let healthScore = Math.max(0, 100 - (slaBreaches * 5) - ((100 - completionRate) * 0.2)).toFixed(0);
+            let healthScore = Math.max(0, 100 - (slaBreaches * 1.5) - ((100 - completionRate) * 0.1)).toFixed(0);
             let healthColor = healthScore > 80 ? 'text-emerald-400' : (healthScore > 50 ? 'text-orange-400' : 'text-pink-500');
-            let brandMax = Math.max(...Object.values(brandStats), 1);
 
             let mdoHtml = `
                 <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
                     <div>
                         <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">
-                            🔴 Live War Room
+                            🔴 LIVE WAR ROOM
                         </h2>
                         <p class="text-[10px] text-slate-500 font-mono mt-1">Real-time Business Telemetry</p>
                     </div>
@@ -984,7 +1519,6 @@
                 </div>
                 
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                    
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-indigo-500 hover-card">
                         <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Volume Output</div>
                         <div class="flex items-end gap-2 mt-2">
@@ -998,7 +1532,7 @@
                         <div class="flex items-center gap-3 mt-2">
                             <span class="text-3xl font-black text-emerald-400">${completionRate}%</span>
                         </div>
-                        <div class="text-[9px] text-slate-500 mt-1 font-semibold">${totalCompleted} Delivered</div>
+                        <div class="text-[9px] text-slate-500 mt-1 font-semibold">${totalCompleted} out of ${filteredData.length} Delivered</div>
                     </div>
                     
                     <div class="glass-panel p-4 rounded-2xl border-t-4 ${slaBreaches > 0 ? 'border-t-pink-500 bg-pink-500/5' : 'border-t-slate-700'} hover-card">
@@ -1018,8 +1552,7 @@
                             ${maxStuck} Stuck Here
                         </div>
                     </div>
-
-                    <!-- NEW FEATURE: Staff Performance Leaderboard -->
+                    
                     <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-yellow-400 hover-card flex flex-col">
                         <div class="text-[10px] text-yellow-400 uppercase font-black tracking-widest mb-2 flex gap-1 items-center">
                             🏆 Top Staff
@@ -1036,37 +1569,29 @@
                             }
                         </div>
                     </div>
-
                 </div>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span class="text-yellow-400">🔥</span> Hot Movers (Top SKUs)
+                            <span class="text-yellow-400">🔥</span> Hot Movers
                         </h3>
                         <div class="space-y-3">
-            `;
-
-            if (sortedSKUs.length > 0) {
-                sortedSKUs.forEach((sku, i) => { 
-                    mdoHtml += `
-                        <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <span class="text-slate-600 font-black text-sm">#${i+1}</span>
-                                <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
-                            </div>
-                            <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">${sku[1]} <span class="text-[9px] text-slate-500">QTY</span></span>
-                        </div>
-                    `; 
-                });
-            } else { 
-                mdoHtml += `
-                    <p class="text-slate-500 text-sm italic">No SKU data available.</p>
-                `; 
-            }
-
-            mdoHtml += `
+                            ${sortedSKUs.length > 0 ? 
+                                sortedSKUs.map((sku, i) => `
+                                    <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                        <div class="flex items-center gap-3 overflow-hidden">
+                                            <span class="text-slate-600 font-black text-sm">#${i+1}</span>
+                                            <span class="text-xs font-bold text-slate-300 truncate">${sku[0]}</span>
+                                        </div>
+                                        <span class="text-sm font-black text-yellow-400 ml-2 shrink-0">
+                                            ${sku[1]} <span class="text-[9px] text-slate-500">QTY</span>
+                                        </span>
+                                    </div>
+                                `).join('') 
+                                : `<p class="text-slate-500 text-sm italic">No SKU data available.</p>`
+                            }
                         </div>
                     </div>
                     
@@ -1075,71 +1600,55 @@
                             <span class="text-emerald-400">👑</span> VIP Dealers
                         </h3>
                         <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-            `;
-
-            if (sortedShops.length > 0) {
-                sortedShops.slice(0, 6).forEach((v, i) => { 
-                    let pct = (v[1].items / topShopVolume) * 100; 
-                    mdoHtml += `
-                        <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
-                            <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
-                            <div class="relative z-10 flex justify-between items-center">
-                                <div class="flex items-center gap-2 w-2/3">
-                                    <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
-                                </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `; 
-                });
-            } else { 
-                mdoHtml += `
-                    <p class="text-slate-500 text-sm italic">No dealer data for this period.</p>
-                `; 
-            }
-
-            mdoHtml += `
+                            ${sortedShops.length > 0 ? 
+                                sortedShops.slice(0, 6).map((v, i) => `
+                                    <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
+                                        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent transition-all duration-1000 ease-out" style="width: ${(v[1].items / topShopVolume) * 100}%"></div>
+                                        <div class="relative z-10 flex justify-between items-center">
+                                            <div class="flex items-center gap-2 w-2/3">
+                                                <span class="text-xs font-bold text-slate-200 truncate group-hover:text-white">${v[0]}</span>
+                                            </div>
+                                            <div class="flex flex-col items-end">
+                                                <span class="text-sm font-black text-emerald-400">${v[1].items}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') 
+                                : `<p class="text-slate-500 text-sm italic">No dealer data for this period.</p>`
+                            }
                         </div>
                     </div>
                     
+                    <!-- NEW FEATURE: Area Heatmap Data -->
+                    <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <span class="text-blue-400">📍</span> Area Heatmap
+                        </h3>
+                        <div class="space-y-3">
+                            ${sortedCities.length > 0 ? 
+                                sortedCities.map((city, i) => `
+                                    <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                        <div class="flex items-center gap-3 overflow-hidden">
+                                            <span class="text-slate-600 font-black text-sm">#${i+1}</span>
+                                            <span class="text-xs font-bold text-slate-300 truncate">${city[0]}</span>
+                                        </div>
+                                        <span class="text-sm font-black text-blue-400 ml-2 shrink-0">
+                                            ${city[1]} <span class="text-[9px] text-slate-500">Orders</span>
+                                        </span>
+                                    </div>
+                                `).join('') 
+                                : `<p class="text-slate-500 text-sm italic">No area data available.</p>`
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- NEW FEATURE: Interactive Pie Chart for Brand Matrix -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
                             <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Brand Matrix</span>
                         </h3>
-                        <div class="flex-1 flex items-end justify-around gap-2 mt-2 pt-4 h-40 border-b border-slate-800 relative">
-            `;
-
-            Object.entries(brandStats).filter(b => b[1] > 0 || brandMax === 1).forEach(b => {
-                let h = brandMax > 0 ? (b[1]/brandMax)*100 : 0; 
-                if (b[1] > 0 && h < 5) h = 5; 
-
-                let color = 'from-blue-600 to-blue-400';
-                if(b[0] === 'Velocity') color = 'from-purple-600 to-pink-500'; 
-                if(b[0] === 'boAt') color = 'from-red-600 to-orange-500'; 
-                if(b[0] === 'Portronics') color = 'from-yellow-600 to-orange-400';
-                
-                mdoHtml += `
-                    <div class="flex-1 flex flex-col items-center justify-end group relative w-full px-1">
-                        <div class="opacity-0 group-hover:opacity-100 absolute -top-8 bg-[#131C31] text-white text-[10px] font-black px-2 py-1 rounded border border-slate-700 shadow-xl transition-all z-20 whitespace-nowrap">
-                            ${b[1]} Units
-                        </div>
-                        <div 
-                            class="chart-bar-fill w-full bg-gradient-to-t ${color} rounded-t-sm shadow-[0_-5px_15px_rgba(0,0,0,0.3)] relative group-hover:brightness-125 transition-all duration-1000 ease-out" 
-                            style="height: 0%;"
-                            data-target="${Math.max(5, h)}%"
-                        >
-                            <div class="absolute inset-0 bg-white/20 w-full h-1"></div>
-                        </div>
-                        <span class="text-[9px] text-slate-400 mt-2 font-bold truncate w-full text-center group-hover:text-white transition-colors">
-                            ${b[0]}
-                        </span>
-                    </div>
-                `;
-            });
-
-            mdoHtml += `
+                        <div class="flex-1 w-full h-40 relative flex justify-center items-center">
+                            <canvas id="brandPieChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1147,16 +1656,68 @@
             
             mdoDiv.innerHTML = mdoHtml;
             
+            // Render Chart.js Pie Chart
             setTimeout(() => { 
-                document.querySelectorAll('.chart-bar-fill').forEach(bar => { 
-                    bar.style.height = bar.getAttribute('data-target'); 
-                }); 
+                const ctx = document.getElementById('brandPieChart');
+                if (ctx) {
+                    if (brandChartInstance) {
+                        brandChartInstance.destroy();
+                    }
+                    
+                    const labels = Object.keys(brandStats).filter(k => brandStats[k] > 0);
+                    const dataVals = Object.values(brandStats).filter(v => v > 0);
+                    
+                    if (labels.length === 0) {
+                        labels.push("No Data");
+                        dataVals.push(1);
+                    }
+
+                    brandChartInstance = new Chart(ctx.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: dataVals,
+                                backgroundColor: [
+                                    '#ef4444', // Red
+                                    '#ec4899', // Pink
+                                    '#f59e0b', // Yellow
+                                    '#3b82f6', // Blue
+                                    '#10b981', // Green
+                                    '#64748b'  // Gray
+                                ],
+                                borderWidth: 0,
+                                hoverOffset: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        color: '#94a3b8',
+                                        font: { size: 10, family: "'Inter', sans-serif" },
+                                        boxWidth: 10
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                    titleFont: { size: 11 },
+                                    bodyFont: { size: 13, weight: 'bold' },
+                                    padding: 10,
+                                    borderColor: '#6366F1',
+                                    borderWidth: 1
+                                }
+                            }
+                        }
+                    });
+                }
             }, 100);
         }
 
-        // ==========================================
-        // PIPELINE & ORDER GRID RENDERING
-        // ==========================================
+        // PIPELINE & ORDER GRID
         function setStageFilter(stageIndex) { 
             activeStageFilter = stageIndex; 
             renderPipeline(); 
@@ -1169,15 +1730,15 @@
             let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
             let stageCounts = Array(9).fill(0);
             
-            // NEW FEATURE: Smart Order Merging Detector
+            // Smart Order Merging Detector
             let shopPendingCount = {};
             
             pendingOrders.forEach(o => { 
                 if (o.completedStages < 9) {
                     stageCounts[o.completedStages]++; 
                 }
-                if (o.completedStages < 4) { // Pre-dispatch orders are mergeable
-                    shopPendingCount[o.shopName] = (shopPendingCount[o.shopName] || 0) + 1;
+                if (o.completedStages < 4) { 
+                    shopPendingCount[o.shopName] = (shopPendingCount[o.shopName] || 0) + 1; 
                 }
             });
 
@@ -1189,7 +1750,9 @@
                     <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">
                         Overview
                     </span>
-                    <span class="text-white text-sm font-black mb-2">All Pending</span>
+                    <span class="text-white text-sm font-black mb-2">
+                        All Pending
+                    </span>
                     <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
                         <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">
                             COUNT
@@ -1204,12 +1767,12 @@
             STAGE_NAMES.forEach((name, idx) => {
                 let isActive = activeStageFilter === idx; 
                 let orderCount = stageCounts[idx];
-                
                 let filterName = name.split(' (')[0]; 
+                
                 if (idx === 6) {
                     filterName = "Delivery Comms";
                 }
-
+                
                 filterHtml += `
                     <div 
                         onclick="setStageFilter(${idx})" 
@@ -1251,8 +1814,8 @@
             displayOrders.forEach(order => {
                 const progress = (order.completedStages / 9) * 100;
                 let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
-                
                 let nextStepName = "Fully Completed";
+                
                 if (order.completedStages < 9) {
                     if (order.completedStages === 6) {
                         nextStepName = isCod ? "Call 2" : "WhatsApp 2";
@@ -1262,23 +1825,46 @@
                 }
                 
                 let exactDateStr = formatExactDate(order.date);
-                let timeData = getTimeAgoUI(order.date); // Returns {text, color, isSLAWarning}
+                let timeData = getTimeAgoUI(order.date);
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 
                 let splitBadge = "";
-                if(String(order.orderId).toUpperCase().includes('SPLIT')) {
-                    splitBadge = `<span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30 shrink-0">✂️ SPLIT</span>`;
+                if (String(order.orderId).toUpperCase().includes('SPLIT')) {
+                    splitBadge = `
+                        <span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30 shrink-0">
+                            ✂️ SPLIT
+                        </span>
+                    `;
                 }
-
-                // NEW FEATURE: VIP Ambulance Glow 
-                let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] border-slate-800 hover:border-indigo-500";
-                let vipBadge = order.isVIP ? `<span class="bg-red-500 text-white text-[9px] px-2 py-1 rounded font-black uppercase shadow-[0_0_10px_red] animate-pulse shrink-0">🔥 VIP</span>` : "";
                 
-                // NEW FEATURE: SLA Breach Predictor UI
-                let slaBadge = timeData.isSLAWarning ? `<span class="text-[9px] bg-yellow-500/20 text-yellow-400 font-black border border-yellow-500 px-2 py-1 rounded animate-pulse tracking-widest shrink-0">⏳ NEAR BREACH</span>` : "";
+                let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
                 
-                // NEW FEATURE: Smart Merge Indicator
-                let mergeBadge = (order.completedStages < 4 && shopPendingCount[order.shopName] > 1) ? `<span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0">🔗 MERGE AVAIL</span>` : "";
+                let vipBadge = "";
+                if (order.isVIP) {
+                    vipBadge = `
+                        <span class="bg-red-500 text-white text-[9px] px-2 py-1 rounded font-black uppercase shadow-[0_0_10px_red] animate-pulse shrink-0">
+                            🔥 VIP
+                        </span>
+                    `;
+                }
+                
+                let slaBadge = "";
+                if (timeData.isSLAWarning) {
+                    slaBadge = `
+                        <span class="text-[9px] bg-yellow-500/20 text-yellow-400 font-black border border-yellow-500 px-2 py-1 rounded animate-pulse tracking-widest shrink-0">
+                            ⏳ NEAR BREACH
+                        </span>
+                    `;
+                }
+                
+                let mergeBadge = "";
+                if (order.completedStages < 4 && shopPendingCount[order.shopName] > 1) {
+                    mergeBadge = `
+                        <span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" title="Pack this together with another pending order!">
+                            🔗 MERGE AVAIL
+                        </span>
+                    `;
+                }
 
                 grid.innerHTML += `
                     <div 
@@ -1309,7 +1895,7 @@
                                 <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
                                     ⏱️ ${timeData.text}
                                 </span>
-                                ${slaBadge}
+                                ${slaBadge} 
                                 ${mergeBadge}
                             </div>
                             
@@ -1328,7 +1914,9 @@
                         
                         <div>
                             <div class="bg-[#0B1121] p-2.5 rounded-lg mb-3 border border-slate-800 flex justify-between items-center group-hover:border-indigo-500/30 transition-colors">
-                                <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Next Action:</span>
+                                <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">
+                                    Next Action:
+                                </span>
                                 <span class="text-[10px] text-emerald-400 font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">
                                     ${nextStepName}
                                 </span>
@@ -1350,9 +1938,7 @@
             });
         }
 
-        // ==========================================
         // UI INTERACTIONS & FILE SELECTION
-        // ==========================================
         function handleFileSelection(inputElement, stageNum) {
             const newFiles = Array.from(inputElement.files);
             queuedFiles = queuedFiles.concat(newFiles);
@@ -1363,7 +1949,7 @@
             const previewBox = document.getElementById(`previewBox_${stageNum}`);
             
             if (queuedFiles.length > 0) {
-                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`;
+                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
                 statusLabel.classList.remove('hidden'); 
                 
                 if (clearBtn) {
@@ -1379,20 +1965,20 @@
                     previewBox.classList.remove('hidden');
                     
                     queuedFiles.forEach(file => {
-                        if (file.type.startsWith('audio/')) { 
+                        if (file.type.startsWith('audio/')) {
                             previewBox.innerHTML += `
                                 <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
                                     🎤<br/>Audio
                                 </div>
                             `; 
-                        } else {
-                            const reader = new FileReader();
+                        } else { 
+                            const reader = new FileReader(); 
                             reader.onload = function(e) { 
                                 previewBox.innerHTML += `
                                     <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
                                 `; 
-                            }
-                            reader.readAsDataURL(file);
+                            }; 
+                            reader.readAsDataURL(file); 
                         }
                     });
                 }
@@ -1402,131 +1988,130 @@
         function clearQueuedFiles(stageNum) {
             queuedFiles = [];
             
-            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
-            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
-            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
-            const previewBox = document.getElementById(`previewBox_${stageNum}`);
-            
-            if(statusLabel) {
-                statusLabel.classList.add('hidden'); 
+            if (document.getElementById(`fileStatusText_${stageNum}`)) {
+                document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden'); 
             }
-            if(clearBtn) {
-                clearBtn.classList.add('hidden'); 
+            if (document.getElementById(`clearFilesBtn_${stageNum}`)) {
+                document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden'); 
             }
-            if(container) {
-                container.classList.add('hidden');
+            if (document.getElementById(`fileStatusContainer_${stageNum}`)) {
+                document.getElementById(`fileStatusContainer_${stageNum}`).classList.add('hidden');
             }
-            if(previewBox) { 
-                previewBox.innerHTML = ''; 
-                previewBox.classList.add('hidden'); 
+            if (document.getElementById(`previewBox_${stageNum}`)) { 
+                document.getElementById(`previewBox_${stageNum}`).innerHTML = ''; 
+                document.getElementById(`previewBox_${stageNum}`).classList.add('hidden'); 
             }
         }
 
-        // ==========================================
-        // WHATSAPP DIRECT CHAT & SHARE TO GROUP
-        // ==========================================
         window.shareToGroup = function(stageNum, fileUrlsString) {
-            const orderId = currentActiveOrder.orderId;
-            const shop = currentActiveOrder.shopName;
+            const orderId = currentActiveOrder.orderId; 
+            const shop = currentActiveOrder.shopName; 
             const stageName = STAGE_NAMES[stageNum - 1]; 
             
             let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
-            
             let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
             
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // ==========================================
-        // NEW FEATURE: Client-Side Tally SO CSV Generator
-        // ==========================================
+        // TALLY SO CSV GENERATOR
         function generateTallyCSV(orderId) {
             const order = window.appData.orders[orderId];
-            if(!order) return;
+            if(!order) {
+                return;
+            }
             
-            // Standard Tally Sales Order CSV format headers
-            let csvContent = "Date,Voucher Type,Voucher Number,Party Name,Item Name,Quantity,Rate,Amount\n";
+            // Adding BOM for explicit UTF-8 recognition in MS Excel / Tally
+            let csvContent = "\uFEFFDate,Voucher Type,Voucher Number,Party Name,Item Name,Quantity,Rate,Amount\n";
+            let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); 
             
-            let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); // DD/MM/YYYY
-            
-            order.items.forEach(item => {
-                // Rate and Amount left 0 by default to allow Tally to auto-fill or remain 0 as per SO standards
-                csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`;
+            order.items.forEach(item => { 
+                csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`; 
             });
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Tally_SO_${order.orderId}.csv`);
-            link.style.visibility = 'hidden';
+            
+            link.href = URL.createObjectURL(blob);
+            link.download = `Tally_SO_${order.orderId}.csv`;
+            link.style.display = 'none';
+            
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            showNotification("Tally SO Exported", `File downloaded for ${order.orderId}. Ready for import.`);
+            showNotification("Tally SO Exported", `Ensure file is CLOSED before importing in Tally.`);
         }
 
-        // ==========================================
-        // NEW FEATURE: Dynamic Shipping Label (A6 Print)
-        // ==========================================
+        // DYNAMIC SHIPPING LABEL (EXACT A4 4-STICKER LAYOUT)
         function generateShippingLabel(orderId) {
             const order = window.appData.orders[orderId];
             const printDiv = document.getElementById('shippingLabelScreen');
             
-            // Generate HTML for A6 print layout (Hidden in normal view, shown in @media print)
-            printDiv.innerHTML = `
-                <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="margin:0; font-size: 24px; font-weight: 900; letter-spacing: 2px;">YASH MARKETING</h2>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold;">OFFICIAL SHIPPING & DISPATCH LABEL</p>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-                    <div>
-                        <div style="font-size: 10px; font-weight: bold; color: #555;">ORDER ID</div>
-                        <div style="font-size: 22px; font-weight: 900;">${order.orderId}</div>
-                        <div style="font-size: 10px; margin-top: 5px;"><strong>Date:</strong> ${order.date.split(' ')[0]}</div>
+            let labelHtml = `
+                <div class="sticker-label">
+                    <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 10px;">
+                        <h2 style="margin:0; font-size: 18px; font-weight: 900;">YASH MARKETING</h2>
+                        <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: bold;">
+                            71, Wadiya Park, Maliwada, A.Nagar - 414001<br/>8378811922 / 8805566651
+                        </p>
                     </div>
-                    <img src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=${order.orderId}" style="width: 80px; height: 80px; border: 1px solid #ddd;" alt="QR Code">
-                </div>
-                
-                <div style="border: 2px solid black; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="font-size: 10px; font-weight: bold; background: black; color: white; display: inline-block; padding: 3px 8px; margin-top: -20px; border-radius: 4px;">TO (CONSIGNEE)</div>
-                    <div style="font-size: 18px; font-weight: 900; margin-top: 10px;">${order.shopName}</div>
-                    <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">📞 ${order.phone || 'Phone number not provided'}</div>
-                    <div style="font-size: 12px; margin-top: 5px; line-height: 1.4;">${order.address || 'Address not provided in database'}</div>
-                </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px dashed #ccc;">
+                        <div>
+                            <div style="font-size: 9px; font-weight: bold;">ORDER ID</div>
+                            <div style="font-size: 14px; font-weight: 900;">${order.orderId}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 9px;">Order Date: <strong>${order.date.split(' ')[0]}</strong></div>
+                            <div style="font-size: 9px;">Print Date: <strong>${new Date().toLocaleDateString('en-GB')}</strong></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-size: 10px; font-weight: bold; background: black; color: white; display: inline-block; padding: 2px 5px;">
+                            TO (CONSIGNEE)
+                        </div>
+                        <div style="font-size: 16px; font-weight: 900; margin-top: 5px;">${order.shopName}</div>
+                        <div style="font-size: 12px; font-weight: bold; margin-top: 2px;">📞 ${order.phone || '______________________'}</div>
+                        <div style="font-size: 11px; margin-top: 5px; height: 35px; border-bottom: 1px solid #aaa;">Address: </div>
+                        <div style="font-size: 11px; height: 20px; border-bottom: 1px solid #aaa;"></div>
+                    </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <div style="flex: 1; border: 1px solid #aaa; padding: 8px; border-radius: 6px;">
-                        <div style="font-size: 9px; font-weight: bold; color: #666;">PAYMENT MODE</div>
-                        <div style="font-size: 14px; font-weight: 900;">${order.paymentMode}</div>
+                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                        <div style="flex: 1; border: 1px solid #aaa; padding: 5px;">
+                            <div style="font-size: 8px; font-weight: bold;">PAYMENT MODE</div>
+                            <div style="font-size: 12px; font-weight: 900;">${order.paymentMode}</div>
+                        </div>
+                        <div style="flex: 1; border: 1px solid #aaa; padding: 5px;">
+                            <div style="font-size: 8px; font-weight: bold;">TRANSPORTER</div>
+                            <div style="font-size: 12px; font-weight: 900; border-bottom: 1px solid #ccc; height: 16px;"></div>
+                        </div>
                     </div>
-                    <div style="flex: 1; border: 1px solid #aaa; padding: 8px; border-radius: 6px;">
-                        <div style="font-size: 9px; font-weight: bold; color: #666;">LOGISTICS / TRANSPORT</div>
-                        <div style="font-size: 14px; font-weight: 900;">${order.transporter}</div>
+                    
+                    <div style="text-align: center; font-size: 12px; font-weight: bold; margin-top: 15px;">
+                        Thank You!
                     </div>
-                </div>
-                
-                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">Total Packages: 1</div>
-                <div style="font-size: 12px; font-weight: bold;">Total Items: ${order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0)}</div>
-
-                <div style="font-size: 9px; text-align: center; margin-top: 30px; color: #666; border-top: 1px dashed #ccc; padding-top: 10px;">
-                    * This is a system-generated label via Enterprise OS v12.0<br>
-                    Scan QR code for internal verification.
                 </div>
             `;
+
+            // Grid positions: 1=Label, 2=Empty, 3=Label, 4=Empty
+            printDiv.innerHTML = `
+                ${labelHtml}
+                <div class="empty-sticker"></div>
+                ${labelHtml}
+                <div class="empty-sticker"></div>
+            `;
             
-            window.print(); // Triggers browser print dialog
+            window.print();
         }
 
-        // ==========================================
-        // MODAL AND TASK EXECUTION (FULLY DETAILED)
-        // ==========================================
+        // MODAL AND TASK EXECUTION
         function openModal(orderId) {
-            // Fetch order from Global App Data Dictionary (Prevents JSON breaking bugs)
             const order = window.appData.orders[orderId];
-            if(!order) return;
+            if(!order) {
+                return;
+            }
             
             currentActiveOrder = order; 
             queuedFiles = []; 
@@ -1534,14 +2119,13 @@
             document.getElementById('modalOrderId').innerText = order.orderId;
             document.getElementById('modalShopName').innerText = order.shopName;
             
-            // VIP Badge Logic
             if (order.isVIP) {
                 document.getElementById('modalVipBadge').classList.remove('hidden');
             } else {
                 document.getElementById('modalVipBadge').classList.add('hidden');
             }
             
-            let exactDateStr = formatExactDate(order.date);
+            let exactDateStr = formatExactDate(order.date); 
             let timeData = getTimeAgoUI(order.date);
             
             document.getElementById('modalReceiptDate').innerText = exactDateStr;
@@ -1549,8 +2133,8 @@
             document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
             let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+            let payBadge = document.getElementById('modalPaymentMode'); 
             
-            let payBadge = document.getElementById('modalPaymentMode');
             payBadge.innerText = order.paymentMode || 'N/A';
             
             if (isCod) {
@@ -1564,7 +2148,6 @@
             const container = document.getElementById('stagesContainer'); 
             container.innerHTML = '';
             
-            // V11 INVENTORY MANIFEST HTML
             let itemsHtml = `
                 <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
                     <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -1577,27 +2160,44 @@
                 order.items.forEach(item => {
                     let imgTag = "";
                     if (item.image) {
-                        imgTag = `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">`;
+                        imgTag = `
+                            <img 
+                                src="${item.image}" 
+                                class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm"
+                            >
+                        `;
                     } else {
-                        imgTag = `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
+                        imgTag = `
+                            <div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">
+                                No Img
+                            </div>
+                        `;
                     }
                     
                     itemsHtml += `
                         <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
                             ${imgTag}
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs text-slate-300 font-bold leading-tight text-wrap-custom">${item.name}</p>
+                                <p class="text-xs text-slate-300 font-bold leading-tight text-wrap-custom">
+                                    ${item.name}
+                                </p>
                                 <div class="mt-2 flex items-center gap-2">
-                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Qty:</span>
-                                    <span class="text-xs font-black text-indigo-400 bg-indigo-900/30 border border-indigo-500/20 px-2 py-0.5 rounded shadow-inner">${item.qty}</span>
+                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                        Qty:
+                                    </span>
+                                    <span class="text-xs font-black text-indigo-400 bg-indigo-900/30 border border-indigo-500/20 px-2 py-0.5 rounded shadow-inner">
+                                        ${item.qty}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-            } else { 
+            } else {
                 itemsHtml += `
-                    <p class="text-sm text-slate-600 italic px-2">No SKU data found for this order.</p>
+                    <p class="text-sm text-slate-600 italic px-2">
+                        No SKU data found for this order.
+                    </p>
                 `; 
             }
             
@@ -1608,7 +2208,6 @@
             
             container.innerHTML += itemsHtml;
 
-            // STAGE ENGINE LOOP
             let stagesListHtml = '<div class="space-y-4">';
             
             for (let i = 0; i < 9; i++) {
@@ -1625,21 +2224,25 @@
                 let uiHtml = '';
                 
                 if (isCompleted) {
-                    let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : [];
-                    let hasFiles = false;
+                    let fileUrls = order.stageUrls ? order.stageUrls[i].split(',') : []; 
+                    let hasFiles = false; 
                     let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
                     
                     fileUrls.forEach((url, index) => {
                         url = url.trim();
                         if (url.includes("http")) {
                             hasFiles = true;
-                            if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) { 
+                            if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
                                 previewHtml += `
                                     <audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
                                 `; 
                             } else { 
                                 previewHtml += `
-                                    <a href="${url}" target="_blank" class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm">
+                                    <a 
+                                        href="${url}" 
+                                        target="_blank" 
+                                        class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm"
+                                    >
                                         <span>🖼️ View Uploaded Proof ${index + 1}</span>
                                         <span class="text-slate-500 text-lg">→</span>
                                     </a>
@@ -1654,17 +2257,19 @@
                                 onclick="shareToGroup(${stageNum}, '${order.stageUrls[i]}')" 
                                 class="mt-2 w-full bg-[#128C7E] hover:bg-[#075E54] text-white text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border border-[#128C7E]"
                             >
-                                <span>📤</span> Share Details & Photos to WhatsApp Group
+                                <span>📤</span> Share to WhatsApp Group
                             </button>
                         `;
                     }
                     
                     previewHtml += `</div>`;
-
+                    
                     uiHtml = `
                         <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition">
                             <div class="flex justify-between items-center">
-                                <span class="text-emerald-400 text-sm font-black">${stageNum}. ${displayStageName}</span>
+                                <span class="text-emerald-400 text-sm font-black">
+                                    ${stageNum}. ${displayStageName}
+                                </span>
                                 <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">
                                     ✔ COMPLETED
                                 </span>
@@ -1676,13 +2281,15 @@
                 else if (isLocked) {
                     uiHtml = `
                         <div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50">
-                            <span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span>
+                            <span class="text-slate-500 text-sm font-bold">
+                                ${stageNum}. ${displayStageName}
+                            </span>
                             <span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">
                                 🔒 LOCKED
                             </span>
                         </div>
                     `;
-                } 
+                }
                 else if (isActive) {
                     let inputHtml = '';
                     
@@ -1698,13 +2305,12 @@
                         `;
                     } 
                     else if (stageNum === 2) {
-                        // NEW FEATURE: TALLY SO EXPORT IN STAGE 2
                         inputHtml = `
                             <button 
                                 onclick="generateTallyCSV('${order.orderId}')" 
                                 class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
                             >
-                                <span>📊</span> Generate Tally Sales Order (CSV)
+                                <span>📊</span> Export Sales Order for Tally (CSV)
                             </button>
                             
                             <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
@@ -1731,9 +2337,9 @@
                                 <button 
                                     id="clearFilesBtn_${stageNum}" 
                                     onclick="clearQueuedFiles(${stageNum})" 
-                                    class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
+                                    class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
                                 >
-                                    Clear Files
+                                    Clear
                                 </button>
                             </div>
                             
@@ -1742,31 +2348,20 @@
                                 id="submitBtn_${stageNum}" 
                                 class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
                             >
-                                Confirm Balance Check & Execute
+                                Confirm Check & Execute
                             </button>
                         `;
                     }
                     else if (stageNum === 3 || stageNum === 7) { 
-                        
-                        // NEW FEATURE: SETTINGS MANAGER TEMPLATE PARSING
                         let msgTemplate = "";
+                        
                         if (stageNum === 3) {
-                            msgTemplate = window.appSettings.waMsgStage3 || `Hello {{shop}},\n\nYour order ({{orderId}}) with Yash Marketing is successfully processed and confirmed.\n\nPayment Mode: {{paymentMode}}\nTotal Amount: Rs. {{amount}}\n\nWe will dispatch it shortly. Thank you!`;
+                            msgTemplate = window.appSettings.waMsgStage3 || `Hello {{shop}},\n\nYour order ({{orderId}}) with Yash Marketing is processed.\n\nPayment Mode: {{paymentMode}}\nAmount: Rs. {{amount}}\n\nThank you!`;
                         } else {
-                            if (isCod) {
-                                msgTemplate = window.appSettings.waMsgStage7COD || `Hello {{shop}},\n\nGood News! Your order ({{orderId}}) from Yash Marketing is OUT FOR DELIVERY today.\n\nPlease keep the exact COD amount Rs. {{amount}} ready for a smooth handover.\n\nThank you for choosing Yash Marketing!`;
-                            } else {
-                                msgTemplate = window.appSettings.waMsgStage7Prepaid || `Hello {{shop}},\n\nGood News! Your PREPAID order ({{orderId}}) from Yash Marketing is OUT FOR DELIVERY today.\n\nOur delivery executive will reach you soon.\n\nThank you for choosing Yash Marketing!`;
-                            }
+                            msgTemplate = isCod ? (window.appSettings.waMsgStage7COD || `Hello {{shop}},\n\nYour order ({{orderId}}) is OUT FOR DELIVERY.\nKeep COD Rs. {{amount}} ready.`) : (window.appSettings.waMsgStage7Prepaid || `Hello {{shop}},\n\nYour PREPAID order ({{orderId}}) is OUT FOR DELIVERY.`);
                         }
-
-                        // Replace placeholders with real data
-                        let finalMsg = msgTemplate
-                            .replace(/{{shop}}/g, order.shopName)
-                            .replace(/{{orderId}}/g, order.orderId)
-                            .replace(/{{paymentMode}}/g, order.paymentMode)
-                            .replace(/{{amount}}/g, order.totalValue);
-
+                        
+                        let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
                         let waUrl = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(finalMsg)}` : `https://wa.me/?text=${encodeURIComponent(finalMsg)}`;
 
                         inputHtml += `
@@ -1780,9 +2375,6 @@
                                     target="_blank" 
                                     class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 mb-3"
                                 >
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"></path>
-                                    </svg>
                                     Send WhatsApp Message
                                 </a>
                                 
@@ -1790,25 +2382,26 @@
                                     <input 
                                         type="checkbox" 
                                         id="noResponse_${stageNum}" 
-                                        class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 focus:ring-pink-500 focus:ring-offset-slate-900 cursor-pointer shrink-0"
+                                        class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 cursor-pointer shrink-0"
                                     >
                                     <span class="text-[11px] text-pink-400 font-black uppercase tracking-widest text-wrap-custom">
-                                        Dealer Didn't Respond / Ignore Comms
+                                        Dealer Didn't Respond / Ignore
                                     </span>
                                 </label>
                             </div>
                         `;
-
+                        
                         if (stageNum === 7 && isCod) {
                             inputHtml += `
                                 <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4">
                                     <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2">
                                         <span class="text-indigo-400">🎤</span> Upload Call Recording (Mandatory for COD)
                                     </p>
+                                    
                                     <input 
                                         type="file" 
                                         accept="audio/*" 
-                                        class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" 
+                                        class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" 
                                         onchange="handleFileSelection(this, ${stageNum})"
                                     >
                                     
@@ -1825,7 +2418,7 @@
                                         <button 
                                             id="clearFilesBtn_${stageNum}" 
                                             onclick="clearQueuedFiles(${stageNum})" 
-                                            class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
+                                            class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
                                         >
                                             Clear
                                         </button>
@@ -1833,7 +2426,7 @@
                                 </div>
                             `;
                         }
-
+                        
                         inputHtml += `
                             <p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">
                                 Step 2: Submit
@@ -1849,7 +2442,6 @@
                     }
                     else {
                         if (stageNum === 4) {
-                            // SPLIT ORDER ENGINE V11 (100% UNTOUCHED)
                             inputHtml += `
                                 <div class="bg-[#0B1121] border border-slate-700 p-3 rounded-xl mt-4 mb-4 shadow-inner">
                                     <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2">
@@ -1857,7 +2449,7 @@
                                     </p>
                                     <div class="space-y-2 max-h-[400px] overflow-y-auto hide-scrollbar pr-1">
                             `;
-                                        
+                            
                             order.items.forEach((item, idx) => {
                                 inputHtml += `
                                     <div class="flex items-center justify-between bg-[#131C31] p-2.5 rounded-lg border border-slate-800">
@@ -1880,13 +2472,13 @@
                                                 value="${item.qty}" 
                                                 max="${item.qty}" 
                                                 min="0" 
-                                                class="w-16 bg-[#0B1121] text-white text-xs font-black p-1.5 rounded border border-slate-600 text-center focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                class="w-16 bg-[#0B1121] text-white text-xs font-black p-1.5 rounded border border-slate-600 text-center outline-none"
                                             >
                                         </div>
                                     </div>
                                 `;
                             });
-                                        
+                            
                             inputHtml += `
                                     </div>
                                     <p class="text-[9px] text-orange-400 mt-3 font-bold leading-tight bg-orange-900/10 p-2 rounded border border-orange-500/20">
@@ -1897,7 +2489,6 @@
                         }
 
                         if (stageNum === 5) {
-                            // NEW FEATURE: Dynamic A6 Label Print Button inside Invoiced Stage
                             inputHtml += `
                                 <button 
                                     onclick="generateShippingLabel('${order.orderId}')" 
@@ -1916,7 +2507,7 @@
                                 <input 
                                     type="file" 
                                     accept="audio/*" 
-                                    class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" 
+                                    class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" 
                                     onchange="handleFileSelection(this, ${stageNum})"
                                 >
                             `;
@@ -1936,6 +2527,7 @@
                                             onchange="handleFileSelection(this, ${stageNum})"
                                         >
                                     </label>
+                                    
                                     <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
                                         🖼️ Multi Gallery
                                         <input 
@@ -1950,7 +2542,6 @@
                             `;
                         }
 
-                        // Thumbnail Preview Area
                         inputHtml += `
                             <div 
                                 id="previewBox_${stageNum}" 
@@ -1965,14 +2556,13 @@
                                 <button 
                                     id="clearFilesBtn_${stageNum}" 
                                     onclick="clearQueuedFiles(${stageNum})" 
-                                    class="text-[10px] font-bold text-pink-400 hover:text-pink-300 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
+                                    class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
                                 >
                                     Clear Files
                                 </button>
                             </div>
                         `;
 
-                        // Customer Rating Area
                         if (stageNum === 9) {
                             inputHtml += `
                                 <div class="mt-4">
@@ -1985,7 +2575,7 @@
                                         min="1" 
                                         max="5" 
                                         placeholder="Enter Score (1-5)" 
-                                        class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-lg text-center shadow-inner"
+                                        class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white outline-none font-bold text-lg text-center shadow-inner"
                                     >
                                 </div>
                             `;
@@ -2020,11 +2610,10 @@
                         </div>
                     `;
                 }
-                
                 stagesListHtml += uiHtml;
             }
             
-            stagesListHtml += '</div>';
+            stagesListHtml += '</div>'; 
             container.innerHTML += stagesListHtml;
             
             document.getElementById('orderModal').classList.remove('hidden');
@@ -2035,9 +2624,6 @@
             fetchOrders(true); 
         }
 
-        // ==========================================
-        // DATA COMPRESSION & UPLOAD PROTOCOLS
-        // ==========================================
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader(); 
@@ -2062,12 +2648,10 @@
                         const ctx = canvas.getContext('2d'); 
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
-                        
                         resolve({ 
                             name: file.name, 
                             mimeType: 'image/jpeg', 
-                            base64: dataUrl.split(',')[1] 
+                            base64: canvas.toDataURL('image/jpeg', 0.6).split(',')[1] 
                         });
                     };
                 };
@@ -2089,16 +2673,12 @@
             });
         }
 
-        // ==========================================
-        // SUBMIT STAGE
-        // ==========================================
         async function submitStage(stageNum) {
-            const btn = document.getElementById(`submitBtn_${stageNum}`);
+            const btn = document.getElementById(`submitBtn_${stageNum}`); 
             const statusLabel = document.getElementById(`status_${stageNum}`);
             
             let isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
 
-            // NEW FEATURE: Added staffName to payload for Leaderboard tracking
             let payload = { 
                 action: 'updateStage', 
                 orderId: currentActiveOrder.orderId, 
@@ -2106,33 +2686,32 @@
                 files: [], 
                 isNoResponse: false, 
                 isWhatsAppOnly: false, 
-                partialStock: null,
+                partialStock: null, 
                 staffName: currentUserName 
             };
             
             const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
-            if (noRespCheckbox && noRespCheckbox.checked) { 
+            if (noRespCheckbox && noRespCheckbox.checked) {
                 payload.isNoResponse = true; 
             }
             
             if (stageNum !== 1) {
-                
                 let fileRequired = true;
                 
-                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) { 
+                if (payload.isNoResponse || stageNum === 9 || stageNum === 3 || (stageNum === 7 && !isCod)) {
                     fileRequired = false; 
                 }
 
                 if (fileRequired && queuedFiles.length === 0) {
-                    if (stageNum === 7 && isCod) { 
-                        alert("For COD Orders, Call Recording (Audio File) is MANDATORY to proceed. Or check 'Dealer Didn't Respond'."); 
-                    } else { 
-                        alert("A file proof (Screenshot/Photo) is mandatory OR check 'Dealer Didn't Respond'."); 
+                    if (stageNum === 7 && isCod) {
+                        alert("For COD Orders, Call Recording is MANDATORY."); 
+                    } else {
+                        alert("A file proof (Screenshot/Photo) is mandatory."); 
                     }
                     return; 
                 }
                 
-                if (!fileRequired && queuedFiles.length === 0) { 
+                if (!fileRequired && queuedFiles.length === 0) {
                     payload.isWhatsAppOnly = true; 
                 }
                 
@@ -2143,9 +2722,9 @@
                 
                 for (let i = 0; i < queuedFiles.length; i++) {
                     let f = queuedFiles[i];
-                    if (f.type.startsWith('image/')) { 
+                    if (f.type.startsWith('image/')) {
                         payload.files.push(await compressImage(f)); 
-                    } else { 
+                    } else {
                         payload.files.push(await getBase64(f)); 
                     }
                 }
@@ -2178,10 +2757,10 @@
                             
                             if (isChecked && userQty > 0) { 
                                 processed.push({name: item.name, qty: userQty}); 
-                                if (userQty < origQty) { 
+                                if (userQty < origQty) {
                                     short.push({name: item.name, qty: origQty - userQty}); 
-                                } 
-                            } else { 
+                                }
+                            } else {
                                 short.push({name: item.name, qty: origQty}); 
                             }
                         }
@@ -2196,7 +2775,7 @@
                         return; 
                     }
                     
-                    if (short.length > 0) { 
+                    if (short.length > 0) {
                         payload.partialStock = { processedItems: processed, shortItems: short }; 
                     }
                 }
@@ -2206,7 +2785,7 @@
             }
             
             if (statusLabel) { 
-                statusLabel.innerText = "📡 Uplinking Data to Control Tower..."; 
+                statusLabel.innerText = "📡 Uplinking Data..."; 
                 statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
                 statusLabel.classList.remove('hidden'); 
             }
@@ -2220,35 +2799,34 @@
                 const data = await res.json();
                 
                 if (data.status === 'success') { 
-                    if (btn) { 
+                    if (btn) {
                         btn.innerText = "Transmission Successful ✓"; 
-                    } 
+                    }
                     queuedFiles = []; 
                     
-                    if (data.splitOrderId) {
-                        alert(`✂️ SPLIT ORDER CREATED SUCCESSFULLY!\n\nNew Order ID: ${data.splitOrderId}\n\nThe remaining short stock has been automatically shifted to this new order in the database.`);
-                        showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`);
+                    if (data.splitOrderId) { 
+                        alert(`✂️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); 
+                        showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); 
                     }
                     
                     fetchOrders(true); 
-                } else { 
+                    closeModal();
+                } else {
                     throw new Error(data.message); 
                 }
             } catch (err) {
-                // NEW FEATURE: One-Tap Retry for Failed Uploads
                 if (statusLabel) { 
-                    statusLabel.innerText = "❌ Sync Failed. Network Dropped."; 
+                    statusLabel.innerText = "❌ Sync Failed. Network Drop."; 
                     statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
                 }
                 if (btn) { 
                     btn.innerText = "Retry Transmission (Tap Again)"; 
-                    btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
-                    btn.classList.add('bg-pink-600', 'hover:bg-pink-500'); // Changes color to indicate retry state
+                    btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500'); 
+                    btn.classList.add('bg-pink-600', 'hover:bg-pink-500'); 
                     btn.disabled = false; 
                 }
             }
         }
     </script>
-    <? } ?>
 </body>
-</html
+</html>
