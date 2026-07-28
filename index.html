@@ -899,7 +899,7 @@ function setDateRange(range, btnElement) {
             renderPipeline();
         }
 
-        // MDO WAR ROOM DASHBOARD (WITH EXACT VALUE PIE CHART)
+        // MDO WAR ROOM DASHBOARD (WITH EXACT VALUE PIE CHART & CUSTOM HOVER)
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
@@ -911,7 +911,7 @@ function setDateRange(range, btnElement) {
             let totalVolume = 0; let totalCompleted = 0; let slaBreaches = 0; 
             let shopStats = {}; let skuStats = {}; let staffScores = {}; let cityStats = {};
             
-            // New Brand Data Structures
+            // New Dynamic Brand Data Structures
             let brandValueStats = {}; 
             let brandVolumeStats = {};
             
@@ -927,7 +927,7 @@ function setDateRange(range, btnElement) {
 
                 if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0 };
                 
-                // Exact order value parsing
+                // Exact order value parsing (Removing commas and ₹)
                 let orderTotalValue = parseFloat(String(o.totalValue).replace(/,/g, '').replace(/[^\d.-]/g, '')) || 0;
                 let orderTotalQty = o.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
                 
@@ -940,14 +940,14 @@ function setDateRange(range, btnElement) {
                     if(!skuStats[cleanName]) skuStats[cleanName] = 0; 
                     skuStats[cleanName] += qty;
                     
-                    // Dynamic Brand Extraction
+                    // Dynamic Brand Extraction (Takes the first word of the product name)
                     let brand = cleanName.split(' ')[0].toUpperCase();
                     if(!brandValueStats[brand]) {
                         brandValueStats[brand] = 0;
                         brandVolumeStats[brand] = 0;
                     }
                     
-                    // Calculating exact proportional value for this brand based on quantity ratio in the order
+                    // Calculating exact proportional value for this brand
                     let proportionalValue = orderTotalQty > 0 ? (qty / orderTotalQty) * orderTotalValue : 0;
                     
                     brandValueStats[brand] += proportionalValue;
@@ -956,7 +956,8 @@ function setDateRange(range, btnElement) {
 
                 if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
                 
-                let city = o.area && o.area !== "Unknown" ? o.area : o.shopName;
+                // Area Mapping Fallback
+                let city = o.area && o.area !== "Unknown Area" ? o.area : o.shopName;
                 cityStats[city] = (cityStats[city] || 0) + 1;
             });
 
@@ -1035,7 +1036,7 @@ function setDateRange(range, btnElement) {
                         </div>
                     </div>
                     
-                    <!-- DYNAMIC PIE CHART (ALL BRANDS, BASED ON VALUE) -->
+                    <!-- DYNAMIC PIE CHART -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
                             <span class="flex items-center gap-2"><span class="text-purple-400">📊</span> Sales by Brand (Value)</span>
@@ -1049,13 +1050,13 @@ function setDateRange(range, btnElement) {
             
             mdoDiv.innerHTML = mdoHtml;
             
-            // Draw Pie Chart
+            // Render the highly customized Chart.js
             setTimeout(() => { 
                 const ctx = document.getElementById('brandPieChart');
                 if (ctx) {
                     if (brandChartInstance) brandChartInstance.destroy();
                     
-                    // Sort brands directly by exact calculated VALUE (No "Others" grouping)
+                    // Sort dynamically extracted brands by exact Value
                     let sortedBrands = Object.entries(brandValueStats).sort((a,b)=>b[1]-a[1]);
                     
                     let finalLabels = sortedBrands.map(b => b[0]);
@@ -1063,14 +1064,11 @@ function setDateRange(range, btnElement) {
                     let finalVolumeData = sortedBrands.map(b => brandVolumeStats[b[0]]);
                     
                     if(finalLabels.length === 0) { 
-                        finalLabels.push("No Data"); 
-                        finalValueData.push(1); 
-                        finalVolumeData.push(0);
+                        finalLabels.push("No Data"); finalValueData.push(1); finalVolumeData.push(0);
                     }
 
                     let totalPieValue = finalValueData.reduce((a,b)=>a+b, 0);
                     
-                    // Dynamically generate colors for unlimited brands
                     let colorPalette = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#eab308', '#6366f1', '#14b8a6', '#f43f5e', '#84cc16'];
                     let bgColors = finalLabels.map((l, i) => colorPalette[i % colorPalette.length]);
 
@@ -1081,54 +1079,34 @@ function setDateRange(range, btnElement) {
                             datasets: [{
                                 data: finalValueData,
                                 backgroundColor: bgColors,
-                                borderWidth: 0, 
-                                hoverOffset: 5
+                                borderWidth: 0, hoverOffset: 5
                             }]
                         },
                         options: {
-                            responsive: true, 
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: {
                                 legend: { 
                                     position: 'right', 
-                                    labels: { 
-                                        color: '#94a3b8', 
-                                        font: { size: 9 }, 
-                                        boxWidth: 8,
-                                        generateLabels: function(chart) {
-                                            return chart.data.labels.map((label, i) => {
-                                                // Shorten very long brand names in legend to save space
-                                                let shortLabel = label.length > 10 ? label.substring(0, 10) + '..' : label;
-                                                return {
-                                                    text: shortLabel,
-                                                    fillStyle: chart.data.datasets[0].backgroundColor[i],
-                                                    hidden: false,
-                                                    index: i
-                                                };
-                                            });
-                                        }
-                                    } 
+                                    labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 8 } 
                                 },
                                 tooltip: {
                                     backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                                    titleFont: { size: 12 },
+                                    titleFont: { size: 13, weight: 'bold' },
                                     bodyFont: { size: 12 },
                                     padding: 12,
-                                    borderColor: '#6366F1',
-                                    borderWidth: 1,
+                                    borderColor: '#6366F1', borderWidth: 1,
                                     callbacks: {
                                         label: function(context) {
-                                            let val = context.raw;
                                             if (finalLabels[0] === "No Data") return "No sales yet";
-                                            
-                                            let brandName = context.label;
+                                            let val = context.raw;
                                             let volume = finalVolumeData[context.dataIndex];
                                             let percentage = totalPieValue > 0 ? ((val / totalPieValue) * 100).toFixed(1) + "%" : "0%";
                                             let formattedVal = new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(val);
                                             
+                                            // The Hover Tooltip format you requested:
                                             return [
                                                 ` Value: ₹${formattedVal}`,
-                                                ` Volume: ${volume} Units`,
+                                                ` Volume: ${volume} Qty`,
                                                 ` Share: ${percentage}`
                                             ];
                                         }
@@ -1139,8 +1117,7 @@ function setDateRange(range, btnElement) {
                     });
                 }
             }, 100);
-        }
-        // PIPELINE RENDERING (DOM BATCHING SPEED FIX - 100x Faster)
+        }        // PIPELINE RENDERING (DOM BATCHING SPEED FIX - 100x Faster)
         function setStageFilter(stageIndex) { activeStageFilter = stageIndex; renderPipeline(); }
 
         function renderPipeline() {
