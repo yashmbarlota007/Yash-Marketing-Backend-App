@@ -701,41 +701,53 @@
         }
 
         // LOGIN SYSTEM
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('loginBtn');
-            const error = document.getElementById('loginError');
-            btn.innerText = "AUTHENTICATING...";
-            
-            try {
-                const payload = { 
-                    action: 'login', 
-                    employeeId: document.getElementById('loginEmpId').value, 
-                    password: document.getElementById('loginPass').value 
-                };
-                
-                const res = await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload) 
-                });
-                
-                const data = await res.json();
-                
-                if (data.status === 'success') {
-                    localStorage.setItem('yash_user', data.user.name); 
-                    localStorage.setItem('yash_role', data.user.role || 'Staff');
-                    showDashboard(data.user.name, data.user.role);
-                } else { 
-                    error.innerText = data.message; 
-                    error.classList.remove('hidden'); 
-                    btn.innerText = "INITIALIZE SYSTEM"; 
-                }
-            } catch (err) { 
-                error.innerText = "Network Error."; 
-                error.classList.remove('hidden'); 
-                btn.innerText = "INITIALIZE SYSTEM"; 
-            }
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const error = document.getElementById('loginError');
+    btn.innerText = "AUTHENTICATING...";
+    error.classList.add('hidden'); // Clear previous errors
+    
+    try {
+        const payload = { 
+            action: 'login', 
+            employeeId: document.getElementById('loginEmpId').value, 
+            password: document.getElementById('loginPass').value 
+        };
+        
+        // Added text/plain header to seamlessly bypass CORS preflight blocks
+        const res = await fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload) 
         });
+        
+        // Read raw text first to prevent invisible JSON parsing crashes
+        const textResponse = await res.text();
+        let data;
+        
+        try {
+            data = JSON.parse(textResponse);
+        } catch (parseErr) {
+            console.error("Raw Server Response:", textResponse);
+            throw new Error("Server blocked connection. Did you Authorize the Apps Script?");
+        }
+        
+        if (data.status === 'success') {
+            localStorage.setItem('yash_user', data.user.name); 
+            localStorage.setItem('yash_role', data.user.role || 'Staff');
+            showDashboard(data.user.name, data.user.role);
+        } else { 
+            error.innerText = data.message; 
+            error.classList.remove('hidden'); 
+            btn.innerText = "INITIALIZE SYSTEM"; 
+        }
+    } catch (err) { 
+        error.innerText = err.message || "Network Error."; 
+        error.classList.remove('hidden'); 
+        btn.innerText = "INITIALIZE SYSTEM"; 
+    }
+});
 
         function showDashboard(name, role) {
             currentUserRole = role || 'Staff'; 
