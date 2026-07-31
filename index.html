@@ -917,16 +917,21 @@
                     if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
                 }
 
-                if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0, value: 0, area: o.area };
-                
-                o.items.forEach(i => {
-                    let qty = parseInt(i.qty || 1); 
-                    let itemVal = parseFloat(i.totalValue || 0);
-                    
-                    totalVolume += qty; 
-                    shopStats[o.shopName].items += qty;
-                    shopStats[o.shopName].value += itemVal;
-                    
+                // 1. Move the shop value calculation OUTSIDE the o.items.forEach loop:
+if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0, value: 0, area: o.area };
+shopStats[o.shopName].value += (o.totalValue || 0); 
+
+o.items.forEach(i => {
+    let qty = parseInt(i.qty || 1); 
+    let itemVal = parseFloat(i.totalValue || 0);
+    
+    totalVolume += qty; 
+    shopStats[o.shopName].items += qty;
+    // 2. REMOVE or COMMENT OUT this line inside the loop:
+    // shopStats[o.shopName].value += itemVal; 
+    
+    // ... (keep skuStats and brandStats logic as is)
+});                    
                     let cleanName = i.name.trim(); 
                     if(!skuStats[cleanName]) skuStats[cleanName] = { qty: 0, value: 0 }; 
                     skuStats[cleanName].qty += qty;
