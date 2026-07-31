@@ -254,8 +254,9 @@
                     <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
                         <span class="text-indigo-400">⚡</span> Order Processing
                     </h1>
-                    <p class="text-slate-400 text-xs mt-1 font-mono">
-                        OP_ID: <span id="userName" class="text-emerald-400 font-bold"></span>
+                    <p class="text-slate-400 text-xs mt-1 font-mono flex items-center">
+                        OP_ID: <span id="userName" class="text-emerald-400 font-bold ml-1"></span>
+                        <span id="backendEarningsBadge" class="ml-3 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] hidden font-bold">💰 Earned Today: ₹0</span>
                     </p>
                 </div>
                 
@@ -809,7 +810,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             try {
                 const res = await fetch(API_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ action: 'getOrders' }) 
+                    body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
                 });
                 
                 const response = await res.json();
@@ -819,6 +820,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                         window.appSettings = response.settings;
                     }
                     
+                    if(response.backendEarnings !== undefined && response.backendEarnings > 0) {
+                        let bBadge = document.getElementById('backendEarningsBadge');
+                        bBadge.innerText = `💰 Earned Today: ₹${response.backendEarnings}`;
+                        bBadge.classList.remove('hidden');
+                    }
+
                     response.data.forEach(o => {
                         let amount = parseFloat(String(o.totalValue).replace(/,/g, '').replace(/[^\d.-]/g, '')) || 0;
                         if(amount >= 50000) {
