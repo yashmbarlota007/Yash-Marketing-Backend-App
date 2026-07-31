@@ -929,7 +929,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                     if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
                 }
 
-                // 1. Move the shop value calculation OUTSIDE the o.items.forEach loop:
+              // 1. Move the shop value calculation OUTSIDE the o.items.forEach loop:
 if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0, value: 0, area: o.area };
 shopStats[o.shopName].value += (o.totalValue || 0); 
 
@@ -939,20 +939,16 @@ o.items.forEach(i => {
     
     totalVolume += qty; 
     shopStats[o.shopName].items += qty;
-    // 2. REMOVE or COMMENT OUT this line inside the loop:
-    // shopStats[o.shopName].value += itemVal; 
     
-    // ... (keep skuStats and brandStats logic as is)
-});                    
-                    let cleanName = i.name.trim(); 
-                    if(!skuStats[cleanName]) skuStats[cleanName] = { qty: 0, value: 0 }; 
-                    skuStats[cleanName].qty += qty;
-                    skuStats[cleanName].value += itemVal;
-                    
-                    let brandName = i.brand && i.brand.trim() !== "" ? i.brand.trim() : "Unknown";
-                    if(!brandStats[brandName]) brandStats[brandName] = 0;
-                    brandStats[brandName] += itemVal; // Brand matrix uses Value now
-                });
+    let cleanName = i.name ? i.name.trim() : "Unknown"; 
+    if(!skuStats[cleanName]) skuStats[cleanName] = { qty: 0, value: 0 }; 
+    skuStats[cleanName].qty += qty;
+    skuStats[cleanName].value += itemVal;
+    
+    let brandName = i.brand && i.brand.trim() !== "" ? i.brand.trim() : "Unknown";
+    if(!brandStats[brandName]) brandStats[brandName] = 0;
+    brandStats[brandName] += itemVal; // Brand matrix uses Value now
+});
 
                 if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
                 
