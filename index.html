@@ -1666,10 +1666,21 @@ let mdoHtml = `
             `; 
             
             container.innerHTML += itemsHtml;
-
             let stagesListHtml = '<div class="space-y-4">';
             
+            // SMART LOCK LOGIC: Check if last completed stage requires sharing
+            let needsShare = false;
+            let lastCompletedStage = order.completedStages;
+            let stagesRequiringShare = [2, 4, 5, 6, 8];
+            if (stagesRequiringShare.includes(lastCompletedStage)) {
+                if (localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') {
+                    needsShare = true;
+                }
+            }
+            
             for (let i = 0; i < 9; i++) {
+
+            
                 const stageNum = i + 1; 
                 const isCompleted = i < order.completedStages; 
                 const isActive = i === order.completedStages; 
