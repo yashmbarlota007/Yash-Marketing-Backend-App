@@ -284,14 +284,20 @@
                     <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     
                     <div class="w-px h-5 bg-slate-700 mx-1"></div>
-                    
-                    <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">
+                                        <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">
                         ✂️ Split
+                    </button>
+                    
+                    <!-- NEW EOD REPORT BUTTON -->
+                    <button onclick="generateEODReport()" class="ml-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                        📊 EOD REPORT
                     </button>
                     
                     <button onclick="logout()" class="ml-1 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
                         LOGOUT
                     </button>
+
+                   
                 </div>
             <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
 
