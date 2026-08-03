@@ -2067,24 +2067,44 @@ let mdoHtml = `
                         `;
                     }
                     
-                    uiHtml = `
-                        <div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-white font-black text-lg">
-                                    ${stageNum}. ${displayStageName}
-                                </span>
-                                <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">
-                                    ACTION REQUIRED
-                                </span>
+                    if (needsShare) {
+                        uiHtml = `
+                            <div class="bg-orange-900/10 border-2 border-orange-500/30 rounded-xl p-5 relative overflow-hidden mt-4">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-white font-black text-lg text-opacity-50">
+                                        ${stageNum}. ${displayStageName}
+                                    </span>
+                                    <span class="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase">
+                                        🔒 LOCKED
+                                    </span>
+                                </div>
+                                <p class="text-xs text-orange-400 font-bold mt-3">
+                                    ⚠️ Action Required: Upar scroll karein aur agla step unlock karne ke liye flashing green "Share to Group" button daba kar update share karein.
+                                </p>
                             </div>
-                            <div id="actionArea_${stageNum}">
-                                ${inputHtml}
+                        `;
+                    } else {
+                        uiHtml = `
+                            <div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-white font-black text-lg">
+                                        ${stageNum}. ${displayStageName}
+                                    </span>
+                                    <span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">
+                                        ACTION REQUIRED
+                                    </span>
+                                </div>
+                                <div id="actionArea_${stageNum}">
+                                    ${inputHtml}
+                                </div>
+                                <p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p>
                             </div>
-                            <p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
+
                 stagesListHtml += uiHtml;
             }
             
