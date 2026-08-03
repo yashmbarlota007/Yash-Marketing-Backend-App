@@ -1421,7 +1421,6 @@ let mdoHtml = `
                 document.getElementById(`previewBox_${stageNum}`).classList.add('hidden'); 
             }
         }
-
         window.shareToGroup = function(stageNum, fileUrlsString) {
             const orderId = currentActiveOrder.orderId; 
             const shop = currentActiveOrder.shopName; 
@@ -1431,8 +1430,49 @@ let mdoHtml = `
             let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
             
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            
+            // SYSTEM LOCK OVERRIDE: Mark as shared and reload modal to unlock next step
+            localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
+            setTimeout(() => { openModal(orderId); }, 1000);
         }
 
+        // DAILY EOD REPORT GENERATOR
+        window.generateEODReport = function() {
+            if (!window.appData || !window.appData.rawArray || window.appData.rawArray.length === 0) {
+                alert("No data available to generate report.");
+                return;
+            }
+            
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let todayOrders = window.appData.rawArray.filter(o => {
+                let d = parseCustomDate(o.date);
+                d.setHours(0,0,0,0);
+                return d.getTime() === today.getTime();
+            });
+            
+            let totalReceived = todayOrders.length;
+            let totalValue = todayOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
+            let totalCompleted = todayOrders.filter(o => o.isFullyCompleted).length;
+            let totalDispatched = todayOrders.filter(o => o.completedStages >= 6 && !o.isFullyCompleted).length;
+            let pending = totalReceived - totalCompleted - totalDispatched;
+            
+            let reportDate = new Date().toLocaleDateString('en-GB');
+            let staffName = currentUserName ? currentUserName.toUpperCase() : 'ADMIN';
+            
+            let msg = `*📊 DAILY EOD REPORT - YASH MARKETING*\n\n*📅 Date:* ${reportDate}\n*🧑‍💼 Staff:* ${staffName}\n\n`;
+            msg += `*📦 Orders Received Today:* ${totalReceived}\n`;
+            msg += `*💰 Total Value:* ₹${totalValue.toLocaleString()}\n`;
+            msg += `*✅ Orders Delivered/Final:* ${totalCompleted}\n`;
+            msg += `*🚚 Orders Dispatched:* ${totalDispatched}\n`;
+            msg += `*⏳ Pending Orders:* ${pending}\n\n`;
+            msg += `_System Generated via MDO OS_`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+       
         // TALLY SO CSV GENERATOR
         function generateTallyCSV(orderId) {
             const order = window.appData.orders[orderId];
