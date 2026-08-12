@@ -404,8 +404,10 @@
         let currentUserName = ''; 
         let brandChartInstance = null; // Used for destroying and redrawing Chart.js
 
-        // ROUTING LOGIC: Checks if the user is a Dealer tracking an order
-        window.onload = function() {
+        // =======================================================
+        // PERSISTENT SESSION & ROUTING LOGIC
+        // =======================================================
+        document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const trackId = urlParams.get('track');
             const portalEmpId = urlParams.get('empId');
@@ -419,7 +421,16 @@
                 runTrackerMode(trackId);
             } else {
                 // STAFF OS VIEW
-                if (portalEmpId && portalEmpId.trim() !== "") {
+                
+                // 1. PRIORITY CHECK: Agar session already saved hai, toh instantly andar le jao (No network delay)
+                const savedUser = localStorage.getItem('yash_user');
+                const savedRole = localStorage.getItem('yash_role');
+                
+                if (savedUser && savedUser.trim() !== "") {
+                    showDashboard(savedUser, savedRole);
+                } 
+                // 2. SSO CHECK: Agar saved nahi hai, par URL me empId hai, tabhi background verify karo
+                else if (portalEmpId && portalEmpId.trim() !== "") {
                     document.getElementById('loginEmpId').value = portalEmpId;
                     document.getElementById('loginPass').value = "SSO_BYPASS";
                     const btn = document.getElementById('loginBtn');
@@ -427,32 +438,40 @@
                     
                     fetch(API_URL, { 
                         method: 'POST', 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ 
                             action: 'login', 
                             employeeId: portalEmpId, 
                             password: 'SSO_BYPASS' 
                         }) 
                     })
-                    .then(res => res.json())
+                    .then(res => res.text())
+                    .then(text => JSON.parse(text))
                     .then(data => {
-                        if (data.status === 'success') {
-                            showDashboard(data.user.name, data.user.role);
+                        // Handle both Data Structures (Frontend expect vs Backend send)
+                        if (data.status === 'success' || data.success === true) {
+                            const uName = data.user?.name || data.username;
+                            const uRole = data.user?.role || data.role || 'Staff';
+                            
+                            // SAVE SESSION PERMANENTLY
+                            localStorage.setItem('yash_user', uName);
+                            localStorage.setItem('yash_role', uRole);
+                            
+                            showDashboard(uName, uRole);
                         } else {
-                            document.getElementById('loginError').innerText = "SSO Failed: " + data.message;
+                            document.getElementById('loginError').innerText = "SSO Failed: " + (data.message || "Invalid Access");
                             document.getElementById('loginError').classList.remove('hidden');
                             btn.innerText = "INITIALIZE SYSTEM";
                         }
                     })
                     .catch(err => {
-                        document.getElementById('loginError').innerText = "Network error during SSO login.";
+                        document.getElementById('loginError').innerText = "Network error during SSO login. Please login manually.";
                         document.getElementById('loginError').classList.remove('hidden');
                         btn.innerText = "INITIALIZE SYSTEM";
                     });
-                } else if (localStorage.getItem('yash_user')) { 
-                    showDashboard(localStorage.getItem('yash_user'), localStorage.getItem('yash_role')); 
                 }
             }
-        };
+        });
 
         // TRACKER FETCH LOGIC
         function runTrackerMode(trackId) {
@@ -707,54 +726,59 @@
             return url;
         }
 
-        // LOGIN SYSTEM
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('loginBtn');
-    const error = document.getElementById('loginError');
-    btn.innerText = "AUTHENTICATING...";
-    error.classList.add('hidden'); // Clear previous errors
-    
-    try {
-        const payload = { 
-            action: 'login', 
-            employeeId: document.getElementById('loginEmpId').value, 
-            password: document.getElementById('loginPass').value 
-        };
-        
-        // Added text/plain header to seamlessly bypass CORS preflight blocks
-        const res = await fetch(API_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload) 
+        // =======================================================
+        // MANUAL LOGIN SYSTEM (BULLETPROOF)
+        // =======================================================
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const error = document.getElementById('loginError');
+            btn.innerText = "AUTHENTICATING...";
+            error.classList.add('hidden'); 
+            
+            try {
+                const payload = { 
+                    action: 'login', 
+                    employeeId: document.getElementById('loginEmpId').value, 
+                    password: document.getElementById('loginPass').value 
+                };
+                
+                const res = await fetch(API_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload) 
+                });
+                
+                const textResponse = await res.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(textResponse);
+                } catch (parseErr) {
+                    throw new Error("Server blocked connection. Did you Authorize the Apps Script?");
+                }
+                
+                // Handle both Data Structures securely
+                if (data.status === 'success' || data.success === true) {
+                    const uName = data.user?.name || data.username;
+                    const uRole = data.user?.role || data.role || 'Staff';
+                    
+                    // SAVE SESSION PERMANENTLY
+                    localStorage.setItem('yash_user', uName); 
+                    localStorage.setItem('yash_role', uRole);
+                    
+                    showDashboard(uName, uRole);
+                } else { 
+                    error.innerText = data.message || "Invalid Employee ID or Password."; 
+                    error.classList.remove('hidden'); 
+                    btn.innerText = "INITIALIZE SYSTEM"; 
+                }
+            } catch (err) { 
+                error.innerText = err.message || "Network Error."; 
+                error.classList.remove('hidden'); 
+                btn.innerText = "INITIALIZE SYSTEM"; 
+            }
         });
-        
-        // Read raw text first to prevent invisible JSON parsing crashes
-        const textResponse = await res.text();
-        let data;
-        
-        try {
-            data = JSON.parse(textResponse);
-        } catch (parseErr) {
-            console.error("Raw Server Response:", textResponse);
-            throw new Error("Server blocked connection. Did you Authorize the Apps Script?");
-        }
-        
-        if (data.status === 'success') {
-            localStorage.setItem('yash_user', data.user.name); 
-            localStorage.setItem('yash_role', data.user.role || 'Staff');
-            showDashboard(data.user.name, data.user.role);
-        } else { 
-            error.innerText = data.message; 
-            error.classList.remove('hidden'); 
-            btn.innerText = "INITIALIZE SYSTEM"; 
-        }
-    } catch (err) { 
-        error.innerText = err.message || "Network Error."; 
-        error.classList.remove('hidden'); 
-        btn.innerText = "INITIALIZE SYSTEM"; 
-    }
-});
 
         function showDashboard(name, role) {
             currentUserRole = role || 'Staff'; 
