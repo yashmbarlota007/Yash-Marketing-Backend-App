@@ -213,7 +213,7 @@
                     YASH MARKETING
                 </h1>
                 <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                    Enterprise OS Login (v12.8.1)
+                    Enterprise OS Login (v12.9.0)
                 </p>
                 
                 <form id="loginForm" class="space-y-4">
@@ -328,7 +328,7 @@
                         </span>
                     </h2>
                     
-                    <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom" id="modalShopName">
+                    <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom flex items-center gap-2" id="modalShopName">
                         Shop Name
                     </p>
                     
@@ -352,6 +352,7 @@
                             id="modalTimeElapsed" 
                             class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest border border-slate-700"
                         ></span>
+                        <span id="modalTatTimer" class="hidden"></span>
                     </div>
                 </div>
                 
@@ -382,7 +383,7 @@
             "Processed (Stock)", 
             "Invoiced", 
             "Dispatched", 
-            "Logistics Allocation", // ⚡ Name simplified, pauti upload removed
+            "Logistics Allocation", 
             "Delivery Comms (Call/WA)", 
             "Delivered", 
             "Final Call (Rating)"
@@ -467,7 +468,30 @@
                     });
                 }
             }
+            
+            // Start Global TAT Timer Tick
+            setInterval(updateTatTimers, 1000);
         });
+
+        // GLOBAL TAT TIMER ENGINE
+        function updateTatTimers() {
+            document.querySelectorAll('.tat-timer').forEach(el => {
+                let target = parseInt(el.getAttribute('data-target'));
+                let now = new Date().getTime();
+                let diff = target - now;
+                
+                if (diff > 0) {
+                    let mins = Math.floor(diff / 60000);
+                    let secs = Math.floor((diff % 60000) / 1000);
+                    el.innerText = `⏳ TAT: ${mins}m ${secs}s`;
+                    el.className = "tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse";
+                } else {
+                    let minsOver = Math.abs(Math.floor(diff / 60000));
+                    el.innerText = `🚨 LATE: ${minsOver}m OVER`;
+                    el.className = "tat-timer bg-red-600 text-white text-[10px] px-2 py-1 rounded font-black border border-red-800 shrink-0 animate-bounce";
+                }
+            });
+        }
 
         // TRACKER FETCH LOGIC
         function runTrackerMode(trackId) {
@@ -493,7 +517,6 @@
                         "Delivered Successfully"
                     ];
                     
-                    // Maps backend 10 stages to 7 public stages smoothly
                     let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.5), 6);
                     
                     customerStages.forEach((stageName, idx) => {
@@ -948,7 +971,7 @@
             let staffScores = {}; 
             let cityStats = {};
             let brandStats = {}; 
-            let stageStuck = Array(10).fill(0); // ⚡ Updated to 10
+            let stageStuck = Array(10).fill(0);
             const nowTime = new Date().getTime();
 
             filteredData.forEach(o => {
@@ -1072,7 +1095,6 @@
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    <!-- 1. Hot Movers (SKU + Qty + Value) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-yellow-400">🔥</span> Hot Movers
@@ -1096,7 +1118,6 @@
                         </div>
                     </div>
                     
-                    <!-- 2. VIP Dealers (Name + Area + Value) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-emerald-400">👑</span> VIP Dealers
@@ -1121,7 +1142,6 @@
                         </div>
                     </div>
                     
-                    <!-- 3. Area Heatmap (Orders + Value) -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-blue-400">📍</span> Area Heatmap
@@ -1145,7 +1165,6 @@
                         </div>
                     </div>
                     
-                    <!-- 4. Dynamic Brand Matrix Chart -->
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
                             <span class="flex items-center gap-2">
@@ -1325,6 +1344,7 @@
                     }
                 }
                 
+                let orderDateObj = parseCustomDate(order.date);
                 let exactDateStr = formatExactDate(order.date);
                 let timeData = getTimeAgoUI(order.date);
                 let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
@@ -1356,6 +1376,14 @@
                             ⏳ NEAR BREACH
                         </span>
                     `;
+                }
+                
+                // FEATURE 3: TAT TIMER BADGE (60 MINS LIMIT)
+                let tatBadge = "";
+                let isBefore6PM = orderDateObj.getHours() < 18;
+                if (isBefore6PM && order.completedStages < 6) { // Goal is completing step 6
+                    let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); // +60 mins
+                    tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
                 }
                 
                 let mergeBadge = "";
@@ -1396,6 +1424,7 @@
                                 <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
                                     ⏱️ ${timeData.text}
                                 </span>
+                                ${tatBadge}
                                 ${slaBadge} 
                                 ${mergeBadge}
                             </div>
@@ -1663,12 +1692,25 @@
                 document.getElementById('modalVipBadge').classList.add('hidden');
             }
             
+            let orderDateObj = parseCustomDate(order.date);
             let exactDateStr = formatExactDate(order.date); 
             let timeData = getTimeAgoUI(order.date);
             
             document.getElementById('modalReceiptDate').innerText = exactDateStr;
             document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
             document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
+
+            // FEATURE 3: TAT TIMER (MODAL HEADER)
+            let tatBadgeEl = document.getElementById('modalTatTimer');
+            let isBefore6PM = orderDateObj.getHours() < 18;
+            if (isBefore6PM && order.completedStages < 6) { 
+                let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); 
+                tatBadgeEl.setAttribute('data-target', targetTime);
+                tatBadgeEl.className = "tat-timer text-[10px] bg-orange-900/30 text-orange-400 px-2 py-1 rounded font-black tracking-widest border border-orange-500/30 animate-pulse inline-block";
+                tatBadgeEl.innerText = "⏳ TAT: Calc...";
+            } else {
+                tatBadgeEl.className = "hidden";
+            }
 
             let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
             let payBadge = document.getElementById('modalPaymentMode'); 
@@ -1747,8 +1789,7 @@
             container.innerHTML += itemsHtml;
             let stagesListHtml = '<div class="space-y-4">';
             
-        
-let needsShare = false, lastCompletedStage = order.completedStages, stagesRequiringShare = [2, 4, 5, 6, 9];
+            let needsShare = false, lastCompletedStage = order.completedStages, stagesRequiringShare = [2, 4, 5, 6, 9];
             
             if (stagesRequiringShare.includes(lastCompletedStage)) {
                 if (localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') {
@@ -1772,6 +1813,37 @@ let needsShare = false, lastCompletedStage = order.completedStages, stagesRequir
                 
                 if (isCompleted) {
                     let cellData = order.stageUrls ? order.stageUrls[i] : "";
+                    
+                    // FEATURE 2: EXTRACT TIMESTAMP & RENDER METRICS
+                    let timestampDisplay = "";
+                    let timeTakenDisplay = "";
+                    let thisEpoch = null;
+                    let previousEpoch = parseCustomDate(order.date).getTime(); 
+                    
+                    if (i > 0 && order.stageUrls[i-1]) {
+                        let prevMatch = order.stageUrls[i-1].match(/TIME:\s*(\d+)/);
+                        if (prevMatch) previousEpoch = parseInt(prevMatch[1]);
+                    }
+
+                    if (cellData && cellData.includes("TIME:")) {
+                        let match = cellData.match(/TIME:\s*(\d+)/);
+                        if (match) {
+                            thisEpoch = parseInt(match[1]);
+                            let d = new Date(thisEpoch);
+                            let timeStr = d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+                            
+                            timestampDisplay = `<span class="text-[9px] text-emerald-300 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/50">At: ${timeStr}</span>`;
+                            
+                            let diffMins = Math.round((thisEpoch - previousEpoch) / 60000);
+                            if (diffMins >= 0) {
+                                timeTakenDisplay = `<span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">Took: ${diffMins}m</span>`;
+                            }
+                            
+                            // Remove timestamp from raw string so normal parsing works
+                            cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
+                        }
+                    }
+
                     let actionStr = "";
                     let urlData = cellData;
                     
@@ -1785,7 +1857,7 @@ let needsShare = false, lastCompletedStage = order.completedStages, stagesRequir
                     let hasFiles = false; 
                     let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
                     
-                    if (actionStr) {
+                    if (actionStr && actionStr !== "Completed") {
                         previewHtml += `
                             <div class="bg-indigo-900/30 border border-indigo-500/30 p-2.5 rounded-lg mb-2 text-indigo-300 text-xs font-bold leading-relaxed whitespace-pre-wrap shadow-inner">
                                 📋 ${actionStr}
@@ -1835,12 +1907,18 @@ let needsShare = false, lastCompletedStage = order.completedStages, stagesRequir
                     
                     uiHtml = `
                         <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition">
-                            <div class="flex justify-between items-center">
-                                <span class="text-emerald-400 text-sm font-black">
-                                    ${stageNum}. ${displayStageName}
-                                </span>
-                                <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest">
-                                    ✔ COMPLETED
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-emerald-400 text-sm font-black block mb-1.5">
+                                        ${stageNum}. ${displayStageName}
+                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        ${timestampDisplay}
+                                        ${timeTakenDisplay}
+                                    </div>
+                                </div>
+                                <span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest shrink-0 ml-2">
+                                    ✔ DONE
                                 </span>
                             </div>
                             ${previewHtml}
@@ -1979,9 +2057,9 @@ let needsShare = false, lastCompletedStage = order.completedStages, stagesRequir
                         let msgTemplate = "";
                         
                         if (stageNum === 3) {
-                            msgTemplate = window.appSettings.waMsgStage3 || `Hello {{shop}},\n\nYour order ({{orderId}}) with Yash Marketing is processed.\n\nPayment Mode: {{paymentMode}}\nAmount: Rs. {{amount}}\n\nThank you!`;
+                            msgTemplate = window.appSettings.waMsgStage3;
                         } else {
-                            msgTemplate = isCod ? (window.appSettings.waMsgStage7COD || `Hello {{shop}},\n\nYour order ({{orderId}}) is OUT FOR DELIVERY.\nKeep COD Rs. {{amount}} ready.`) : (window.appSettings.waMsgStage7Prepaid || `Hello {{shop}},\n\nYour PREPAID order ({{orderId}}) is OUT FOR DELIVERY.`);
+                            msgTemplate = isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid;
                         }
                         
                         let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
@@ -2338,7 +2416,6 @@ let needsShare = false, lastCompletedStage = order.completedStages, stagesRequir
                 payload.isNoResponse = true; 
             }
             
-            // ⚡ NEW TEXT LOGIC FOR STAGE 7
             if (stageNum === 7) {
                 let runner = document.getElementById('runnerSelect').value;
                 if (runner === "Others") {
@@ -2365,7 +2442,6 @@ let needsShare = false, lastCompletedStage = order.completedStages, stagesRequir
             if (stageNum !== 1) {
                 let fileRequired = true;
                 
-                // ⚡ Updated Stage Checks - Stage 7 (Text Only), Stage 10 (Rating), Stage 3/8 (No response)
                 if (payload.isNoResponse || stageNum === 10 || stageNum === 7 || stageNum === 3 || (stageNum === 8 && !isCod)) {
                     fileRequired = false; 
                 }
