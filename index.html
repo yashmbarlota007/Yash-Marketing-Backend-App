@@ -124,8 +124,8 @@
                 background: white !important; 
                 color: black !important;
                 display: grid !important; 
-                grid-template-columns: 1fr 1fr; 
-                grid-template-rows: 1fr 1fr; 
+                grid-template-columns: 1fr 1fr; /* 2 Columns */
+                grid-template-rows: 1fr 1fr; /* 2 Rows */
                 box-sizing: border-box;
                 padding: 10mm;
                 gap: 10mm;
@@ -210,12 +210,23 @@
                     <button onclick="closeHandover()" class="text-slate-500 hover:text-pink-400 text-2xl leading-none">&times;</button>
                 </div>
                 <div class="p-5">
-                    <textarea id="handoverNoteInput" rows="4" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-500 text-sm" placeholder="Enter critical updates, pending tasks, or issues for the next shift..."></textarea>
-                    <button onclick="saveHandover()" id="btnSaveHandover" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all text-sm">
+                    <textarea 
+                        id="handoverNoteInput" 
+                        rows="4" 
+                        class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-500 text-sm" 
+                        placeholder="Enter critical updates, pending tasks, or issues for the next shift..."
+                    ></textarea>
+                    
+                    <button 
+                        onclick="saveHandover()" 
+                        id="btnSaveHandover" 
+                        class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all text-sm"
+                    >
                         Submit Handover Note
                     </button>
                     
                     <h3 class="mt-6 mb-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2">Recent Shift Notes</h3>
+                    
                     <div id="handoverHistory" class="space-y-3 max-h-[30vh] overflow-y-auto hide-scrollbar">
                         <!-- History injected here -->
                     </div>
@@ -236,7 +247,7 @@
                     YASH MARKETING
                 </h1>
                 <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                    Enterprise OS Login (v13.0.0)
+                    Enterprise OS Login (v13.0.1)
                 </p>
                 
                 <form id="loginForm" class="space-y-4">
@@ -302,7 +313,9 @@
                     <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
                     <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
                     <button onclick="setDateRange('thisWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Week</button>
+                    <button onclick="setDateRange('lastWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Week</button>
                     <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Month</button>
+                    <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     
                     <div class="w-px h-5 bg-slate-700 mx-1"></div>
                     
@@ -335,7 +348,7 @@
             
             <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </div>
-    </div> <!-- End Main App Wrapper -->
+    </div> 
 
     <!-- Order Execution Task Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
@@ -424,7 +437,7 @@
         let filteredData = [];
         let currentActiveOrder = null;
         
-        // OPTIMIZATION: Default to showing all unaccepted orders first
+        // DEFAULTS FOR LATE NIGHT ORDER FIX
         let activeStageFilter = 0; 
         let activeDateRange = 'all'; 
         
@@ -443,14 +456,12 @@
             const portalEmpId = urlParams.get('empId');
 
             if (trackId) {
-                // DEALER TRACKING VIEW
                 document.getElementById('mainAppWrapper').classList.add('hidden');
                 document.getElementById('trackingScreen').classList.remove('hidden');
                 document.getElementById('displayTrackId').innerText = trackId;
                 
                 runTrackerMode(trackId);
             } else {
-                // STAFF OS VIEW
                 const savedUser = localStorage.getItem('yash_user');
                 const savedRole = localStorage.getItem('yash_role');
                 
@@ -497,10 +508,10 @@
                 }
             }
             
-            // Start Global TAT Timer Tick
             setInterval(updateTatTimers, 1000);
         });
 
+        // GLOBAL TAT TIMER ENGINE
         function updateTatTimers() {
             document.querySelectorAll('.tat-timer').forEach(el => {
                 let target = parseInt(el.getAttribute('data-target'));
@@ -520,6 +531,7 @@
             });
         }
 
+        // TRACKER FETCH LOGIC
         function runTrackerMode(trackId) {
             fetch(API_URL, { 
                 method: 'POST', 
@@ -684,30 +696,42 @@
 
         async function saveHandover() {
             let note = document.getElementById('handoverNoteInput').value.trim();
-            if(!note) return alert("Please write a note before submitting.");
+            if(!note) {
+                alert("Please write a note before submitting.");
+                return;
+            }
             
             let btn = document.getElementById('btnSaveHandover');
-            btn.innerText = "Saving..."; btn.disabled = true;
+            btn.innerText = "Saving..."; 
+            btn.disabled = true;
 
             try {
                 let res = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'saveHandover', staffName: currentUserName, note: note })
+                    body: JSON.stringify({ 
+                        action: 'saveHandover', 
+                        staffName: currentUserName, 
+                        note: note 
+                    })
                 });
                 let data = await res.json();
+                
                 if(data.status === 'success') {
                     document.getElementById('handoverNoteInput').value = '';
                     fetchHandoverNotes();
-                } else alert("Failed to save note.");
+                } else {
+                    alert("Failed to save note: " + data.message);
+                }
             } catch(e) {
-                alert("Network error.");
+                alert("Network error. Could not save note.");
             }
-            btn.innerText = "Submit Handover Note"; btn.disabled = false;
+            btn.innerText = "Submit Handover Note"; 
+            btn.disabled = false;
         }
 
         async function fetchHandoverNotes() {
             let historyDiv = document.getElementById('handoverHistory');
-            historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Loading notes...</div>';
+            historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Loading recent notes...</div>';
             
             try {
                 let res = await fetch(API_URL, {
@@ -715,21 +739,22 @@
                     body: JSON.stringify({ action: 'getHandover' })
                 });
                 let data = await res.json();
+                
                 if(data.status === 'success' && data.data.length > 0) {
                     historyDiv.innerHTML = data.data.map(n => `
                         <div class="bg-[#0B1121] p-3 rounded-lg border border-slate-800">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-xs font-black text-indigo-400">${n.staff}</span>
-                                <span class="text-[9px] text-slate-500 font-mono">${new Date(n.time).toLocaleString('en-GB')}</span>
+                                <span class="text-[9px] text-slate-500 font-mono tracking-widest">${new Date(n.time).toLocaleString('en-GB')}</span>
                             </div>
-                            <p class="text-sm text-slate-300 leading-relaxed">${n.note}</p>
+                            <p class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">${n.note}</p>
                         </div>
                     `).join('');
                 } else {
                     historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">No recent shift notes found.</div>';
                 }
             } catch(e) {
-                historyDiv.innerHTML = '<div class="text-center text-pink-500 text-xs py-4">Error loading notes.</div>';
+                historyDiv.innerHTML = '<div class="text-center text-pink-500 text-xs py-4">Error loading history.</div>';
             }
         }
 
@@ -1535,7 +1560,7 @@
                             </div>
                             
                             <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">
-                                ${order.shopName}
+                                ${order.shopName} <span class="text-slate-500 font-normal">(${order.area})</span>
                             </p>
                             
                             <div class="flex gap-1 items-center flex-wrap mb-3">
