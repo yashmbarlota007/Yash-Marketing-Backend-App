@@ -236,7 +236,7 @@
                     YASH MARKETING
                 </h1>
                 <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                    Enterprise OS Login (v13.0.0)
+                    Enterprise OS Login (v13.5.0)
                 </p>
                 
                 <form id="loginForm" class="space-y-4">
@@ -302,6 +302,7 @@
                     <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
                     <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
                     <button onclick="setDateRange('thisWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Week</button>
+                    <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Month</button>
                     
                     <div class="w-px h-5 bg-slate-700 mx-1"></div>
@@ -1062,7 +1063,9 @@
                 if(o.isFullyCompleted) {
                     totalCompleted++;
                 } else { 
-                    stageStuck[o.completedStages]++; 
+                    if (o.completedStages < 10) {
+                        stageStuck[o.completedStages]++; 
+                    }
                     if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
                 }
 
@@ -1505,7 +1508,15 @@
                 }
                 
                 let mergeBadge = "";
-                if (order.completedStages < 4 && shopPendingCount[order.shopName] > 1 && !order.creditLocked) {
+                let orderDateStr = parseCustomDate(order.date).toDateString();
+                let pendingCount = filteredData.filter(o => 
+                    o.shopName === order.shopName && 
+                    parseCustomDate(o.date).toDateString() === orderDateStr && 
+                    o.completedStages < 4 && 
+                    !o.creditLocked
+                ).length;
+
+                if (order.completedStages < 4 && pendingCount > 1 && !order.creditLocked) {
                     mergeBadge = `
                         <span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" title="Pack this together with another pending order!">
                             🔗 MERGE AVAIL
@@ -1588,8 +1599,7 @@
         }
 
         // 1-CLICK MERGE EXECUTION
-        // ✅ Added targetBtn to the function arguments below
-        async function executeMerge(primaryOrderId, shopName, targetBtn) {
+        async function executeMerge(primaryOrderId, shopName, secondaryIds, targetBtn) {
             if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
             
             targetBtn.innerText = "Merging Pipelines...";
@@ -1602,6 +1612,7 @@
                     body: JSON.stringify({
                         action: 'mergeOrders',
                         primaryOrderId: primaryOrderId,
+                        secondaryIds: secondaryIds,
                         shopName: shopName
                     })
                 });
@@ -1736,16 +1747,25 @@
             container.innerHTML += itemsHtml;
 
             let mergeActionHtml = "";
-            let pendingCount = filteredData.filter(o => o.shopName === order.shopName && o.completedStages < 4).length;
+            let orderDateStr = parseCustomDate(order.date).toDateString();
+            
+            // STRICT REQUIREMENT: Same Dealer AND Same Day orders only.
+            let secondaryOrders = filteredData.filter(o => 
+                o.shopName === order.shopName && 
+                parseCustomDate(o.date).toDateString() === orderDateStr && 
+                o.completedStages < 4 && 
+                o.orderId !== order.orderId &&
+                !o.creditLocked
+            );
 
-            if (order.completedStages < 4 && pendingCount > 1) {
-                // ✅ Passes "this" directly in the HTML to the JS function
+            if (order.completedStages < 4 && secondaryOrders.length > 0 && !order.creditLocked) {
+                let secondaryIds = secondaryOrders.map(o => o.orderId).join(',');
                 mergeActionHtml = `
                     <button 
-                        onclick="executeMerge('${order.orderId}', '${order.shopName}', this)" 
+                        onclick="executeMerge('${order.orderId}', '${order.shopName}', '${secondaryIds}', this)" 
                         class="w-full mt-2 mb-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white font-black py-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2 uppercase tracking-widest border border-blue-500/50"
                     >
-                        🔗 1-Click Merge: Combine ${pendingCount - 1} other pending order(s) into this one
+                        🔗 1-Click Merge: Combine ${secondaryOrders.length} other pending order(s) into this one
                     </button>
                 `;
             }
