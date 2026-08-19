@@ -1590,18 +1590,19 @@
         }
 
         // 1-CLICK MERGE EXECUTION
-        async function executeMerge(primaryOrderId, shopName) {
-            if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
-            
-            let targetBtn = event.currentTarget;
-            targetBtn.innerText = "Merging Pipelines...";
-            targetBtn.disabled = true;
-            targetBtn.classList.add('animate-pulse');
-            
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
+        // ✅ Added targetBtn here
+async function executeMerge(primaryOrderId, shopName, targetBtn) {
+    if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
+    
+    // ✅ The button is now safely passed in, no need for event.currentTarget
+    targetBtn.innerText = "Merging Pipelines...";
+    targetBtn.disabled = true;
+    targetBtn.classList.add('animate-pulse');
+    
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            // ... the rest of your original function stays exactly the same ...                    body: JSON.stringify({
                         action: 'mergeOrders',
                         primaryOrderId: primaryOrderId,
                         shopName: shopName
