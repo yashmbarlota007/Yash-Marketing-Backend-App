@@ -210,12 +210,24 @@
                     <button onclick="closeHandover()" class="text-slate-500 hover:text-pink-400 text-2xl leading-none">&times;</button>
                 </div>
                 <div class="p-5">
-                    <textarea id="handoverNoteInput" rows="4" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-500 text-sm" placeholder="Enter critical updates, pending tasks, or issues for the next shift..."></textarea>
-                    <button onclick="saveHandover()" id="btnSaveHandover" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all text-sm">
+                    <textarea 
+                        id="handoverNoteInput" 
+                        rows="4" 
+                        class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-500 text-sm" 
+                        placeholder="Enter critical updates, pending tasks, or issues for the next shift..."
+                    ></textarea>
+                    
+                    <button 
+                        onclick="saveHandover()" 
+                        id="btnSaveHandover" 
+                        class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all text-sm"
+                    >
                         Submit Handover Note
                     </button>
                     
-                    <h3 class="mt-6 mb-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2">Recent Shift Notes</h3>
+                    <h3 class="mt-6 mb-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2">
+                        Recent Shift Notes
+                    </h3>
                     <div id="handoverHistory" class="space-y-3 max-h-[30vh] overflow-y-auto hide-scrollbar">
                         <!-- History injected here -->
                     </div>
@@ -236,7 +248,7 @@
                     YASH MARKETING
                 </h1>
                 <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                    Enterprise OS Login (v13.5.0)
+                    Enterprise OS Login (v14.0.0)
                 </p>
                 
                 <form id="loginForm" class="space-y-4">
@@ -279,7 +291,9 @@
                     </h1>
                     <p class="text-slate-400 text-xs mt-1 font-mono flex items-center">
                         OP_ID: <span id="userName" class="text-emerald-400 font-bold ml-1"></span>
-                        <span id="backendEarningsBadge" class="ml-3 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] hidden font-bold">💰 Earned Today: ₹0</span>
+                        <span id="backendEarningsBadge" class="ml-3 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] hidden font-bold">
+                            💰 Earned Today: ₹0
+                        </span>
                     </p>
                 </div>
                 
@@ -302,6 +316,7 @@
                     <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
                     <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
                     <button onclick="setDateRange('thisWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Week</button>
+                    
                     <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Month</button>
                     
@@ -336,7 +351,7 @@
             
             <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </div>
-    </div> <!-- End Main App Wrapper -->
+    </div>
 
     <!-- Order Execution Task Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
@@ -443,14 +458,12 @@
             const portalEmpId = urlParams.get('empId');
 
             if (trackId) {
-                // DEALER TRACKING VIEW
                 document.getElementById('mainAppWrapper').classList.add('hidden');
                 document.getElementById('trackingScreen').classList.remove('hidden');
                 document.getElementById('displayTrackId').innerText = trackId;
                 
                 runTrackerMode(trackId);
             } else {
-                // STAFF OS VIEW
                 const savedUser = localStorage.getItem('yash_user');
                 const savedRole = localStorage.getItem('yash_role');
                 
@@ -497,7 +510,6 @@
                 }
             }
             
-            // Start Global TAT Timer Tick
             setInterval(updateTatTimers, 1000);
         });
 
@@ -586,7 +598,9 @@
             });
         }
 
+        // =======================================================
         // CMD+K SEARCH LOGIC
+        // =======================================================
         document.addEventListener('keydown', (e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') { 
                 e.preventDefault(); 
@@ -671,7 +685,9 @@
             }).join('');
         }
 
+        // =======================================================
         // SHIFT HANDOVER LOGIC
+        // =======================================================
         function openHandover() {
             document.getElementById('handoverModal').classList.remove('hidden');
             fetchHandoverNotes();
@@ -687,7 +703,8 @@
             if(!note) return alert("Please write a note before submitting.");
             
             let btn = document.getElementById('btnSaveHandover');
-            btn.innerText = "Saving..."; btn.disabled = true;
+            btn.innerText = "Saving..."; 
+            btn.disabled = true;
 
             try {
                 let res = await fetch(API_URL, {
@@ -698,11 +715,14 @@
                 if(data.status === 'success') {
                     document.getElementById('handoverNoteInput').value = '';
                     fetchHandoverNotes();
-                } else alert("Failed to save note.");
+                } else {
+                    alert("Failed to save note.");
+                }
             } catch(e) {
                 alert("Network error.");
             }
-            btn.innerText = "Submit Handover Note"; btn.disabled = false;
+            btn.innerText = "Submit Handover Note"; 
+            btn.disabled = false;
         }
 
         async function fetchHandoverNotes() {
@@ -733,7 +753,9 @@
             }
         }
 
+        // =======================================================
         // DATE PARSERS & HELPERS
+        // =======================================================
         function parseCustomDate(dateStr) {
             if (!dateStr) {
                 return new Date();
@@ -928,7 +950,9 @@
             }, 5000); 
         }
 
-        // FETCH ORDERS
+        // =======================================================
+        // FETCH ORDERS & FILTER LOGIC
+        // =======================================================
         async function fetchOrders(isSilent = false) {
             const grid = document.getElementById('orderGrid');
             
@@ -1032,7 +1056,9 @@
             renderPipeline();
         }
 
+        // =======================================================
         // MDO WAR ROOM DASHBOARD
+        // =======================================================
         function renderMdoDashboard() {
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
@@ -1060,16 +1086,18 @@
             filteredData.forEach(o => {
                 totalOrderValue += (o.totalValue || 0);
 
-                if(o.isFullyCompleted) {
+                if (o.completedStages >= 10) {
                     totalCompleted++;
                 } else { 
-                    if (o.completedStages < 10) {
-                        stageStuck[o.completedStages]++; 
+                    stageStuck[o.completedStages]++; 
+                    if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
+                        slaBreaches++;
                     }
-                    if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
                 }
 
-                if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0, value: 0, area: o.area };
+                if(!shopStats[o.shopName]) {
+                    shopStats[o.shopName] = { items: 0, value: 0, area: o.area };
+                }
                 shopStats[o.shopName].value += (o.totalValue || 0); 
 
                 o.items.forEach(i => {
@@ -1080,20 +1108,28 @@
                     shopStats[o.shopName].items += qty;
                     
                     let cleanName = i.name ? i.name.trim() : "Unknown"; 
-                    if(!skuStats[cleanName]) skuStats[cleanName] = { qty: 0, value: 0 }; 
+                    if(!skuStats[cleanName]) {
+                        skuStats[cleanName] = { qty: 0, value: 0 }; 
+                    }
                     skuStats[cleanName].qty += qty;
                     skuStats[cleanName].value += itemVal;
                     
                     let brandName = i.brand && i.brand.trim() !== "" ? i.brand.trim() : "Unknown";
-                    if(!brandStats[brandName]) brandStats[brandName] = 0;
+                    if(!brandStats[brandName]) {
+                        brandStats[brandName] = 0;
+                    }
                     brandStats[brandName] += itemVal; 
                 });
 
-                if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
+                if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
+                    staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
+                }
                 
                 let city = (o.area && o.area !== "Unknown Area" && o.area !== "") ? o.area : "Unmapped Dealer";
                 
-                if(!cityStats[city]) cityStats[city] = { orders: 0, value: 0 };
+                if(!cityStats[city]) {
+                    cityStats[city] = { orders: 0, value: 0 };
+                }
                 cityStats[city].orders += 1;
                 cityStats[city].value += (o.totalValue || 0);
             });
@@ -1102,6 +1138,9 @@
             let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5); 
             let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 3);
             let sortedCities = Object.entries(cityStats).sort((a,b) => b[1].value - a[1].value).slice(0, 5);
+            
+            // DESCENDING SORT FOR BRAND MATRIX
+            let sortedBrands = Object.entries(brandStats).sort((a,b) => b[1] - a[1]);
 
             let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].value : 1;
             let maxStuck = Math.max(...stageStuck);
@@ -1112,7 +1151,10 @@
             let penalty = (filteredData.length > 0) ? ((slaBreaches / filteredData.length) * 50) : 0; 
             let healthScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
             
-            if (filteredData.length === 0) healthScore = 0; 
+            if (filteredData.length === 0) {
+                healthScore = 0; 
+            }
+            
             let healthColor = healthScore >= 80 ? 'text-emerald-400' : (healthScore >= 50 ? 'text-orange-400' : 'text-pink-500');
 
             let mdoHtml = `
@@ -1273,8 +1315,8 @@
                         brandChartInstance.destroy();
                     }
                     
-                    const labels = Object.keys(brandStats).filter(k => brandStats[k] > 0);
-                    const dataVals = Object.values(brandStats).filter(v => v > 0);
+                    const labels = sortedBrands.filter(b => b[1] > 0).map(b => b[0]);
+                    const dataVals = sortedBrands.filter(b => b[1] > 0).map(b => b[1]);
                     const totalMatrixValue = dataVals.reduce((a, b) => a + b, 0);
                     
                     if (labels.length === 0) { 
@@ -1324,7 +1366,9 @@
             }, 100);
         }
 
+        // =======================================================
         // PIPELINE & ORDER GRID
+        // =======================================================
         function setStageFilter(stageIndex) { 
             activeStageFilter = stageIndex; 
             renderPipeline(); 
@@ -1341,8 +1385,12 @@
                 if(data.status === 'success') {
                     showNotification("OVERRIDE SUCCESS", "Order Unlocked.");
                     fetchOrders(true);
-                } else alert("Failed to unblock order.");
-            } catch(e) { alert("Network error."); }
+                } else {
+                    alert("Failed to unblock order.");
+                }
+            } catch(e) { 
+                alert("Network error."); 
+            }
         }
 
         function renderPipeline() {
@@ -1598,7 +1646,9 @@
             });
         }
 
+        // =======================================================
         // 1-CLICK MERGE EXECUTION
+        // =======================================================
         async function executeMerge(primaryOrderId, shopName, secondaryIds, targetBtn) {
             if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
             
@@ -1633,6 +1683,9 @@
             }
         }
 
+        // =======================================================
+        // MODAL MANAGEMENT
+        // =======================================================
         function openModal(orderId) {
             const order = window.appData.orders[orderId];
             if(!order) {
@@ -1749,7 +1802,6 @@
             let mergeActionHtml = "";
             let orderDateStr = parseCustomDate(order.date).toDateString();
             
-            // STRICT REQUIREMENT: Same Dealer AND Same Day orders only.
             let secondaryOrders = filteredData.filter(o => 
                 o.shopName === order.shopName && 
                 parseCustomDate(o.date).toDateString() === orderDateStr && 
@@ -1806,7 +1858,9 @@
                     
                     if (i > 0 && order.stageUrls[i-1]) {
                         let prevMatch = order.stageUrls[i-1].match(/TIME:\s*(\d+)/);
-                        if (prevMatch) previousEpoch = parseInt(prevMatch[1]);
+                        if (prevMatch) {
+                            previousEpoch = parseInt(prevMatch[1]);
+                        }
                     }
 
                     if (cellData && cellData.includes("TIME:")) {
@@ -1816,11 +1870,19 @@
                             let d = new Date(thisEpoch);
                             let timeStr = d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
                             
-                            timestampDisplay = `<span class="text-[9px] text-emerald-300 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/50">At: ${timeStr}</span>`;
+                            timestampDisplay = `
+                                <span class="text-[9px] text-emerald-300 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/50">
+                                    At: ${timeStr}
+                                </span>
+                            `;
                             
                             let diffMins = Math.round((thisEpoch - previousEpoch) / 60000);
                             if (diffMins >= 0) {
-                                timeTakenDisplay = `<span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">Took: ${diffMins}m</span>`;
+                                timeTakenDisplay = `
+                                    <span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">
+                                        Took: ${diffMins}m
+                                    </span>
+                                `;
                             }
                             
                             cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
@@ -1992,7 +2054,11 @@
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">
                                     1. Who took the order?
                                 </label>
-                                <select id="runnerSelect" class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" onchange="if(this.value==='Others'){document.getElementById('runnerOther').classList.remove('hidden')}else{document.getElementById('runnerOther').classList.add('hidden')}">
+                                <select 
+                                    id="runnerSelect" 
+                                    class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" 
+                                    onchange="if(this.value==='Others'){document.getElementById('runnerOther').classList.remove('hidden')}else{document.getElementById('runnerOther').classList.add('hidden')}"
+                                >
                                     <option value="" disabled selected>Select Delivery Person...</option>
                                     <option value="Vishal Gunjal">Vishal Gunjal</option>
                                     <option value="Preetam Bogawat">Preetam Bogawat</option>
@@ -2011,7 +2077,11 @@
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">
                                     2. Which Transport?
                                 </label>
-                                <select id="transportSelect" class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" onchange="if(this.value==='Others'){document.getElementById('transportOther').classList.remove('hidden')}else{document.getElementById('transportOther').classList.add('hidden')}">
+                                <select 
+                                    id="transportSelect" 
+                                    class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" 
+                                    onchange="if(this.value==='Others'){document.getElementById('transportOther').classList.remove('hidden')}else{document.getElementById('transportOther').classList.add('hidden')}"
+                                >
                                     <option value="" disabled selected>Select Transport Partner...</option>
                                     <option value="Local">Local</option>
                                     <option value="Adhunik Transport">Adhunik Transport</option>
@@ -2328,6 +2398,9 @@
             fetchOrders(true); 
         }
 
+        // =======================================================
+        // FILE UPLOADS & MEDIA HANDLING
+        // =======================================================
         function handleFileSelection(inputElement, stageNum) {
             const newFiles = Array.from(inputElement.files);
             queuedFiles = queuedFiles.concat(newFiles);
@@ -2364,7 +2437,10 @@
                             const reader = new FileReader(); 
                             reader.onload = function(e) { 
                                 previewBox.innerHTML += `
-                                    <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
+                                    <img 
+                                        src="${e.target.result}" 
+                                        class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm"
+                                    >
                                 `; 
                             }; 
                             reader.readAsDataURL(file); 
@@ -2406,6 +2482,9 @@
             setTimeout(() => { openModal(orderId); }, 1000);
         }
 
+        // =======================================================
+        // REPORTS & EXPORTS
+        // =======================================================
         function generateEODReport() {
             if (!window.appData || !window.appData.rawArray || window.appData.rawArray.length === 0) {
                 alert("No data available to generate report.");
@@ -2443,7 +2522,7 @@
 
         function generateTallyCSV(orderId) {
             const order = window.appData.orders[orderId];
-            if(!order) {
+            if (!order) {
                 return;
             }
             
@@ -2468,6 +2547,9 @@
             showNotification("Tally SO Exported", `Ensure file is CLOSED before importing in Tally.`);
         }
 
+        // =======================================================
+        // COMPRESSION & SUBMISSION
+        // =======================================================
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader(); 
@@ -2535,6 +2617,7 @@
             };
             
             const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
+            
             if (noRespCheckbox && noRespCheckbox.checked) {
                 payload.isNoResponse = true; 
             }
@@ -2552,7 +2635,8 @@
 
                 if (!runner || !transport) {
                     alert("Accountability requires data! Select both a Delivery Person and a Transport partner.");
-                    if(btn) { 
+                    
+                    if (btn) { 
                         btn.disabled = false; 
                         btn.innerText = "Allocate Logistics & Proceed"; 
                     }
@@ -2598,9 +2682,11 @@
                 
                 if (stageNum === 10) { 
                     const rating = document.getElementById('ratingInput').value;
+                    
                     if (!rating) { 
                         alert("Customer Rating is mandatory."); 
-                        if(btn) { 
+                        
+                        if (btn) { 
                             btn.disabled = false; 
                             btn.innerText = "Execute & Proceed"; 
                         } 
@@ -2623,19 +2709,30 @@
                             let origQty = parseInt(item.qty);
                             
                             if (isChecked && userQty > 0) { 
-                                processed.push({name: item.name, qty: userQty}); 
+                                processed.push({
+                                    name: item.name, 
+                                    qty: userQty
+                                }); 
+                                
                                 if (userQty < origQty) {
-                                    short.push({name: item.name, qty: origQty - userQty}); 
+                                    short.push({
+                                        name: item.name, 
+                                        qty: origQty - userQty
+                                    }); 
                                 }
                             } else {
-                                short.push({name: item.name, qty: origQty}); 
+                                short.push({
+                                    name: item.name, 
+                                    qty: origQty
+                                }); 
                             }
                         }
                     });
                     
                     if (processed.length === 0) { 
                         alert("You must dispatch at least one item."); 
-                        if(btn) { 
+                        
+                        if (btn) { 
                             btn.disabled = false; 
                             btn.innerText = "Execute & Proceed"; 
                         } 
@@ -2643,7 +2740,10 @@
                     }
                     
                     if (short.length > 0) {
-                        payload.partialStock = { processedItems: processed, shortItems: short }; 
+                        payload.partialStock = { 
+                            processedItems: processed, 
+                            shortItems: short 
+                        }; 
                     }
                 }
             } else if (btn) { 
@@ -2669,6 +2769,7 @@
                     if (btn) {
                         btn.innerText = "Transmission Successful ✓"; 
                     }
+                    
                     queuedFiles = []; 
                     
                     if (data.splitOrderId) { 
@@ -2686,6 +2787,7 @@
                     statusLabel.innerText = "❌ Sync Failed. Network Drop."; 
                     statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
                 }
+                
                 if (btn) { 
                     btn.innerText = "Retry Transmission (Tap Again)"; 
                     btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500'); 
