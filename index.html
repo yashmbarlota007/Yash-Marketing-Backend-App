@@ -424,7 +424,6 @@
         let filteredData = [];
         let currentActiveOrder = null;
         
-        // OPTIMIZATION: Default to showing all unaccepted orders first
         let activeStageFilter = 0; 
         let activeDateRange = 'all'; 
         
@@ -1465,7 +1464,6 @@
                 let cursorStyle = "cursor-pointer";
                 let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
                 
-                // FEATURE: UI Lock Down for Credit Breaches
                 if (order.creditLocked && !order.ceoOverride) {
                     let unlockBtn = isOwner ? `<button onclick="event.stopPropagation(); executeUnblock('${order.orderId}')" class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white text-[10px] py-1.5 rounded font-black uppercase tracking-widest transition-all">🔓 CEO Override: Unblock</button>` : `<p class="mt-2 text-[9px] text-pink-400 font-bold uppercase">Contact Yash Sir to Unblock</p>`;
                     lockOverlay = `
@@ -1476,7 +1474,7 @@
                             ${unlockBtn}
                         </div>
                     `;
-                    clickAction = ""; // Disable opening modal
+                    clickAction = ""; 
                     cursorStyle = "cursor-not-allowed";
                     vipClass = "bg-red-900/10 border-red-500/50";
                 }
@@ -1590,19 +1588,18 @@
         }
 
         // 1-CLICK MERGE EXECUTION
-        // ✅ Added targetBtn here
-async function executeMerge(primaryOrderId, shopName, targetBtn) {
-    if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
-    
-    // ✅ The button is now safely passed in, no need for event.currentTarget
-    targetBtn.innerText = "Merging Pipelines...";
-    targetBtn.disabled = true;
-    targetBtn.classList.add('animate-pulse');
-    
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            // ... the rest of your original function stays exactly the same ...                    body: JSON.stringify({
+        // ✅ Added targetBtn to the function arguments below
+        async function executeMerge(primaryOrderId, shopName, targetBtn) {
+            if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
+            
+            targetBtn.innerText = "Merging Pipelines...";
+            targetBtn.disabled = true;
+            targetBtn.classList.add('animate-pulse');
+            
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
                         action: 'mergeOrders',
                         primaryOrderId: primaryOrderId,
                         shopName: shopName
@@ -1742,9 +1739,10 @@ async function executeMerge(primaryOrderId, shopName, targetBtn) {
             let pendingCount = filteredData.filter(o => o.shopName === order.shopName && o.completedStages < 4).length;
 
             if (order.completedStages < 4 && pendingCount > 1) {
+                // ✅ Passes "this" directly in the HTML to the JS function
                 mergeActionHtml = `
                     <button 
-                        onclick="executeMerge('${order.orderId}', '${order.shopName}', this)"
+                        onclick="executeMerge('${order.orderId}', '${order.shopName}', this)" 
                         class="w-full mt-2 mb-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white font-black py-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2 uppercase tracking-widest border border-blue-500/50"
                     >
                         🔗 1-Click Merge: Combine ${pendingCount - 1} other pending order(s) into this one
