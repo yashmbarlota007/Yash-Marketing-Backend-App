@@ -1,6 +1,6 @@
 // ==============================================================================
-// FILE 3: logic.js (The Application Brain)
-// YASH MARKETING - ENTERPRISE OS FRONTEND LOGIC (v13.1.0)
+// FILE: logic.js (The Application Brain)
+// YASH MARKETING - ENTERPRISE OS FRONTEND LOGIC (v13.2.0 - UNCOMPRESSED)
 // ==============================================================================
 
 // ⚠️ IMPORTANT: Replace this URL with your exact Google Apps Script Web App URL
@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (portalEmpId && portalEmpId.trim() !== "") {
             document.getElementById('loginEmpId').value = portalEmpId;
             document.getElementById('loginPass').value = "SSO_BYPASS";
+            
             const btn = document.getElementById('loginBtn');
             btn.innerText = "AUTHENTICATING SSO...";
             
@@ -106,22 +107,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // GLOBAL TAT TIMER ENGINE
 function updateTatTimers() {
-    document.querySelectorAll('.tat-timer').forEach(el => {
-        let target = parseInt(el.getAttribute('data-target'));
+    let timers = document.querySelectorAll('.tat-timer');
+    
+    for (let i = 0; i < timers.length; i++) {
+        let el = timers[i];
+        let targetString = el.getAttribute('data-target');
+        let target = parseInt(targetString, 10);
         let now = new Date().getTime();
         let diff = target - now;
         
         if (diff > 0) {
             let mins = Math.floor(diff / 60000);
             let secs = Math.floor((diff % 60000) / 1000);
+            
             el.innerText = `⏳ TAT: ${mins}m ${secs}s`;
             el.className = "tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse";
         } else {
             let minsOver = Math.abs(Math.floor(diff / 60000));
+            
             el.innerText = `🚨 LATE: ${minsOver}m OVER`;
             el.className = "tat-timer bg-red-600 text-white text-[10px] px-2 py-1 rounded font-black border border-red-800 shrink-0 animate-bounce";
         }
-    });
+    }
 }
 
 // TRACKER FETCH LOGIC
@@ -135,8 +142,10 @@ function runTrackerMode(trackId) {
     })
     .then(res => res.json())
     .then(data => {
-        document.getElementById('trackingLoader').style.display = 'none';
-        if(data.status === 'success') {
+        let loader = document.getElementById('trackingLoader');
+        loader.style.display = 'none';
+        
+        if (data.status === 'success') {
             let html = '';
             const customerStages = [
                 "Order Placed", 
@@ -148,13 +157,35 @@ function runTrackerMode(trackId) {
                 "Delivered Successfully"
             ];
             
-            let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.5), 6);
+            let stageCalc = data.data.completedStages / 1.5;
+            let mappedStage = Math.floor(stageCalc);
             
-            customerStages.forEach((stageName, idx) => {
-                let isCompleted = idx <= mappedStage;
-                let isActive = idx === mappedStage;
-                let color = isCompleted ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-700';
-                let textColor = isCompleted ? 'text-white' : 'text-slate-500';
+            if (mappedStage > 6) {
+                mappedStage = 6;
+            }
+            
+            for (let idx = 0; idx < customerStages.length; idx++) {
+                let stageName = customerStages[idx];
+                let isCompleted = false;
+                
+                if (idx <= mappedStage) {
+                    isCompleted = true;
+                }
+                
+                let isActive = false;
+                if (idx === mappedStage) {
+                    isActive = true;
+                }
+                
+                let color = 'bg-slate-700';
+                if (isCompleted) {
+                    color = 'bg-emerald-500 shadow-[0_0_10px_#10b981]';
+                }
+                
+                let textColor = 'text-slate-500';
+                if (isCompleted) {
+                    textColor = 'text-white';
+                }
                 
                 let icon = "";
                 if (isCompleted) {
@@ -163,31 +194,48 @@ function runTrackerMode(trackId) {
                     icon = '⏳';
                 }
                 
+                let borderClass = 'border-slate-800 bg-[#131C31]';
+                if (isCompleted) {
+                    borderClass = 'border-emerald-500/30 bg-emerald-900/10';
+                }
+                
                 html += `
                     <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                         <div class="flex items-center justify-center w-8 h-8 rounded-full border-4 border-[#0B1121] ${color} text-white font-black text-xs z-10 shrink-0">
                             ${icon}
                         </div>
-                        <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border ${isCompleted ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-slate-800 bg-[#131C31]'} shadow">
+                        <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border ${borderClass} shadow">
                             <h3 class="font-bold text-sm ${textColor}">
                                 ${stageName}
                             </h3>
                         </div>
                     </div>
                 `;
-            });
+            }
             
-            document.getElementById('trackingTimeline').innerHTML = html;
-            document.getElementById('trackingTimeline').classList.remove('hidden');
+            let timeline = document.getElementById('trackingTimeline');
+            timeline.innerHTML = html;
+            timeline.classList.remove('hidden');
+            
         } else {
-            document.getElementById('trackingError').innerText = data.message || "Invalid Tracking ID";
-            document.getElementById('trackingError').classList.remove('hidden');
+            let trackingError = document.getElementById('trackingError');
+            
+            if (data.message) {
+                trackingError.innerText = data.message;
+            } else {
+                trackingError.innerText = "Invalid Tracking ID";
+            }
+            
+            trackingError.classList.remove('hidden');
         }
     })
     .catch(err => {
-        document.getElementById('trackingLoader').style.display = 'none';
-        document.getElementById('trackingError').innerText = "Network error while fetching tracking data.";
-        document.getElementById('trackingError').classList.remove('hidden');
+        let loader = document.getElementById('trackingLoader');
+        loader.style.display = 'none';
+        
+        let trackingError = document.getElementById('trackingError');
+        trackingError.innerText = "Network error while fetching tracking data.";
+        trackingError.classList.remove('hidden');
     });
 }
 
@@ -204,14 +252,22 @@ document.addEventListener('keydown', (e) => {
 });
 
 function openSearch() { 
-    document.getElementById('searchModal').classList.remove('hidden'); 
-    document.getElementById('searchInput').focus(); 
+    let modal = document.getElementById('searchModal');
+    modal.classList.remove('hidden'); 
+    
+    let input = document.getElementById('searchInput');
+    input.focus(); 
 }
 
 function closeSearch() { 
-    document.getElementById('searchModal').classList.add('hidden'); 
-    document.getElementById('searchInput').value = ''; 
-    document.getElementById('searchResults').innerHTML = `
+    let modal = document.getElementById('searchModal');
+    modal.classList.add('hidden'); 
+    
+    let input = document.getElementById('searchInput');
+    input.value = ''; 
+    
+    let resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = `
         <div class="p-8 text-center text-slate-500 font-bold">
             Start typing to search main database...
         </div>
@@ -219,7 +275,8 @@ function closeSearch() {
 }
 
 function performSearch() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
+    const input = document.getElementById('searchInput');
+    const query = input.value.toLowerCase();
     const resultsDiv = document.getElementById('searchResults');
     
     if (query.length < 2) { 
@@ -231,11 +288,29 @@ function performSearch() {
         return; 
     }
     
-    const matches = window.appData.rawArray.filter(o => 
-        (o.orderId && o.orderId.toLowerCase().includes(query)) || 
-        (o.shopName && o.shopName.toLowerCase().includes(query)) || 
-        (o.phone && o.phone.includes(query))
-    ).slice(0, 10);
+    let matches = [];
+    
+    for (let i = 0; i < window.appData.rawArray.length; i++) {
+        let o = window.appData.rawArray[i];
+        
+        let matchFound = false;
+        
+        if (o.orderId && o.orderId.toLowerCase().includes(query)) {
+            matchFound = true;
+        } else if (o.shopName && o.shopName.toLowerCase().includes(query)) {
+            matchFound = true;
+        } else if (o.phone && o.phone.includes(query)) {
+            matchFound = true;
+        }
+        
+        if (matchFound) {
+            matches.push(o);
+        }
+        
+        if (matches.length >= 10) {
+            break;
+        }
+    }
 
     if (matches.length === 0) { 
         resultsDiv.innerHTML = `
@@ -245,13 +320,18 @@ function performSearch() {
         `; 
         return; 
     }
+    
+    let htmlOutput = "";
 
-    resultsDiv.innerHTML = matches.map(o => {
+    for (let i = 0; i < matches.length; i++) {
+        let o = matches[i];
         let badge = "";
+        
         if (o.isVIP) {
             badge = '<span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">VIP</span>';
         }
-        return `
+        
+        htmlOutput += `
         <div 
             onclick="closeSearch(); openModal('${o.orderId}')" 
             class="p-3 border-b border-slate-800 hover:bg-slate-800 cursor-pointer flex justify-between items-center transition-colors rounded-lg mb-1"
@@ -274,23 +354,32 @@ function performSearch() {
             </div>
         </div>
         `;
-    }).join('');
+    }
+    
+    resultsDiv.innerHTML = htmlOutput;
 }
 
 // SHIFT HANDOVER LOGIC
 function openHandover() {
-    document.getElementById('handoverModal').classList.remove('hidden');
+    let modal = document.getElementById('handoverModal');
+    modal.classList.remove('hidden');
+    
     fetchHandoverNotes();
 }
 
 function closeHandover() {
-    document.getElementById('handoverModal').classList.add('hidden');
-    document.getElementById('handoverNoteInput').value = '';
+    let modal = document.getElementById('handoverModal');
+    modal.classList.add('hidden');
+    
+    let input = document.getElementById('handoverNoteInput');
+    input.value = '';
 }
 
 async function saveHandover() {
-    let note = document.getElementById('handoverNoteInput').value.trim();
-    if(!note) {
+    let input = document.getElementById('handoverNoteInput');
+    let note = input.value.trim();
+    
+    if (note === "") {
         alert("Please write a note before submitting.");
         return;
     }
@@ -300,25 +389,35 @@ async function saveHandover() {
     btn.disabled = true;
 
     try {
+        let payload = { 
+            action: 'saveHandover', 
+            staffName: currentUserName, 
+            note: note 
+        };
+        
         let res = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ 
-                action: 'saveHandover', 
-                staffName: currentUserName, 
-                note: note 
-            })
+            body: JSON.stringify(payload)
         });
+        
         let data = await res.json();
         
-        if(data.status === 'success') {
-            document.getElementById('handoverNoteInput').value = '';
+        if (data.status === 'success') {
+            let noteInput = document.getElementById('handoverNoteInput');
+            noteInput.value = '';
+            
             fetchHandoverNotes();
         } else {
-            alert("Failed to save note: " + data.message);
+            let errorMsg = "Unknown error";
+            if (data.message) {
+                errorMsg = data.message;
+            }
+            alert("Failed to save note: " + errorMsg);
         }
-    } catch(e) {
+    } catch (e) {
         alert("Network error. Could not save note.");
     }
+    
     btn.innerText = "Submit Handover Note"; 
     btn.disabled = false;
 }
@@ -328,26 +427,42 @@ async function fetchHandoverNotes() {
     historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Loading recent notes...</div>';
     
     try {
+        let payload = { 
+            action: 'getHandover' 
+        };
+        
         let res = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'getHandover' })
+            body: JSON.stringify(payload)
         });
+        
         let data = await res.json();
         
-        if(data.status === 'success' && data.data.length > 0) {
-            historyDiv.innerHTML = data.data.map(n => `
-                <div class="bg-[#0B1121] p-3 rounded-lg border border-slate-800">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-black text-indigo-400">${n.staff}</span>
-                        <span class="text-[9px] text-slate-500 font-mono tracking-widest">${new Date(n.time).toLocaleString('en-GB')}</span>
+        if (data.status === 'success' && data.data.length > 0) {
+            let htmlOutput = "";
+            
+            for (let i = 0; i < data.data.length; i++) {
+                let n = data.data[i];
+                
+                let dateObj = new Date(n.time);
+                let dateString = dateObj.toLocaleString('en-GB');
+                
+                htmlOutput += `
+                    <div class="bg-[#0B1121] p-3 rounded-lg border border-slate-800">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-black text-indigo-400">${n.staff}</span>
+                            <span class="text-[9px] text-slate-500 font-mono tracking-widest">${dateString}</span>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">${n.note}</p>
                     </div>
-                    <p class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">${n.note}</p>
-                </div>
-            `).join('');
+                `;
+            }
+            
+            historyDiv.innerHTML = htmlOutput;
         } else {
             historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">No recent shift notes found.</div>';
         }
-    } catch(e) {
+    } catch (e) {
         historyDiv.innerHTML = '<div class="text-center text-pink-500 text-xs py-4">Error loading history.</div>';
     }
 }
@@ -357,29 +472,45 @@ function parseCustomDate(dateStr) {
     if (!dateStr) {
         return new Date();
     }
+    
     let d = new Date(dateStr);
+    
     if (!isNaN(d)) {
         return d;
     }
     
     let parts = String(dateStr).split(' ');
+    
     if (parts.length >= 1) {
         let dateParts = parts[0].split(/[\/\-]/);
+        
         if (dateParts.length === 3) {
-            let day = parseInt(dateParts[0]);
-            let month = parseInt(dateParts[1]) - 1;
-            let year = parseInt(dateParts[2]);
+            let day = parseInt(dateParts[0], 10);
+            let month = parseInt(dateParts[1], 10) - 1;
+            let year = parseInt(dateParts[2], 10);
             
             if (year < 100) {
                 year += 2000;
             }
             
-            let hours = 0, mins = 0, secs = 0;
+            let hours = 0;
+            let mins = 0;
+            let secs = 0;
+            
             if (parts.length >= 2) {
                 let timeParts = parts[1].split(':');
-                hours = parseInt(timeParts[0]) || 0; 
-                mins = parseInt(timeParts[1]) || 0; 
-                secs = parseInt(timeParts[2]) || 0;
+                
+                if (timeParts[0]) {
+                    hours = parseInt(timeParts[0], 10) || 0;
+                }
+                
+                if (timeParts[1]) {
+                    mins = parseInt(timeParts[1], 10) || 0;
+                }
+                
+                if (timeParts[2]) {
+                    secs = parseInt(timeParts[2], 10) || 0;
+                }
             }
             return new Date(year, month, day, hours, mins, secs);
         }
@@ -391,35 +522,61 @@ function formatExactDate(dateString) {
     if (!dateString) {
         return "";
     }
+    
     const d = parseCustomDate(dateString);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
+    
+    let day = String(d.getDate()).padStart(2, '0');
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let year = d.getFullYear();
     
     let hours = d.getHours(); 
-    const ampm = hours >= 12 ? 'PM' : 'AM'; 
+    
+    let ampm = 'AM';
+    if (hours >= 12) {
+        ampm = 'PM';
+    }
     
     hours = hours % 12; 
-    hours = hours ? hours : 12; 
     
-    const mins = String(d.getMinutes()).padStart(2, '0');
+    if (hours === 0) {
+        hours = 12;
+    }
+    
+    let mins = String(d.getMinutes()).padStart(2, '0');
+    
     return `Received: ${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
 }
 
 function getTimeAgoUI(dateString) {
     if (!dateString) {
-        return { text: "", color: "text-slate-400", isSLAWarning: false };
+        return { 
+            text: "", 
+            color: "text-slate-400", 
+            isSLAWarning: false 
+        };
     }
     
     const orderDate = parseCustomDate(dateString);
-    const diffInMs = new Date() - orderDate;
+    const nowTime = new Date().getTime();
+    const orderTime = orderDate.getTime();
+    
+    const diffInMs = nowTime - orderTime;
     
     if (diffInMs < 0) {
-        return { text: "Just now", color: "text-emerald-400", isSLAWarning: false };
+        return { 
+            text: "Just now", 
+            color: "text-emerald-400", 
+            isSLAWarning: false 
+        };
     }
     
-    const diffInHrs = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+    const msInHour = 1000 * 60 * 60;
+    const msInMin = 1000 * 60;
+    
+    const diffInHrs = Math.floor(diffInMs / msInHour);
+    
+    const remainderMs = diffInMs % msInHour;
+    const diffInMins = Math.floor(remainderMs / msInMin);
     
     let color = 'text-emerald-400';
     let isSLAWarning = false;
@@ -434,15 +591,35 @@ function getTimeAgoUI(dateString) {
     }
 
     if (diffInHrs > 48) {
-        return { text: `${Math.floor(diffInHrs/24)}d ago`, color, isSLAWarning };
+        let days = Math.floor(diffInHrs / 24);
+        return { 
+            text: `${days}d ago`, 
+            color: color, 
+            isSLAWarning: isSLAWarning 
+        };
     }
+    
     if (diffInHrs > 0) {
-        return { text: `${diffInHrs}h ${diffInMins}m ago`, color, isSLAWarning };
+        return { 
+            text: `${diffInHrs}h ${diffInMins}m ago`, 
+            color: color, 
+            isSLAWarning: isSLAWarning 
+        };
     }
+    
     if (diffInMins > 0) {
-        return { text: `${diffInMins}m ago`, color, isSLAWarning };
+        return { 
+            text: `${diffInMins}m ago`, 
+            color: color, 
+            isSLAWarning: isSLAWarning 
+        };
     }
-    return { text: `Just now`, color, isSLAWarning };
+    
+    return { 
+        text: `Just now`, 
+        color: color, 
+        isSLAWarning: isSLAWarning 
+    };
 }
 
 function makeDirectDriveLink(url) {
@@ -458,16 +635,21 @@ function makeDirectDriveLink(url) {
 // =======================================================
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
     const btn = document.getElementById('loginBtn');
     const error = document.getElementById('loginError');
+    
     btn.innerText = "AUTHENTICATING...";
     error.classList.add('hidden'); 
     
     try {
+        let empIdInput = document.getElementById('loginEmpId');
+        let passInput = document.getElementById('loginPass');
+        
         const payload = { 
             action: 'login', 
-            employeeId: document.getElementById('loginEmpId').value, 
-            password: document.getElementById('loginPass').value 
+            employeeId: empIdInput.value, 
+            password: passInput.value 
         };
         
         const res = await fetch(API_URL, { 
@@ -486,38 +668,69 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         }
         
         if (data.status === 'success' || data.success === true) {
-            const uName = data.user?.name || data.username;
-            const uRole = data.user?.role || data.role || 'Staff';
+            let uName = data.username;
+            if (data.user && data.user.name) {
+                uName = data.user.name;
+            }
+            
+            let uRole = 'Staff';
+            if (data.user && data.user.role) {
+                uRole = data.user.role;
+            } else if (data.role) {
+                uRole = data.role;
+            }
             
             localStorage.setItem('yash_user', uName); 
             localStorage.setItem('yash_role', uRole);
             
             showDashboard(uName, uRole);
         } else { 
-            error.innerText = data.message || "Invalid Employee ID or Password."; 
+            let errorMsg = "Invalid Employee ID or Password.";
+            if (data.message) {
+                errorMsg = data.message;
+            }
+            error.innerText = errorMsg; 
             error.classList.remove('hidden'); 
             btn.innerText = "INITIALIZE SYSTEM"; 
         }
     } catch (err) { 
-        error.innerText = err.message || "Network Error."; 
+        let errorMsg = "Network Error.";
+        if (err.message) {
+            errorMsg = err.message;
+        }
+        error.innerText = errorMsg; 
         error.classList.remove('hidden'); 
         btn.innerText = "INITIALIZE SYSTEM"; 
     }
 });
 
 function showDashboard(name, role) {
-    currentUserRole = role || 'Staff'; 
+    if (role) {
+        currentUserRole = role; 
+    } else {
+        currentUserRole = 'Staff';
+    }
+    
     currentUserName = name;
     
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('dashboardScreen').classList.remove('hidden');
-    document.getElementById('userName').innerText = name.toUpperCase();
+    let loginScreen = document.getElementById('loginScreen');
+    loginScreen.classList.add('hidden');
+    
+    let dashboardScreen = document.getElementById('dashboardScreen');
+    dashboardScreen.classList.remove('hidden');
+    
+    let userNameDisplay = document.getElementById('userName');
+    userNameDisplay.innerText = name.toUpperCase();
     
     fetchOrders(false);
+    
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
     }
-    autoRefreshInterval = setInterval(() => { fetchOrders(true); }, 30000); 
+    
+    autoRefreshInterval = setInterval(() => { 
+        fetchOrders(true); 
+    }, 30000); 
 }
 
 function logout() { 
@@ -530,7 +743,8 @@ function showNotification(title, message) {
     const toast = document.createElement('div');
     
     toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto mb-2";
-    toast.innerHTML = `
+    
+    let htmlOutput = `
         <span class="text-2xl animate-bounce">⚡</span>
         <div>
             <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400">${title}</p>
@@ -538,12 +752,17 @@ function showNotification(title, message) {
         </div>
     `;
     
+    toast.innerHTML = htmlOutput;
     area.appendChild(toast);
     
     setTimeout(() => { 
         toast.style.opacity = '0'; 
         toast.style.transition = 'opacity 0.3s ease'; 
-        setTimeout(() => toast.remove(), 300); 
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 300); 
+        
     }, 5000); 
 }
 
@@ -551,7 +770,7 @@ function showNotification(title, message) {
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
-    if (!isSilent && window.appData.rawArray.length === 0) {
+    if (isSilent === false && window.appData.rawArray.length === 0) {
         grid.innerHTML = `
             <div class="col-span-full py-20 text-center">
                 <div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
@@ -563,19 +782,24 @@ async function fetchOrders(isSilent = false) {
     }
     
     try {
+        let payload = { 
+            action: 'getOrders', 
+            staffName: currentUserName 
+        };
+        
         const res = await fetch(API_URL, { 
             method: 'POST', 
-            body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
+            body: JSON.stringify(payload) 
         });
         
         const response = await res.json();
         
         if (response.status === 'success') {
-            if(response.settings) {
+            if (response.settings) {
                 window.appSettings = response.settings;
             }
             
-            if(response.backendEarnings !== undefined && response.backendEarnings > 0) {
+            if (response.backendEarnings !== undefined && response.backendEarnings > 0) {
                 let bBadge = document.getElementById('backendEarningsBadge');
                 bBadge.innerText = `💰 Earned Today: ₹${response.backendEarnings}`;
                 bBadge.classList.remove('hidden');
@@ -584,13 +808,17 @@ async function fetchOrders(isSilent = false) {
             window.appData.rawArray = response.data;
             window.appData.orders = {}; 
             
-            response.data.forEach(o => { 
+            for (let i = 0; i < response.data.length; i++) {
+                let o = response.data[i];
                 window.appData.orders[o.orderId] = o; 
-            });
+            }
             
             applyDateFilter(); 
             
-            if (currentActiveOrder && !document.getElementById('orderModal').classList.contains('hidden')) {
+            let modal = document.getElementById('orderModal');
+            let isModalHidden = modal.classList.contains('hidden');
+            
+            if (currentActiveOrder && !isModalHidden) {
                 openModal(currentActiveOrder.orderId); 
             }
         }
@@ -601,12 +829,18 @@ async function fetchOrders(isSilent = false) {
 
 function setDateRange(range, btnElement) {
     activeDateRange = range;
+    
     if (btnElement) {
-        document.querySelectorAll('.date-filter-btn').forEach(btn => {
+        let buttons = document.querySelectorAll('.date-filter-btn');
+        
+        for (let i = 0; i < buttons.length; i++) {
+            let btn = buttons[i];
             btn.classList.remove('active-filter', 'bg-[#4F46E5]', 'text-white', 'border-indigo-500');
-        });
+        }
+        
         btnElement.classList.add('active-filter');
     }
+    
     applyDateFilter();
 }
 
@@ -615,49 +849,115 @@ function applyDateFilter() {
     now.setHours(0,0,0,0);
 
     let today = new Date(now);
-    let yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+    
+    let yesterday = new Date(now); 
+    yesterday.setDate(yesterday.getDate() - 1);
     
     let dayOfWeek = now.getDay();
-    let diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    let startOfThisWeek = new Date(now); startOfThisWeek.setDate(diffToMonday);
+    let adjustment = 1;
+    if (dayOfWeek === 0) {
+        adjustment = -6;
+    }
     
-    let startOfLastWeek = new Date(startOfThisWeek); startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-    let endOfLastWeek = new Date(startOfThisWeek); endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+    let diffToMonday = now.getDate() - dayOfWeek + adjustment;
+    
+    let startOfThisWeek = new Date(now); 
+    startOfThisWeek.setDate(diffToMonday);
+    
+    let startOfLastWeek = new Date(startOfThisWeek); 
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+    
+    let endOfLastWeek = new Date(startOfThisWeek); 
+    endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
     
     let startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     let startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     let endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
     if (activeDateRange === 'split') {
-        filteredData = window.appData.rawArray.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
+        filteredData = [];
+        for (let i = 0; i < window.appData.rawArray.length; i++) {
+            let o = window.appData.rawArray[i];
+            let idString = String(o.orderId).toUpperCase();
+            
+            if (idString.includes('SPLIT')) {
+                filteredData.push(o);
+            }
+        }
     } else if (activeDateRange === 'all') {
         filteredData = window.appData.rawArray;
     } else {
-        filteredData = window.appData.rawArray.filter(o => {
+        filteredData = [];
+        
+        for (let i = 0; i < window.appData.rawArray.length; i++) {
+            let o = window.appData.rawArray[i];
+            
             let d = parseCustomDate(o.date); 
             d.setHours(0,0,0,0);
             
-            if (activeDateRange === 'today') return d.getTime() === today.getTime();
-            if (activeDateRange === 'yesterday') return d.getTime() === yesterday.getTime();
-            if (activeDateRange === 'thisWeek') return d >= startOfThisWeek && d <= now;
-            if (activeDateRange === 'lastWeek') return d >= startOfLastWeek && d <= endOfLastWeek;
-            if (activeDateRange === 'thisMonth') return d >= startOfThisMonth && d <= now;
-            if (activeDateRange === 'lastMonth') return d >= startOfLastMonth && d <= endOfLastMonth;
+            let dTime = d.getTime();
+            let keep = true;
             
-            return true;
-        });
+            if (activeDateRange === 'today') {
+                if (dTime !== today.getTime()) {
+                    keep = false;
+                }
+            } else if (activeDateRange === 'yesterday') {
+                if (dTime !== yesterday.getTime()) {
+                    keep = false;
+                }
+            } else if (activeDateRange === 'thisWeek') {
+                if (d < startOfThisWeek || d > now) {
+                    keep = false;
+                }
+            } else if (activeDateRange === 'lastWeek') {
+                if (d < startOfLastWeek || d > endOfLastWeek) {
+                    keep = false;
+                }
+            } else if (activeDateRange === 'thisMonth') {
+                if (d < startOfThisMonth || d > now) {
+                    keep = false;
+                }
+            } else if (activeDateRange === 'lastMonth') {
+                if (d < startOfLastMonth || d > endOfLastMonth) {
+                    keep = false;
+                }
+            }
+            
+            if (keep) {
+                filteredData.push(o);
+            }
+        }
     }
+    
     renderMdoDashboard(); 
     renderPipeline();
 }
 
 // MDO WAR ROOM DASHBOARD
 function renderMdoDashboard() {
-    const userName = localStorage.getItem('yash_user') || "";
-    const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
+    let userNameStr = "";
+    let localUser = localStorage.getItem('yash_user');
+    
+    if (localUser) {
+        userNameStr = localUser;
+    }
+    
+    let isOwner = false;
+    let roleLower = currentUserRole.toLowerCase();
+    
+    if (roleLower === 'admin' || roleLower === 'owner') {
+        isOwner = true;
+    }
+    
+    let nameLower = userNameStr.toLowerCase();
+    if (nameLower.includes('yash')) {
+        isOwner = true;
+    }
+    
     const mdoDiv = document.getElementById('mdoCommandCenter');
     
-    if (!isOwner) { 
+    if (isOwner === false) { 
         mdoDiv.classList.add('hidden'); 
         return; 
     }
@@ -668,69 +968,215 @@ function renderMdoDashboard() {
     let totalCompleted = 0; 
     let slaBreaches = 0; 
     let totalOrderValue = 0;
+    
     let shopStats = {}; 
     let skuStats = {}; 
     let staffScores = {}; 
     let cityStats = {};
     let brandStats = {}; 
-    let stageStuck = Array(10).fill(0);
+    
+    let stageStuck = [];
+    for (let i = 0; i < 10; i++) {
+        stageStuck.push(0);
+    }
+    
     const nowTime = new Date().getTime();
 
-    filteredData.forEach(o => {
-        totalOrderValue += (o.totalValue || 0);
+    for (let i = 0; i < filteredData.length; i++) {
+        let o = filteredData[i];
+        
+        let orderVal = 0;
+        if (o.totalValue) {
+            orderVal = o.totalValue;
+        }
+        
+        totalOrderValue += orderVal;
 
-        if(o.isFullyCompleted) {
+        if (o.isFullyCompleted) {
             totalCompleted++;
         } else { 
-            stageStuck[o.completedStages]++; 
-            if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) slaBreaches++;
+            let currentStage = o.completedStages;
+            stageStuck[currentStage]++; 
+            
+            let dObj = parseCustomDate(o.date);
+            let dTime = dObj.getTime();
+            
+            let diff = nowTime - dTime;
+            let targetDiff = 48 * 60 * 60 * 1000;
+            
+            if (diff > targetDiff) {
+                slaBreaches++;
+            }
         }
 
-        if(!shopStats[o.shopName]) shopStats[o.shopName] = { items: 0, value: 0, area: o.area };
-        shopStats[o.shopName].value += (o.totalValue || 0); 
+        if (!shopStats[o.shopName]) {
+            shopStats[o.shopName] = { 
+                items: 0, 
+                value: 0, 
+                area: o.area 
+            };
+        }
+        
+        shopStats[o.shopName].value += orderVal; 
 
-        o.items.forEach(i => {
-            let qty = parseInt(i.qty || 1); 
-            let itemVal = parseFloat(i.totalValue || 0);
+        for (let j = 0; j < o.items.length; j++) {
+            let item = o.items[j];
+            
+            let qty = 1;
+            if (item.qty) {
+                qty = parseInt(item.qty, 10);
+            }
+            
+            let itemVal = 0;
+            if (item.totalValue) {
+                itemVal = parseFloat(item.totalValue);
+            }
             
             totalVolume += qty; 
             shopStats[o.shopName].items += qty;
             
-            let cleanName = i.name ? i.name.trim() : "Unknown"; 
-            if(!skuStats[cleanName]) skuStats[cleanName] = { qty: 0, value: 0 }; 
+            let cleanName = "Unknown";
+            if (item.name) {
+                cleanName = item.name.trim();
+            }
+            
+            if (!skuStats[cleanName]) {
+                skuStats[cleanName] = { 
+                    qty: 0, 
+                    value: 0 
+                };
+            }
+            
             skuStats[cleanName].qty += qty;
             skuStats[cleanName].value += itemVal;
             
-            let brandName = i.brand && i.brand.trim() !== "" ? i.brand.trim() : "Unknown";
-            if(!brandStats[brandName]) brandStats[brandName] = 0;
+            let brandName = "Unknown";
+            if (item.brand && item.brand.trim() !== "") {
+                brandName = item.brand.trim();
+            }
+            
+            if (!brandStats[brandName]) {
+                brandStats[brandName] = 0;
+            }
+            
             brandStats[brandName] += itemVal; 
-        });
+        }
 
-        if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
+        if (o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
+            let staff = o.lastUpdatedBy;
+            if (!staffScores[staff]) {
+                staffScores[staff] = 0;
+            }
+            staffScores[staff] += 1;
+        }
         
-        let city = (o.area && o.area !== "Unknown Area" && o.area !== "") ? o.area : "Unmapped Dealer";
+        let city = "Unmapped Dealer";
+        if (o.area && o.area !== "Unknown Area" && o.area !== "") {
+            city = o.area;
+        }
         
-        if(!cityStats[city]) cityStats[city] = { orders: 0, value: 0 };
+        if (!cityStats[city]) {
+            cityStats[city] = { 
+                orders: 0, 
+                value: 0 
+            };
+        }
+        
         cityStats[city].orders += 1;
-        cityStats[city].value += (o.totalValue || 0);
+        cityStats[city].value += orderVal;
+    }
+
+    let sortedShops = Object.entries(shopStats).sort((a,b) => {
+        return b[1].value - a[1].value;
     });
-
-    let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].value - a[1].value);
-    let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5); 
-    let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 3);
-    let sortedCities = Object.entries(cityStats).sort((a,b) => b[1].value - a[1].value).slice(0, 5);
-
-    let topShopVolume = sortedShops.length > 0 ? sortedShops[0][1].value : 1;
-    let maxStuck = Math.max(...stageStuck);
-    let frictionIndex = maxStuck > 0 ? STAGE_NAMES[stageStuck.indexOf(maxStuck)].split(' (')[0] : "Smooth Pipeline";
     
-    let completionRate = filteredData.length > 0 ? (totalCompleted / filteredData.length) * 100 : 100;
+    let sortedSKUs = Object.entries(skuStats).sort((a,b) => {
+        return b[1].qty - a[1].qty;
+    });
+    let topSKUs = sortedSKUs.slice(0, 5);
+    
+    let sortedStaff = Object.entries(staffScores).sort((a,b) => {
+        return b[1] - a[1];
+    });
+    let topStaff = sortedStaff.slice(0, 3);
+    
+    let sortedCities = Object.entries(cityStats).sort((a,b) => {
+        return b[1].value - a[1].value;
+    });
+    let topCities = sortedCities.slice(0, 5);
+
+    let topShopVolume = 1;
+    if (sortedShops.length > 0) {
+        topShopVolume = sortedShops[0][1].value;
+    }
+    
+    let maxStuck = 0;
+    for (let i = 0; i < stageStuck.length; i++) {
+        if (stageStuck[i] > maxStuck) {
+            maxStuck = stageStuck[i];
+        }
+    }
+    
+    let maxStuckIndex = -1;
+    for (let i = 0; i < stageStuck.length; i++) {
+        if (stageStuck[i] === maxStuck) {
+            maxStuckIndex = i;
+            break;
+        }
+    }
+    
+    let frictionIndex = "Smooth Pipeline";
+    if (maxStuck > 0 && maxStuckIndex !== -1) {
+        let fullName = STAGE_NAMES[maxStuckIndex];
+        let parts = fullName.split(' (');
+        frictionIndex = parts[0];
+    }
+    
+    let completionRate = 100;
+    if (filteredData.length > 0) {
+        completionRate = (totalCompleted / filteredData.length) * 100;
+    }
+    
     let baseScore = completionRate; 
-    let penalty = (filteredData.length > 0) ? ((slaBreaches / filteredData.length) * 50) : 0; 
-    let healthScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
+    let penalty = 0;
+    if (filteredData.length > 0) {
+        penalty = (slaBreaches / filteredData.length) * 50;
+    }
     
-    if (filteredData.length === 0) healthScore = 0; 
-    let healthColor = healthScore >= 80 ? 'text-emerald-400' : (healthScore >= 50 ? 'text-orange-400' : 'text-pink-500');
+    let calcScore = baseScore - penalty;
+    let healthScore = Math.round(calcScore);
+    
+    if (healthScore < 0) {
+        healthScore = 0;
+    }
+    if (healthScore > 100) {
+        healthScore = 100;
+    }
+    
+    if (filteredData.length === 0) {
+        healthScore = 0; 
+    }
+    
+    let healthColor = 'text-pink-500';
+    if (healthScore >= 80) {
+        healthColor = 'text-emerald-400';
+    } else if (healthScore >= 50) {
+        healthColor = 'text-orange-400';
+    }
+    
+    let breachBorderClass = 'border-t-slate-700';
+    let breachBgClass = '';
+    let breachIcon = '✅';
+    let breachTextColor = 'text-slate-400';
+    let breachNumColor = 'text-white';
+    
+    if (slaBreaches > 0) {
+        breachBorderClass = 'border-t-pink-500';
+        breachBgClass = 'bg-pink-500/5';
+        breachIcon = '<span class="animate-pulse">⚠️</span>';
+        breachTextColor = 'text-pink-400';
+        breachNumColor = 'text-pink-500';
+    }
 
     let mdoHtml = `
         <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
@@ -772,11 +1218,11 @@ function renderMdoDashboard() {
                 </div>
             </div>
             
-            <div class="glass-panel p-4 rounded-2xl border-t-4 ${slaBreaches > 0 ? 'border-t-pink-500 bg-pink-500/5' : 'border-t-slate-700'} hover-card">
-                <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
-                    ${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches
+            <div class="glass-panel p-4 rounded-2xl border-t-4 ${breachBorderClass} ${breachBgClass} hover-card">
+                <div class="text-[10px] ${breachTextColor} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
+                    ${breachIcon} SLA Breaches
                 </div>
-                <span class="text-2xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'} mt-2 block">
+                <span class="text-2xl font-black ${breachNumColor} mt-2 block">
                     ${slaBreaches}
                 </span>
                 <div class="text-[9px] text-slate-500 mt-1 font-semibold">
@@ -803,21 +1249,32 @@ function renderMdoDashboard() {
                     <span class="text-yellow-400">🔥</span> Hot Movers
                 </h3>
                 <div class="space-y-3">
-                    ${sortedSKUs.length > 0 ? sortedSKUs.map((sku, i) => `
-                        <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="text-xs font-bold text-slate-300 truncate mb-1">
-                                ${i+1}. ${sku[0]}
-                            </div>
-                            <div class="flex justify-between items-end">
-                                <span class="text-sm font-black text-yellow-400">
-                                    ${sku[1].qty} <span class="text-[9px] text-slate-500">QTY</span>
-                                </span>
-                                <span class="text-xs font-black text-emerald-400">
-                                    ₹${sku[1].value.toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-                    `).join('') : `<p class="text-slate-500 text-sm italic">No SKU data.</p>`}
+    `;
+    
+    if (topSKUs.length > 0) {
+        for (let i = 0; i < topSKUs.length; i++) {
+            let sku = topSKUs[i];
+            mdoHtml += `
+                <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                    <div class="text-xs font-bold text-slate-300 truncate mb-1">
+                        ${i+1}. ${sku[0]}
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-sm font-black text-yellow-400">
+                            ${sku[1].qty} <span class="text-[9px] text-slate-500">QTY</span>
+                        </span>
+                        <span class="text-xs font-black text-emerald-400">
+                            ₹${sku[1].value.toLocaleString()}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        mdoHtml += `<p class="text-slate-500 text-sm italic">No SKU data.</p>`;
+    }
+    
+    mdoHtml += `
                 </div>
             </div>
             
@@ -826,22 +1283,40 @@ function renderMdoDashboard() {
                     <span class="text-emerald-400">👑</span> VIP Dealers
                 </h3>
                 <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-                    ${sortedShops.length > 0 ? sortedShops.slice(0, 6).map((v, i) => `
-                        <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
-                            <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent" style="width: ${(v[1].value / topShopVolume) * 100}%"></div>
-                            <div class="relative z-10">
-                                <div class="text-xs font-bold text-slate-200 truncate group-hover:text-white">
-                                    ${v[0]}
-                                </div>
-                                <div class="text-[9px] text-slate-400 uppercase tracking-widest mb-1">
-                                    📍 ${v[1].area}
-                                </div>
-                                <div class="text-sm font-black text-emerald-400">
-                                    ₹${v[1].value.toLocaleString()}
-                                </div>
-                            </div>
+    `;
+    
+    if (sortedShops.length > 0) {
+        let displayShops = sortedShops.slice(0, 6);
+        for (let i = 0; i < displayShops.length; i++) {
+            let v = displayShops[i];
+            
+            let widthPercent = 0;
+            if (topShopVolume > 0) {
+                widthPercent = (v[1].value / topShopVolume) * 100;
+            }
+            
+            mdoHtml += `
+                <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
+                    <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent" style="width: ${widthPercent}%"></div>
+                    <div class="relative z-10">
+                        <div class="text-xs font-bold text-slate-200 truncate group-hover:text-white">
+                            ${v[0]}
                         </div>
-                    `).join('') : `<p class="text-slate-500 text-sm italic">No dealer data.</p>`}
+                        <div class="text-[9px] text-slate-400 uppercase tracking-widest mb-1">
+                            📍 ${v[1].area}
+                        </div>
+                        <div class="text-sm font-black text-emerald-400">
+                            ₹${v[1].value.toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        mdoHtml += `<p class="text-slate-500 text-sm italic">No dealer data.</p>`;
+    }
+    
+    mdoHtml += `
                 </div>
             </div>
             
@@ -850,21 +1325,32 @@ function renderMdoDashboard() {
                     <span class="text-blue-400">📍</span> Area Heatmap
                 </h3>
                 <div class="space-y-3">
-                    ${sortedCities.length > 0 ? sortedCities.map((city, i) => `
-                        <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="text-xs font-bold text-slate-300 truncate mb-1">
-                                #${i+1} ${city[0]}
-                            </div>
-                            <div class="flex justify-between items-end">
-                                <span class="text-sm font-black text-blue-400">
-                                    ${city[1].orders} <span class="text-[9px] text-slate-500">ORD</span>
-                                </span>
-                                <span class="text-xs font-black text-emerald-400">
-                                    ₹${city[1].value.toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-                    `).join('') : `<p class="text-slate-500 text-sm italic">No area data.</p>`}
+    `;
+    
+    if (topCities.length > 0) {
+        for (let i = 0; i < topCities.length; i++) {
+            let city = topCities[i];
+            mdoHtml += `
+                <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                    <div class="text-xs font-bold text-slate-300 truncate mb-1">
+                        #${i+1} ${city[0]}
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-sm font-black text-blue-400">
+                            ${city[1].orders} <span class="text-[9px] text-slate-500">ORD</span>
+                        </span>
+                        <span class="text-xs font-black text-emerald-400">
+                            ₹${city[1].value.toLocaleString()}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        mdoHtml += `<p class="text-slate-500 text-sm italic">No area data.</p>`;
+    }
+    
+    mdoHtml += `
                 </div>
             </div>
             
@@ -884,28 +1370,59 @@ function renderMdoDashboard() {
     mdoDiv.innerHTML = mdoHtml;
     
     setTimeout(() => { 
-        const ctx = document.getElementById('brandPieChart');
-        if (ctx) {
+        let canvasElement = document.getElementById('brandPieChart');
+        
+        if (canvasElement) {
             if (brandChartInstance) {
                 brandChartInstance.destroy();
             }
             
-            const labels = Object.keys(brandStats).filter(k => brandStats[k] > 0);
-            const dataVals = Object.values(brandStats).filter(v => v > 0);
-            const totalMatrixValue = dataVals.reduce((a, b) => a + b, 0);
+            let allKeys = Object.keys(brandStats);
+            let labels = [];
+            for (let i = 0; i < allKeys.length; i++) {
+                let k = allKeys[i];
+                if (brandStats[k] > 0) {
+                    labels.push(k);
+                }
+            }
+            
+            let allVals = Object.values(brandStats);
+            let dataVals = [];
+            for (let i = 0; i < allVals.length; i++) {
+                let v = allVals[i];
+                if (v > 0) {
+                    dataVals.push(v);
+                }
+            }
+            
+            let totalMatrixValue = 0;
+            for (let i = 0; i < dataVals.length; i++) {
+                totalMatrixValue += dataVals[i];
+            }
             
             if (labels.length === 0) { 
                 labels.push("No Data"); 
                 dataVals.push(1); 
             }
 
-            brandChartInstance = new Chart(ctx.getContext('2d'), {
+            let ctx = canvasElement.getContext('2d');
+            
+            brandChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: dataVals,
-                        backgroundColor: ['#ef4444', '#ec4899', '#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#06b6d4', '#64748b'],
+                        backgroundColor: [
+                            '#ef4444', 
+                            '#ec4899', 
+                            '#f59e0b', 
+                            '#3b82f6', 
+                            '#10b981', 
+                            '#a855f7', 
+                            '#06b6d4', 
+                            '#64748b'
+                        ],
                         borderWidth: 0, 
                         hoverOffset: 5
                     }]
@@ -916,14 +1433,30 @@ function renderMdoDashboard() {
                     plugins: {
                         legend: { 
                             position: 'right', 
-                            labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 } 
+                            labels: { 
+                                color: '#94a3b8', 
+                                font: { size: 10 }, 
+                                boxWidth: 10 
+                            } 
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    let label = context.label || '';
-                                    let val = context.raw || 0;
-                                    let percent = totalMatrixValue > 0 ? Math.round((val / totalMatrixValue) * 100) : 0;
+                                    let label = "";
+                                    if (context.label) {
+                                        label = context.label;
+                                    }
+                                    
+                                    let val = 0;
+                                    if (context.raw) {
+                                        val = context.raw;
+                                    }
+                                    
+                                    let percent = 0;
+                                    if (totalMatrixValue > 0) {
+                                        percent = Math.round((val / totalMatrixValue) * 100);
+                                    }
+                                    
                                     return `${label}: ₹${val.toLocaleString()} (${percent}%)`;
                                 }
                             },
@@ -948,95 +1481,185 @@ function setStageFilter(stageIndex) {
 }
 
 async function executeUnblock(orderId) {
-    if(!confirm("Warning: You are bypassing the system Credit Lock for this dealer. Proceed?")) return;
+    let confirmAction = confirm("Warning: You are bypassing the system Credit Lock for this dealer. Proceed?");
+    if (confirmAction === false) {
+        return;
+    }
+    
     try {
+        let payload = { 
+            action: 'unblockOrder', 
+            orderId: orderId 
+        };
+        
         let res = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'unblockOrder', orderId: orderId })
+            body: JSON.stringify(payload)
         });
+        
         let data = await res.json();
-        if(data.status === 'success') {
+        
+        if (data.status === 'success') {
             showNotification("OVERRIDE SUCCESS", "Order Unlocked.");
             fetchOrders(true);
-        } else alert("Failed to unblock order.");
-    } catch(e) { alert("Network error."); }
+        } else {
+            alert("Failed to unblock order.");
+        }
+    } catch (e) { 
+        alert("Network error."); 
+    }
 }
 
 function renderPipeline() {
     const grid = document.getElementById('orderGrid');
     const filterBar = document.getElementById('stageFilterBar');
     
-    let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-    let stageCounts = Array(10).fill(0); 
+    let pendingOrders = [];
+    for (let i = 0; i < filteredData.length; i++) {
+        let o = filteredData[i];
+        if (o.isFullyCompleted === false) {
+            pendingOrders.push(o);
+        }
+    }
+    
+    let stageCounts = [];
+    for (let i = 0; i < 10; i++) {
+        stageCounts.push(0);
+    }
     
     let shopPendingCount = {};
     
-    pendingOrders.forEach(o => { 
-        if (o.completedStages < 10) { 
-            stageCounts[o.completedStages]++; 
+    for (let i = 0; i < pendingOrders.length; i++) {
+        let o = pendingOrders[i];
+        
+        let sIndex = o.completedStages;
+        if (sIndex < 10) { 
+            stageCounts[sIndex]++; 
         }
-        if (o.completedStages < 4) { 
-            shopPendingCount[o.shopName] = (shopPendingCount[o.shopName] || 0) + 1; 
+        
+        if (sIndex < 4) { 
+            let sName = o.shopName;
+            if (!shopPendingCount[sName]) {
+                shopPendingCount[sName] = 0;
+            }
+            shopPendingCount[sName] += 1; 
         }
-    });
+    }
+
+    let filterOverviewClass = 'bg-[#131C31] border-slate-800 hover:bg-slate-800';
+    let filterOverviewTextClass = 'text-slate-500';
+    let filterOverviewCountLabelClass = 'text-slate-600';
+    let filterOverviewCountClass = 'bg-[#0B1121] text-slate-400';
+    
+    if (activeStageFilter === null) {
+        filterOverviewClass = 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]';
+        filterOverviewTextClass = 'text-indigo-200';
+        filterOverviewCountLabelClass = 'text-indigo-200';
+        filterOverviewCountClass = 'bg-white text-indigo-900';
+    }
 
     let filterHtml = `
         <div 
             onclick="setStageFilter(null)" 
-            class="snap-start cursor-pointer ${activeStageFilter === null ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all"
+            class="snap-start cursor-pointer ${filterOverviewClass} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all"
         >
-            <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">
+            <span class="${filterOverviewTextClass} text-[9px] font-black uppercase tracking-widest mb-1">
                 Overview
             </span>
             <span class="text-white text-sm font-black mb-2">
                 All Pending
             </span>
             <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">
+                <span class="text-[10px] ${filterOverviewCountLabelClass} font-bold">
                     COUNT
                 </span>
-                <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">
+                <span class="${filterOverviewCountClass} px-2 py-0.5 rounded text-xs font-black">
                     ${pendingOrders.length}
                 </span>
             </div>
         </div>
     `;
     
-    STAGE_NAMES.forEach((name, idx) => {
-        let isActive = activeStageFilter === idx; 
+    for (let idx = 0; idx < STAGE_NAMES.length; idx++) {
+        let name = STAGE_NAMES[idx];
+        
+        let isActive = false;
+        if (activeStageFilter === idx) {
+            isActive = true;
+        }
+        
         let orderCount = stageCounts[idx];
-        let filterName = name.split(' (')[0]; 
+        
+        let filterName = name;
+        let parts = name.split(' (');
+        if (parts.length > 0) {
+            filterName = parts[0];
+        }
         
         if (idx === 7) { 
             filterName = "Delivery Comms";
         }
         
+        let boxClass = 'bg-[#131C31] border-slate-800 hover:bg-slate-800';
+        let stepTextClass = 'text-slate-500';
+        let titleClass = 'text-slate-400';
+        let stuckLabelClass = 'text-slate-600';
+        let countBoxClass = 'bg-[#0B1121] text-slate-600';
+        
+        if (isActive) {
+            boxClass = 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]';
+            stepTextClass = 'text-indigo-200';
+            titleClass = 'text-white';
+            stuckLabelClass = 'text-indigo-200';
+            countBoxClass = 'bg-indigo-900 text-indigo-300';
+        }
+        
+        if (orderCount > 0) {
+            if (isActive) {
+                countBoxClass = 'bg-white text-indigo-900';
+            } else {
+                countBoxClass = 'bg-pink-500/20 text-pink-400 border border-pink-500/20';
+            }
+        }
+        
         filterHtml += `
             <div 
                 onclick="setStageFilter(${idx})" 
-                class="snap-start cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all"
+                class="snap-start cursor-pointer ${boxClass} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all"
             >
-                <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">
+                <span class="${stepTextClass} text-[9px] font-black uppercase tracking-widest mb-1">
                     Step ${idx+1}
                 </span>
-                <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">
+                <span class="${titleClass} text-xs font-bold mb-2 leading-tight">
                     ${filterName}
                 </span>
                 <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                    <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">
+                    <span class="text-[10px] ${stuckLabelClass} font-bold">
                         STUCK
                     </span>
-                    <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">
+                    <span class="${countBoxClass} px-2 py-0.5 rounded text-xs font-black">
                         ${orderCount}
                     </span>
                 </div>
             </div>
         `;
-    });
+    }
     
     filterBar.innerHTML = filterHtml;
 
-    let displayOrders = activeStageFilter !== null ? pendingOrders.filter(o => o.completedStages === activeStageFilter) : pendingOrders;
+    let displayOrders = [];
+    
+    if (activeStageFilter !== null) {
+        for (let i = 0; i < pendingOrders.length; i++) {
+            let o = pendingOrders[i];
+            if (o.completedStages === activeStageFilter) {
+                displayOrders.push(o);
+            }
+        }
+    } else {
+        displayOrders = pendingOrders;
+    }
+    
     grid.innerHTML = '';
     
     if (displayOrders.length === 0) { 
@@ -1049,29 +1672,72 @@ function renderPipeline() {
         return; 
     }
 
-    const userName = localStorage.getItem('yash_user') || "";
-    const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
+    let userNameStr = "";
+    let localUser = localStorage.getItem('yash_user');
+    if (localUser) {
+        userNameStr = localUser;
+    }
+    
+    let isOwner = false;
+    let roleLower = currentUserRole.toLowerCase();
+    
+    if (roleLower === 'admin' || roleLower === 'owner') {
+        isOwner = true;
+    }
+    
+    let nameLower = userNameStr.toLowerCase();
+    if (nameLower.includes('yash')) {
+        isOwner = true;
+    }
 
-    displayOrders.forEach(order => {
-        const progress = (order.completedStages / 10) * 100; 
-        let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+    for (let i = 0; i < displayOrders.length; i++) {
+        let order = displayOrders[i];
+        
+        let completionRatio = order.completedStages / 10;
+        const progress = completionRatio * 100; 
+        
+        let isCod = false;
+        if (order.paymentMode) {
+            let pStr = order.paymentMode.toUpperCase();
+            if (pStr.includes('COD')) {
+                isCod = true;
+            }
+        }
+        
         let nextStepName = "Fully Completed";
         
         if (order.completedStages < 10) { 
             if (order.completedStages === 7) { 
-                nextStepName = isCod ? "Call 2" : "WhatsApp 2";
+                if (isCod) {
+                    nextStepName = "Call 2";
+                } else {
+                    nextStepName = "WhatsApp 2";
+                }
             } else {
-                nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
+                let fullStageName = STAGE_NAMES[order.completedStages];
+                let sParts = fullStageName.split(' (');
+                nextStepName = sParts[0];
             }
         }
         
         let orderDateObj = parseCustomDate(order.date);
         let exactDateStr = formatExactDate(order.date);
         let timeData = getTimeAgoUI(order.date);
-        let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
+        
+        let orderItemsCount = 0;
+        for (let j = 0; j < order.items.length; j++) {
+            let item = order.items[j];
+            let q = 1;
+            if (item.qty) {
+                q = parseInt(item.qty, 10);
+            }
+            orderItemsCount += q;
+        }
         
         let splitBadge = "";
-        if (String(order.orderId).toUpperCase().includes('SPLIT')) {
+        let idString = String(order.orderId).toUpperCase();
+        
+        if (idString.includes('SPLIT')) {
             splitBadge = `
                 <span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30 shrink-0">
                     ✂️ SPLIT
@@ -1082,10 +1748,22 @@ function renderPipeline() {
         let lockOverlay = "";
         let clickAction = `onclick="openModal('${order.orderId}')"`;
         let cursorStyle = "cursor-pointer";
-        let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
         
+        let vipClass = "bg-[#131C31] hover:border-indigo-500 border-slate-800";
+        if (order.isVIP) {
+            vipClass = "vip-corridor bg-[#131C31]";
+        }
+        
+        // FEATURE: UI Lock Down for Credit Breaches
         if (order.creditLocked && !order.ceoOverride) {
-            let unlockBtn = isOwner ? `<button onclick="event.stopPropagation(); executeUnblock('${order.orderId}')" class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white text-[10px] py-1.5 rounded font-black uppercase tracking-widest transition-all">🔓 CEO Override: Unblock</button>` : `<p class="mt-2 text-[9px] text-pink-400 font-bold uppercase">Contact Yash Sir to Unblock</p>`;
+            
+            let unlockBtn = "";
+            if (isOwner) {
+                unlockBtn = `<button onclick="event.stopPropagation(); executeUnblock('${order.orderId}')" class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white text-[10px] py-1.5 rounded font-black uppercase tracking-widest transition-all">🔓 CEO Override: Unblock</button>`;
+            } else {
+                unlockBtn = `<p class="mt-2 text-[9px] text-pink-400 font-bold uppercase">Contact Yash Sir to Unblock</p>`;
+            }
+            
             lockOverlay = `
                 <div class="absolute inset-0 bg-black/80 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-4 text-center rounded-2xl border-2 border-red-500">
                     <span class="text-3xl mb-1">🛑</span>
@@ -1118,19 +1796,62 @@ function renderPipeline() {
         }
         
         let tatBadge = "";
-        let isBefore6PM = orderDateObj.getHours() < 18;
+        let isBefore6PM = false;
+        
+        let h = orderDateObj.getHours();
+        if (h < 18) {
+            isBefore6PM = true;
+        }
+        
         if (isBefore6PM && order.completedStages < 6) { 
-            let targetTime = orderDateObj.getTime() + (60 * 60 * 1000);
+            let msInHour = 60 * 60 * 1000;
+            let targetTime = orderDateObj.getTime() + msInHour;
+            
             tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
         }
         
         let mergeBadge = "";
-        if (order.completedStages < 4 && shopPendingCount[order.shopName] > 1 && !order.creditLocked) {
+        let isEarlyStage = false;
+        if (order.completedStages < 4) {
+            isEarlyStage = true;
+        }
+        
+        let hasMultiPending = false;
+        if (shopPendingCount[order.shopName] > 1) {
+            hasMultiPending = true;
+        }
+        
+        let isNotLocked = false;
+        if (!order.creditLocked) {
+            isNotLocked = true;
+        }
+        
+        if (isEarlyStage && hasMultiPending && isNotLocked) {
             mergeBadge = `
                 <span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" title="Pack this together with another pending order!">
                     🔗 MERGE AVAIL
                 </span>
             `;
+        }
+        
+        let paymentBadgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        if (isCod) {
+            paymentBadgeClass = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+        }
+        
+        let pModeDisplay = 'N/A';
+        if (order.paymentMode) {
+            pModeDisplay = order.paymentMode;
+        }
+        
+        let tValDisplay = '0';
+        if (order.totalValue) {
+            tValDisplay = order.totalValue;
+        }
+
+        let orderArea = "";
+        if (order.area) {
+            orderArea = order.area;
         }
 
         grid.innerHTML += `
@@ -1153,7 +1874,7 @@ function renderPipeline() {
                     </div>
                     
                     <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">
-                        ${order.shopName} <span class="text-slate-500 font-normal">(${order.area})</span>
+                        ${order.shopName} <span class="text-slate-500 font-normal">(${orderArea})</span>
                     </p>
                     
                     <div class="flex gap-1 items-center flex-wrap mb-3">
@@ -1169,11 +1890,11 @@ function renderPipeline() {
                     </div>
                     
                     <div class="mt-3 flex flex-wrap gap-2 items-center">
-                        <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${isCod ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">
-                            ${order.paymentMode || 'N/A'}
+                        <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${paymentBadgeClass}">
+                            ${pModeDisplay}
                         </span>
                         <span class="text-[10px] font-black text-yellow-400 bg-yellow-900/20 px-2 py-1 rounded border border-yellow-500/20">
-                            ₹${order.totalValue || '0'}
+                            ₹${tValDisplay}
                         </span>
                         <span class="text-[10px] font-black text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700">
                             Qty: ${orderItemsCount}
@@ -1204,12 +1925,17 @@ function renderPipeline() {
                 </div>
             </div>
         `;
-    });
+    }
 }
 
 // 1-CLICK MERGE EXECUTION
 async function executeMerge(primaryOrderId, shopName) {
-    if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
+    let msg = `Combine all pending items for ${shopName} into this order?`;
+    let confirmVal = confirm(msg);
+    
+    if (confirmVal === false) {
+        return;
+    }
     
     let targetBtn = event.currentTarget;
     targetBtn.innerText = "Merging Pipelines...";
@@ -1217,22 +1943,29 @@ async function executeMerge(primaryOrderId, shopName) {
     targetBtn.classList.add('animate-pulse');
     
     try {
+        let payload = {
+            action: 'mergeOrders',
+            primaryOrderId: primaryOrderId,
+            shopName: shopName
+        };
+        
         const res = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'mergeOrders',
-                primaryOrderId: primaryOrderId,
-                shopName: shopName
-            })
+            body: JSON.stringify(payload)
         });
+        
         const data = await res.json();
         
-        if(data.status === 'success') {
+        if (data.status === 'success') {
             showNotification("MERGE COMPLETE", "Orders have been physically combined in the database.");
             closeModal();
             fetchOrders(true);
         } else {
-            alert(data.message);
+            let errorMsg = "Merge Failed";
+            if (data.message) {
+                errorMsg = data.message;
+            }
+            alert(errorMsg);
             targetBtn.innerText = "Merge Failed";
         }
     } catch(e) {
@@ -1244,32 +1977,47 @@ async function executeMerge(primaryOrderId, shopName) {
 
 function openModal(orderId) {
     const order = window.appData.orders[orderId];
-    if(!order) {
+    
+    if (!order) {
         return;
     }
     
     currentActiveOrder = order; 
     queuedFiles = []; 
     
-    document.getElementById('modalOrderId').innerText = order.orderId;
-    document.getElementById('modalShopName').innerText = order.shopName;
+    let modalIdDisplay = document.getElementById('modalOrderId');
+    modalIdDisplay.innerText = order.orderId;
     
+    let modalShopName = document.getElementById('modalShopName');
+    modalShopName.innerText = order.shopName;
+    
+    let badge = document.getElementById('modalVipBadge');
     if (order.isVIP) {
-        document.getElementById('modalVipBadge').classList.remove('hidden');
+        badge.classList.remove('hidden');
     } else {
-        document.getElementById('modalVipBadge').classList.add('hidden');
+        badge.classList.add('hidden');
     }
     
     let orderDateObj = parseCustomDate(order.date);
     let exactDateStr = formatExactDate(order.date); 
     let timeData = getTimeAgoUI(order.date);
     
-    document.getElementById('modalReceiptDate').innerText = exactDateStr;
-    document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
-    document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
+    let recDateDisplay = document.getElementById('modalReceiptDate');
+    recDateDisplay.innerText = exactDateStr;
+    
+    let timeDisplay = document.getElementById('modalTimeElapsed');
+    timeDisplay.innerText = `⏱️ ${timeData.text}`;
+    timeDisplay.className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
     let tatBadgeEl = document.getElementById('modalTatTimer');
-    let isBefore6PM = orderDateObj.getHours() < 18;
+    
+    let isBefore6PM = false;
+    let hr = orderDateObj.getHours();
+    
+    if (hr < 18) {
+        isBefore6PM = true;
+    }
+    
     if (isBefore6PM && order.completedStages < 6) { 
         let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); 
         tatBadgeEl.setAttribute('data-target', targetTime);
@@ -1279,10 +2027,21 @@ function openModal(orderId) {
         tatBadgeEl.className = "hidden";
     }
 
-    let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+    let isCod = false;
+    if (order.paymentMode) {
+        let pUpper = order.paymentMode.toUpperCase();
+        if (pUpper.includes('COD')) {
+            isCod = true;
+        }
+    }
+    
     let payBadge = document.getElementById('modalPaymentMode'); 
     
-    payBadge.innerText = order.paymentMode || 'N/A';
+    if (order.paymentMode) {
+        payBadge.innerText = order.paymentMode;
+    } else {
+        payBadge.innerText = 'N/A';
+    }
     
     if (isCod) {
         payBadge.className = `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-500/10 text-orange-400 border-orange-500/20`;
@@ -1290,7 +2049,13 @@ function openModal(orderId) {
         payBadge.className = `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
     }
     
-    document.getElementById('modalTotalValue').innerText = `Amount: ₹${order.totalValue || '0'}`;
+    let valDisplay = document.getElementById('modalTotalValue');
+    
+    let tVal = '0';
+    if (order.totalValue) {
+        tVal = order.totalValue;
+    }
+    valDisplay.innerText = `Amount: ₹${tVal}`;
     
     const container = document.getElementById('stagesContainer'); 
     container.innerHTML = '';
@@ -1304,9 +2069,11 @@ function openModal(orderId) {
     `;
     
     if (order.items && order.items.length > 0) {
-        order.items.forEach(item => {
+        for (let i = 0; i < order.items.length; i++) {
+            let item = order.items[i];
             let imgTag = "";
-            if (item.image) {
+            
+            if (item.image && item.image !== "") {
                 imgTag = `
                     <img 
                         src="${item.image}" 
@@ -1321,25 +2088,35 @@ function openModal(orderId) {
                 `;
             }
             
+            let iName = "";
+            if (item.name) {
+                iName = item.name;
+            }
+            
+            let iQty = "";
+            if (item.qty) {
+                iQty = item.qty;
+            }
+            
             itemsHtml += `
                 <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
                     ${imgTag}
                     <div class="flex-1 min-w-0">
                         <p class="text-xs text-slate-300 font-bold leading-tight text-wrap-custom">
-                            ${item.name}
+                            ${iName}
                         </p>
                         <div class="mt-2 flex items-center gap-2">
                             <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
                                 Qty:
                             </span>
                             <span class="text-xs font-black text-indigo-400 bg-indigo-900/30 border border-indigo-500/20 px-2 py-0.5 rounded shadow-inner">
-                                ${item.qty}
+                                ${iQty}
                             </span>
                         </div>
                     </div>
                 </div>
             `;
-        });
+        }
     } else {
         itemsHtml += `
             <p class="text-sm text-slate-600 italic px-2">
@@ -1356,15 +2133,25 @@ function openModal(orderId) {
     container.innerHTML += itemsHtml;
 
     let mergeActionHtml = "";
-    let pendingCount = filteredData.filter(o => o.shopName === order.shopName && o.completedStages < 4).length;
+    
+    let pendingCount = 0;
+    for (let i = 0; i < filteredData.length; i++) {
+        let fd = filteredData[i];
+        if (fd.shopName === order.shopName) {
+            if (fd.completedStages < 4) {
+                pendingCount++;
+            }
+        }
+    }
 
     if (order.completedStages < 4 && pendingCount > 1) {
+        let amountToMerge = pendingCount - 1;
         mergeActionHtml = `
             <button 
                 onclick="executeMerge('${order.orderId}', '${order.shopName}')" 
                 class="w-full mt-2 mb-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white font-black py-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2 uppercase tracking-widest border border-blue-500/50"
             >
-                🔗 1-Click Merge: Combine ${pendingCount - 1} other pending order(s) into this one
+                🔗 1-Click Merge: Combine ${amountToMerge} other pending order(s) into this one
             </button>
         `;
     }
@@ -1373,10 +2160,23 @@ function openModal(orderId) {
 
     let stagesListHtml = '<div class="space-y-4">';
     
-    let needsShare = false, lastCompletedStage = order.completedStages, stagesRequiringShare = [2, 4, 5, 6, 9];
+    let needsShare = false;
+    let lastCompletedStage = order.completedStages;
+    let stagesRequiringShare = [2, 4, 5, 6, 9];
     
-    if (stagesRequiringShare.includes(lastCompletedStage)) {
-        if (localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') {
+    let isStageReqShare = false;
+    for (let i = 0; i < stagesRequiringShare.length; i++) {
+        if (stagesRequiringShare[i] === lastCompletedStage) {
+            isStageReqShare = true;
+            break;
+        }
+    }
+    
+    if (isStageReqShare) {
+        let lsKey = 'shared_' + order.orderId + '_' + lastCompletedStage;
+        let lsVal = localStorage.getItem(lsKey);
+        
+        if (lsVal !== 'true') {
             needsShare = true;
         }
     }
@@ -1384,45 +2184,82 @@ function openModal(orderId) {
     for (let i = 0; i < 10; i++) { 
 
         const stageNum = i + 1; 
-        const isCompleted = i < order.completedStages; 
-        const isActive = i === order.completedStages; 
-        const isLocked = i > order.completedStages;
+        
+        let isCompleted = false;
+        if (i < order.completedStages) {
+            isCompleted = true;
+        }
+        
+        let isActive = false;
+        if (i === order.completedStages) {
+            isActive = true;
+        }
+        
+        let isLocked = false;
+        if (i > order.completedStages) {
+            isLocked = true;
+        }
         
         let displayStageName = STAGE_NAMES[i];
         if (stageNum === 8) { 
-            displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
+            if (isCod) {
+                displayStageName = "Call 2 (Out-for-delivery)";
+            } else {
+                displayStageName = "WhatsApp 2 (Out-for-delivery)";
+            }
         }
         
         let uiHtml = '';
         
         if (isCompleted) {
-            let cellData = order.stageUrls ? order.stageUrls[i] : "";
+            let cellData = "";
+            if (order.stageUrls) {
+                if (order.stageUrls[i]) {
+                    cellData = order.stageUrls[i];
+                }
+            }
             
             let timestampDisplay = "";
             let timeTakenDisplay = "";
             let thisEpoch = null;
+            
             let previousEpoch = parseCustomDate(order.date).getTime(); 
             
-            if (i > 0 && order.stageUrls[i-1]) {
-                let prevMatch = order.stageUrls[i-1].match(/TIME:\s*(\d+)/);
-                if (prevMatch) previousEpoch = parseInt(prevMatch[1]);
+            if (i > 0) {
+                if (order.stageUrls) {
+                    if (order.stageUrls[i-1]) {
+                        let prevStr = order.stageUrls[i-1];
+                        let prevMatch = prevStr.match(/TIME:\s*(\d+)/);
+                        if (prevMatch) {
+                            previousEpoch = parseInt(prevMatch[1], 10);
+                        }
+                    }
+                }
             }
 
             if (cellData && cellData.includes("TIME:")) {
                 let match = cellData.match(/TIME:\s*(\d+)/);
                 if (match) {
-                    thisEpoch = parseInt(match[1]);
+                    thisEpoch = parseInt(match[1], 10);
                     let d = new Date(thisEpoch);
-                    let timeStr = d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+                    
+                    let opts = {
+                        hour: '2-digit', 
+                        minute:'2-digit'
+                    };
+                    let timeStr = d.toLocaleTimeString('en-US', opts);
                     
                     timestampDisplay = `<span class="text-[9px] text-emerald-300 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/50">At: ${timeStr}</span>`;
                     
-                    let diffMins = Math.round((thisEpoch - previousEpoch) / 60000);
+                    let diffRaw = thisEpoch - previousEpoch;
+                    let diffMins = Math.round(diffRaw / 60000);
+                    
                     if (diffMins >= 0) {
                         timeTakenDisplay = `<span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">Took: ${diffMins}m</span>`;
                     }
                     
-                    cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
+                    cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '');
+                    cellData = cellData.trim();
                 }
             }
 
@@ -1431,11 +2268,22 @@ function openModal(orderId) {
             
             if (cellData && cellData.includes("||")) {
                 let parts = cellData.split("||");
-                actionStr = parts[0].trim().replace(/^\[|\]$/g, '');
-                urlData = parts[1];
+                let partZero = parts[0].trim();
+                
+                actionStr = partZero.replace(/^\[|\]$/g, '');
+                
+                if (parts[1]) {
+                    urlData = parts[1];
+                } else {
+                    urlData = "";
+                }
             }
 
-            let fileUrls = urlData ? urlData.split(',') : []; 
+            let fileUrls = [];
+            if (urlData) {
+                fileUrls = urlData.split(',');
+            }
+            
             let hasFiles = false; 
             let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
             
@@ -1447,40 +2295,75 @@ function openModal(orderId) {
                 `;
             }
             
-            fileUrls.forEach((url, index) => {
-                url = url.trim();
+            for (let fIndex = 0; fIndex < fileUrls.length; fIndex++) {
+                let rawUrl = fileUrls[fIndex];
+                let url = rawUrl.trim();
+                
                 if (url.includes("http")) {
                     hasFiles = true;
-                    if (stageNum === 10 || stageNum === 8 || url.toLowerCase().includes("audio")) { 
+                    
+                    let isAudio = false;
+                    let urlLower = url.toLowerCase();
+                    if (urlLower.includes("audio")) {
+                        isAudio = true;
+                    }
+                    
+                    if (stageNum === 10 || stageNum === 8 || isAudio) { 
                         previewHtml += `
                             <audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
                         `; 
                     } else { 
+                        let displayIndex = fIndex + 1;
                         previewHtml += `
                             <a 
                                 href="${url}" 
                                 target="_blank" 
                                 class="bg-[#0B1121] hover:bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-bold text-indigo-400 flex items-center justify-between transition shadow-sm"
                             >
-                                <span>🖼️ View Uploaded Proof ${index + 1}</span>
+                                <span>🖼️ View Uploaded Proof ${displayIndex}</span>
                                 <span class="text-slate-500 text-lg">→</span>
                             </a>
                         `; 
                     }
                 }
-            });
+            }
             
-            if (hasFiles && stagesRequiringShare.includes(stageNum)) {
-                let isShared = localStorage.getItem('shared_' + order.orderId + '_' + stageNum) === 'true';
-                let btnClass = isShared ? "bg-[#128C7E]/40 text-white border-[#128C7E]/50" : "bg-[#25D366] text-white border-[#25D366] animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(37,211,102,0.5)]";
-                let btnText = isShared ? "✓ Shared to WhatsApp" : "📤 Share to Group (MANDATORY)";
+            let stageReqShare = false;
+            for (let rIndex = 0; rIndex < stagesRequiringShare.length; rIndex++) {
+                if (stagesRequiringShare[rIndex] === stageNum) {
+                    stageReqShare = true;
+                    break;
+                }
+            }
+            
+            if (hasFiles && stageReqShare) {
+                let lsKey = 'shared_' + order.orderId + '_' + stageNum;
+                let lsVal = localStorage.getItem(lsKey);
+                
+                let isShared = false;
+                if (lsVal === 'true') {
+                    isShared = true;
+                }
+                
+                let btnClass = "bg-[#25D366] text-white border-[#25D366] animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(37,211,102,0.5)]";
+                if (isShared) {
+                    btnClass = "bg-[#128C7E]/40 text-white border-[#128C7E]/50";
+                }
+                
+                let btnText = "📤 Share to Group (MANDATORY)";
+                let iconDisplay = "📤";
+                
+                if (isShared) {
+                    btnText = "✓ Shared to WhatsApp";
+                    iconDisplay = "✓";
+                }
                 
                 previewHtml += `
                     <button 
                         onclick="shareToGroup(${stageNum}, '${urlData}')" 
                         class="mt-2 w-full ${btnClass} text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border"
                     >
-                        <span>${isShared ? '✓' : '📤'}</span> ${btnText}
+                        <span>${iconDisplay}</span> ${btnText}
                     </button>
                 `;
             }
@@ -1639,13 +2522,40 @@ function openModal(orderId) {
                 let msgTemplate = "";
                 
                 if (stageNum === 3) {
-                    msgTemplate = window.appSettings.waMsgStage3;
+                    if (window.appSettings.waMsgStage3) {
+                        msgTemplate = window.appSettings.waMsgStage3;
+                    }
                 } else {
-                    msgTemplate = isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid;
+                    if (isCod) {
+                        if (window.appSettings.waMsgStage7COD) {
+                            msgTemplate = window.appSettings.waMsgStage7COD;
+                        }
+                    } else {
+                        if (window.appSettings.waMsgStage7Prepaid) {
+                            msgTemplate = window.appSettings.waMsgStage7Prepaid;
+                        }
+                    }
                 }
                 
-                let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
-                let waUrl = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(finalMsg)}` : `https://wa.me/?text=${encodeURIComponent(finalMsg)}`;
+                let finalMsg = msgTemplate;
+                
+                if (order.shopName) {
+                    finalMsg = finalMsg.replace(/{{shop}}/g, order.shopName);
+                }
+                if (order.orderId) {
+                    finalMsg = finalMsg.replace(/{{orderId}}/g, order.orderId);
+                }
+                if (order.paymentMode) {
+                    finalMsg = finalMsg.replace(/{{paymentMode}}/g, order.paymentMode);
+                }
+                if (order.totalValue !== undefined) {
+                    finalMsg = finalMsg.replace(/{{amount}}/g, order.totalValue);
+                }
+                
+                let waUrl = `https://wa.me/?text=${encodeURIComponent(finalMsg)}`;
+                if (order.phone) {
+                    waUrl = `https://wa.me/${order.phone}?text=${encodeURIComponent(finalMsg)}`;
+                }
 
                 inputHtml += `
                     <div class="mt-4 mb-4">
@@ -1733,17 +2643,29 @@ function openModal(orderId) {
                             <div class="space-y-2 max-h-[400px] overflow-y-auto hide-scrollbar pr-1">
                     `;
                     
-                    order.items.forEach((item, idx) => {
+                    for (let itemIdx = 0; itemIdx < order.items.length; itemIdx++) {
+                        let itemObj = order.items[itemIdx];
+                        
+                        let displayItemName = "";
+                        if (itemObj.name) {
+                            displayItemName = itemObj.name;
+                        }
+                        
+                        let displayItemQty = "";
+                        if (itemObj.qty) {
+                            displayItemQty = itemObj.qty;
+                        }
+                        
                         inputHtml += `
                             <div class="flex items-center justify-between bg-[#131C31] p-2.5 rounded-lg border border-slate-800">
                                 <label class="flex items-start gap-2.5 text-xs font-bold text-white cursor-pointer w-2/3 text-wrap-custom">
                                     <input 
                                         type="checkbox" 
-                                        id="chk_item_${idx}" 
+                                        id="chk_item_${itemIdx}" 
                                         checked 
                                         class="mt-0.5 rounded border-slate-600 bg-slate-800 text-indigo-500 w-4 h-4 cursor-pointer shrink-0"
                                     >
-                                    <span class="leading-tight">${item.name}</span>
+                                    <span class="leading-tight">${displayItemName}</span>
                                 </label>
                                 <div class="flex flex-col items-end">
                                     <span class="text-[8px] text-slate-500 mb-1 uppercase font-black tracking-widest">
@@ -1751,16 +2673,16 @@ function openModal(orderId) {
                                     </span>
                                     <input 
                                         type="number" 
-                                        id="qty_item_${idx}" 
-                                        value="${item.qty}" 
-                                        max="${item.qty}" 
+                                        id="qty_item_${itemIdx}" 
+                                        value="${displayItemQty}" 
+                                        max="${displayItemQty}" 
                                         min="0" 
                                         class="w-16 bg-[#0B1121] text-white text-xs font-black p-1.5 rounded border border-slate-600 text-center outline-none"
                                     >
                                 </div>
                             </div>
                         `;
-                    });
+                    }
                     
                     inputHtml += `
                             </div>
@@ -1919,17 +2841,23 @@ function openModal(orderId) {
     stagesListHtml += '</div>'; 
     container.innerHTML += stagesListHtml;
     
-    document.getElementById('orderModal').classList.remove('hidden');
+    let modalObj = document.getElementById('orderModal');
+    modalObj.classList.remove('hidden');
 }
 
 function closeModal() { 
-    document.getElementById('orderModal').classList.add('hidden'); 
+    let modalObj = document.getElementById('orderModal');
+    modalObj.classList.add('hidden'); 
+    
     fetchOrders(true); 
 }
 
 function handleFileSelection(inputElement, stageNum) {
-    const newFiles = Array.from(inputElement.files);
-    queuedFiles = queuedFiles.concat(newFiles);
+    let inputArr = Array.from(inputElement.files);
+    
+    for (let i = 0; i < inputArr.length; i++) {
+        queuedFiles.push(inputArr[i]);
+    }
     
     const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
     const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
@@ -1952,23 +2880,26 @@ function handleFileSelection(inputElement, stageNum) {
             previewBox.innerHTML = ''; 
             previewBox.classList.remove('hidden');
             
-            queuedFiles.forEach(file => {
-                if (file.type.startsWith('audio/')) {
+            for (let i = 0; i < queuedFiles.length; i++) {
+                let file = queuedFiles[i];
+                let fType = file.type;
+                
+                if (fType.startsWith('audio/')) {
                     previewBox.innerHTML += `
                         <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
                             🎤<br/>Audio
                         </div>
                     `; 
                 } else { 
-                    const reader = new FileReader(); 
-                    reader.onload = function(e) { 
+                    let readerObj = new FileReader(); 
+                    readerObj.onload = function(e) { 
                         previewBox.innerHTML += `
                             <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
                         `; 
                     }; 
-                    reader.readAsDataURL(file); 
+                    readerObj.readAsDataURL(file); 
                 }
-            });
+            }
         }
     }
 }
@@ -1976,37 +2907,65 @@ function handleFileSelection(inputElement, stageNum) {
 function clearQueuedFiles(stageNum) {
     queuedFiles = [];
     
-    if (document.getElementById(`fileStatusText_${stageNum}`)) {
-        document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden'); 
+    let txtLabel = document.getElementById(`fileStatusText_${stageNum}`);
+    if (txtLabel) {
+        txtLabel.classList.add('hidden'); 
     }
-    if (document.getElementById(`clearFilesBtn_${stageNum}`)) {
-        document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden'); 
+    
+    let clrBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
+    if (clrBtn) {
+        clrBtn.classList.add('hidden'); 
     }
-    if (document.getElementById(`fileStatusContainer_${stageNum}`)) {
-        document.getElementById(`fileStatusContainer_${stageNum}`).classList.add('hidden');
+    
+    let cont = document.getElementById(`fileStatusContainer_${stageNum}`);
+    if (cont) {
+        cont.classList.add('hidden');
     }
-    if (document.getElementById(`previewBox_${stageNum}`)) { 
-        document.getElementById(`previewBox_${stageNum}`).innerHTML = ''; 
-        document.getElementById(`previewBox_${stageNum}`).classList.add('hidden'); 
+    
+    let pBox = document.getElementById(`previewBox_${stageNum}`);
+    if (pBox) { 
+        pBox.innerHTML = ''; 
+        pBox.classList.add('hidden'); 
     }
 }
 
 window.shareToGroup = function(stageNum, fileUrlsString) {
-    const orderId = currentActiveOrder.orderId; 
-    const shop = currentActiveOrder.shopName; 
-    const stageName = STAGE_NAMES[stageNum - 1]; 
+    let currentId = currentActiveOrder.orderId; 
+    let shopNameStr = currentActiveOrder.shopName; 
+    let stageDisplay = STAGE_NAMES[stageNum - 1]; 
     
-    let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
-    let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
+    let linkParts = fileUrlsString.split(',');
+    let linkArr = [];
     
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    for (let i = 0; i < linkParts.length; i++) {
+        let p = linkParts[i].trim();
+        linkArr.push(makeDirectDriveLink(p));
+    }
     
-    localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
-    setTimeout(() => { openModal(orderId); }, 1000);
+    let finalLinks = linkArr.join('\n');
+    let msg = `*Order Update Alert*\n\n*Order ID:* ${currentId}\n*Dealer:* ${shopNameStr}\n*Stage Update:* ${stageDisplay}\n\n*Attached Files/Proof:*\n${finalLinks}`;
+    
+    let wUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(wUrl, '_blank');
+    
+    let lsKey = 'shared_' + currentId + '_' + stageNum;
+    localStorage.setItem(lsKey, 'true');
+    
+    setTimeout(() => { 
+        openModal(currentId); 
+    }, 1000);
 }
 
 function generateEODReport() {
-    if (!window.appData || !window.appData.rawArray || window.appData.rawArray.length === 0) {
+    if (!window.appData) {
+        alert("No data available to generate report.");
+        return;
+    }
+    if (!window.appData.rawArray) {
+        alert("No data available to generate report.");
+        return;
+    }
+    if (window.appData.rawArray.length === 0) {
         alert("No data available to generate report.");
         return;
     }
@@ -2014,20 +2973,53 @@ function generateEODReport() {
     let today = new Date();
     today.setHours(0,0,0,0);
     
-    let todayOrders = window.appData.rawArray.filter(o => {
+    let todayOrders = [];
+    
+    for (let i = 0; i < window.appData.rawArray.length; i++) {
+        let o = window.appData.rawArray[i];
         let d = parseCustomDate(o.date);
         d.setHours(0,0,0,0);
-        return d.getTime() === today.getTime();
-    });
+        
+        if (d.getTime() === today.getTime()) {
+            todayOrders.push(o);
+        }
+    }
     
     let totalReceived = todayOrders.length;
-    let totalValue = todayOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
-    let totalCompleted = todayOrders.filter(o => o.isFullyCompleted).length;
-    let totalDispatched = todayOrders.filter(o => o.completedStages >= 6 && !o.isFullyCompleted).length;
+    let totalValue = 0;
+    
+    for (let i = 0; i < todayOrders.length; i++) {
+        let val = 0;
+        if (todayOrders[i].totalValue) {
+            val = todayOrders[i].totalValue;
+        }
+        totalValue += val;
+    }
+    
+    let totalCompleted = 0;
+    for (let i = 0; i < todayOrders.length; i++) {
+        if (todayOrders[i].isFullyCompleted === true) {
+            totalCompleted++;
+        }
+    }
+    
+    let totalDispatched = 0;
+    for (let i = 0; i < todayOrders.length; i++) {
+        let o = todayOrders[i];
+        if (o.completedStages >= 6 && o.isFullyCompleted === false) {
+            totalDispatched++;
+        }
+    }
+    
     let pending = totalReceived - totalCompleted - totalDispatched;
     
-    let reportDate = new Date().toLocaleDateString('en-GB');
-    let staffName = currentUserName ? currentUserName.toUpperCase() : 'ADMIN';
+    let dObj = new Date();
+    let reportDate = dObj.toLocaleDateString('en-GB');
+    
+    let staffName = 'ADMIN';
+    if (currentUserName) {
+        staffName = currentUserName.toUpperCase();
+    }
     
     let msg = `*📊 DAILY EOD REPORT - YASH MARKETING*\n\n*📅 Date:* ${reportDate}\n*🧑‍💼 Staff:* ${staffName}\n\n`;
     msg += `*📦 Orders Received Today:* ${totalReceived}\n`;
@@ -2037,24 +3029,41 @@ function generateEODReport() {
     msg += `*⏳ Pending Orders:* ${pending}\n\n`;
     msg += `_System Generated via MDO OS_`;
     
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    let wUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(wUrl, '_blank');
 }
 
 function generateTallyCSV(orderId) {
-    const order = window.appData.orders[orderId];
-    if(!order) {
+    let order = window.appData.orders[orderId];
+    if (!order) {
         return;
     }
     
     let csvContent = "\uFEFFDate,Voucher Type,Voucher Number,Party Name,Item Name,Quantity,Rate,Amount\n";
-    let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); 
     
-    order.items.forEach(item => { 
-        csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`; 
-    });
+    let dObj = parseCustomDate(order.date);
+    let formattedDate = dObj.toLocaleDateString('en-GB'); 
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
+    for (let i = 0; i < order.items.length; i++) {
+        let item = order.items[i];
+        let iName = "";
+        if (item.name) {
+            iName = item.name;
+        }
+        
+        let iQty = "0";
+        if (item.qty) {
+            iQty = item.qty;
+        }
+        
+        csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${iName}",${iQty},0,0\n`; 
+    }
+    
+    let opts = { 
+        type: 'text/csv;charset=utf-8;' 
+    };
+    let blob = new Blob([csvContent], opts);
+    let link = document.createElement("a");
     
     link.href = URL.createObjectURL(blob);
     link.download = `Tally_SO_${order.orderId}.csv`;
@@ -2069,16 +3078,16 @@ function generateTallyCSV(orderId) {
 
 function compressImage(file) {
     return new Promise((resolve) => {
-        const reader = new FileReader(); 
+        let reader = new FileReader(); 
         reader.readAsDataURL(file);
         
         reader.onload = (event) => {
-            const img = new Image(); 
+            let img = new Image(); 
             img.src = event.target.result;
             
             img.onload = () => {
-                const canvas = document.createElement('canvas'); 
-                const MAX_WIDTH = 500; 
+                let canvas = document.createElement('canvas'); 
+                let MAX_WIDTH = 500; 
                 let scale = 1;
                 
                 if (img.width > MAX_WIDTH) {
@@ -2088,13 +3097,17 @@ function compressImage(file) {
                 canvas.width = img.width * scale; 
                 canvas.height = img.height * scale;
                 
-                const ctx = canvas.getContext('2d'); 
+                let ctx = canvas.getContext('2d'); 
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                let baseStr = canvas.toDataURL('image/jpeg', 0.45);
+                let splitArr = baseStr.split(',');
+                let payload = splitArr[1];
                 
                 resolve({ 
                     name: file.name, 
                     mimeType: 'image/jpeg', 
-                    base64: canvas.toDataURL('image/jpeg', 0.45).split(',')[1] 
+                    base64: payload
                 });
             };
         };
@@ -2103,24 +3116,41 @@ function compressImage(file) {
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader(); 
+        let reader = new FileReader(); 
         reader.readAsDataURL(file);
         
-        reader.onload = () => resolve({ 
-            name: file.name, 
-            mimeType: file.type, 
-            base64: reader.result.split(',')[1] 
-        });
+        reader.onload = () => {
+            let res = reader.result;
+            let splitArr = res.split(',');
+            let payload = splitArr[1];
+            
+            resolve({ 
+                name: file.name, 
+                mimeType: file.type, 
+                base64: payload
+            });
+        };
         
-        reader.onerror = error => reject(error);
+        reader.onerror = (error) => {
+            reject(error);
+        };
     });
 }
 
 async function submitStage(stageNum) {
-    const btn = document.getElementById(`submitBtn_${stageNum}`); 
-    const statusLabel = document.getElementById(`status_${stageNum}`);
+    let btnId = `submitBtn_${stageNum}`;
+    let btn = document.getElementById(btnId); 
     
-    let isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
+    let statusId = `status_${stageNum}`;
+    let statusLabel = document.getElementById(statusId);
+    
+    let isCod = false;
+    if (currentActiveOrder.paymentMode) {
+        let pm = currentActiveOrder.paymentMode.toUpperCase();
+        if (pm.includes('COD')) {
+            isCod = true;
+        }
+    }
 
     let payload = { 
         action: 'updateStage', 
@@ -2133,25 +3163,35 @@ async function submitStage(stageNum) {
         staffName: currentUserName 
     };
     
-    const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
-    if (noRespCheckbox && noRespCheckbox.checked) {
-        payload.isNoResponse = true; 
+    let noRespId = `noResponse_${stageNum}`;
+    let noRespCheckbox = document.getElementById(noRespId);
+    
+    if (noRespCheckbox) {
+        if (noRespCheckbox.checked) {
+            payload.isNoResponse = true; 
+        }
     }
     
     if (stageNum === 7) {
-        let runner = document.getElementById('runnerSelect').value;
+        let runnerSelect = document.getElementById('runnerSelect');
+        let runner = runnerSelect.value;
+        
         if (runner === "Others") {
-            runner = document.getElementById('runnerOther').value;
+            let runnerOther = document.getElementById('runnerOther');
+            runner = runnerOther.value;
         }
         
-        let transport = document.getElementById('transportSelect').value;
+        let transSelect = document.getElementById('transportSelect');
+        let transport = transSelect.value;
+        
         if (transport === "Others") {
-            transport = document.getElementById('transportOther').value;
+            let transOther = document.getElementById('transportOther');
+            transport = transOther.value;
         }
 
         if (!runner || !transport) {
             alert("Accountability requires data! Select both a Delivery Person and a Transport partner.");
-            if(btn) { 
+            if (btn) { 
                 btn.disabled = false; 
                 btn.innerText = "Allocate Logistics & Proceed"; 
             }
@@ -2164,8 +3204,20 @@ async function submitStage(stageNum) {
     if (stageNum !== 1) {
         let fileRequired = true;
         
-        if (payload.isNoResponse || stageNum === 10 || stageNum === 7 || stageNum === 3 || (stageNum === 8 && !isCod)) {
-            fileRequired = false; 
+        if (payload.isNoResponse === true) {
+            fileRequired = false;
+        }
+        if (stageNum === 10) {
+            fileRequired = false;
+        }
+        if (stageNum === 7) {
+            fileRequired = false;
+        }
+        if (stageNum === 3) {
+            fileRequired = false;
+        }
+        if (stageNum === 8 && isCod === false) {
+            fileRequired = false;
         }
 
         if (fileRequired && queuedFiles.length === 0) {
@@ -2177,8 +3229,10 @@ async function submitStage(stageNum) {
             return; 
         }
         
-        if (!fileRequired && queuedFiles.length === 0 && (stageNum === 3 || stageNum === 8)) {
-            payload.isWhatsAppOnly = true; 
+        if (!fileRequired && queuedFiles.length === 0) {
+            if (stageNum === 3 || stageNum === 8) {
+                payload.isWhatsAppOnly = true; 
+            }
         }
         
         if (btn) { 
@@ -2188,53 +3242,81 @@ async function submitStage(stageNum) {
         
         for (let i = 0; i < queuedFiles.length; i++) {
             let f = queuedFiles[i];
+            
             if (f.type.startsWith('image/')) {
-                payload.files.push(await compressImage(f)); 
+                let compObj = await compressImage(f);
+                payload.files.push(compObj); 
             } else {
-                payload.files.push(await getBase64(f)); 
+                let baseObj = await getBase64(f);
+                payload.files.push(baseObj); 
             }
         }
         
         if (stageNum === 10) { 
-            const rating = document.getElementById('ratingInput').value;
-            if (!rating) { 
+            let rInput = document.getElementById('ratingInput');
+            let ratingVal = rInput.value;
+            
+            if (!ratingVal || ratingVal === "") { 
                 alert("Customer Rating is mandatory."); 
-                if(btn) { 
+                
+                if (btn) { 
                     btn.disabled = false; 
                     btn.innerText = "Execute & Proceed"; 
                 } 
                 return; 
             }
-            payload.rating = rating;
+            
+            payload.rating = ratingVal;
         }
 
         if (stageNum === 4) {
             let processed = []; 
             let short = [];
             
-            currentActiveOrder.items.forEach((item, idx) => {
-                let chk = document.getElementById(`chk_item_${idx}`); 
-                let qtyInput = document.getElementById(`qty_item_${idx}`);
+            for (let idx = 0; idx < currentActiveOrder.items.length; idx++) {
+                let item = currentActiveOrder.items[idx];
+                
+                let chkId = `chk_item_${idx}`;
+                let chk = document.getElementById(chkId); 
+                
+                let qtyId = `qty_item_${idx}`;
+                let qtyInput = document.getElementById(qtyId);
                 
                 if (chk && qtyInput) {
                     let isChecked = chk.checked; 
-                    let userQty = parseInt(qtyInput.value) || 0; 
-                    let origQty = parseInt(item.qty);
+                    let userQty = parseInt(qtyInput.value, 10) || 0; 
+                    
+                    let origQty = 1;
+                    if (item.qty) {
+                        origQty = parseInt(item.qty, 10);
+                    }
                     
                     if (isChecked && userQty > 0) { 
-                        processed.push({name: item.name, qty: userQty}); 
+                        processed.push({
+                            name: item.name, 
+                            qty: userQty
+                        }); 
+                        
                         if (userQty < origQty) {
-                            short.push({name: item.name, qty: origQty - userQty}); 
+                            let diff = origQty - userQty;
+                            short.push({
+                                name: item.name, 
+                                qty: diff
+                            }); 
                         }
                     } else {
-                        short.push({name: item.name, qty: origQty}); 
+                        short.push({
+                            name: item.name, 
+                            qty: origQty
+                        }); 
                     }
                 }
-            });
+            }
             
             if (processed.length === 0) { 
                 alert("You must dispatch at least one item."); 
-                if(btn) { 
+                
+                if (btn) { 
                     btn.disabled = false; 
                     btn.innerText = "Execute & Proceed"; 
                 } 
@@ -2242,12 +3324,17 @@ async function submitStage(stageNum) {
             }
             
             if (short.length > 0) {
-                payload.partialStock = { processedItems: processed, shortItems: short }; 
+                payload.partialStock = { 
+                    processedItems: processed, 
+                    shortItems: short 
+                }; 
             }
         }
-    } else if (btn) { 
-        btn.innerText = "Locking Process..."; 
-        btn.disabled = true; 
+    } else {
+        if (btn) { 
+            btn.innerText = "Locking Process..."; 
+            btn.disabled = true; 
+        }
     }
     
     if (statusLabel) { 
@@ -2257,17 +3344,19 @@ async function submitStage(stageNum) {
     }
 
     try {
-        const res = await fetch(API_URL, { 
+        let reqOpts = { 
             method: 'POST', 
             body: JSON.stringify(payload) 
-        });
+        };
         
+        const res = await fetch(API_URL, reqOpts);
         const data = await res.json();
         
         if (data.status === 'success') { 
             if (btn) {
                 btn.innerText = "Transmission Successful ✓"; 
             }
+            
             queuedFiles = []; 
             
             if (data.splitOrderId) { 
@@ -2277,14 +3366,20 @@ async function submitStage(stageNum) {
             
             fetchOrders(true); 
             closeModal();
+            
         } else {
-            throw new Error(data.message); 
+            let errorMsg = "Unknown error";
+            if (data.message) {
+                errorMsg = data.message;
+            }
+            throw new Error(errorMsg); 
         }
     } catch (err) {
         if (statusLabel) { 
             statusLabel.innerText = "❌ Sync Failed. Network Drop."; 
             statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
         }
+        
         if (btn) { 
             btn.innerText = "Retry Transmission (Tap Again)"; 
             btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500'); 
