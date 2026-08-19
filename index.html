@@ -213,7 +213,7 @@
                     YASH MARKETING
                 </h1>
                 <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                    Enterprise OS Login (v12.9.0)
+                    Enterprise OS Login (v12.9.1)
                 </p>
                 
                 <form id="loginForm" class="space-y-4">
@@ -1006,7 +1006,9 @@
 
                 if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
                 
-                let city = o.area && o.area !== "Unknown Area" ? o.area : o.shopName;
+                // Mapped Area Fallback correctly resolved to Unmapped Dealer instead of Staff Portals
+                let city = (o.area && o.area !== "Unknown Area" && o.area !== "") ? o.area : "Unmapped Dealer";
+                
                 if(!cityStats[city]) cityStats[city] = { orders: 0, value: 0 };
                 cityStats[city].orders += 1;
                 cityStats[city].value += (o.totalValue || 0);
@@ -1378,11 +1380,10 @@
                     `;
                 }
                 
-                // FEATURE 3: TAT TIMER BADGE (60 MINS LIMIT)
                 let tatBadge = "";
                 let isBefore6PM = orderDateObj.getHours() < 18;
-                if (isBefore6PM && order.completedStages < 6) { // Goal is completing step 6
-                    let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); // +60 mins
+                if (isBefore6PM && order.completedStages < 6) { 
+                    let targetTime = orderDateObj.getTime() + (60 * 60 * 1000);
                     tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
                 }
                 
@@ -1468,212 +1469,41 @@
             });
         }
 
-        // UI INTERACTIONS & FILE SELECTION
-        function handleFileSelection(inputElement, stageNum) {
-            const newFiles = Array.from(inputElement.files);
-            queuedFiles = queuedFiles.concat(newFiles);
+        // 1-CLICK MERGE EXECUTION
+        async function executeMerge(primaryOrderId, shopName) {
+            if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
             
-            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
-            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
-            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
-            const previewBox = document.getElementById(`previewBox_${stageNum}`);
+            let targetBtn = event.currentTarget;
+            targetBtn.innerText = "Merging Pipelines...";
+            targetBtn.disabled = true;
+            targetBtn.classList.add('animate-pulse');
             
-            if (queuedFiles.length > 0) {
-                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
-                statusLabel.classList.remove('hidden'); 
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'mergeOrders',
+                        primaryOrderId: primaryOrderId,
+                        shopName: shopName
+                    })
+                });
+                const data = await res.json();
                 
-                if (clearBtn) {
-                    clearBtn.classList.remove('hidden'); 
+                if(data.status === 'success') {
+                    showNotification("MERGE COMPLETE", "Orders have been physically combined in the database.");
+                    closeModal();
+                    fetchOrders(true);
+                } else {
+                    alert(data.message);
+                    targetBtn.innerText = "Merge Failed";
                 }
-                
-                if (container) {
-                    container.classList.remove('hidden');
-                }
-                
-                if (previewBox) {
-                    previewBox.innerHTML = ''; 
-                    previewBox.classList.remove('hidden');
-                    
-                    queuedFiles.forEach(file => {
-                        if (file.type.startsWith('audio/')) {
-                            previewBox.innerHTML += `
-                                <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
-                                    🎤<br/>Audio
-                                </div>
-                            `; 
-                        } else { 
-                            const reader = new FileReader(); 
-                            reader.onload = function(e) { 
-                                previewBox.innerHTML += `
-                                    <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
-                                `; 
-                            }; 
-                            reader.readAsDataURL(file); 
-                        }
-                    });
-                }
+            } catch(e) {
+                alert("Network error during merge execution.");
+                targetBtn.innerText = "Retry Merge";
+                targetBtn.disabled = false;
             }
         }
-        
-        function clearQueuedFiles(stageNum) {
-            queuedFiles = [];
-            
-            if (document.getElementById(`fileStatusText_${stageNum}`)) {
-                document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden'); 
-            }
-            if (document.getElementById(`clearFilesBtn_${stageNum}`)) {
-                document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden'); 
-            }
-            if (document.getElementById(`fileStatusContainer_${stageNum}`)) {
-                document.getElementById(`fileStatusContainer_${stageNum}`).classList.add('hidden');
-            }
-            if (document.getElementById(`previewBox_${stageNum}`)) { 
-                document.getElementById(`previewBox_${stageNum}`).innerHTML = ''; 
-                document.getElementById(`previewBox_${stageNum}`).classList.add('hidden'); 
-            }
-        }
-        
-        window.shareToGroup = function(stageNum, fileUrlsString) {
-            const orderId = currentActiveOrder.orderId; 
-            const shop = currentActiveOrder.shopName; 
-            const stageName = STAGE_NAMES[stageNum - 1]; 
-            
-            let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
-            let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
-            
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-            
-            localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
-            setTimeout(() => { openModal(orderId); }, 1000);
-        }
 
-        // DAILY EOD REPORT GENERATOR
-        window.generateEODReport = function() {
-            if (!window.appData || !window.appData.rawArray || window.appData.rawArray.length === 0) {
-                alert("No data available to generate report.");
-                return;
-            }
-            
-            let today = new Date();
-            today.setHours(0,0,0,0);
-            
-            let todayOrders = window.appData.rawArray.filter(o => {
-                let d = parseCustomDate(o.date);
-                d.setHours(0,0,0,0);
-                return d.getTime() === today.getTime();
-            });
-            
-            let totalReceived = todayOrders.length;
-            let totalValue = todayOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
-            let totalCompleted = todayOrders.filter(o => o.isFullyCompleted).length;
-            let totalDispatched = todayOrders.filter(o => o.completedStages >= 6 && !o.isFullyCompleted).length;
-            let pending = totalReceived - totalCompleted - totalDispatched;
-            
-            let reportDate = new Date().toLocaleDateString('en-GB');
-            let staffName = currentUserName ? currentUserName.toUpperCase() : 'ADMIN';
-            
-            let msg = `*📊 DAILY EOD REPORT - YASH MARKETING*\n\n*📅 Date:* ${reportDate}\n*🧑‍💼 Staff:* ${staffName}\n\n`;
-            msg += `*📦 Orders Received Today:* ${totalReceived}\n`;
-            msg += `*💰 Total Value:* ₹${totalValue.toLocaleString()}\n`;
-            msg += `*✅ Orders Delivered/Final:* ${totalCompleted}\n`;
-            msg += `*🚚 Orders Dispatched:* ${totalDispatched}\n`;
-            msg += `*⏳ Pending Orders:* ${pending}\n\n`;
-            msg += `_System Generated via MDO OS_`;
-            
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        // TALLY SO CSV GENERATOR
-        function generateTallyCSV(orderId) {
-            const order = window.appData.orders[orderId];
-            if(!order) {
-                return;
-            }
-            
-            let csvContent = "\uFEFFDate,Voucher Type,Voucher Number,Party Name,Item Name,Quantity,Rate,Amount\n";
-            let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); 
-            
-            order.items.forEach(item => { 
-                csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`; 
-            });
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            
-            link.href = URL.createObjectURL(blob);
-            link.download = `Tally_SO_${order.orderId}.csv`;
-            link.style.display = 'none';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showNotification("Tally SO Exported", `Ensure file is CLOSED before importing in Tally.`);
-        }
-
-        // DYNAMIC SHIPPING LABEL (EXACT A4 4-STICKER LAYOUT)
-        function generateShippingLabel(orderId) {
-            const order = window.appData.orders[orderId];
-            const printDiv = document.getElementById('shippingLabelScreen');
-            
-            let labelHtml = `
-                <div class="sticker-label">
-                    <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 10px;">
-                        <h2 style="margin:0; font-size: 18px; font-weight: 900;">YASH MARKETING</h2>
-                        <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: bold;">
-                            71, Wadiya Park, Maliwada, A.Nagar - 414001<br/>8378811922 / 8805566651
-                        </p>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px dashed #ccc;">
-                        <div>
-                            <div style="font-size: 9px; font-weight: bold;">ORDER ID</div>
-                            <div style="font-size: 14px; font-weight: 900;">${order.orderId}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 9px;">Order Date: <strong>${order.date.split(' ')[0]}</strong></div>
-                            <div style="font-size: 9px;">Print Date: <strong>${new Date().toLocaleDateString('en-GB')}</strong></div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <div style="font-size: 10px; font-weight: bold; background: black; color: white; display: inline-block; padding: 2px 5px;">
-                            TO (CONSIGNEE)
-                        </div>
-                        <div style="font-size: 16px; font-weight: 900; margin-top: 5px;">${order.shopName}</div>
-                        <div style="font-size: 12px; font-weight: bold; margin-top: 2px;">📞 ${order.phone || '______________________'}</div>
-                        <div style="font-size: 11px; margin-top: 5px; height: 35px; border-bottom: 1px solid #aaa;">Address: </div>
-                        <div style="font-size: 11px; height: 20px; border-bottom: 1px solid #aaa;"></div>
-                    </div>
-
-                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                        <div style="flex: 1; border: 1px solid #aaa; padding: 5px;">
-                            <div style="font-size: 8px; font-weight: bold;">PAYMENT MODE</div>
-                            <div style="font-size: 12px; font-weight: 900;">${order.paymentMode}</div>
-                        </div>
-                        <div style="flex: 1; border: 1px solid #aaa; padding: 5px;">
-                            <div style="font-size: 8px; font-weight: bold;">TRANSPORTER</div>
-                            <div style="font-size: 12px; font-weight: 900; border-bottom: 1px solid #ccc; height: 16px;"></div>
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; font-size: 12px; font-weight: bold; margin-top: 15px;">
-                        Thank You!
-                    </div>
-                </div>
-            `;
-
-            printDiv.innerHTML = `
-                ${labelHtml}
-                <div class="empty-sticker"></div>
-                ${labelHtml}
-                <div class="empty-sticker"></div>
-            `;
-            
-            window.print();
-        }
-
-        // MODAL AND TASK EXECUTION
         function openModal(orderId) {
             const order = window.appData.orders[orderId];
             if(!order) {
@@ -1700,7 +1530,6 @@
             document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
             document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
-            // FEATURE 3: TAT TIMER (MODAL HEADER)
             let tatBadgeEl = document.getElementById('modalTatTimer');
             let isBefore6PM = orderDateObj.getHours() < 18;
             if (isBefore6PM && order.completedStages < 6) { 
@@ -1787,6 +1616,23 @@
             `; 
             
             container.innerHTML += itemsHtml;
+
+            let mergeActionHtml = "";
+            let pendingCount = filteredData.filter(o => o.shopName === order.shopName && o.completedStages < 4).length;
+
+            if (order.completedStages < 4 && pendingCount > 1) {
+                mergeActionHtml = `
+                    <button 
+                        onclick="executeMerge('${order.orderId}', '${order.shopName}')" 
+                        class="w-full mt-2 mb-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white font-black py-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2 uppercase tracking-widest border border-blue-500/50"
+                    >
+                        🔗 1-Click Merge: Combine ${pendingCount - 1} other pending order(s) into this one
+                    </button>
+                `;
+            }
+
+            container.innerHTML += mergeActionHtml;
+
             let stagesListHtml = '<div class="space-y-4">';
             
             let needsShare = false, lastCompletedStage = order.completedStages, stagesRequiringShare = [2, 4, 5, 6, 9];
@@ -1814,7 +1660,6 @@
                 if (isCompleted) {
                     let cellData = order.stageUrls ? order.stageUrls[i] : "";
                     
-                    // FEATURE 2: EXTRACT TIMESTAMP & RENDER METRICS
                     let timestampDisplay = "";
                     let timeTakenDisplay = "";
                     let thisEpoch = null;
@@ -1839,7 +1684,6 @@
                                 timeTakenDisplay = `<span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">Took: ${diffMins}m</span>`;
                             }
                             
-                            // Remove timestamp from raw string so normal parsing works
                             cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
                         }
                     }
@@ -2345,9 +2189,146 @@
             fetchOrders(true); 
         }
 
-        // ==========================================
-        // OPTIMIZATION 3: AGGRESSIVE COMPRESSION
-        // ==========================================
+        function handleFileSelection(inputElement, stageNum) {
+            const newFiles = Array.from(inputElement.files);
+            queuedFiles = queuedFiles.concat(newFiles);
+            
+            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
+            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
+            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
+            const previewBox = document.getElementById(`previewBox_${stageNum}`);
+            
+            if (queuedFiles.length > 0) {
+                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
+                statusLabel.classList.remove('hidden'); 
+                
+                if (clearBtn) {
+                    clearBtn.classList.remove('hidden'); 
+                }
+                
+                if (container) {
+                    container.classList.remove('hidden');
+                }
+                
+                if (previewBox) {
+                    previewBox.innerHTML = ''; 
+                    previewBox.classList.remove('hidden');
+                    
+                    queuedFiles.forEach(file => {
+                        if (file.type.startsWith('audio/')) {
+                            previewBox.innerHTML += `
+                                <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
+                                    🎤<br/>Audio
+                                </div>
+                            `; 
+                        } else { 
+                            const reader = new FileReader(); 
+                            reader.onload = function(e) { 
+                                previewBox.innerHTML += `
+                                    <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
+                                `; 
+                            }; 
+                            reader.readAsDataURL(file); 
+                        }
+                    });
+                }
+            }
+        }
+        
+        function clearQueuedFiles(stageNum) {
+            queuedFiles = [];
+            
+            if (document.getElementById(`fileStatusText_${stageNum}`)) {
+                document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden'); 
+            }
+            if (document.getElementById(`clearFilesBtn_${stageNum}`)) {
+                document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden'); 
+            }
+            if (document.getElementById(`fileStatusContainer_${stageNum}`)) {
+                document.getElementById(`fileStatusContainer_${stageNum}`).classList.add('hidden');
+            }
+            if (document.getElementById(`previewBox_${stageNum}`)) { 
+                document.getElementById(`previewBox_${stageNum}`).innerHTML = ''; 
+                document.getElementById(`previewBox_${stageNum}`).classList.add('hidden'); 
+            }
+        }
+        
+        window.shareToGroup = function(stageNum, fileUrlsString) {
+            const orderId = currentActiveOrder.orderId; 
+            const shop = currentActiveOrder.shopName; 
+            const stageName = STAGE_NAMES[stageNum - 1]; 
+            
+            let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
+            let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            
+            localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
+            setTimeout(() => { openModal(orderId); }, 1000);
+        }
+
+        function generateEODReport() {
+            if (!window.appData || !window.appData.rawArray || window.appData.rawArray.length === 0) {
+                alert("No data available to generate report.");
+                return;
+            }
+            
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let todayOrders = window.appData.rawArray.filter(o => {
+                let d = parseCustomDate(o.date);
+                d.setHours(0,0,0,0);
+                return d.getTime() === today.getTime();
+            });
+            
+            let totalReceived = todayOrders.length;
+            let totalValue = todayOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
+            let totalCompleted = todayOrders.filter(o => o.isFullyCompleted).length;
+            let totalDispatched = todayOrders.filter(o => o.completedStages >= 6 && !o.isFullyCompleted).length;
+            let pending = totalReceived - totalCompleted - totalDispatched;
+            
+            let reportDate = new Date().toLocaleDateString('en-GB');
+            let staffName = currentUserName ? currentUserName.toUpperCase() : 'ADMIN';
+            
+            let msg = `*📊 DAILY EOD REPORT - YASH MARKETING*\n\n*📅 Date:* ${reportDate}\n*🧑‍💼 Staff:* ${staffName}\n\n`;
+            msg += `*📦 Orders Received Today:* ${totalReceived}\n`;
+            msg += `*💰 Total Value:* ₹${totalValue.toLocaleString()}\n`;
+            msg += `*✅ Orders Delivered/Final:* ${totalCompleted}\n`;
+            msg += `*🚚 Orders Dispatched:* ${totalDispatched}\n`;
+            msg += `*⏳ Pending Orders:* ${pending}\n\n`;
+            msg += `_System Generated via MDO OS_`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function generateTallyCSV(orderId) {
+            const order = window.appData.orders[orderId];
+            if(!order) {
+                return;
+            }
+            
+            let csvContent = "\uFEFFDate,Voucher Type,Voucher Number,Party Name,Item Name,Quantity,Rate,Amount\n";
+            let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); 
+            
+            order.items.forEach(item => { 
+                csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`; 
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            link.href = URL.createObjectURL(blob);
+            link.download = `Tally_SO_${order.orderId}.csv`;
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification("Tally SO Exported", `Ensure file is CLOSED before importing in Tally.`);
+        }
+
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader(); 
@@ -2359,8 +2340,6 @@
                     
                     img.onload = () => {
                         const canvas = document.createElement('canvas'); 
-                        
-                        // MAXIMUM WIDTH HALVED for extremely fast encoding and low payload
                         const MAX_WIDTH = 500; 
                         let scale = 1;
                         
@@ -2377,7 +2356,6 @@
                         resolve({ 
                             name: file.name, 
                             mimeType: 'image/jpeg', 
-                            // QUALITY LOWERED TO 0.45 for blazing fast uploads (Proof-grade, not 4K)
                             base64: canvas.toDataURL('image/jpeg', 0.45).split(',')[1] 
                         });
                     };
