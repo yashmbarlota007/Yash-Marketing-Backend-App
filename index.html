@@ -316,7 +316,6 @@
                     <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
                     <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
                     <button onclick="setDateRange('thisWeek', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Week</button>
-                    
                     <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Month</button>
                     
@@ -351,7 +350,7 @@
             
             <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </div>
-    </div>
+    </div> <!-- End Main App Wrapper -->
 
     <!-- Order Execution Task Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
@@ -458,12 +457,14 @@
             const portalEmpId = urlParams.get('empId');
 
             if (trackId) {
+                // DEALER TRACKING VIEW
                 document.getElementById('mainAppWrapper').classList.add('hidden');
                 document.getElementById('trackingScreen').classList.remove('hidden');
                 document.getElementById('displayTrackId').innerText = trackId;
                 
                 runTrackerMode(trackId);
             } else {
+                // STAFF OS VIEW
                 const savedUser = localStorage.getItem('yash_user');
                 const savedRole = localStorage.getItem('yash_role');
                 
@@ -510,6 +511,7 @@
                 }
             }
             
+            // Start Global TAT Timer Tick
             setInterval(updateTatTimers, 1000);
         });
 
@@ -657,7 +659,11 @@
             resultsDiv.innerHTML = matches.map(o => {
                 let badge = "";
                 if (o.isVIP) {
-                    badge = '<span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">VIP</span>';
+                    badge = `
+                        <span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">
+                            VIP
+                        </span>
+                    `;
                 }
                 return `
                 <div 
@@ -700,7 +706,9 @@
 
         async function saveHandover() {
             let note = document.getElementById('handoverNoteInput').value.trim();
-            if(!note) return alert("Please write a note before submitting.");
+            if(!note) {
+                return alert("Please write a note before submitting.");
+            }
             
             let btn = document.getElementById('btnSaveHandover');
             btn.innerText = "Saving..."; 
@@ -709,7 +717,11 @@
             try {
                 let res = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'saveHandover', staffName: currentUserName, note: note })
+                    body: JSON.stringify({ 
+                        action: 'saveHandover', 
+                        staffName: currentUserName, 
+                        note: note 
+                    })
                 });
                 let data = await res.json();
                 if(data.status === 'success') {
@@ -721,13 +733,18 @@
             } catch(e) {
                 alert("Network error.");
             }
+            
             btn.innerText = "Submit Handover Note"; 
             btn.disabled = false;
         }
 
         async function fetchHandoverNotes() {
             let historyDiv = document.getElementById('handoverHistory');
-            historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Loading notes...</div>';
+            historyDiv.innerHTML = `
+                <div class="text-center text-slate-500 text-xs py-4">
+                    Loading notes...
+                </div>
+            `;
             
             try {
                 let res = await fetch(API_URL, {
@@ -735,21 +752,36 @@
                     body: JSON.stringify({ action: 'getHandover' })
                 });
                 let data = await res.json();
+                
                 if(data.status === 'success' && data.data.length > 0) {
                     historyDiv.innerHTML = data.data.map(n => `
                         <div class="bg-[#0B1121] p-3 rounded-lg border border-slate-800">
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs font-black text-indigo-400">${n.staff}</span>
-                                <span class="text-[9px] text-slate-500 font-mono">${new Date(n.time).toLocaleString('en-GB')}</span>
+                                <span class="text-xs font-black text-indigo-400">
+                                    ${n.staff}
+                                </span>
+                                <span class="text-[9px] text-slate-500 font-mono">
+                                    ${new Date(n.time).toLocaleString('en-GB')}
+                                </span>
                             </div>
-                            <p class="text-sm text-slate-300 leading-relaxed">${n.note}</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                ${n.note}
+                            </p>
                         </div>
                     `).join('');
                 } else {
-                    historyDiv.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">No recent shift notes found.</div>';
+                    historyDiv.innerHTML = `
+                        <div class="text-center text-slate-500 text-xs py-4">
+                            No recent shift notes found.
+                        </div>
+                    `;
                 }
             } catch(e) {
-                historyDiv.innerHTML = '<div class="text-center text-pink-500 text-xs py-4">Error loading notes.</div>';
+                historyDiv.innerHTML = `
+                    <div class="text-center text-pink-500 text-xs py-4">
+                        Error loading notes.
+                    </div>
+                `;
             }
         }
 
@@ -1086,10 +1118,12 @@
             filteredData.forEach(o => {
                 totalOrderValue += (o.totalValue || 0);
 
-                if (o.completedStages >= 10) {
+                if (o.completedStages >= 10 || o.isFullyCompleted) {
                     totalCompleted++;
                 } else { 
-                    stageStuck[o.completedStages]++; 
+                    if (o.completedStages < 10) {
+                        stageStuck[o.completedStages]++; 
+                    }
                     if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
                         slaBreaches++;
                     }
@@ -1121,7 +1155,7 @@
                     brandStats[brandName] += itemVal; 
                 });
 
-                if(o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
+                if (o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
                     staffScores[o.lastUpdatedBy] = (staffScores[o.lastUpdatedBy] || 0) + 1;
                 }
                 
@@ -1375,14 +1409,22 @@
         }
 
         async function executeUnblock(orderId) {
-            if(!confirm("Warning: You are bypassing the system Credit Lock for this dealer. Proceed?")) return;
+            if (!confirm("Warning: You are bypassing the system Credit Lock for this dealer. Proceed?")) {
+                return;
+            }
+            
             try {
                 let res = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'unblockOrder', orderId: orderId })
+                    body: JSON.stringify({ 
+                        action: 'unblockOrder', 
+                        orderId: orderId 
+                    })
                 });
+                
                 let data = await res.json();
-                if(data.status === 'success') {
+                
+                if (data.status === 'success') {
                     showNotification("OVERRIDE SUCCESS", "Order Unlocked.");
                     fetchOrders(true);
                 } else {
@@ -1403,7 +1445,7 @@
             let shopPendingCount = {};
             
             pendingOrders.forEach(o => { 
-                if (o.completedStages < 10) { 
+                if (o.completedStages < 10) {
                     stageCounts[o.completedStages]++; 
                 }
                 if (o.completedStages < 4) { 
@@ -1438,7 +1480,7 @@
                 let orderCount = stageCounts[idx];
                 let filterName = name.split(' (')[0]; 
                 
-                if (idx === 7) { 
+                if (idx === 7) {
                     filterName = "Delivery Comms";
                 }
                 
@@ -1488,8 +1530,8 @@
                 let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
                 let nextStepName = "Fully Completed";
                 
-                if (order.completedStages < 10) { 
-                    if (order.completedStages === 7) { 
+                if (order.completedStages < 10) {
+                    if (order.completedStages === 7) {
                         nextStepName = isCod ? "Call 2" : "WhatsApp 2";
                     } else {
                         nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
@@ -1510,13 +1552,25 @@
                     `;
                 }
                 
-                let lockOverlay = "";
-                let clickAction = `onclick="openModal('${order.orderId}')"`;
-                let cursorStyle = "cursor-pointer";
+                let lockOverlay = ""; 
+                let clickAction = `onclick="openModal('${order.orderId}')"`; 
+                let cursorStyle = "cursor-pointer"; 
                 let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
                 
                 if (order.creditLocked && !order.ceoOverride) {
-                    let unlockBtn = isOwner ? `<button onclick="event.stopPropagation(); executeUnblock('${order.orderId}')" class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white text-[10px] py-1.5 rounded font-black uppercase tracking-widest transition-all">🔓 CEO Override: Unblock</button>` : `<p class="mt-2 text-[9px] text-pink-400 font-bold uppercase">Contact Yash Sir to Unblock</p>`;
+                    let unlockBtn = isOwner ? `
+                        <button 
+                            onclick="event.stopPropagation(); executeUnblock('${order.orderId}')" 
+                            class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white text-[10px] py-1.5 rounded font-black uppercase tracking-widest transition-all"
+                        >
+                            🔓 CEO Override: Unblock
+                        </button>
+                    ` : `
+                        <p class="mt-2 text-[9px] text-pink-400 font-bold uppercase">
+                            Contact Yash Sir to Unblock
+                        </p>
+                    `;
+                    
                     lockOverlay = `
                         <div class="absolute inset-0 bg-black/80 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-4 text-center rounded-2xl border-2 border-red-500">
                             <span class="text-3xl mb-1">🛑</span>
@@ -1526,7 +1580,7 @@
                         </div>
                     `;
                     clickAction = ""; 
-                    cursorStyle = "cursor-not-allowed";
+                    cursorStyle = "cursor-not-allowed"; 
                     vipClass = "bg-red-900/10 border-red-500/50";
                 }
                 
@@ -1548,15 +1602,25 @@
                     `;
                 }
                 
-                let tatBadge = "";
+                let tatBadge = ""; 
                 let isBefore6PM = orderDateObj.getHours() < 18;
+                
                 if (isBefore6PM && order.completedStages < 6) { 
                     let targetTime = orderDateObj.getTime() + (60 * 60 * 1000);
-                    tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
+                    tatBadge = `
+                        <span 
+                            class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" 
+                            data-target="${targetTime}"
+                        >
+                            ⏳ TAT: Calc...
+                        </span>
+                    `;
                 }
                 
                 let mergeBadge = "";
                 let orderDateStr = parseCustomDate(order.date).toDateString();
+                
+                // RESTRICTED MERGE LOGIC: Same Dealer AND Same Day AND not Locked
                 let pendingCount = filteredData.filter(o => 
                     o.shopName === order.shopName && 
                     parseCustomDate(o.date).toDateString() === orderDateStr && 
@@ -1566,7 +1630,10 @@
 
                 if (order.completedStages < 4 && pendingCount > 1 && !order.creditLocked) {
                     mergeBadge = `
-                        <span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" title="Pack this together with another pending order!">
+                        <span 
+                            class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" 
+                            title="Pack this together with another pending order!"
+                        >
                             🔗 MERGE AVAIL
                         </span>
                     `;
@@ -1582,7 +1649,9 @@
                         
                         <div class="mb-4 relative z-10">
                             <div class="flex justify-between items-start mb-1.5">
-                                <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
+                                <h3 class="font-black text-sm text-white tracking-wider">
+                                    ${order.orderId}
+                                </h3>
                                 <div class="flex flex-col gap-1 items-end">
                                     <div class="flex gap-1">
                                         ${vipBadge}
@@ -1650,7 +1719,9 @@
         // 1-CLICK MERGE EXECUTION
         // =======================================================
         async function executeMerge(primaryOrderId, shopName, secondaryIds, targetBtn) {
-            if(!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
+            if (!confirm(`Combine all pending items for ${shopName} into this order?`)) {
+                return;
+            }
             
             targetBtn.innerText = "Merging Pipelines...";
             targetBtn.disabled = true;
@@ -1659,36 +1730,37 @@
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        action: 'mergeOrders',
-                        primaryOrderId: primaryOrderId,
-                        secondaryIds: secondaryIds,
-                        shopName: shopName
+                    body: JSON.stringify({ 
+                        action: 'mergeOrders', 
+                        primaryOrderId: primaryOrderId, 
+                        secondaryIds: secondaryIds, 
+                        shopName: shopName 
                     })
                 });
+                
                 const data = await res.json();
                 
-                if(data.status === 'success') {
+                if (data.status === 'success') {
                     showNotification("MERGE COMPLETE", "Orders have been physically combined in the database.");
-                    closeModal();
+                    closeModal(); 
                     fetchOrders(true);
-                } else {
-                    alert(data.message);
-                    targetBtn.innerText = "Merge Failed";
+                } else { 
+                    alert(data.message); 
+                    targetBtn.innerText = "Merge Failed"; 
                 }
-            } catch(e) {
-                alert("Network error during merge execution.");
-                targetBtn.innerText = "Retry Merge";
-                targetBtn.disabled = false;
+            } catch(e) { 
+                alert("Network error during merge execution."); 
+                targetBtn.innerText = "Retry Merge"; 
+                targetBtn.disabled = false; 
             }
         }
 
         // =======================================================
-        // MODAL MANAGEMENT
+        // ORDER MODAL & STAGE GENERATION
         // =======================================================
         function openModal(orderId) {
             const order = window.appData.orders[orderId];
-            if(!order) {
+            if (!order) {
                 return;
             }
             
@@ -1699,12 +1771,12 @@
             document.getElementById('modalShopName').innerText = order.shopName;
             
             if (order.isVIP) {
-                document.getElementById('modalVipBadge').classList.remove('hidden');
+                document.getElementById('modalVipBadge').classList.remove('hidden'); 
             } else {
                 document.getElementById('modalVipBadge').classList.add('hidden');
             }
             
-            let orderDateObj = parseCustomDate(order.date);
+            let orderDateObj = parseCustomDate(order.date); 
             let exactDateStr = formatExactDate(order.date); 
             let timeData = getTimeAgoUI(order.date);
             
@@ -1712,20 +1784,20 @@
             document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
             document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
-            let tatBadgeEl = document.getElementById('modalTatTimer');
+            let tatBadgeEl = document.getElementById('modalTatTimer'); 
             let isBefore6PM = orderDateObj.getHours() < 18;
+            
             if (isBefore6PM && order.completedStages < 6) { 
                 let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); 
-                tatBadgeEl.setAttribute('data-target', targetTime);
-                tatBadgeEl.className = "tat-timer text-[10px] bg-orange-900/30 text-orange-400 px-2 py-1 rounded font-black tracking-widest border border-orange-500/30 animate-pulse inline-block";
+                tatBadgeEl.setAttribute('data-target', targetTime); 
+                tatBadgeEl.className = "tat-timer text-[10px] bg-orange-900/30 text-orange-400 px-2 py-1 rounded font-black tracking-widest border border-orange-500/30 animate-pulse inline-block"; 
                 tatBadgeEl.innerText = "⏳ TAT: Calc...";
             } else {
                 tatBadgeEl.className = "hidden";
             }
 
-            let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+            let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD'); 
             let payBadge = document.getElementById('modalPaymentMode'); 
-            
             payBadge.innerText = order.paymentMode || 'N/A';
             
             if (isCod) {
@@ -1802,6 +1874,7 @@
             let mergeActionHtml = "";
             let orderDateStr = parseCustomDate(order.date).toDateString();
             
+            // STRICT REQUIREMENT: Same Dealer AND Same Day orders only to prevent chaos
             let secondaryOrders = filteredData.filter(o => 
                 o.shopName === order.shopName && 
                 parseCustomDate(o.date).toDateString() === orderDateStr && 
@@ -1821,53 +1894,53 @@
                     </button>
                 `;
             }
-
+            
             container.innerHTML += mergeActionHtml;
 
             let stagesListHtml = '<div class="space-y-4">';
+            let needsShare = false;
+            let lastCompletedStage = order.completedStages;
+            let stagesRequiringShare = [2, 4, 5, 6, 9];
             
-            let needsShare = false, lastCompletedStage = order.completedStages, stagesRequiringShare = [2, 4, 5, 6, 9];
-            
-            if (stagesRequiringShare.includes(lastCompletedStage)) {
+            if (stagesRequiringShare.includes(lastCompletedStage)) { 
                 if (localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') {
                     needsShare = true;
                 }
             }
             
             for (let i = 0; i < 10; i++) { 
-
                 const stageNum = i + 1; 
                 const isCompleted = i < order.completedStages; 
                 const isActive = i === order.completedStages; 
                 const isLocked = i > order.completedStages;
                 
-                let displayStageName = STAGE_NAMES[i];
-                if (stageNum === 8) { 
+                let displayStageName = STAGE_NAMES[i]; 
+                
+                if (stageNum === 8) {
                     displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
                 }
                 
                 let uiHtml = '';
                 
                 if (isCompleted) {
-                    let cellData = order.stageUrls ? order.stageUrls[i] : "";
-                    
-                    let timestampDisplay = "";
-                    let timeTakenDisplay = "";
-                    let thisEpoch = null;
+                    let cellData = order.stageUrls ? order.stageUrls[i] : ""; 
+                    let timestampDisplay = ""; 
+                    let timeTakenDisplay = ""; 
+                    let thisEpoch = null; 
                     let previousEpoch = parseCustomDate(order.date).getTime(); 
                     
-                    if (i > 0 && order.stageUrls[i-1]) {
-                        let prevMatch = order.stageUrls[i-1].match(/TIME:\s*(\d+)/);
+                    if (i > 0 && order.stageUrls[i-1]) { 
+                        let prevMatch = order.stageUrls[i-1].match(/TIME:\s*(\d+)/); 
                         if (prevMatch) {
-                            previousEpoch = parseInt(prevMatch[1]);
+                            previousEpoch = parseInt(prevMatch[1]); 
                         }
                     }
-
+                    
                     if (cellData && cellData.includes("TIME:")) {
                         let match = cellData.match(/TIME:\s*(\d+)/);
                         if (match) {
-                            thisEpoch = parseInt(match[1]);
-                            let d = new Date(thisEpoch);
+                            thisEpoch = parseInt(match[1]); 
+                            let d = new Date(thisEpoch); 
                             let timeStr = d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
                             
                             timestampDisplay = `
@@ -1877,6 +1950,7 @@
                             `;
                             
                             let diffMins = Math.round((thisEpoch - previousEpoch) / 60000);
+                            
                             if (diffMins >= 0) {
                                 timeTakenDisplay = `
                                     <span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">
@@ -1884,18 +1958,17 @@
                                     </span>
                                 `;
                             }
-                            
                             cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
                         }
                     }
 
-                    let actionStr = "";
+                    let actionStr = ""; 
                     let urlData = cellData;
                     
-                    if (cellData && cellData.includes("||")) {
-                        let parts = cellData.split("||");
-                        actionStr = parts[0].trim().replace(/^\[|\]$/g, '');
-                        urlData = parts[1];
+                    if (cellData && cellData.includes("||")) { 
+                        let parts = cellData.split("||"); 
+                        actionStr = parts[0].trim().replace(/^\[|\]$/g, ''); 
+                        urlData = parts[1]; 
                     }
 
                     let fileUrls = urlData ? urlData.split(',') : []; 
@@ -1914,7 +1987,7 @@
                         url = url.trim();
                         if (url.includes("http")) {
                             hasFiles = true;
-                            if (stageNum === 10 || stageNum === 8 || url.toLowerCase().includes("audio")) { 
+                            if (stageNum === 10 || stageNum === 8 || url.toLowerCase().includes("audio")) {
                                 previewHtml += `
                                     <audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
                                 `; 
