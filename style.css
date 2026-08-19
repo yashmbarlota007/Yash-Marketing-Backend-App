@@ -1,133 +1,132 @@
-<style>
-    body { 
-        background-color: #0B1121; 
-        color: #f8fafc; 
-        font-family: 'Inter', sans-serif; 
+body { 
+    background-color: #0B1121; 
+    color: #f8fafc; 
+    font-family: 'Inter', sans-serif; 
+}
+
+.glass-panel { 
+    background: rgba(15, 23, 42, 0.7); 
+    backdrop-filter: blur(12px); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+}
+
+.hover-card { 
+    transition: all 0.3s ease; 
+}
+
+.hover-card:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+    border-color: rgba(99, 102, 241, 0.4); 
+}
+
+::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: #0B1121; 
+}
+
+::-webkit-scrollbar-thumb { 
+    background: #334155; 
+    border-radius: 4px; 
+}
+
+.hide-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+
+.hide-scrollbar { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+
+@keyframes slideDown { 
+    from { 
+        transform: translateY(-100%); 
+        opacity: 0; 
+    } 
+    to { 
+        transform: translateY(0); 
+        opacity: 1; 
+    } 
+}
+
+.toast-enter { 
+    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+}
+
+.active-filter { 
+    background: #4F46E5 !important; 
+    border-color: #6366F1 !important; 
+    color: white !important; 
+    font-weight: bold; 
+}
+
+.text-wrap-custom { 
+    word-wrap: break-word; 
+    white-space: normal; 
+}
+
+.vip-corridor { 
+    animation: pulse-red-glow 2s infinite; 
+    border: 1px solid #ef4444 !important; 
+}
+
+@keyframes pulse-red-glow {
+    0% { 
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); 
+    }
+    70% { 
+        box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0); 
+    }
+    100% { 
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); 
+    }
+}
+
+/* EXACT A4 (4-STICKER) PRINT LAYOUT */
+@media print {
+    body * { 
+        display: none !important; 
+    }
+    #shippingLabelScreen, #shippingLabelScreen * { 
+        display: block !important; 
     }
     
-    .glass-panel { 
-        background: rgba(15, 23, 42, 0.7); 
-        backdrop-filter: blur(12px); 
-        border: 1px solid rgba(255, 255, 255, 0.08); 
+    @page { 
+        size: A4; 
+        margin: 0; 
     }
     
-    .hover-card { 
-        transition: all 0.3s ease; 
+    #shippingLabelScreen {
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 210mm; 
+        height: 297mm; 
+        background: white !important; 
+        color: black !important;
+        display: grid !important; 
+        grid-template-columns: 1fr 1fr; 
+        grid-template-rows: 1fr 1fr; 
+        box-sizing: border-box;
+        padding: 10mm;
+        gap: 10mm;
     }
     
-    .hover-card:hover { 
-        transform: translateY(-3px); 
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
-        border-color: rgba(99, 102, 241, 0.4); 
-    }
-    
-    ::-webkit-scrollbar { 
-        width: 6px; 
-        height: 6px; 
-    }
-    
-    ::-webkit-scrollbar-track { 
-        background: #0B1121; 
-    }
-    
-    ::-webkit-scrollbar-thumb { 
-        background: #334155; 
-        border-radius: 4px; 
-    }
-    
-    .hide-scrollbar::-webkit-scrollbar { 
-        display: none; 
-    }
-    
-    .hide-scrollbar { 
-        -ms-overflow-style: none; 
-        scrollbar-width: none; 
-    }
-    
-    @keyframes slideDown { 
-        from { 
-            transform: translateY(-100%); 
-            opacity: 0; 
-        } 
-        to { 
-            transform: translateY(0); 
-            opacity: 1; 
-        } 
-    }
-    
-    .toast-enter { 
-        animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-    }
-    
-    .active-filter { 
-        background: #4F46E5 !important; 
-        border-color: #6366F1 !important; 
-        color: white !important; 
-        font-weight: bold; 
-    }
-    
-    .text-wrap-custom { 
-        word-wrap: break-word; 
-        white-space: normal; 
+    .sticker-label {
+        border: 1px dashed #ccc; 
+        padding: 5mm;
+        box-sizing: border-box;
+        width: 100%; 
+        height: 100%;
+        overflow: hidden;
     }
 
-    .vip-corridor { 
-        animation: pulse-red-glow 2s infinite; 
-        border: 1px solid #ef4444 !important; 
+    .empty-sticker { 
+        border: none; 
     }
-    
-    @keyframes pulse-red-glow {
-        0% { 
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); 
-        }
-        70% { 
-            box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0); 
-        }
-        100% { 
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); 
-        }
-    }
-
-    /* EXACT A4 (4-STICKER) PRINT LAYOUT */
-    @media print {
-        body * { 
-            display: none !important; 
-        }
-        #shippingLabelScreen, #shippingLabelScreen * { 
-            display: block !important; 
-        }
-        
-        @page { 
-            size: A4; 
-            margin: 0; 
-        }
-        
-        #shippingLabelScreen {
-            position: absolute; 
-            left: 0; 
-            top: 0; 
-            width: 210mm; 
-            height: 297mm; 
-            background: white !important; 
-            color: black !important;
-            display: grid !important; 
-            grid-template-columns: 1fr 1fr; 
-            grid-template-rows: 1fr 1fr; 
-            box-sizing: border-box;
-            padding: 10mm;
-            gap: 10mm;
-        }
-        
-        .sticker-label {
-            border: 1px dashed #ccc; 
-            padding: 5mm;
-            box-sizing: border-box;
-            width: 100%; 
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .empty-sticker { 
-            border: none; 
-        }
-    }
+}
