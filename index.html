@@ -2345,6 +2345,9 @@
             fetchOrders(true); 
         }
 
+        // ==========================================
+        // OPTIMIZATION 3: AGGRESSIVE COMPRESSION
+        // ==========================================
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader(); 
@@ -2356,7 +2359,9 @@
                     
                     img.onload = () => {
                         const canvas = document.createElement('canvas'); 
-                        const MAX_WIDTH = 800; 
+                        
+                        // MAXIMUM WIDTH HALVED for extremely fast encoding and low payload
+                        const MAX_WIDTH = 500; 
                         let scale = 1;
                         
                         if (img.width > MAX_WIDTH) {
@@ -2372,7 +2377,8 @@
                         resolve({ 
                             name: file.name, 
                             mimeType: 'image/jpeg', 
-                            base64: canvas.toDataURL('image/jpeg', 0.6).split(',')[1] 
+                            // QUALITY LOWERED TO 0.45 for blazing fast uploads (Proof-grade, not 4K)
+                            base64: canvas.toDataURL('image/jpeg', 0.45).split(',')[1] 
                         });
                     };
                 };
