@@ -1,9 +1,17 @@
+/* ==============================================================================
+   FILE: style.css (The Visual Engine & Print Layouts)
+   YASH MARKETING - ENTERPRISE OS FRONTEND
+   ============================================================================== */
+
 body { 
     background-color: #0B1121; 
     color: #f8fafc; 
     font-family: 'Inter', sans-serif; 
 }
 
+/* ==========================================
+   UI COMPONENTS & EFFECTS
+   ========================================== */
 .glass-panel { 
     background: rgba(15, 23, 42, 0.7); 
     backdrop-filter: blur(12px); 
@@ -20,6 +28,9 @@ body {
     border-color: rgba(99, 102, 241, 0.4); 
 }
 
+/* ==========================================
+   CUSTOM SCROLLBARS
+   ========================================== */
 ::-webkit-scrollbar { 
     width: 6px; 
     height: 6px; 
@@ -43,6 +54,9 @@ body {
     scrollbar-width: none; 
 }
 
+/* ==========================================
+   ANIMATIONS & DYNAMIC ALERTS
+   ========================================== */
 @keyframes slideDown { 
     from { 
         transform: translateY(-100%); 
@@ -58,23 +72,6 @@ body {
     animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
 }
 
-.active-filter { 
-    background: #4F46E5 !important; 
-    border-color: #6366F1 !important; 
-    color: white !important; 
-    font-weight: bold; 
-}
-
-.text-wrap-custom { 
-    word-wrap: break-word; 
-    white-space: normal; 
-}
-
-.vip-corridor { 
-    animation: pulse-red-glow 2s infinite; 
-    border: 1px solid #ef4444 !important; 
-}
-
 @keyframes pulse-red-glow {
     0% { 
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); 
@@ -87,11 +84,34 @@ body {
     }
 }
 
-/* EXACT A4 (4-STICKER) PRINT LAYOUT */
+.vip-corridor { 
+    animation: pulse-red-glow 2s infinite; 
+    border: 1px solid #ef4444 !important; 
+}
+
+/* ==========================================
+   UTILITY CLASSES
+   ========================================== */
+.active-filter { 
+    background: #4F46E5 !important; 
+    border-color: #6366F1 !important; 
+    color: white !important; 
+    font-weight: bold; 
+}
+
+.text-wrap-custom { 
+    word-wrap: break-word; 
+    white-space: normal; 
+}
+
+/* ==========================================
+   A4 HARDWARE PRINT ENGINE (4-STICKER LAYOUT)
+   ========================================== */
 @media print {
     body * { 
         display: none !important; 
     }
+    
     #shippingLabelScreen, #shippingLabelScreen * { 
         display: block !important; 
     }
@@ -110,8 +130,8 @@ body {
         background: white !important; 
         color: black !important;
         display: grid !important; 
-        grid-template-columns: 1fr 1fr; 
-        grid-template-rows: 1fr 1fr; 
+        grid-template-columns: 1fr 1fr; /* 2 Columns */
+        grid-template-rows: 1fr 1fr; /* 2 Rows */
         box-sizing: border-box;
         padding: 10mm;
         gap: 10mm;
