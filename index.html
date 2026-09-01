@@ -248,7 +248,7 @@
                     YASH MARKETING
                 </h1>
                 <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">
-                    Enterprise OS Login (v14.0.0)
+                    Enterprise OS Login (v14.1.0)
                 </p>
                 
                 <form id="loginForm" class="space-y-4">
@@ -416,13 +416,11 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzQ7W09dn_1gyNSq_PCPrKLX6ApgB52Ob2_1BnmRe5SdYTMNyc8kRwudr80pe2QFCQZCg/exec"; 
         
-        // Expanded to 11 Stages to accommodate Physical Verification
+        // Trimmed to 9 Stages for Max Efficiency
         const STAGE_NAMES = [
-            "Order Received", 
             "Balance Check", 
             "WhatsApp 1 (Confirmation)", 
             "Processed (Stock)", 
-            "Physical Verification", 
             "Invoiced", 
             "Dispatched", 
             "Logistics Allocation", 
@@ -559,7 +557,7 @@
                         "Delivered Successfully"
                     ];
                     
-                    let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.6), 6); // Adjusted for 11 stages
+                    let mappedStage = Math.min(Math.floor(data.data.completedStages / 1.5), 6); 
                     
                     customerStages.forEach((stageName, idx) => {
                         let isCompleted = idx <= mappedStage;
@@ -682,7 +680,7 @@
                     </div>
                     <div class="text-right">
                         <div class="text-[10px] bg-indigo-900/50 border border-indigo-500/30 px-2 py-1 rounded text-indigo-300 font-black mb-1">
-                            Stage ${o.completedStages}/11
+                            Stage ${o.completedStages}/9
                         </div>
                         <div class="text-[9px] text-emerald-400 font-black uppercase">
                             ${o.paymentMode}
@@ -1118,16 +1116,16 @@
             let staffScores = {}; 
             let cityStats = {};
             let brandStats = {}; 
-            let stageStuck = Array(11).fill(0);
+            let stageStuck = Array(9).fill(0);
             const nowTime = new Date().getTime();
 
             filteredData.forEach(o => {
                 totalOrderValue += (o.totalValue || 0);
 
-                if (o.completedStages >= 11 || o.isFullyCompleted) {
+                if (o.completedStages >= 9 || o.isFullyCompleted) {
                     totalCompleted++;
                 } else { 
-                    if (o.completedStages < 11) {
+                    if (o.completedStages < 9) {
                         stageStuck[o.completedStages]++; 
                     }
                     if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
@@ -1176,7 +1174,7 @@
 
             let sortedShops = Object.entries(shopStats).sort((a,b) => b[1].value - a[1].value);
             let sortedSKUs = Object.entries(skuStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5); 
-            let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 3);
+            let sortedStaff = Object.entries(staffScores).sort((a,b) => b[1] - a[1]).slice(0, 5);
             let sortedCities = Object.entries(cityStats).sort((a,b) => b[1].value - a[1].value).slice(0, 5);
             
             // DESCENDING SORT FOR BRAND MATRIX
@@ -1262,7 +1260,8 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <!-- NEW ROW FOR GRID DATA -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-yellow-400">🔥</span> Hot Movers
@@ -1288,10 +1287,24 @@
                     
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <span class="text-amber-400">🏆</span> Leaderboard
+                        </h3>
+                        <div class="space-y-3">
+                            ${sortedStaff.length > 0 ? sortedStaff.map((staff, i) => `
+                                <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                                    <span class="text-xs font-bold text-slate-300">#${i+1} ${staff[0]}</span>
+                                    <span class="text-xs font-black text-emerald-400">${staff[1] * 10} Pts</span>
+                                </div>
+                            `).join('') : `<p class="text-slate-500 text-sm italic">No staff data.</p>`}
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                             <span class="text-emerald-400">👑</span> VIP Dealers
                         </h3>
                         <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
-                            ${sortedShops.length > 0 ? sortedShops.slice(0, 6).map((v, i) => `
+                            ${sortedShops.length > 0 ? sortedShops.slice(0, 5).map((v, i) => `
                                 <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
                                     <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent" style="width: ${(v[1].value / topShopVolume) * 100}%"></div>
                                     <div class="relative z-10">
@@ -1336,7 +1349,7 @@
                     <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
                         <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
                             <span class="flex items-center gap-2">
-                                <span class="text-purple-400">📊</span> Brand Matrix (Value)
+                                <span class="text-purple-400">📊</span> Brand Matrix
                             </span>
                         </h3>
                         <div class="flex-1 w-full h-40 relative flex justify-center items-center">
@@ -1380,7 +1393,7 @@
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: { 
-                                    position: 'right', 
+                                    position: 'bottom', 
                                     labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 } 
                                 },
                                 tooltip: {
@@ -1446,15 +1459,15 @@
             const filterBar = document.getElementById('stageFilterBar');
             
             let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-            let stageCounts = Array(11).fill(0); 
+            let stageCounts = Array(9).fill(0); 
             
             let shopPendingCount = {};
             
             pendingOrders.forEach(o => { 
-                if (o.completedStages < 11) {
+                if (o.completedStages < 9) {
                     stageCounts[o.completedStages]++; 
                 }
-                if (o.completedStages < 4) { 
+                if (o.completedStages < 3) { // 3 is now Stock Check
                     shopPendingCount[o.shopName] = (shopPendingCount[o.shopName] || 0) + 1; 
                 }
             });
@@ -1486,7 +1499,7 @@
                 let orderCount = stageCounts[idx];
                 let filterName = name.split(' (')[0]; 
                 
-                if (idx === 8) { // Updated to 8 for Delivery Comms
+                if (idx === 6) { 
                     filterName = "Delivery Comms";
                 }
                 
@@ -1532,12 +1545,12 @@
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
 
             displayOrders.forEach(order => {
-                const progress = (order.completedStages / 11) * 100; 
+                const progress = (order.completedStages / 9) * 100; 
                 let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
                 let nextStepName = "Fully Completed";
                 
-                if (order.completedStages < 11) {
-                    if (order.completedStages === 8) { // Was 7
+                if (order.completedStages < 9) {
+                    if (order.completedStages === 6) { // Delivery Comms
                         nextStepName = isCod ? "Call 2" : "WhatsApp 2";
                     } else {
                         nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
@@ -1611,7 +1624,7 @@
                 let tatBadge = ""; 
                 let isBefore6PM = orderDateObj.getHours() < 18;
                 
-                if (isBefore6PM && order.completedStages < 6) { 
+                if (isBefore6PM && order.completedStages < 5) { // Adjusted from 6 to 5
                     let targetTime = orderDateObj.getTime() + (60 * 60 * 1000);
                     tatBadge = `
                         <span 
@@ -1626,15 +1639,14 @@
                 let mergeBadge = "";
                 let orderDateStr = parseCustomDate(order.date).toDateString();
                 
-                // RESTRICTED MERGE LOGIC: Same Dealer AND Same Day AND not Locked
                 let pendingCount = filteredData.filter(o => 
                     o.shopName === order.shopName && 
                     parseCustomDate(o.date).toDateString() === orderDateStr && 
-                    o.completedStages < 4 && 
+                    o.completedStages < 3 && 
                     !o.creditLocked
                 ).length;
 
-                if (order.completedStages < 4 && pendingCount > 1 && !order.creditLocked) {
+                if (order.completedStages < 3 && pendingCount > 1 && !order.creditLocked) {
                     mergeBadge = `
                         <span 
                             class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" 
@@ -1707,7 +1719,7 @@
                             
                             <div class="flex justify-between text-[9px] text-slate-500 mb-1.5 font-black uppercase tracking-widest">
                                 <span>Pipeline Progress</span>
-                                <span class="text-indigo-400">${order.completedStages}/11</span>
+                                <span class="text-indigo-400">${order.completedStages}/9</span>
                             </div>
                             
                             <div class="w-full bg-[#0B1121] rounded-full h-1.5 overflow-hidden border border-slate-800">
@@ -1793,7 +1805,7 @@
             let tatBadgeEl = document.getElementById('modalTatTimer'); 
             let isBefore6PM = orderDateObj.getHours() < 18;
             
-            if (isBefore6PM && order.completedStages < 6) { 
+            if (isBefore6PM && order.completedStages < 5) { 
                 let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); 
                 tatBadgeEl.setAttribute('data-target', targetTime); 
                 tatBadgeEl.className = "tat-timer text-[10px] bg-orange-900/30 text-orange-400 px-2 py-1 rounded font-black tracking-widest border border-orange-500/30 animate-pulse inline-block"; 
@@ -1880,16 +1892,15 @@
             let mergeActionHtml = "";
             let orderDateStr = parseCustomDate(order.date).toDateString();
             
-            // STRICT REQUIREMENT: Same Dealer AND Same Day orders only to prevent chaos
             let secondaryOrders = filteredData.filter(o => 
                 o.shopName === order.shopName && 
                 parseCustomDate(o.date).toDateString() === orderDateStr && 
-                o.completedStages < 4 && 
+                o.completedStages < 3 && 
                 o.orderId !== order.orderId &&
                 !o.creditLocked
             );
 
-            if (order.completedStages < 4 && secondaryOrders.length > 0 && !order.creditLocked) {
+            if (order.completedStages < 3 && secondaryOrders.length > 0 && !order.creditLocked) {
                 let secondaryIds = secondaryOrders.map(o => o.orderId).join(',');
                 mergeActionHtml = `
                     <button 
@@ -1906,7 +1917,7 @@
             let stagesListHtml = '<div class="space-y-4">';
             let needsShare = false;
             let lastCompletedStage = order.completedStages;
-            let stagesRequiringShare = [2, 4, 5, 6, 7, 10]; // Adjusted for 11 stages (wa1, stock, phys verification, invoiced, dispatched, delivered)
+            const stagesRequiringShare = [1, 3, 4, 5, 8]; 
             
             if (stagesRequiringShare.includes(lastCompletedStage)) { 
                 if (localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') {
@@ -1914,7 +1925,7 @@
                 }
             }
             
-            for (let i = 0; i < 11; i++) { // Loop bounded to 11
+            for (let i = 0; i < 9; i++) { 
                 const stageNum = i + 1; 
                 const isCompleted = i < order.completedStages; 
                 const isActive = i === order.completedStages; 
@@ -1922,7 +1933,7 @@
                 
                 let displayStageName = STAGE_NAMES[i]; 
                 
-                if (stageNum === 9) { // Delivery Comms
+                if (stageNum === 7) { 
                     displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
                 }
                 
@@ -1935,6 +1946,13 @@
                     let thisEpoch = null; 
                     let previousEpoch = parseCustomDate(order.date).getTime(); 
                     
+                    let staffName = "System";
+                    let staffMatch = cellData ? cellData.match(/STAFF:\s*(.+)/) : null;
+                    if (staffMatch) {
+                        staffName = staffMatch[1].trim();
+                        cellData = cellData.replace(/\|\|\s*STAFF:\s*.+/, '').trim();
+                    }
+
                     if (i > 0 && order.stageUrls[i-1]) { 
                         let prevMatch = order.stageUrls[i-1].match(/TIME:\s*(\d+)/); 
                         if (prevMatch) {
@@ -1964,6 +1982,8 @@
                                     </span>
                                 `;
                             }
+                            timeTakenDisplay += `<span class="text-[9px] text-blue-400 font-black bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/30 ml-2">👤 ${staffName}</span>`;
+
                             cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
                         }
                     }
@@ -1993,7 +2013,7 @@
                         url = url.trim();
                         if (url.includes("http")) {
                             hasFiles = true;
-                            if (stageNum === 11 || stageNum === 9 || url.toLowerCase().includes("audio")) {
+                            if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
                                 previewHtml += `
                                     <audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
                                 `; 
@@ -2036,7 +2056,7 @@
                                     <span class="text-emerald-400 text-sm font-black block mb-1.5">
                                         ${stageNum}. ${displayStageName}
                                     </span>
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 flex-wrap">
                                         ${timestampDisplay}
                                         ${timeTakenDisplay}
                                     </div>
@@ -2064,18 +2084,7 @@
                 else if (isActive) {
                     let inputHtml = '';
                     
-                    if (stageNum === 1) {
-                        inputHtml = `
-                            <button 
-                                onclick="submitStage(${stageNum})" 
-                                id="submitBtn_${stageNum}" 
-                                class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
-                            >
-                                Accept Task & Begin Process
-                            </button>
-                        `;
-                    } 
-                    else if (stageNum === 2) {
+                    if (stageNum === 1) { // Balance Check
                         inputHtml = `
                             <button 
                                 onclick="generateTallyCSV('${order.orderId}')" 
@@ -2083,47 +2092,9 @@
                             >
                                 <span>📊</span> Export Sales Order for Tally (CSV)
                             </button>
-                            
-                            <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                <span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)
-                            </p>
-                            
-                            <input 
-                                type="file" 
-                                accept="image/*" 
-                                class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors hover:border-indigo-500" 
-                                onchange="handleFileSelection(this, ${stageNum})"
-                            >
-                            
-                            <div 
-                                id="previewBox_${stageNum}" 
-                                class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"
-                            ></div>
-                            
-                            <div 
-                                class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" 
-                                id="fileStatusContainer_${stageNum}"
-                            >
-                                <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
-                                <button 
-                                    id="clearFilesBtn_${stageNum}" 
-                                    onclick="clearQueuedFiles(${stageNum})" 
-                                    class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                            
-                            <button 
-                                onclick="submitStage(${stageNum})" 
-                                id="submitBtn_${stageNum}" 
-                                class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
-                            >
-                                Confirm Check & Execute
-                            </button>
                         `;
                     }
-                    else if (stageNum === 8) { // Was 7 (Logistics)
+                    else if (stageNum === 6) { // Logistics
                         inputHtml += `
                             <div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner">
                                 <p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2">
@@ -2185,10 +2156,10 @@
                             </div>
                         `;
                     }
-                    else if (stageNum === 3 || stageNum === 9) { // 9 is new WA2 stage
+                    else if (stageNum === 2 || stageNum === 7) { // WA 1 and WA 2
                         let msgTemplate = "";
                         
-                        if (stageNum === 3) {
+                        if (stageNum === 2) {
                             msgTemplate = window.appSettings.waMsgStage3;
                         } else {
                             msgTemplate = isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid;
@@ -2224,7 +2195,7 @@
                             </div>
                         `;
                         
-                        if (stageNum === 9 && isCod) { // Delivery Comms Cod
+                        if (stageNum === 7 && isCod) { // Delivery Comms COD
                             inputHtml += `
                                 <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4">
                                     <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2">
@@ -2274,8 +2245,7 @@
                         `;
                     }
                     else {
-                        // UPGRADED STAGE 4 UI
-                        if (stageNum === 4) {
+                        if (stageNum === 3) { // Processed Stock
                             inputHtml += `
                                 <div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner">
                                     <p class="text-sm text-slate-300 mb-4 uppercase font-black tracking-widest flex items-center gap-2">
@@ -2329,57 +2299,7 @@
                             `;
                         }
 
-                                               // NEW STAGE 5 UI - PHYSICAL VERIFICATION
-                        if (stageNum === 5) {
-                            
-                            // Calculate Brand-wise Quantities
-                            let brandSummaryHtml = `<div class="mb-4 p-3 bg-[#131C31] rounded-xl border border-slate-700 shadow-inner">
-                                <p class="text-[10px] font-black text-emerald-400 mb-2 uppercase tracking-widest border-b border-slate-700 pb-2">📦 Box Content Summary (Count & Verify)</p>
-                                <div class="flex flex-wrap gap-2 mt-2">`;
-                            
-                            let bCounts = {};
-                            if (order.items && order.items.length > 0) {
-                                order.items.forEach(it => {
-                                    let bName = (it.brand && it.brand.trim() !== "") ? it.brand.trim() : "Other/Unknown";
-                                    bCounts[bName] = (bCounts[bName] || 0) + parseInt(it.qty || 1);
-                                });
-                                
-                                for (let b in bCounts) {
-                                    brandSummaryHtml += `<div class="bg-[#0B1121] border border-slate-600 text-slate-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-2">
-                                        ${b} <span class="bg-emerald-900/50 text-emerald-400 font-black px-1.5 py-0.5 rounded border border-emerald-500/30">${bCounts[b]} Qty</span>
-                                    </div>`;
-                                }
-                            } else {
-                                brandSummaryHtml += `<span class="text-xs text-slate-500 italic">No items found to verify.</span>`;
-                            }
-                            brandSummaryHtml += `</div></div>`;
-
-                            inputHtml += `
-                                <div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner">
-                                    <p class="text-xs text-slate-300 mb-3 uppercase font-black tracking-widest flex items-center gap-2">
-                                        <span class="text-emerald-400 text-lg">🔍</span> Cross-Check Verification
-                                    </p>
-                                    
-                                    ${brandSummaryHtml}
-                                    
-                                    <label class="flex items-start gap-3 cursor-pointer bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-xl hover:bg-emerald-900/40 transition-colors mb-4">
-                                        <input 
-                                            type="checkbox" 
-                                            id="physicalMatchCheck" 
-                                            class="w-6 h-6 rounded border-slate-600 bg-slate-800 text-emerald-500 cursor-pointer shrink-0"
-                                        >
-                                        <span class="text-sm text-emerald-100 font-bold leading-relaxed">
-                                            I confirm the pulled stock EXACTLY matches the generated invoice.
-                                        </span>
-                                    </label>
-                                    
-                                    <p class="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                        <span class="text-indigo-400">📸</span> Upload Box Photo (Required)
-                                    </p>
-                            `;
-                        }
-
-                        if (stageNum === 6) { // Was 5 (Shipping Label)
+                        if (stageNum === 4) { // Invoiced
                             inputHtml += `
                                 <button 
                                     onclick="generateShippingLabel('${order.orderId}')" 
@@ -2390,7 +2310,7 @@
                             `;
                         }
 
-                        if (stageNum === 11) { // Was 10 (Rating)
+                        if (stageNum === 9) { // Final Call / Rating
                             inputHtml += `
                                 <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
                                     <span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)
@@ -2403,47 +2323,40 @@
                                 >
                             `;
                         } else {
-                            if (stageNum !== 4 && stageNum !== 5) {
-                                inputHtml += `
-                                    <p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                        <span class="text-indigo-400">⚡</span> Upload Proof (Required)
-                                    </p>
-                                `;
-                            }
+                            inputHtml += `
+                                <p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2">
+                                    <span class="text-indigo-400">⚡</span> Upload Proof (Required)
+                                </p>
+                                <p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p>
+                            `;
                             
-                            if (stageNum !== 4) { // Don't show standard image uploader for stage 4 stock check
-                                inputHtml += `
-                                    <div class="flex gap-2 w-full">
-                                        <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                                            📸 Live Camera
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                capture="environment" 
-                                                class="hidden" 
-                                                onchange="handleFileSelection(this, ${stageNum})"
-                                            >
-                                        </label>
-                                        
-                                        <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                                            🖼️ Multi Gallery
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                multiple 
-                                                class="hidden" 
-                                                onchange="handleFileSelection(this, ${stageNum})"
-                                            >
-                                        </label>
-                                    </div>
-                                `;
-                            }
+                            inputHtml += `
+                                <div class="flex gap-2 w-full">
+                                    <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                        📸 Live Camera
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            capture="environment" 
+                                            class="hidden" 
+                                            onchange="handleFileSelection(this, ${stageNum})"
+                                        >
+                                    </label>
+                                    
+                                    <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                        🖼️ Multi Gallery
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            multiple 
+                                            class="hidden" 
+                                            onchange="handleFileSelection(this, ${stageNum})"
+                                        >
+                                    </label>
+                                </div>
+                            `;
                         }
                         
-                        if (stageNum === 5) {
-                            inputHtml += `</div>`; // Close the verification inner box
-                        }
-
                         inputHtml += `
                             <div 
                                 id="previewBox_${stageNum}" 
@@ -2465,7 +2378,7 @@
                             </div>
                         `;
 
-                        if (stageNum === 11) { // Rating Input
+                        if (stageNum === 9) { // Rating Input
                             inputHtml += `
                                 <div class="mt-4">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">
@@ -2651,7 +2564,7 @@
             let totalReceived = todayOrders.length;
             let totalValue = todayOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
             let totalCompleted = todayOrders.filter(o => o.isFullyCompleted).length;
-            let totalDispatched = todayOrders.filter(o => o.completedStages >= 7 && !o.isFullyCompleted).length;
+            let totalDispatched = todayOrders.filter(o => o.completedStages >= 5 && !o.isFullyCompleted).length; // 5 is now dispatched
             let pending = totalReceived - totalCompleted - totalDispatched;
             
             let reportDate = new Date().toLocaleDateString('en-GB');
@@ -2709,7 +2622,7 @@
                     
                     img.onload = () => {
                         const canvas = document.createElement('canvas'); 
-                        const MAX_WIDTH = 1200; // FIX 1: Greatly increased for better resolution & zooming
+                        const MAX_WIDTH = 800; // FIX 3: Massively reduced from 1200 to 800 to stop app hanging on old phones
                         let scale = 1;
                         
                         if (img.width > MAX_WIDTH) {
@@ -2725,7 +2638,7 @@
                         resolve({ 
                             name: file.name, 
                             mimeType: 'image/jpeg', 
-                            base64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1] // Improved JPEG quality
+                            base64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1] 
                         });
                     };
                 };
@@ -2769,17 +2682,8 @@
             if (noRespCheckbox && noRespCheckbox.checked) {
                 payload.isNoResponse = true; 
             }
-
-            // NEW VERIFICATION CHECK
-            if (stageNum === 5) {
-                const verificationCheck = document.getElementById('physicalMatchCheck');
-                if (verificationCheck && !verificationCheck.checked) {
-                    alert("Please verify and check the confirmation box to proceed.");
-                    return;
-                }
-            }
             
-            if (stageNum === 8) { // Logistics
+            if (stageNum === 6) { // Logistics
                 let runner = document.getElementById('runnerSelect').value;
                 if (runner === "Others") {
                     runner = document.getElementById('runnerOther').value;
@@ -2803,106 +2707,103 @@
                 payload.actionText = `Runner: ${runner} | Transport: ${transport}`;
             }
             
-            if (stageNum !== 1) {
-                let fileRequired = true;
-                
-                // Exclude file requirements logic based on new stages
-                if (payload.isNoResponse || stageNum === 11 || stageNum === 8 || stageNum === 3 || (stageNum === 9 && !isCod) || stageNum === 4) {
-                    fileRequired = false; 
-                }
+            let fileRequired = true;
+            
+            if (payload.isNoResponse || stageNum === 9 || stageNum === 6 || stageNum === 2 || (stageNum === 7 && !isCod)) {
+                fileRequired = false; 
+            }
 
-                if (fileRequired && queuedFiles.length === 0) {
-                    if (stageNum === 9 && isCod) {
-                        alert("For COD Orders, Call Recording is MANDATORY."); 
-                    } else {
-                        alert("A file proof (Screenshot/Photo) is mandatory."); 
+            if (fileRequired && queuedFiles.length === 0) {
+                if (stageNum === 7 && isCod) {
+                    alert("For COD Orders, Call Recording is MANDATORY."); 
+                } else {
+                    alert("A file proof (Screenshot/Photo) is mandatory."); 
+                }
+                return; 
+            }
+            
+            if (!fileRequired && queuedFiles.length === 0 && (stageNum === 2 || stageNum === 7)) {
+                payload.isWhatsAppOnly = true; 
+            }
+            
+            if (btn) { 
+                btn.innerText = "Processing & Transmitting..."; 
+                btn.disabled = true; 
+            }
+            
+            for (let i = 0; i < queuedFiles.length; i++) {
+                let f = queuedFiles[i];
+                if (f.type.startsWith('image/')) {
+                    payload.files.push(await compressImage(f)); 
+                } else {
+                    payload.files.push(await getBase64(f)); 
+                }
+            }
+            
+            if (stageNum === 9) { // Rating Stage
+                const rating = document.getElementById('ratingInput').value;
+                
+                if (!rating) { 
+                    alert("Customer Rating is mandatory."); 
+                    
+                    if (btn) { 
+                        btn.disabled = false; 
+                        btn.innerText = "Execute & Proceed"; 
+                    } 
+                    return; 
+                }
+                payload.rating = rating;
+            }
+
+            if (stageNum === 3) { // Stock stage
+                let processed = []; 
+                let short = [];
+                
+                currentActiveOrder.items.forEach((item, idx) => {
+                    let chk = document.getElementById(`chk_item_${idx}`); 
+                    let qtyInput = document.getElementById(`qty_item_${idx}`);
+                    
+                    if (chk && qtyInput) {
+                        let isChecked = chk.checked; 
+                        let userQty = parseInt(qtyInput.value) || 0; 
+                        let origQty = parseInt(item.qty);
+                        
+                        if (isChecked && userQty > 0) { 
+                            processed.push({
+                                name: item.name, 
+                                qty: userQty
+                            }); 
+                            
+                            if (userQty < origQty) {
+                                short.push({
+                                    name: item.name, 
+                                    qty: origQty - userQty
+                                }); 
+                            }
+                        } else {
+                            short.push({
+                                name: item.name, 
+                                qty: origQty
+                            }); 
+                        }
                     }
+                });
+                
+                if (processed.length === 0) { 
+                    alert("You must dispatch at least one item."); 
+                    
+                    if (btn) { 
+                        btn.disabled = false; 
+                        btn.innerText = "Execute & Proceed"; 
+                    } 
                     return; 
                 }
                 
-                if (!fileRequired && queuedFiles.length === 0 && (stageNum === 3 || stageNum === 9)) {
-                    payload.isWhatsAppOnly = true; 
-                }
-                
-                if (btn) { 
-                    btn.innerText = "Processing & Transmitting..."; 
-                    btn.disabled = true; 
-                }
-                
-                for (let i = 0; i < queuedFiles.length; i++) {
-                    let f = queuedFiles[i];
-                    if (f.type.startsWith('image/')) {
-                        payload.files.push(await compressImage(f)); 
-                    } else {
-                        payload.files.push(await getBase64(f)); 
-                    }
-                }
-                
-                if (stageNum === 11) { // Rating Stage
-                    const rating = document.getElementById('ratingInput').value;
-                    
-                    if (!rating) { 
-                        alert("Customer Rating is mandatory."); 
-                        
-                        if (btn) { 
-                            btn.disabled = false; 
-                            btn.innerText = "Execute & Proceed"; 
-                        } 
-                        return; 
-                    }
-                    payload.rating = rating;
-                }
-
-                if (stageNum === 4) { // Stock stage
-                    let processed = []; 
-                    let short = [];
-                    
-                    currentActiveOrder.items.forEach((item, idx) => {
-                        let chk = document.getElementById(`chk_item_${idx}`); 
-                        let qtyInput = document.getElementById(`qty_item_${idx}`);
-                        
-                        if (chk && qtyInput) {
-                            let isChecked = chk.checked; 
-                            let userQty = parseInt(qtyInput.value) || 0; 
-                            let origQty = parseInt(item.qty);
-                            
-                            if (isChecked && userQty > 0) { 
-                                processed.push({
-                                    name: item.name, 
-                                    qty: userQty
-                                }); 
-                                
-                                if (userQty < origQty) {
-                                    short.push({
-                                        name: item.name, 
-                                        qty: origQty - userQty
-                                    }); 
-                                }
-                            } else {
-                                short.push({
-                                    name: item.name, 
-                                    qty: origQty
-                                }); 
-                            }
-                        }
-                    });
-                    
-                    if (processed.length === 0) { 
-                        alert("You must dispatch at least one item."); 
-                        
-                        if (btn) { 
-                            btn.disabled = false; 
-                            btn.innerText = "Execute & Proceed"; 
-                        } 
-                        return; 
-                    }
-                    
-                    if (short.length > 0) {
-                        payload.partialStock = { 
-                            processedItems: processed, 
-                            shortItems: short 
-                        }; 
-                    }
+                if (short.length > 0) {
+                    payload.partialStock = { 
+                        processedItems: processed, 
+                        shortItems: short 
+                    }; 
                 }
             } else if (btn) { 
                 btn.innerText = "Locking Process..."; 
