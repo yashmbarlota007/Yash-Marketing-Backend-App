@@ -2085,15 +2085,71 @@
                     let inputHtml = '';
                     
                     if (stageNum === 1) { // Balance Check
-                        inputHtml = `
-                            <button 
-                                onclick="generateTallyCSV('${order.orderId}')" 
-                                class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
-                            >
-                                <span>📊</span> Export Sales Order for Tally (CSV)
-                            </button>
-                        `;
-                    }
+    inputHtml = `
+        <button 
+            onclick="generateTallyCSV('${order.orderId}')" 
+            class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
+        >
+            <span>📊</span> Export Sales Order for Tally (CSV)
+        </button>
+        
+        <p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2">
+            <span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)
+        </p>
+        <p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p>
+        
+        <div class="flex gap-2 w-full">
+            <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                📸 Live Camera
+                <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment" 
+                    class="hidden" 
+                    onchange="handleFileSelection(this, ${stageNum})"
+                >
+            </label>
+            
+            <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                🖼️ Multi Gallery
+                <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple 
+                    class="hidden" 
+                    onchange="handleFileSelection(this, ${stageNum})"
+                >
+            </label>
+        </div>
+        
+        <div 
+            id="previewBox_${stageNum}" 
+            class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"
+        ></div>
+        
+        <div 
+            class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" 
+            id="fileStatusContainer_${stageNum}"
+        >
+            <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
+            <button 
+                id="clearFilesBtn_${stageNum}" 
+                onclick="clearQueuedFiles(${stageNum})" 
+                class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
+            >
+                Clear Files
+            </button>
+        </div>
+        
+        <button 
+            id="submitBtn_${stageNum}" 
+            onclick="submitStage(${stageNum})" 
+            class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
+        >
+            Confirm Check & Execute
+        </button>
+    `;
+}
                     else if (stageNum === 6) { // Logistics
                         inputHtml += `
                             <div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner">
