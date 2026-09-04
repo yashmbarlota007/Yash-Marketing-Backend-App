@@ -1956,7 +1956,7 @@
                     let thisEpoch = null; 
                     let previousEpoch = parseCustomDate(order.date).getTime(); 
                     
-                                    let staffName = "System";
+                                                       let staffName = "System";
                     let staffMatch = cellData ? cellData.match(/STAFF:\s*(.+)/) : null;
                     if (staffMatch) {
                         staffName = staffMatch[1].trim();
@@ -1975,19 +1975,24 @@
                         if (match) {
                             thisEpoch = parseInt(match[1]); 
                             let d = new Date(thisEpoch); 
+                            
+                            // Naya Date + Time Format Logic
+                            let day = String(d.getDate()).padStart(2, '0');
+                            let month = String(d.getMonth() + 1).padStart(2, '0');
+                            let year = String(d.getFullYear()).slice(-2); // 2026 ko 26 banayega
                             let timeStr = d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+                            let dateTimeStr = `${day}/${month}/${year} ${timeStr}`;
                             
                             timestampDisplay = `
-                                <span class="text-[9px] text-emerald-300 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/50">
-                                    At: ${timeStr}
+                                <span class="text-[9px] text-emerald-300 font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800/50 shadow-sm">
+                                    📅 ${dateTimeStr}
                                 </span>
                             `;
                             
-                            // Time ko properly calculate karna
+                            // Time Taken Calculation
                             let diffMins = Math.max(0, Math.round((thisEpoch - previousEpoch) / 60000));
                             let timeFormatted = "";
                             
-                            // Agar 60 min se kam hai toh sirf Mins, warna Hour aur Mins dono
                             if (diffMins < 60) {
                                 timeFormatted = `${diffMins} Mins`;
                             } else {
@@ -1997,12 +2002,12 @@
                             }
                             
                             timeTakenDisplay = `
-                                <span class="text-[10px] text-orange-300 font-bold bg-orange-950/50 px-2 py-0.5 rounded border border-orange-800/50 ml-2">
+                                <span class="text-[10px] text-orange-300 font-bold bg-orange-950/50 px-2 py-0.5 rounded border border-orange-800/50 ml-2 shadow-sm">
                                     ⏱️ Took: ${timeFormatted}
                                 </span>
                             `;
 
-                            // Staff ka naam clearly dikhana
+                            // Staff Name tracking
                             timeTakenDisplay += `
                                 <span class="text-[10px] text-blue-200 font-black bg-blue-900/60 px-2 py-0.5 rounded border border-blue-400/50 ml-2 shadow-sm">
                                     👤 By: ${staffName}
@@ -2012,6 +2017,7 @@
                             cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
                         }
                     }
+
 
 
                                                           let actionStr = "";
