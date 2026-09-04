@@ -1988,13 +1988,20 @@
                         }
                     }
 
-                    let actionStr = ""; 
-                    let urlData = cellData;
-                    
-                    if (cellData && cellData.includes("||")) { 
-                        let parts = cellData.split("||"); 
-                        actionStr = parts[0].trim().replace(/^\[|\]$/g, ''); 
-                        urlData = parts[1]; 
+                                        let actionStr = "";
+                    let urlData = "";
+
+                    if (cellData && cellData.includes("||")) {
+                        let parts = cellData.split("||");
+                        actionStr = parts[0].trim().replace(/^\[|\]$/g, '');
+                        urlData = parts[1].trim();
+                    } else {
+                        // Agar string me koi link (http) nahi hai, toh wo ek System Note (jaise 'Merged' ya 'Skipped') hai
+                        if (cellData && !cellData.includes("http")) {
+                            actionStr = cellData.trim().replace(/^\[|\]$/g, '');
+                        } else {
+                            urlData = cellData ? cellData.trim() : "";
+                        }
                     }
 
                     let fileUrls = urlData ? urlData.split(',') : []; 
