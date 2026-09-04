@@ -1988,15 +1988,24 @@
                         }
                     }
 
-                                        let actionStr = "";
+                                                          let actionStr = "";
                     let urlData = "";
 
                     if (cellData && cellData.includes("||")) {
                         let parts = cellData.split("||");
-                        actionStr = parts[0].trim().replace(/^\[|\]$/g, '');
-                        urlData = parts[1].trim();
+                        
+                        // Agar string ke pehle part me link (http) hai, toh use URL manenge
+                        if (parts[0].includes("http")) {
+                            urlData = parts[0].trim();
+                        } else {
+                            // Warna wo Action Text hai (Jaise "Merged into..." ya "Completed")
+                            actionStr = parts[0].trim().replace(/^\[|\]$/g, '');
+                            if (parts.length > 1 && parts[1].includes("http")) {
+                                urlData = parts[1].trim();
+                            }
+                        }
                     } else {
-                        // Agar string me koi link (http) nahi hai, toh wo ek System Note (jaise 'Merged' ya 'Skipped') hai
+                        // Agar direct text ya direct link save ho gaya ho
                         if (cellData && !cellData.includes("http")) {
                             actionStr = cellData.trim().replace(/^\[|\]$/g, '');
                         } else {
