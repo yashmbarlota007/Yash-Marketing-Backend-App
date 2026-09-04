@@ -1956,7 +1956,7 @@
                     let thisEpoch = null; 
                     let previousEpoch = parseCustomDate(order.date).getTime(); 
                     
-                    let staffName = "System";
+                                    let staffName = "System";
                     let staffMatch = cellData ? cellData.match(/STAFF:\s*(.+)/) : null;
                     if (staffMatch) {
                         staffName = staffMatch[1].trim();
@@ -1983,20 +1983,36 @@
                                 </span>
                             `;
                             
-                            let diffMins = Math.round((thisEpoch - previousEpoch) / 60000);
+                            // Time ko properly calculate karna
+                            let diffMins = Math.max(0, Math.round((thisEpoch - previousEpoch) / 60000));
+                            let timeFormatted = "";
                             
-                            if (diffMins >= 0) {
-                                timeTakenDisplay = `
-                                    <span class="text-[9px] text-slate-400 font-mono bg-[#0B1121] px-2 py-0.5 rounded border border-slate-700/50">
-                                        Took: ${diffMins}m
-                                    </span>
-                                `;
+                            // Agar 60 min se kam hai toh sirf Mins, warna Hour aur Mins dono
+                            if (diffMins < 60) {
+                                timeFormatted = `${diffMins} Mins`;
+                            } else {
+                                let hrs = Math.floor(diffMins / 60);
+                                let mins = diffMins % 60;
+                                timeFormatted = `${hrs} Hour ${mins} Mins`;
                             }
-                            timeTakenDisplay += `<span class="text-[9px] text-blue-400 font-black bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/30 ml-2">👤 ${staffName}</span>`;
+                            
+                            timeTakenDisplay = `
+                                <span class="text-[10px] text-orange-300 font-bold bg-orange-950/50 px-2 py-0.5 rounded border border-orange-800/50 ml-2">
+                                    ⏱️ Took: ${timeFormatted}
+                                </span>
+                            `;
+
+                            // Staff ka naam clearly dikhana
+                            timeTakenDisplay += `
+                                <span class="text-[10px] text-blue-200 font-black bg-blue-900/60 px-2 py-0.5 rounded border border-blue-400/50 ml-2 shadow-sm">
+                                    👤 By: ${staffName}
+                                </span>
+                            `;
 
                             cellData = cellData.replace(/\|\|\s*TIME:\s*\d+/, '').trim();
                         }
                     }
+
 
                                                           let actionStr = "";
                     let urlData = "";
