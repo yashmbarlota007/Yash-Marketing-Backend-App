@@ -1637,16 +1637,19 @@
                 }
                 
                 let mergeBadge = "";
-                let orderDateStr = parseCustomDate(order.date).toDateString();
+                           let orderDateStr = parseCustomDate(order.date).toDateString();
                 
                 let pendingCount = filteredData.filter(o => 
                     o.shopName === order.shopName && 
                     parseCustomDate(o.date).toDateString() === orderDateStr && 
                     o.completedStages < 3 && 
-                    !o.creditLocked
+                    !o.creditLocked &&
+                    !(o.stageUrls.some(url => url && url.includes("Merged into")))
                 ).length;
 
-                if (order.completedStages < 3 && pendingCount > 1 && !order.creditLocked) {
+                let isCurrentMerged = order.stageUrls.some(url => url && url.includes("Merged into"));
+
+                if (order.completedStages < 3 && pendingCount > 1 && !order.creditLocked && !isCurrentMerged) {
                     mergeBadge = `
                         <span 
                             class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" 
@@ -1656,6 +1659,7 @@
                         </span>
                     `;
                 }
+
 
                 grid.innerHTML += `
                     <div 
@@ -1889,18 +1893,23 @@
             
             container.innerHTML += itemsHtml;
 
-            let mergeActionHtml = "";
+                        let mergeActionHtml = "";
             let orderDateStr = parseCustomDate(order.date).toDateString();
             
+            // Check karein ki current order pehle se merge toh nahi ho chuka hai
+            let isAlreadyMerged = order.stageUrls.some(url => url && url.includes("Merged into"));
+
             let secondaryOrders = filteredData.filter(o => 
                 o.shopName === order.shopName && 
                 parseCustomDate(o.date).toDateString() === orderDateStr && 
                 o.completedStages < 3 && 
                 o.orderId !== order.orderId &&
-                !o.creditLocked
+                !o.creditLocked &&
+                !(o.stageUrls.some(url => url && url.includes("Merged into"))) // Pehle se merged orders ko list se bahar nikalein
             );
 
-            if (order.completedStages < 3 && secondaryOrders.length > 0 && !order.creditLocked) {
+            // Agar order pehle se merged hai, toh usme Merge ka button dikhayenge hi nahi
+            if (order.completedStages < 3 && secondaryOrders.length > 0 && !order.creditLocked && !isAlreadyMerged) {
                 let secondaryIds = secondaryOrders.map(o => o.orderId).join(',');
                 mergeActionHtml = `
                     <button 
@@ -1911,6 +1920,7 @@
                     </button>
                 `;
             }
+
             
             container.innerHTML += mergeActionHtml;
 
