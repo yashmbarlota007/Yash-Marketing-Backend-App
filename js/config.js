@@ -1,6 +1,6 @@
 // js/config.js
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxuZcbliBTpFKM2Hf7r3rN_5djcxRSl4DRt8yBqqIyEH5BQu_Xn7C818yuQCtrQekS5fw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyXHJaFTSkjwu6C8ze4czs2Q42NQsgzjW814j8OLA7ztMXTW-nqmh2gkpjebmdSW4YJjA/exec";
 
 // Trimmed to 9 Stages for Max Efficiency
 const STAGE_NAMES = [
