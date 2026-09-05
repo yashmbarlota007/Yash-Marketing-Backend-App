@@ -11,31 +11,26 @@
     <!-- Chart.js for Interactive Pie Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- External Stylesheet -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
-    <!-- DEALER TRACKING SELF-SERVICE MODE -->
+    <!-- ALL YOUR HTML STAYS EXACTLY THE SAME AS ORIGINAL -->
+    <!-- (I have kept your exact HTML tags here, just removed the huge style and script blocks) -->
+    
+    <!-- Dealer Tracking Screen -->
     <div id="trackingScreen" class="hidden max-w-md mx-auto mt-10 p-6 glass-panel rounded-2xl border-t-4 border-t-emerald-500 text-center shadow-2xl">
-        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">
-            Live Order Tracker
-        </h1>
-        <p class="text-slate-400 text-sm mb-8 font-mono">
-            Tracking ID: <span id="displayTrackId"></span>
-        </p>
-        
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">Live Order Tracker</h1>
+        <p class="text-slate-400 text-sm mb-8 font-mono">Tracking ID: <span id="displayTrackId"></span></p>
         <div id="trackingLoader" class="inline-block animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-        
-        <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
-        </div>
-        
+        <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent"></div>
         <div id="trackingError" class="hidden text-pink-500 font-bold mt-4"></div>
     </div>
 
-    <!-- MAIN APP WRAPPER -->
+    <!-- Main App Wrapper -->
     <div id="mainAppWrapper">
-        <!-- Global Cmd+K Search Modal -->
+        <!-- Search Modal -->
         <div id="searchModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-start justify-center pt-20 px-4 transition-all">
             <div class="bg-[#131C31] w-full max-w-2xl rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
                 <div class="p-4 border-b border-slate-800 flex items-center gap-3">
@@ -49,7 +44,7 @@
             </div>
         </div>
 
-        <!-- Shift Handover Modal -->
+        <!-- Handover Modal -->
         <div id="handoverModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-center justify-center p-4 transition-all">
             <div class="bg-[#131C31] w-full max-w-lg rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
                 <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-[#0B1121]">
@@ -65,10 +60,8 @@
             </div>
         </div>
 
-        <!-- Notification Area -->
+        <!-- System UI Elements -->
         <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
-
-        <!-- Dynamic Shipping Label Printable Area -->
         <div id="shippingLabelScreen" class="hidden"></div>
 
         <!-- Login Screen -->
@@ -85,24 +78,22 @@
             </div>
         </div>
 
-        <!-- Main Operational Dashboard Screen -->
+        <!-- Dashboard Screen -->
         <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto pb-20">
+            <!-- Top Navigation Bar -->
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
                 <div class="w-full lg:w-1/3">
                     <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight"><span class="text-indigo-400">⚡</span> Order Processing</h1>
-                    <p class="text-slate-400 text-xs mt-1 font-mono flex items-center">
-                        OP_ID: <span id="userName" class="text-emerald-400 font-bold ml-1"></span>
+                    <p class="text-slate-400 text-xs mt-1 font-mono flex items-center">OP_ID: <span id="userName" class="text-emerald-400 font-bold ml-1"></span>
                         <span id="backendEarningsBadge" class="ml-3 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] hidden font-bold">💰 Earned Today: ₹0</span>
                     </p>
                 </div>
-                
                 <div class="w-full lg:w-1/3">
                     <button onclick="openSearch()" class="w-full bg-[#0B1121] border border-slate-700 hover:border-indigo-500 text-slate-400 flex justify-between items-center px-4 py-2.5 rounded-xl transition-all shadow-inner group">
                         <span class="flex items-center gap-2 text-sm"><span class="text-indigo-400">🔍</span> Search orders, dealers...</span>
                         <span class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded group-hover:text-white">Cmd+K</span>
                     </button>
                 </div>
-
                 <div class="flex flex-wrap items-center justify-end gap-1.5 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
                     <button onclick="setDateRange('all', this)" class="date-filter-btn active-filter px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">All Time</button>
                     <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
@@ -123,9 +114,9 @@
             <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar snap-x snap-mandatory w-full"></div>
             <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </div>
-    </div>
+    </div> 
 
-    <!-- Order Execution Task Modal -->
+    <!-- Order Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
         <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-700">
             <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-[#131C31] shadow-md z-10">
@@ -153,20 +144,10 @@
         </div>
     </div>
 
-    <!-- External JavaScript Application Logic -->
-    <script src="app.js"></script>
-        <!-- Global Config must load first -->
-    <script src="config.js"></script>
-    
-    <!-- Auth relies on Config -->
-    <script src="auth.js"></script>
-    
-    <!-- API relies on Config and Auth -->
-    <script src="api.js"></script>
-    
-    <!-- UI relies on everything above -->
-    <script src="ui.js"></script>
-</body>
-
+    <!-- PURE MODULAR SCRIPTS SETUP -->
+    <script src="./js/config-utils.js"></script>
+    <script src="./js/auth.js"></script>
+    <script src="./js/dashboard.js"></script>
+    <script src="./js/execution.js"></script>
 </body>
 </html>
