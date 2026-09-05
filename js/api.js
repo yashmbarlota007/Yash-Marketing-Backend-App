@@ -17,9 +17,10 @@ async function fetchOrders(isSilent = false) {
     
     try {
         // 2. Backend Call
-       const res = await fetch(API_URL, { 
+      const res = await fetch(API_URL, { 
     method: 'POST', 
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- YE LINE ADD KAREIN (Bypasses CORS block)
+    redirect: 'follow', // <-- YEH LINE ADD KAREIN (Force redirect follow)
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
 });
         
