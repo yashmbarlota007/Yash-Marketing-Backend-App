@@ -2581,8 +2581,24 @@
         // FILE UPLOADS & MEDIA HANDLING
         // =======================================================
         function handleFileSelection(inputElement, stageNum) {
-            const newFiles = Array.from(inputElement.files);
-            queuedFiles = queuedFiles.concat(newFiles);
+    const newFiles = Array.from(inputElement.files);
+    const validFiles = [];
+    const MAX_SIZE = 6 * 1024 * 1024; // 6MB strict limit for stable GAS JSON payloads
+
+    for (let f of newFiles) {
+        if (f.size > MAX_SIZE) {
+            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB to ensure stable synchronization.`);
+        } else {
+            validFiles.push(f);
+        }
+    }
+
+    if (validFiles.length === 0) {
+        inputElement.value = ''; // Reset if all files rejected
+        return;
+    }
+
+    queuedFiles = queuedFiles.concat(validFiles);
             
             const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
             const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
