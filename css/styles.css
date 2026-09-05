@@ -44,14 +44,8 @@ body {
 }
 
 @keyframes slideDown { 
-    from { 
-        transform: translateY(-100%); 
-        opacity: 0; 
-    } 
-    to { 
-        transform: translateY(0); 
-        opacity: 1; 
-    } 
+    from { transform: translateY(-100%); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
 }
 
 .toast-enter { 
@@ -76,30 +70,17 @@ body {
 }
 
 @keyframes pulse-red-glow {
-    0% { 
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); 
-    }
-    70% { 
-        box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0); 
-    }
-    100% { 
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); 
-    }
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 /* EXACT A4 (4-STICKER) PRINT LAYOUT */
 @media print {
-    body * { 
-        display: none !important; 
-    }
-    #shippingLabelScreen, #shippingLabelScreen * { 
-        display: block !important; 
-    }
+    body * { display: none !important; }
+    #shippingLabelScreen, #shippingLabelScreen * { display: block !important; }
     
-    @page { 
-        size: A4; 
-        margin: 0; 
-    }
+    @page { size: A4; margin: 0; }
     
     #shippingLabelScreen {
         position: absolute; 
@@ -125,8 +106,5 @@ body {
         height: 100%;
         overflow: hidden;
     }
-
-    .empty-sticker { 
-        border: none; 
-    }
+    .empty-sticker { border: none; }
 }
