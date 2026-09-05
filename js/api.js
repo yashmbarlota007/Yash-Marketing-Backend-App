@@ -17,10 +17,11 @@ async function fetchOrders(isSilent = false) {
     
     try {
         // 2. Backend Call
-        const res = await fetch(API_URL, { 
-            method: 'POST', 
-            body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
-        });
+       const res = await fetch(API_URL, { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- YE LINE ADD KAREIN (Bypasses CORS block)
+    body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
+});
         
         // 3. Pehle Text ke form me check karenge taaki HTML error page na crash kare
         const textResponse = await res.text(); 
