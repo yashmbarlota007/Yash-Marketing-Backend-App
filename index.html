@@ -155,5 +155,18 @@
 
     <!-- External JavaScript Application Logic -->
     <script src="app.js"></script>
+        <!-- Global Config must load first -->
+    <script src="config.js"></script>
+    
+    <!-- Auth relies on Config -->
+    <script src="auth.js"></script>
+    
+    <!-- API relies on Config and Auth -->
+    <script src="api.js"></script>
+    
+    <!-- UI relies on everything above -->
+    <script src="ui.js"></script>
+</body>
+
 </body>
 </html>
