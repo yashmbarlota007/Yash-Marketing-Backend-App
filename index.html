@@ -2583,67 +2583,63 @@
         function handleFileSelection(inputElement, stageNum) {
     const newFiles = Array.from(inputElement.files);
     const validFiles = [];
-    const MAX_SIZE = 6 * 1024 * 1024; // 6MB strict limit for stable GAS JSON payloads
+    const MAX_SIZE = 6 * 1024 * 1024; // 6MB strict limit
 
     for (let f of newFiles) {
         if (f.size > MAX_SIZE) {
-            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB to ensure stable synchronization.`);
+            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB.`);
         } else {
             validFiles.push(f);
         }
     }
 
     if (validFiles.length === 0) {
-        inputElement.value = ''; // Reset if all files rejected
+        inputElement.value = ''; 
         return;
     }
 
     queuedFiles = queuedFiles.concat(validFiles);
-            
-            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
-            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
-            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
-            const previewBox = document.getElementById(`previewBox_${stageNum}`);
-            
-            if (queuedFiles.length > 0) {
-                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
-                statusLabel.classList.remove('hidden'); 
-                
-                if (clearBtn) {
-                    clearBtn.classList.remove('hidden'); 
-                }
-                
-                if (container) {
-                    container.classList.remove('hidden');
-                }
-                
-                if (previewBox) {
-                    previewBox.innerHTML = ''; 
-                    previewBox.classList.remove('hidden');
-                    
-                    queuedFiles.forEach(file => {
-                        if (file.type.startsWith('audio/')) {
-                            previewBox.innerHTML += `
-                                <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
-                                    🎤<br/>Audio
-                                </div>
-                            `; 
-                        } else { 
-                            const reader = new FileReader(); 
-                            reader.onload = function(e) { 
-                                previewBox.innerHTML += `
-                                    <img 
-                                        src="${e.target.result}" 
-                                        class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm"
-                                    >
-                                `; 
-                            }; 
-                            reader.readAsDataURL(file); 
-                        }
-                    });
-                }
-            }
+    
+    const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
+    const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
+    const container = document.getElementById(`fileStatusContainer_${stageNum}`);
+    const previewBox = document.getElementById(`previewBox_${stageNum}`);
+    
+    if (queuedFiles.length > 0) {
+        statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
+        statusLabel.classList.remove('hidden'); 
+        
+        if (clearBtn) {
+            clearBtn.classList.remove('hidden'); 
         }
+        if (container) {
+            container.classList.remove('hidden');
+        }
+        
+        if (previewBox) {
+            previewBox.innerHTML = ''; 
+            previewBox.classList.remove('hidden');
+            
+            queuedFiles.forEach(file => {
+                if (file.type.startsWith('audio/')) {
+                    previewBox.innerHTML += `
+                        <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
+                            🎤<br/>Audio
+                        </div>
+                    `; 
+                } else { 
+                    const reader = new FileReader(); 
+                    reader.onload = function(e) { 
+                        previewBox.innerHTML += `
+                            <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
+                        `; 
+                    }; 
+                    reader.readAsDataURL(file); 
+                }
+            });
+        }
+    }
+}
         
         function clearQueuedFiles(stageNum) {
             queuedFiles = [];
