@@ -1,0 +1,120 @@
+<!-- DEALER TRACKING SELF-SERVICE MODE -->
+<div id="trackingScreen" class="hidden max-w-md mx-auto mt-10 p-6 glass-panel rounded-2xl border-t-4 border-t-emerald-500 text-center shadow-2xl">
+    <h1 class="text-3xl font-black text-white mb-2 tracking-tight">Live Order Tracker</h1>
+    <p class="text-slate-400 text-sm mb-8 font-mono">Tracking ID: <span id="displayTrackId"></span></p>
+    <div id="trackingLoader" class="inline-block animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+    <div id="trackingTimeline" class="text-left space-y-6 hidden pl-4 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent"></div>
+    <div id="trackingError" class="hidden text-pink-500 font-bold mt-4"></div>
+</div>
+
+<!-- MAIN APP WRAPPER -->
+<div id="mainAppWrapper">
+    <!-- Global Cmd+K Search Modal -->
+    <div id="searchModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-start justify-center pt-20 px-4 transition-all">
+        <div class="bg-[#131C31] w-full max-w-2xl rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-800 flex items-center gap-3">
+                <span class="text-indigo-400 text-xl">🔍</span>
+                <input type="text" id="searchInput" onkeyup="performSearch()" placeholder="Search Order ID, Dealer Name or Phone Number..." class="w-full bg-transparent text-white text-lg outline-none font-bold placeholder-slate-500">
+                <button onclick="closeSearch()" class="text-slate-500 text-xs border border-slate-700 px-2 py-1 rounded hover:bg-slate-800">ESC</button>
+            </div>
+            <div id="searchResults" class="max-h-[60vh] overflow-y-auto p-2 bg-[#0B1121] hide-scrollbar">
+                <div class="p-8 text-center text-slate-500 font-bold">Start typing to search main database...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shift Handover Modal -->
+    <div id="handoverModal" class="hidden fixed inset-0 bg-[#0B1121]/90 backdrop-blur-md z-[200] flex items-center justify-center p-4 transition-all">
+        <div class="bg-[#131C31] w-full max-w-lg rounded-2xl border border-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-[#0B1121]">
+                <h2 class="text-xl font-black text-white flex items-center gap-2"><span class="text-indigo-400">📝</span> Shift Handover Notes</h2>
+                <button onclick="closeHandover()" class="text-slate-500 hover:text-pink-400 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-5">
+                <textarea id="handoverNoteInput" rows="4" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-500 text-sm" placeholder="Enter critical updates, pending tasks, or issues..."></textarea>
+                <button onclick="saveHandover()" id="btnSaveHandover" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all text-sm">Submit Handover Note</button>
+                <h3 class="mt-6 mb-3 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2">Recent Shift Notes</h3>
+                <div id="handoverHistory" class="space-y-3 max-h-[30vh] overflow-y-auto hide-scrollbar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Area & Labels -->
+    <div id="notificationArea" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+    <div id="shippingLabelScreen" class="hidden"></div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="flex h-[90vh] items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border-t-4 border-t-indigo-500">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2 tracking-tight">YASH MARKETING</h1>
+            <p class="text-slate-400 text-xs tracking-[0.2em] mb-8 uppercase font-semibold">Enterprise OS Login (v14.1.0)</p>
+            <form id="loginForm" class="space-y-4">
+                <input type="text" id="loginEmpId" placeholder="Access Code / Emp ID" required class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase transition-all shadow-inner">
+                <input type="password" id="loginPass" placeholder="Security PIN" required class="w-full bg-[#131C31] border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner">
+                <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform active:scale-[0.98]">INITIALIZE SYSTEM</button>
+            </form>
+            <p id="loginError" class="text-pink-400 text-sm mt-4 font-semibold hidden animate-pulse"></p>
+        </div>
+    </div>
+
+    <!-- Main Operational Dashboard Screen -->
+    <div id="dashboardScreen" class="hidden max-w-[1400px] mx-auto pb-20">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-[#131C31] p-4 rounded-2xl border border-slate-800 shadow-lg">
+            <div class="w-full lg:w-1/3">
+                <h1 class="text-2xl font-black text-white flex items-center gap-2 tracking-tight"><span class="text-indigo-400">⚡</span> Order Processing</h1>
+                <p class="text-slate-400 text-xs mt-1 font-mono flex items-center">OP_ID: <span id="userName" class="text-emerald-400 font-bold ml-1"></span> <span id="backendEarningsBadge" class="ml-3 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] hidden font-bold">💰 Earned Today: ₹0</span></p>
+            </div>
+            
+            <div class="w-full lg:w-1/3">
+                <button onclick="openSearch()" class="w-full bg-[#0B1121] border border-slate-700 hover:border-indigo-500 text-slate-400 flex justify-between items-center px-4 py-2.5 rounded-xl transition-all shadow-inner group">
+                    <span class="flex items-center gap-2 text-sm"><span class="text-indigo-400">🔍</span> Search orders, dealers...</span>
+                    <span class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded group-hover:text-white">Cmd+K</span>
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-1.5 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
+                <button onclick="setDateRange('all', this)" class="date-filter-btn active-filter px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">All Time</button>
+                <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
+                <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
+                
+                <div class="w-px h-5 bg-slate-700 mx-1"></div>
+                
+                <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">✂️ Split</button>
+                <button onclick="openHandover()" class="ml-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">📝 NOTES</button>
+                <button onclick="generateEODReport()" class="ml-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">📊 EOD</button>
+                <button onclick="logout()" class="ml-1 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all">LOGOUT</button>
+            </div>
+        </div>
+        
+        <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
+        <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2"><span class="text-indigo-400">🌊</span> Operational Pipeline</h3>
+        <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar snap-x snap-mandatory w-full"></div>
+        <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+    </div>
+</div>
+
+<!-- Order Execution Task Modal -->
+<div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
+    <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl border border-slate-700">
+        <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-[#131C31] shadow-md z-10">
+            <div>
+                <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                    <span id="modalOrderId">ORD-000</span>
+                    <span id="modalVipBadge" class="hidden bg-red-500 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase shadow-[0_0_10px_red] animate-pulse">🔥 VIP</span>
+                </h2>
+                <p class="text-indigo-400 text-sm font-bold mt-1 text-wrap-custom flex items-center gap-2" id="modalShopName">Shop Name</p>
+                <div class="flex gap-2 mt-2 items-center flex-wrap">
+                    <span id="modalPaymentMode" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-white font-black tracking-widest uppercase"></span>
+                    <span id="modalTotalValue" class="text-[10px] bg-emerald-900/30 border border-emerald-500/30 px-2 py-1 rounded text-emerald-400 font-black tracking-widest"></span>
+                </div>
+                <div class="flex gap-2 mt-2 items-center flex-wrap">
+                    <span id="modalReceiptDate" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono tracking-widest border border-slate-700"></span>
+                    <span id="modalTimeElapsed" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-black tracking-widest border border-slate-700"></span>
+                    <span id="modalTatTimer" class="hidden"></span>
+                </div>
+            </div>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-pink-400 text-4xl leading-none transition-colors">&times;</button>
+        </div>
+        <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-[#0B1121]" id="stagesContainer"></div>
+    </div>
+</div>
