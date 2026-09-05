@@ -201,26 +201,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     error.classList.add('hidden'); 
     
     try {
-        const payload = { 
+        // Master Key API call
+        const data = await gasRequest({ 
             action: 'login', 
             employeeId: document.getElementById('loginEmpId').value, 
             password: document.getElementById('loginPass').value 
-        };
-        
-        const res = await fetch(API_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload) 
         });
-        
-        const textResponse = await res.text();
-        let data;
-        
-        try {
-            data = JSON.parse(textResponse);
-        } catch (parseErr) {
-            throw new Error("Server blocked connection. Did you Authorize the Apps Script?");
-        }
         
         if (data.status === 'success' || data.success === true) {
             const uName = data.user?.name || data.username;
@@ -228,7 +214,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             
             localStorage.setItem('yash_user', uName); 
             localStorage.setItem('yash_role', uRole);
-            
             showDashboard(uName, uRole);
         } else { 
             error.innerText = data.message || "Invalid Employee ID or Password."; 
