@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yash Marketing - Order Processing OS</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Chart.js for Interactive Pie Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <?!= include('CSS_Styles'); ?>
+    <!-- VERCEL STANDARD CSS LINK -->
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
-    <?!= include('UI_Layout'); ?>
+    <!-- Aapka pura UI_Layout.html ka code yaha paste karein -->
+    <div id="mainAppWrapper">...</div>
     
-    <?!= include('JS_Core'); ?>
-    <?!= include('JS_Actions'); ?>
+    <!-- VERCEL STANDARD JS LINKS (Order matter karta hai, Core pehle aayega) -->
+    <script src="./core.js"></script>
+    <script src="./actions.js"></script>
 
 </body>
 </html>
