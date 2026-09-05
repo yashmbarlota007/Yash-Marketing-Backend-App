@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yash Marketing - Order Processing OS</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (Compiled for Production via Vercel) -->
+    <link href="/styles.css" rel="stylesheet">
     
     <!-- Chart.js for Interactive Pie Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -998,7 +998,7 @@
             
             if (!isSilent && window.appData.rawArray.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full py-20 text-center">
+                    <div class="col-span-full py-20 text-center" id="empty-state">
                         <div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
                         <p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">
                             Syncing with Mainframe...
@@ -1529,11 +1529,10 @@
             filterBar.innerHTML = filterHtml;
 
             let displayOrders = activeStageFilter !== null ? pendingOrders.filter(o => o.completedStages === activeStageFilter) : pendingOrders;
-            grid.innerHTML = '';
             
             if (displayOrders.length === 0) { 
                 grid.innerHTML = `
-                    <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center">
+                    <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center" id="empty-state">
                         <div class="text-4xl mb-3">🍃</div>
                         <p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p>
                     </div>
@@ -1541,10 +1540,33 @@
                 return; 
             }
 
+            // Remove empty state if it exists
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
             const userName = localStorage.getItem('yash_user') || "";
             const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
 
+            const currentIds = new Set();
+
             displayOrders.forEach(order => {
+                const cardId = `order-card-${order.orderId}`;
+                currentIds.add(cardId);
+
+                // Create a unique hash representing this order's exact state in the UI
+                const orderStateHash = btoa(encodeURIComponent(JSON.stringify(order) + activeStageFilter));
+
+                let existingCard = document.getElementById(cardId);
+
+                // DOM Reconciliation: If card exists and hasn't changed, just reposition it
+                if (existingCard && existingCard.getAttribute('data-state-hash') === orderStateHash) {
+                    grid.appendChild(existingCard); // Appending an existing node just moves it to the end (maintains sort order)
+                    return; 
+                }
+
+                // --- Begin Generating Card HTML ---
                 const progress = (order.completedStages / 9) * 100; 
                 let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
                 let nextStepName = "Fully Completed";
@@ -1637,7 +1659,7 @@
                 }
                 
                 let mergeBadge = "";
-                           let orderDateStr = parseCustomDate(order.date).toDateString();
+                let orderDateStr = parseCustomDate(order.date).toDateString();
                 
                 let pendingCount = filteredData.filter(o => 
                     o.shopName === order.shopName && 
@@ -1660,9 +1682,10 @@
                     `;
                 }
 
-
-                grid.innerHTML += `
+                const fullCardHtml = `
                     <div 
+                        id="${cardId}"
+                        data-state-hash="${orderStateHash}"
                         ${clickAction} 
                         class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border"
                     >
@@ -1734,6 +1757,21 @@
                         </div>
                     </div>
                 `;
+
+                if (existingCard) {
+                    // Overwrite old card with updated data
+                    existingCard.outerHTML = fullCardHtml;
+                } else {
+                    // Inject newly generated card
+                    grid.insertAdjacentHTML('beforeend', fullCardHtml);
+                }
+            });
+
+            // Cleanup: Remove cards from DOM that are no longer in the displayOrders array
+            Array.from(grid.children).forEach(child => {
+                if (child.id && child.id.startsWith('order-card-') && !currentIds.has(child.id)) {
+                    child.remove();
+                }
             });
         }
 
@@ -1893,7 +1931,7 @@
             
             container.innerHTML += itemsHtml;
 
-                        let mergeActionHtml = "";
+            let mergeActionHtml = "";
             let orderDateStr = parseCustomDate(order.date).toDateString();
             
             // Check karein ki current order pehle se merge toh nahi ho chuka hai
@@ -1921,7 +1959,6 @@
                 `;
             }
 
-            
             container.innerHTML += mergeActionHtml;
 
             let stagesListHtml = '<div class="space-y-4">';
@@ -1956,7 +1993,7 @@
                     let thisEpoch = null; 
                     let previousEpoch = parseCustomDate(order.date).getTime(); 
                     
-                                                       let staffName = "System";
+                    let staffName = "System";
                     let staffMatch = cellData ? cellData.match(/STAFF:\s*(.+)/) : null;
                     if (staffMatch) {
                         staffName = staffMatch[1].trim();
@@ -2018,9 +2055,7 @@
                         }
                     }
 
-
-
-                                                          let actionStr = "";
+                    let actionStr = "";
                     let urlData = "";
 
                     if (cellData && cellData.includes("||")) {
@@ -2057,7 +2092,7 @@
                         `;
                     }
                     
-                                      fileUrls.forEach((url, index) => {
+                    fileUrls.forEach((url, index) => {
                         url = url.trim();
                         if (url.includes("http")) {
                             hasFiles = true;
@@ -2093,7 +2128,6 @@
                         }
                     });
 
-                    
                     if (hasFiles && stagesRequiringShare.includes(stageNum)) {
                         let isShared = localStorage.getItem('shared_' + order.orderId + '_' + stageNum) === 'true';
                         let btnClass = isShared ? "bg-[#128C7E]/40 text-white border-[#128C7E]/50" : "bg-[#25D366] text-white border-[#25D366] animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(37,211,102,0.5)]";
@@ -2147,71 +2181,71 @@
                     let inputHtml = '';
                     
                     if (stageNum === 1) { // Balance Check
-    inputHtml = `
-        <button 
-            onclick="generateTallyCSV('${order.orderId}')" 
-            class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
-        >
-            <span>📊</span> Export Sales Order for Tally (CSV)
-        </button>
-        
-        <p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2">
-            <span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)
-        </p>
-        <p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p>
-        
-        <div class="flex gap-2 w-full">
-            <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                📸 Live Camera
-                <input 
-                    type="file" 
-                    accept="image/*" 
-                    capture="environment" 
-                    class="hidden" 
-                    onchange="handleFileSelection(this, ${stageNum})"
-                >
-            </label>
-            
-            <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
-                🖼️ Multi Gallery
-                <input 
-                    type="file" 
-                    accept="image/*" 
-                    multiple 
-                    class="hidden" 
-                    onchange="handleFileSelection(this, ${stageNum})"
-                >
-            </label>
-        </div>
-        
-        <div 
-            id="previewBox_${stageNum}" 
-            class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"
-        ></div>
-        
-        <div 
-            class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" 
-            id="fileStatusContainer_${stageNum}"
-        >
-            <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
-            <button 
-                id="clearFilesBtn_${stageNum}" 
-                onclick="clearQueuedFiles(${stageNum})" 
-                class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
-            >
-                Clear Files
-            </button>
-        </div>
-        
-        <button 
-            id="submitBtn_${stageNum}" 
-            onclick="submitStage(${stageNum})" 
-            class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
-        >
-            Confirm Check & Execute
-        </button>
-    `;
-}
+                        inputHtml = `
+                            <button 
+                                onclick="generateTallyCSV('${order.orderId}')" 
+                                class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
+                            >
+                                <span>📊</span> Export Sales Order for Tally (CSV)
+                            </button>
+                            
+                            <p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2">
+                                <span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)
+                            </p>
+                            <p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p>
+                            
+                            <div class="flex gap-2 w-full">
+                                <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                    📸 Live Camera
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        capture="environment" 
+                                        class="hidden" 
+                                        onchange="handleFileSelection(this, ${stageNum})"
+                                    >
+                                </label>
+                                
+                                <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">
+                                    🖼️ Multi Gallery
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        multiple 
+                                        class="hidden" 
+                                        onchange="handleFileSelection(this, ${stageNum})"
+                                    >
+                                </label>
+                            </div>
+                            
+                            <div 
+                                id="previewBox_${stageNum}" 
+                                class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"
+                            ></div>
+                            
+                            <div 
+                                class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" 
+                                id="fileStatusContainer_${stageNum}"
+                            >
+                                <p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p>
+                                <button 
+                                    id="clearFilesBtn_${stageNum}" 
+                                    onclick="clearQueuedFiles(${stageNum})" 
+                                    class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30"
+                                >
+                                    Clear Files
+                                </button>
+                            </div>
+                            
+                            <button 
+                                id="submitBtn_${stageNum}" 
+                                onclick="submitStage(${stageNum})" 
+                                class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg"
+                            >
+                                Confirm Check & Execute
+                            </button>
+                        `;
+                    }
                     else if (stageNum === 6) { // Logistics
                         inputHtml += `
                             <div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner">
@@ -2581,65 +2615,65 @@
         // FILE UPLOADS & MEDIA HANDLING
         // =======================================================
         function handleFileSelection(inputElement, stageNum) {
-    const newFiles = Array.from(inputElement.files);
-    const validFiles = [];
-    const MAX_SIZE = 6 * 1024 * 1024; // 6MB strict limit
+            const newFiles = Array.from(inputElement.files);
+            const validFiles = [];
+            const MAX_SIZE = 6 * 1024 * 1024; // 6MB strict limit
 
-    for (let f of newFiles) {
-        if (f.size > MAX_SIZE) {
-            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB.`);
-        } else {
-            validFiles.push(f);
-        }
-    }
-
-    if (validFiles.length === 0) {
-        inputElement.value = ''; 
-        return;
-    }
-
-    queuedFiles = queuedFiles.concat(validFiles);
-    
-    const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
-    const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
-    const container = document.getElementById(`fileStatusContainer_${stageNum}`);
-    const previewBox = document.getElementById(`previewBox_${stageNum}`);
-    
-    if (queuedFiles.length > 0) {
-        statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
-        statusLabel.classList.remove('hidden'); 
-        
-        if (clearBtn) {
-            clearBtn.classList.remove('hidden'); 
-        }
-        if (container) {
-            container.classList.remove('hidden');
-        }
-        
-        if (previewBox) {
-            previewBox.innerHTML = ''; 
-            previewBox.classList.remove('hidden');
-            
-            queuedFiles.forEach(file => {
-                if (file.type.startsWith('audio/')) {
-                    previewBox.innerHTML += `
-                        <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
-                            🎤<br/>Audio
-                        </div>
-                    `; 
-                } else { 
-                    const reader = new FileReader(); 
-                    reader.onload = function(e) { 
-                        previewBox.innerHTML += `
-                            <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
-                        `; 
-                    }; 
-                    reader.readAsDataURL(file); 
+            for (let f of newFiles) {
+                if (f.size > MAX_SIZE) {
+                    alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB.`);
+                } else {
+                    validFiles.push(f);
                 }
-            });
+            }
+
+            if (validFiles.length === 0) {
+                inputElement.value = ''; 
+                return;
+            }
+
+            queuedFiles = queuedFiles.concat(validFiles);
+            
+            const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
+            const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
+            const container = document.getElementById(`fileStatusContainer_${stageNum}`);
+            const previewBox = document.getElementById(`previewBox_${stageNum}`);
+            
+            if (queuedFiles.length > 0) {
+                statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
+                statusLabel.classList.remove('hidden'); 
+                
+                if (clearBtn) {
+                    clearBtn.classList.remove('hidden'); 
+                }
+                if (container) {
+                    container.classList.remove('hidden');
+                }
+                
+                if (previewBox) {
+                    previewBox.innerHTML = ''; 
+                    previewBox.classList.remove('hidden');
+                    
+                    queuedFiles.forEach(file => {
+                        if (file.type.startsWith('audio/')) {
+                            previewBox.innerHTML += `
+                                <div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">
+                                    🎤<br/>Audio
+                                </div>
+                            `; 
+                        } else { 
+                            const reader = new FileReader(); 
+                            reader.onload = function(e) { 
+                                previewBox.innerHTML += `
+                                    <img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">
+                                `; 
+                            }; 
+                            reader.readAsDataURL(file); 
+                        }
+                    });
+                }
+            }
         }
-    }
-}
         
         function clearQueuedFiles(stageNum) {
             queuedFiles = [];
@@ -2742,44 +2776,43 @@
         // COMPRESSION & SUBMISSION
         // =======================================================
         function compressImage(file) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
 
-        img.onload = () => {
-            // Instantly free up the memory pointer once the image is loaded
-            URL.revokeObjectURL(objectUrl);
+                img.onload = () => {
+                    // Instantly free up the memory pointer once the image is loaded
+                    URL.revokeObjectURL(objectUrl);
 
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            let scale = 1;
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    let scale = 1;
 
-            if (img.width > MAX_WIDTH) {
-                scale = MAX_WIDTH / img.width;
-            }
+                    if (img.width > MAX_WIDTH) {
+                        scale = MAX_WIDTH / img.width;
+                    }
 
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
 
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            resolve({
-                name: file.name,
-                mimeType: 'image/jpeg',
-                base64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+                    resolve({
+                        name: file.name,
+                        mimeType: 'image/jpeg',
+                        base64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+                    });
+                };
+
+                img.onerror = (error) => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(error);
+                };
+
+                img.src = objectUrl;
             });
-        };
-
-        img.onerror = (error) => {
-            URL.revokeObjectURL(objectUrl);
-            reject(error);
-        };
-
-        img.src = objectUrl;
-    });
-}
-
+        }
 
         function getBase64(file) {
             return new Promise((resolve, reject) => {
@@ -2977,20 +3010,20 @@
                 } else {
                     throw new Error(data.message); 
                 }
-           } catch (err) {
-        if (statusLabel) { 
-            statusLabel.innerText = "❌ " + (err.message || "Sync Failed. Network Drop."); 
-            statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
+            } catch (err) {
+                if (statusLabel) { 
+                    statusLabel.innerText = "❌ " + (err.message || "Sync Failed. Network Drop."); 
+                    statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
+                }
+                
+                if (btn) { 
+                    btn.innerText = "Retry Transmission (Tap Again)"; 
+                    btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500'); 
+                    btn.classList.add('bg-pink-600', 'hover:bg-pink-500'); 
+                    btn.disabled = false; 
+                }
+            }
         }
-        
-        if (btn) { 
-            btn.innerText = "Retry Transmission (Tap Again)"; 
-            btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500'); 
-            btn.classList.add('bg-pink-600', 'hover:bg-pink-500'); 
-            btn.disabled = false; 
-        }
-    }
-}
     </script>
 </body>
 </html>
