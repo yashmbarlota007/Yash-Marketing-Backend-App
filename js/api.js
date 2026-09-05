@@ -3,7 +3,6 @@
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
-    // 1. Loading State Show Karega
     if (!isSilent && window.appData.rawArray.length === 0) {
         grid.innerHTML = `
             <div class="col-span-full py-20 text-center" id="empty-state">
@@ -16,15 +15,13 @@ async function fetchOrders(isSilent = false) {
     }
     
     try {
-        // 2. Backend Call
-      const res = await fetch(API_URL, { 
-    method: 'POST', 
-    redirect: 'follow', // <-- YEH LINE ADD KAREIN (Force redirect follow)
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
-});
+        const res = await fetch(API_URL, { 
+            method: 'POST', 
+            redirect: 'follow', // <-- ADDED
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- ADDED
+            body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
+        });
         
-        // 3. Pehle Text ke form me check karenge taaki HTML error page na crash kare
         const textResponse = await res.text(); 
         let response;
         
@@ -34,7 +31,6 @@ async function fetchOrders(isSilent = false) {
             throw new Error("Backend Error: Google Apps Script ne JSON ke badle invalid data bheja hai. URL ya Permissions check karein.");
         }
         
-        // 4. Data Success aane par processing
         if (response.status === 'success') {
             if(response.settings) {
                 window.appSettings = response.settings;
@@ -46,7 +42,6 @@ async function fetchOrders(isSilent = false) {
                 bBadge.classList.remove('hidden');
             }
 
-            // Data mapping with fail-safes
             window.appData.rawArray = response.data || [];
             window.appData.orders = {}; 
             
@@ -54,7 +49,6 @@ async function fetchOrders(isSilent = false) {
                 window.appData.orders[o.orderId] = o; 
             });
             
-            // 5. UI Render functions ko Try/Catch me rakha hai taaki File Splitting errors catch ho jaye
             try {
                 applyDateFilter(); 
             } catch(uiError) {
@@ -68,7 +62,6 @@ async function fetchOrders(isSilent = false) {
     } catch (err) { 
         console.error("Background sync error: ", err); 
         
-        // 6. SCREEN PAR EXACT ERROR DISPLAY KAREGA INSTEAD OF ENDLESS LOADER
         if (!isSilent) {
             grid.innerHTML = `
                 <div class="col-span-full py-10 bg-red-900/10 border border-red-500/30 rounded-2xl text-center mx-2 mt-8 shadow-lg">
@@ -96,6 +89,8 @@ async function executeUnblock(orderId) {
     try {
         let res = await fetch(API_URL, {
             method: 'POST',
+            redirect: 'follow', // <-- ADDED
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- ADDED
             body: JSON.stringify({ 
                 action: 'unblockOrder', 
                 orderId: orderId 
@@ -127,6 +122,8 @@ async function executeMerge(primaryOrderId, shopName, secondaryIds, targetBtn) {
     try {
         const res = await fetch(API_URL, {
             method: 'POST',
+            redirect: 'follow', // <-- ADDED
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- ADDED
             body: JSON.stringify({ 
                 action: 'mergeOrders', 
                 primaryOrderId: primaryOrderId, 
@@ -175,7 +172,7 @@ async function submitStage(stageNum) {
         payload.isNoResponse = true; 
     }
     
-    if (stageNum === 6) { // Logistics
+    if (stageNum === 6) { 
         let runner = document.getElementById('runnerSelect').value;
         if (runner === "Others") {
             runner = document.getElementById('runnerOther').value;
@@ -232,7 +229,7 @@ async function submitStage(stageNum) {
         }
     }
     
-    if (stageNum === 9) { // Rating Stage
+    if (stageNum === 9) { 
         const rating = document.getElementById('ratingInput').value;
         
         if (!rating) { 
@@ -247,7 +244,7 @@ async function submitStage(stageNum) {
         payload.rating = rating;
     }
 
-    if (stageNum === 3) { // Stock stage
+    if (stageNum === 3) { 
         let processed = []; 
         let short = [];
         
@@ -310,7 +307,9 @@ async function submitStage(stageNum) {
 
     try {
         const res = await fetch(API_URL, { 
-            method: 'POST', 
+            method: 'POST',
+            redirect: 'follow', // <-- ADDED
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- ADDED
             body: JSON.stringify(payload) 
         });
         
@@ -329,7 +328,7 @@ async function submitStage(stageNum) {
             }
             
             fetchOrders(true); 
-            closeModal(); // Exits cleanly without interrupting UX workflow
+            closeModal(); 
         } else {
             throw new Error(data.message); 
         }
@@ -361,6 +360,8 @@ async function saveHandover() {
     try {
         let res = await fetch(API_URL, {
             method: 'POST',
+            redirect: 'follow', // <-- ADDED
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- ADDED
             body: JSON.stringify({ 
                 action: 'saveHandover', 
                 staffName: currentUserName, 
@@ -393,6 +394,8 @@ async function fetchHandoverNotes() {
     try {
         let res = await fetch(API_URL, {
             method: 'POST',
+            redirect: 'follow', // <-- ADDED
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // <-- ADDED
             body: JSON.stringify({ action: 'getHandover' })
         });
         let data = await res.json();
