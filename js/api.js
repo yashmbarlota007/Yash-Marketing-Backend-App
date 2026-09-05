@@ -3,6 +3,7 @@
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
+    // 1. Loading State Show Karega
     if (!isSilent && window.appData.rawArray.length === 0) {
         grid.innerHTML = `
             <div class="col-span-full py-20 text-center" id="empty-state">
@@ -15,13 +16,23 @@ async function fetchOrders(isSilent = false) {
     }
     
     try {
+        // 2. Backend Call
         const res = await fetch(API_URL, { 
             method: 'POST', 
             body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) 
         });
         
-        const response = await res.json();
+        // 3. Pehle Text ke form me check karenge taaki HTML error page na crash kare
+        const textResponse = await res.text(); 
+        let response;
         
+        try {
+            response = JSON.parse(textResponse);
+        } catch (parseErr) {
+            throw new Error("Backend Error: Google Apps Script ne JSON ke badle invalid data bheja hai. URL ya Permissions check karein.");
+        }
+        
+        // 4. Data Success aane par processing
         if (response.status === 'success') {
             if(response.settings) {
                 window.appSettings = response.settings;
@@ -33,17 +44,45 @@ async function fetchOrders(isSilent = false) {
                 bBadge.classList.remove('hidden');
             }
 
-            window.appData.rawArray = response.data;
+            // Data mapping with fail-safes
+            window.appData.rawArray = response.data || [];
             window.appData.orders = {}; 
             
-            response.data.forEach(o => { 
+            window.appData.rawArray.forEach(o => { 
                 window.appData.orders[o.orderId] = o; 
             });
             
-            applyDateFilter(); 
+            // 5. UI Render functions ko Try/Catch me rakha hai taaki File Splitting errors catch ho jaye
+            try {
+                applyDateFilter(); 
+            } catch(uiError) {
+                throw new Error("UI Render Error: " + uiError.message);
+            }
+
+        } else {
+            throw new Error(response.message || "Backend API se sync fail ho gaya.");
         }
+        
     } catch (err) { 
-        console.log("Background sync error: ", err); 
+        console.error("Background sync error: ", err); 
+        
+        // 6. SCREEN PAR EXACT ERROR DISPLAY KAREGA INSTEAD OF ENDLESS LOADER
+        if (!isSilent) {
+            grid.innerHTML = `
+                <div class="col-span-full py-10 bg-red-900/10 border border-red-500/30 rounded-2xl text-center mx-2 mt-8 shadow-lg">
+                    <div class="text-3xl mb-3 animate-bounce">⚠️</div>
+                    <p class="text-red-400 font-black tracking-widest uppercase text-sm mb-2">
+                        System Sync Failed
+                    </p>
+                    <p class="text-white text-xs mb-6 font-mono px-4 text-wrap-custom">
+                        ${err.message}
+                    </p>
+                    <button onclick="fetchOrders(false)" class="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)]">
+                        Retry Connection
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
