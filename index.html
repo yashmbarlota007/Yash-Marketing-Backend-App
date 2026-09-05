@@ -2966,10 +2966,13 @@
                     throw new Error(data.message); 
                 }
             } catch (err) {
-                if (statusLabel) { 
-                    statusLabel.innerText = "❌ Sync Failed. Network Drop."; 
-                    statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
-                }
+    if (statusLabel) {
+        // Expose the actual backend failure instead of a generic network drop
+        statusLabel.innerText = "❌ " + (err.message || "Sync Failed. Network Drop.");
+        statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase";
+    }
+    if (btn) {
+        btn.innerText = "Retry Transmission (Tap Again)";
                 
                 if (btn) { 
                     btn.innerText = "Retry Transmission (Tap Again)"; 
