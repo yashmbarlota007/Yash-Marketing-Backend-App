@@ -1,0 +1,128 @@
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzQ7W09dn_1gyNSq_PCPrKLX6ApgB52Ob2_1BnmRe5SdYTMNyc8kRwudr80pe2QFCQZCg/exec"; 
+    
+    const STAGE_NAMES = ["Balance Check", "WhatsApp 1 (Confirmation)", "Processed (Stock)", "Invoiced", "Dispatched", "Logistics Allocation", "Delivery Comms (Call/WA)", "Delivered", "Final Call (Rating)"];
+
+    window.appData = { rawArray: [], orders: {} };
+    window.appSettings = {};
+
+    let filteredData = [];
+    let currentActiveOrder = null;
+    let activeStageFilter = 0; 
+    let activeDateRange = 'all'; 
+    let autoRefreshInterval = null;
+    let queuedFiles = []; 
+    let currentUserRole = 'Staff';
+    let currentUserName = ''; 
+    let brandChartInstance = null; 
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const trackId = urlParams.get('track');
+        const portalEmpId = urlParams.get('empId');
+
+        if (trackId) {
+            document.getElementById('mainAppWrapper').classList.add('hidden');
+            document.getElementById('trackingScreen').classList.remove('hidden');
+            document.getElementById('displayTrackId').innerText = trackId;
+            runTrackerMode(trackId);
+        } else {
+            const savedUser = localStorage.getItem('yash_user');
+            const savedRole = localStorage.getItem('yash_role');
+            
+            if (savedUser && savedUser.trim() !== "") {
+                showDashboard(savedUser, savedRole);
+            } else if (portalEmpId && portalEmpId.trim() !== "") {
+                handleSSOLogin(portalEmpId);
+            }
+        }
+        setInterval(updateTatTimers, 1000);
+    });
+
+    function handleSSOLogin(portalEmpId) {
+        document.getElementById('loginEmpId').value = portalEmpId;
+        document.getElementById('loginPass').value = "SSO_BYPASS";
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = "AUTHENTICATING SSO...";
+        
+        fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'login', employeeId: portalEmpId, password: 'SSO_BYPASS' }) 
+        })
+        .then(res => res.text()).then(text => JSON.parse(text))
+        .then(data => {
+            if (data.status === 'success' || data.success === true) {
+                const uName = data.user?.name || data.username;
+                const uRole = data.user?.role || data.role || 'Staff';
+                localStorage.setItem('yash_user', uName);
+                localStorage.setItem('yash_role', uRole);
+                showDashboard(uName, uRole);
+            } else {
+                document.getElementById('loginError').innerText = "SSO Failed: " + (data.message || "Invalid Access");
+                document.getElementById('loginError').classList.remove('hidden');
+                btn.innerText = "INITIALIZE SYSTEM";
+            }
+        });
+    }
+
+    // Manual Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('loginBtn');
+        const error = document.getElementById('loginError');
+        btn.innerText = "AUTHENTICATING...";
+        error.classList.add('hidden'); 
+        
+        try {
+            const payload = { action: 'login', employeeId: document.getElementById('loginEmpId').value, password: document.getElementById('loginPass').value };
+            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const data = JSON.parse(await res.text());
+            
+            if (data.status === 'success' || data.success === true) {
+                const uName = data.user?.name || data.username;
+                const uRole = data.user?.role || data.role || 'Staff';
+                localStorage.setItem('yash_user', uName); 
+                localStorage.setItem('yash_role', uRole);
+                showDashboard(uName, uRole);
+            } else { 
+                error.innerText = data.message || "Invalid Employee ID or Password."; 
+                error.classList.remove('hidden'); btn.innerText = "INITIALIZE SYSTEM"; 
+            }
+        } catch (err) { error.innerText = "Network Error."; error.classList.remove('hidden'); btn.innerText = "INITIALIZE SYSTEM"; }
+    });
+
+    function showDashboard(name, role) {
+        currentUserRole = role || 'Staff'; 
+        currentUserName = name;
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('dashboardScreen').classList.remove('hidden');
+        document.getElementById('userName').innerText = name.toUpperCase();
+        
+        fetchOrders(false);
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(() => { 
+            if (document.getElementById('orderModal').classList.contains('hidden')) fetchOrders(true); 
+        }, 30000); 
+    }
+
+    async function fetchOrders(isSilent = false) {
+        if (!isSilent && window.appData.rawArray.length === 0) {
+            document.getElementById('orderGrid').innerHTML = `<div class="col-span-full py-20 text-center"><p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">Syncing with Mainframe...</p></div>`;
+        }
+        try {
+            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getOrders', staffName: currentUserName }) });
+            const response = await res.json();
+            if (response.status === 'success') {
+                if(response.settings) window.appSettings = response.settings;
+                window.appData.rawArray = response.data;
+                window.appData.orders = {}; 
+                response.data.forEach(o => { window.appData.orders[o.orderId] = o; });
+                applyDateFilter(); 
+            }
+        } catch (err) { console.log("Background sync error: ", err); }
+    }
+
+    // ALL UTILITY AND PARSER FUNCTIONS (KEEP YOUR ORIGINAL DATE PARSING & UI RENDERERS HERE)
+    // NOTE: In your actual file, you'll copy the original renderPipeline() and renderMdoDashboard() functions inside this script block.
+</script>
