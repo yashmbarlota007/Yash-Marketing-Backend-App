@@ -1,20 +1,28 @@
 // js/api.js
 
 // --- MASTER KEY BYPASS SYSTEM ---
+// --- MASTER KEY BYPASS SYSTEM (NO HEADERS) ---
 async function gasRequest(payloadObj) {
-    const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'payload=' + encodeURIComponent(JSON.stringify(payloadObj))
-    });
-    const textResponse = await res.text();
     try {
-        return JSON.parse(textResponse);
-    } catch (err) {
-        throw new Error("System ne request block ki. URL ya deployment permissions check karein.");
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            // Yahan se humne 'headers' puri tarah hata diye hain. 
+            // Isse browser isey 'text/plain' manega aur CORS block nahi karega.
+            body: JSON.stringify(payloadObj)
+        });
+        
+        const textResponse = await res.text();
+        
+        try {
+            return JSON.parse(textResponse);
+        } catch (parseErr) {
+            console.error("Backend sent HTML instead of JSON:", textResponse);
+            throw new Error("System Error: Google script failed to return JSON.");
+        }
+    } catch (networkErr) {
+        throw new Error("Failed to fetch: Check internet or Google Apps Script URL.");
     }
 }
-
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
