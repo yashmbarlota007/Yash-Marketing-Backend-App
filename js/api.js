@@ -95,7 +95,15 @@ async function submitStage(stageNum) {
     let fileRequired = !(payload.isNoResponse || stageNum === 9 || stageNum === 6 || stageNum === 2 || (stageNum === 7 && !isCod));
     if (fileRequired && queuedFiles.length === 0) { alert(stageNum === 7 && isCod ? "For COD Orders, Call Recording is MANDATORY." : "A file proof (Screenshot/Photo) is mandatory."); return; }
     if (!fileRequired && queuedFiles.length === 0 && (stageNum === 2 || stageNum === 7)) payload.isWhatsAppOnly = true; 
-    if (btn) { btn.innerText = "Processing & Transmitting..."; btn.disabled = true; }
+    
+    // ==========================================
+    // NEW: BUFFER ANIMATION & BUTTON LOCK
+    // ==========================================
+    if (btn) { 
+        btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> EXECUTING (WAIT 3-4s)...`;
+        btn.disabled = true; 
+        btn.classList.add('opacity-70', 'cursor-not-allowed');
+    }
     
     for (let i = 0; i < queuedFiles.length; i++) {
         let f = queuedFiles[i];
@@ -104,7 +112,11 @@ async function submitStage(stageNum) {
     
     if (stageNum === 9) { 
         const rating = document.getElementById('ratingInput').value;
-        if (!rating) { alert("Customer Rating is mandatory."); if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; } return; }
+        if (!rating) { 
+            alert("Customer Rating is mandatory."); 
+            if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
+            return; 
+        }
         payload.rating = rating;
     }
 
@@ -120,30 +132,41 @@ async function submitStage(stageNum) {
                 } else { short.push({ name: item.name, qty: origQty }); }
             }
         });
-        if (processed.length === 0) { alert("You must dispatch at least one item."); if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; } return; }
+        if (processed.length === 0) { 
+            alert("You must dispatch at least one item."); 
+            if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
+            return; 
+        }
         if (short.length > 0) payload.partialStock = { processedItems: processed, shortItems: short }; 
-    } else if (btn) { btn.innerText = "Locking Process..."; btn.disabled = true; }
+    }
     
     if (statusLabel) { statusLabel.innerText = "📡 Uplinking Data..."; statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; statusLabel.classList.remove('hidden'); }
 
-   try {
+    try {
         const data = await gasRequest(payload);
         if (data.status === 'success') { 
-            if (btn) btn.innerText = "Transmission Successful ✓"; 
+            if (btn) { 
+                btn.innerHTML = "✓ SUCCESS"; 
+                btn.classList.remove('opacity-70', 'cursor-not-allowed'); 
+                btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+            } 
             queuedFiles = []; 
             if (data.splitOrderId) { alert(`✂️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); }
             
-            // 1. Fetch updated data silently
             await fetchOrders(true); 
-            // 2. Refresh the modal with the new data instead of closing it
             openModal(currentActiveOrder.orderId); 
         } else { throw new Error(data.message); }
     } catch (err) {
         if (statusLabel) { statusLabel.innerText = "❌ " + (err.message || "Network Drop."); statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; }
-        if (btn) { btn.innerText = "Retry Transmission"; btn.classList.replace('bg-indigo-600', 'bg-pink-600'); btn.classList.replace('hover:bg-indigo-500', 'hover:bg-pink-500'); btn.disabled = false; }
+        if (btn) { 
+            btn.innerText = "Retry Transmission"; 
+            btn.classList.replace('bg-indigo-600', 'bg-pink-600'); 
+            btn.classList.replace('hover:bg-indigo-500', 'hover:bg-pink-500'); 
+            btn.disabled = false; 
+            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        }
     }
 }
-
 async function saveHandover() {
     let note = document.getElementById('handoverNoteInput').value.trim();
     if(!note) return alert("Please write a note before submitting.");
