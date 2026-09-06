@@ -284,9 +284,17 @@ function applyDateFilter() {
     if (activeDateRange === 'split') {
         filteredData = window.appData.rawArray.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
     } else if (activeDateRange === 'all') {
-        filteredData = [...window.appData.rawArray]; // Use spread operator to safely clone
+        filteredData = [...window.appData.rawArray]; 
     } else {
         filteredData = window.appData.rawArray.filter(o => {
+            // =========================================================
+            // NEW LOGIC: ALWAYS SHOW PENDING SPLITS IN ANY TAB
+            // Isse staff kabhi bhi split orders bhulega nahi
+            // =========================================================
+            let isSplit = String(o.orderId).toUpperCase().includes('SPLIT');
+            let isPending = !o.isFullyCompleted;
+            if (isSplit && isPending) return true;
+
             let d = parseCustomDate(o.date); 
             d.setHours(0,0,0,0);
             
@@ -301,13 +309,11 @@ function applyDateFilter() {
         });
     }
 
-    // ==========================================
-    // NEW: STRICT DATE SORTING (OVERRIDE VIP)
-    // ==========================================
+    // STRICT DATE SORTING (OVERRIDE VIP)
     filteredData.sort((a, b) => {
         let dateA = parseCustomDate(a.date).getTime();
         let dateB = parseCustomDate(b.date).getTime();
-        return dateB - dateA; // Sorts newest orders at the top, ignoring VIP status
+        return dateB - dateA; 
     });
 
     renderMdoDashboard(); 
