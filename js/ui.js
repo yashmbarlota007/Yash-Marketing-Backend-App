@@ -731,12 +731,25 @@ function openModal(orderId) {
             
             fileUrls.forEach((url, index) => {
                 url = url.trim();
-                if (url.includes("http")) {
-                    hasFiles = true;
-                    if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
-                        previewHtml += `<audio controls src="${url}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700 mt-2"></audio>`; 
-                    } else { 
-                        let imgThumbnailUrl = url;
+               if (url.includes("http")) {
+    hasFiles = true;
+    if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
+        // Convert Google Drive view link to direct streaming link
+        let streamUrl = url;
+        let driveMatch = url.match(/\/d\/(.*?)\//);
+        if (driveMatch && driveMatch[1]) { 
+            streamUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`; 
+        }
+        previewHtml += `
+            <div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 p-2 shadow-sm">
+                <p class="text-[10px] font-bold text-indigo-400 mb-2">🎤 Call Recording</p>
+                <audio controls src="${streamUrl}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
+                <a href="${url}" target="_blank" class="block mt-2 text-[9px] text-center font-bold text-slate-400 hover:text-white underline uppercase tracking-widest transition-colors">
+                    Click to Open in Google Drive ↗
+                </a>
+            </div>`; 
+    } else { 
+        let imgThumbnailUrl = url;
                         let driveMatch = url.match(/\/d\/(.*?)\//);
                         if (driveMatch && driveMatch[1]) { imgThumbnailUrl = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`; }
                         previewHtml += `<div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 overflow-hidden relative group shadow-sm"><p class="text-[10px] font-bold text-indigo-400 p-2 border-b border-slate-700 bg-slate-800/50">🖼️ Uploaded Proof ${index + 1}</p><a href="${url}" target="_blank" class="block relative"><img src="${imgThumbnailUrl}" class="w-full h-auto max-h-48 object-contain bg-black/40"><div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white text-xs font-black bg-indigo-600 px-3 py-1.5 rounded-full shadow-lg">🔍 Click to Enlarge</span></div></a></div>`; 
