@@ -458,11 +458,13 @@ function renderPipeline() {
         let timeData = getTimeAgoUI(order.date);
         let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
         
+        let isSplit = String(order.orderId).toUpperCase().includes('SPLIT');
         let splitBadge = "";
-        if (String(order.orderId).toUpperCase().includes('SPLIT')) {
+        
+        if (isSplit) {
             splitBadge = `
-                <span class="bg-purple-900/30 text-[9px] px-2 py-1 rounded text-purple-400 font-bold border border-purple-500/30 shrink-0">
-                    ✂️ SPLIT
+                <span class="bg-purple-600 text-white text-[10px] px-2 py-1 rounded border border-purple-400 font-black uppercase shadow-[0_0_10px_purple] animate-pulse shrink-0">
+                    ✂️ PENDING SPLIT
                 </span>
             `;
         }
@@ -472,6 +474,13 @@ function renderPipeline() {
         let cursorStyle = "cursor-pointer"; 
         let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
         
+        // =========================================================
+        // AGGRESSIVE HIGHLIGHT FOR SPLIT ORDERS
+        // Normal orders ke beech alag chamkega
+        // =========================================================
+        if (isSplit && activeStageFilter !== 'completed') {
+             vipClass = "bg-purple-900/20 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.25)]";
+        }        
         if (order.creditLocked && !order.ceoOverride) {
             let unlockBtn = isOwner ? `
                 <button 
