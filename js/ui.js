@@ -330,9 +330,11 @@ function renderPipeline() {
     const grid = document.getElementById('orderGrid');
     const filterBar = document.getElementById('stageFilterBar');
     
+    // Separate pending and completed orders
     let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-    let stageCounts = Array(9).fill(0); 
+    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= 9);
     
+    let stageCounts = Array(9).fill(0); 
     let shopPendingCount = {};
     
     pendingOrders.forEach(o => { 
@@ -354,6 +356,19 @@ function renderPipeline() {
             <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
                 <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">COUNT</span>
                 <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${pendingOrders.length}</span>
+            </div>
+        </div>
+        
+        <!-- NEW: COMPLETED ORDERS TAB -->
+        <div 
+            onclick="setStageFilter('completed')" 
+            class="snap-start cursor-pointer ${activeStageFilter === 'completed' ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all"
+        >
+            <span class="${activeStageFilter === 'completed' ? 'text-emerald-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">History</span>
+            <span class="text-white text-sm font-black mb-2">Completed</span>
+            <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
+                <span class="text-[10px] ${activeStageFilter === 'completed' ? 'text-emerald-200' : 'text-slate-600'} font-bold">DONE</span>
+                <span class="${activeStageFilter === 'completed' ? 'bg-white text-emerald-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${completedOrders.length}</span>
             </div>
         </div>
     `;
@@ -384,13 +399,21 @@ function renderPipeline() {
     
     filterBar.innerHTML = filterHtml;
 
-    let displayOrders = activeStageFilter !== null ? pendingOrders.filter(o => o.completedStages === activeStageFilter) : pendingOrders;
+    // Display Logic Update
+    let displayOrders = [];
+    if (activeStageFilter === 'completed') {
+        displayOrders = completedOrders;
+    } else if (activeStageFilter !== null) {
+        displayOrders = pendingOrders.filter(o => o.completedStages === activeStageFilter);
+    } else {
+        displayOrders = pendingOrders;
+    }
     
     if (displayOrders.length === 0) { 
         grid.innerHTML = `
             <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center" id="empty-state">
-                <div class="text-4xl mb-3">🍃</div>
-                <p class="text-slate-400 text-lg font-bold">Inbox Zero for this view.</p>
+                <div class="text-4xl mb-3">${activeStageFilter === 'completed' ? '📦' : '🍃'}</div>
+                <p class="text-slate-400 text-lg font-bold">${activeStageFilter === 'completed' ? 'No completed orders found.' : 'Inbox Zero for this view.'}</p>
             </div>
         `; 
         return; 
@@ -476,7 +499,7 @@ function renderPipeline() {
         let slaBadge = timeData.isSLAWarning ? `<span class="text-[9px] bg-yellow-500/20 text-yellow-400 font-black border border-yellow-500 px-2 py-1 rounded animate-pulse tracking-widest shrink-0">⏳ NEAR BREACH</span>` : "";
         let tatBadge = ""; 
         
-        if (orderDateObj.getHours() < 18 && order.completedStages < 5) { 
+        if (orderDateObj.getHours() < 18 && order.completedStages < 5 && activeStageFilter !== 'completed') { 
             let targetTime = orderDateObj.getTime() + (60 * 60 * 1000);
             tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
         }
@@ -491,7 +514,7 @@ function renderPipeline() {
         }
 
         const fullCardHtml = `
-            <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border">
+            <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-500/30 bg-emerald-900/5' : ''}">
                 ${lockOverlay}
                 <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full transition-transform group-hover:scale-125"></div>
                 <div class="mb-4 relative z-10">
@@ -502,7 +525,9 @@ function renderPipeline() {
                     <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">${order.shopName}</p>
                     <div class="flex gap-1 items-center flex-wrap mb-3">
                         <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${exactDateStr}</span>
-                        <span class="bg-[#0B1121] ${timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">⏱️ ${timeData.text}</span>
+                        <span class="bg-[#0B1121] ${activeStageFilter === 'completed' ? 'text-emerald-400' : timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
+                            ${activeStageFilter === 'completed' ? '✅ COMPLETED' : '⏱️ ' + timeData.text}
+                        </span>
                         ${tatBadge}${slaBadge}${mergeBadge}
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2 items-center">
@@ -514,14 +539,14 @@ function renderPipeline() {
                 <div>
                     <div class="bg-[#0B1121] p-2.5 rounded-lg mb-3 border border-slate-800 flex justify-between items-center group-hover:border-indigo-500/30 transition-colors">
                         <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Next Action:</span>
-                        <span class="text-[10px] text-emerald-400 font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">${nextStepName}</span>
+                        <span class="text-[10px] ${activeStageFilter === 'completed' ? 'text-emerald-500' : 'text-emerald-400'} font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">${nextStepName}</span>
                     </div>
                     <div class="flex justify-between text-[9px] text-slate-500 mb-1.5 font-black uppercase tracking-widest">
-                        <span>Pipeline Progress</span><span class="text-indigo-400">${order.completedStages}/9</span>
+                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-500' : 'text-indigo-400'}">${order.completedStages}/9</span>
                     </div>
                     <div class="w-full bg-[#0B1121] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                        <div class="bg-gradient-to-r from-indigo-600 to-purple-500 h-1.5 rounded-full relative" style="width: ${progress}%">
-                            <div class="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_ease-in-out_infinite]"></div>
+                        <div class="${activeStageFilter === 'completed' ? 'bg-emerald-500' : 'bg-gradient-to-r from-indigo-600 to-purple-500'} h-1.5 rounded-full relative" style="width: ${progress}%">
+                            <div class="absolute inset-0 bg-white/20 w-full ${activeStageFilter === 'completed' ? '' : 'animate-[pulse_2s_ease-in-out_infinite]'}"></div>
                         </div>
                     </div>
                 </div>
@@ -740,12 +765,39 @@ function openModal(orderId) {
                 let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
                 let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
                 
+                // AUTOFETCH & ATTACH PHOTOS FOR WHATSAPP 2 (STAGE 7)
+                if (stageNum === 7 && order.stageUrls) {
+                    let attachments = [];
+                    // Fetch from Stage 3 (Stock), Stage 4 (Invoice), Stage 5 (Dispatch) -> Array index 2, 3, 4
+                    [2, 3, 4].forEach(idx => {
+                        let cellData = order.stageUrls[idx] || "";
+                        let urlData = "";
+                        
+                        if (cellData.includes("||")) {
+                            let parts = cellData.split("||");
+                            if (parts[0].includes("http")) urlData = parts[0].trim();
+                            else if (parts.length > 1 && parts[1].includes("http")) urlData = parts[1].trim();
+                        } else if (cellData.includes("http")) {
+                            urlData = cellData.trim();
+                        }
+                        
+                        if (urlData) {
+                            let links = urlData.split(',').map(l => l.trim()).filter(l => l.includes("http"));
+                            attachments.push(...links);
+                        }
+                    });
+
+                    if (attachments.length > 0) {
+                        finalMsg += `\n\n*📦 Order Photos (Stock/Invoice/Box):*\n` + attachments.join('\n');
+                    }
+                }
+                
                 // FORMATTING FIX: Clean the number, ensure '91', and use API URL
                 let cleanPhone = "";
                 if (order.phone && order.phone.toString().trim() !== "") {
-                    cleanPhone = order.phone.toString().replace(/\D/g, ''); // Removes all spaces, brackets, and +
+                    cleanPhone = order.phone.toString().replace(/\D/g, ''); 
                     if (cleanPhone.length === 10) {
-                        cleanPhone = '91' + cleanPhone; // Auto-attaches India code
+                        cleanPhone = '91' + cleanPhone; 
                     }
                 } else {
                     console.warn(`WARNING: Order ${order.orderId} is missing phone number data.`);
