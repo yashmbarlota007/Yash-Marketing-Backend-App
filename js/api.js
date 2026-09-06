@@ -69,11 +69,35 @@ async function executeUnblock(orderId) {
 async function executeMerge(primaryOrderId, shopName, secondaryIds, targetBtn) {
     if (!confirm(`Combine all pending items for ${shopName} into this order?`)) return;
     targetBtn.innerText = "Merging Pipelines..."; targetBtn.disabled = true; targetBtn.classList.add('animate-pulse');
+    
     try {
         const data = await gasRequest({ action: 'mergeOrders', primaryOrderId: primaryOrderId, secondaryIds: secondaryIds, shopName: shopName });
-        if (data.status === 'success') { showNotification("MERGE COMPLETE", "Orders combined."); closeModal(); fetchOrders(true); } 
-        else { alert(data.message); targetBtn.innerText = "Merge Failed"; }
-    } catch(e) { alert("Network error."); targetBtn.innerText = "Retry Merge"; targetBtn.disabled = false; }
+        if (data.status === 'success') { 
+            showNotification("MERGE COMPLETE", "Orders combined successfully."); 
+            
+            // =========================================================
+            // NEW FIX: OPTIMISTIC UI UPDATE
+            // Instantly hide merged orders from frontend to beat the ArrayFormula lag
+            // =========================================================
+            let secIdsArray = secondaryIds.split(',').map(id => id.trim());
+            window.appData.rawArray = window.appData.rawArray.filter(o => !secIdsArray.includes(o.orderId));
+            
+            // Instantly re-render the pipeline without the merged orders
+            applyDateFilter(); 
+
+            closeModal(); 
+            // Fetch in background to silently sync with the server
+            fetchOrders(true); 
+        } 
+        else { 
+            alert(data.message); 
+            targetBtn.innerText = "Merge Failed"; 
+        }
+    } catch(e) { 
+        alert("Network error."); 
+        targetBtn.innerText = "Retry Merge"; 
+        targetBtn.disabled = false; 
+    }
 }
 
 async function submitStage(stageNum) {
