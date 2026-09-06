@@ -126,13 +126,17 @@ async function submitStage(stageNum) {
     
     if (statusLabel) { statusLabel.innerText = "📡 Uplinking Data..."; statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; statusLabel.classList.remove('hidden'); }
 
-    try {
+   try {
         const data = await gasRequest(payload);
         if (data.status === 'success') { 
             if (btn) btn.innerText = "Transmission Successful ✓"; 
             queuedFiles = []; 
             if (data.splitOrderId) { alert(`✂️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); }
-            fetchOrders(true); closeModal(); 
+            
+            // 1. Fetch updated data silently
+            await fetchOrders(true); 
+            // 2. Refresh the modal with the new data instead of closing it
+            openModal(currentActiveOrder.orderId); 
         } else { throw new Error(data.message); }
     } catch (err) {
         if (statusLabel) { statusLabel.innerText = "❌ " + (err.message || "Network Drop."); statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; }
