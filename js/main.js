@@ -284,7 +284,7 @@ function applyDateFilter() {
     if (activeDateRange === 'split') {
         filteredData = window.appData.rawArray.filter(o => String(o.orderId).toUpperCase().includes('SPLIT'));
     } else if (activeDateRange === 'all') {
-        filteredData = window.appData.rawArray;
+        filteredData = [...window.appData.rawArray]; // Use spread operator to safely clone
     } else {
         filteredData = window.appData.rawArray.filter(o => {
             let d = parseCustomDate(o.date); 
@@ -300,6 +300,16 @@ function applyDateFilter() {
             return true;
         });
     }
+
+    // ==========================================
+    // NEW: STRICT DATE SORTING (OVERRIDE VIP)
+    // ==========================================
+    filteredData.sort((a, b) => {
+        let dateA = parseCustomDate(a.date).getTime();
+        let dateB = parseCustomDate(b.date).getTime();
+        return dateB - dateA; // Sorts newest orders at the top, ignoring VIP status
+    });
+
     renderMdoDashboard(); 
     renderPipeline();
 }
