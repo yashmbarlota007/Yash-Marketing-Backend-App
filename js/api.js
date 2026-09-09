@@ -23,6 +23,7 @@ async function gasRequest(payloadObj) {
         throw new Error("Failed to fetch: Check internet or Google Apps Script URL.");
     }
 }
+
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
@@ -177,8 +178,22 @@ async function submitStage(stageNum) {
             queuedFiles = []; 
             if (data.splitOrderId) { alert(`✂️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); }
             
+            // ====================================================
+            // NEW: CAPTURE GOOGLE DRIVE IMAGE URLS FOR WHATSAPP
+            // ====================================================
+            if (stageNum === 7 && data.fileUrls && data.fileUrls.length > 0) {
+                currentActiveOrder.recentFileUrls = data.fileUrls;
+            }
+
             await fetchOrders(true); 
-            openModal(currentActiveOrder.orderId); 
+            
+            // We pass a special flag to openModal if it's stage 7 so we can trigger the WhatsApp pop-up
+            if (stageNum === 7 && currentActiveOrder.recentFileUrls) {
+                openModal(currentActiveOrder.orderId, { triggerWhatsApp: true });
+            } else {
+                openModal(currentActiveOrder.orderId); 
+            }
+            
         } else { throw new Error(data.message); }
     } catch (err) {
         if (statusLabel) { statusLabel.innerText = "❌ " + (err.message || "Network Drop."); statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; }
@@ -191,6 +206,7 @@ async function submitStage(stageNum) {
         }
     }
 }
+
 async function saveHandover() {
     let note = document.getElementById('handoverNoteInput').value.trim();
     if(!note) return alert("Please write a note before submitting.");
