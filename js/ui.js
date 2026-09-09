@@ -447,7 +447,7 @@ function renderPipeline() {
         
         if (order.completedStages < 9) {
             if (order.completedStages === 6) {
-                nextStepName = isCod ? "Call 2" : "WhatsApp 2";
+                nextStepName = isCod ? "Call 2" : " 2";
             } else {
                 nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
             }
@@ -676,7 +676,7 @@ function openModal(orderId) {
         const isLocked = i > order.completedStages;
         let displayStageName = STAGE_NAMES[i]; 
         
-        if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
+        if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : " 2 (Out-for-delivery)";
         
         let uiHtml = '';
         
@@ -740,25 +740,25 @@ function openModal(orderId) {
             
             fileUrls.forEach((url, index) => {
                 url = url.trim();
-               if (url.includes("http")) {
-    hasFiles = true;
-    if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
-        // Convert Google Drive view link to direct streaming link
-        let streamUrl = url;
-        let driveMatch = url.match(/\/d\/(.*?)\//);
-        if (driveMatch && driveMatch[1]) { 
-            streamUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`; 
-        }
-        previewHtml += `
-            <div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 p-2 shadow-sm">
-                <p class="text-[10px] font-bold text-indigo-400 mb-2">🎤 Call Recording</p>
-                <audio controls src="${streamUrl}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
-                <a href="${url}" target="_blank" class="block mt-2 text-[9px] text-center font-bold text-slate-400 hover:text-white underline uppercase tracking-widest transition-colors">
-                    Click to Open in Google Drive ↗
-                </a>
-            </div>`; 
-    } else { 
-        let imgThumbnailUrl = url;
+                if (url.includes("http")) {
+                    hasFiles = true;
+                    if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
+                        // Convert Google Drive view link to direct streaming link
+                        let streamUrl = url;
+                        let driveMatch = url.match(/\/d\/(.*?)\//);
+                        if (driveMatch && driveMatch[1]) { 
+                            streamUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`; 
+                        }
+                        previewHtml += `
+                            <div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 p-2 shadow-sm">
+                                <p class="text-[10px] font-bold text-indigo-400 mb-2">🎤 Call Recording</p>
+                                <audio controls src="${streamUrl}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
+                                <a href="${url}" target="_blank" class="block mt-2 text-[9px] text-center font-bold text-slate-400 hover:text-white underline uppercase tracking-widest transition-colors">
+                                    Click to Open in Google Drive ↗
+                                </a>
+                            </div>`; 
+                    } else { 
+                        let imgThumbnailUrl = url;
                         let driveMatch = url.match(/\/d\/(.*?)\//);
                         if (driveMatch && driveMatch[1]) { imgThumbnailUrl = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`; }
                         previewHtml += `<div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 overflow-hidden relative group shadow-sm"><p class="text-[10px] font-bold text-indigo-400 p-2 border-b border-slate-700 bg-slate-800/50">🖼️ Uploaded Proof ${index + 1}</p><a href="${url}" target="_blank" class="block relative"><img src="${imgThumbnailUrl}" class="w-full h-auto max-h-48 object-contain bg-black/40"><div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white text-xs font-black bg-indigo-600 px-3 py-1.5 rounded-full shadow-lg">🔍 Click to Enlarge</span></div></a></div>`; 
@@ -787,10 +787,13 @@ function openModal(orderId) {
                 let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
                 let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
                 
-                // AUTOFETCH & ATTACH PHOTOS FOR WHATSAPP 2 (STAGE 7)
+                // =========================================================
+                // NEW FEATURE: AUTOFETCH ALL PHOTOS FOR WHATSAPP (STAGE 7)
+                // Grabs images from Stage 3 (Stock), Stage 4 (Invoice), Stage 5 (Box)
+                // =========================================================
                 if (stageNum === 7 && order.stageUrls) {
                     let attachments = [];
-                    // Fetch from Stage 3 (Stock), Stage 4 (Invoice), Stage 5 (Dispatch) -> Array index 2, 3, 4
+                    // Extracting from indices 2, 3, 4 corresponding to Stage 3, 4, 5
                     [2, 3, 4].forEach(idx => {
                         let cellData = order.stageUrls[idx] || "";
                         let urlData = "";
@@ -814,7 +817,6 @@ function openModal(orderId) {
                     }
                 }
                 
-                // FORMATTING FIX: Clean the number, ensure '91', and use API URL
                 let cleanPhone = "";
                 if (order.phone && order.phone.toString().trim() !== "") {
                     cleanPhone = order.phone.toString().replace(/\D/g, ''); 
