@@ -745,47 +745,43 @@ function openModal(orderId) {
                     if (stageNum === 9 || stageNum === 7 || url.toLowerCase().includes("audio")) {
                         // Convert Google Drive view link to direct streaming link
                         let streamUrl = url;
-                        let driveMatch = url.match(/\/d\/(.*?)\//);
-                        if (driveMatch && driveMatch[1]) { 
-                            streamUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`; 
-                        }
-                        previewHtml += `
-                            <div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 p-2 shadow-sm">
-                                <p class="text-[10px] font-bold text-indigo-400 mb-2">🎤 Call Recording</p>
-                                <audio controls src="${streamUrl}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
-                                <a href="${url}" target="_blank" class="block mt-2 text-[9px] text-center font-bold text-slate-400 hover:text-white underline uppercase tracking-widest transition-colors">
-                                    Click to Open in Google Drive ↗
-                                </a>
-                            </div>`; 
-                    } else { 
-                        let imgThumbnailUrl = url;
-                        let driveMatch = url.match(/\/d\/(.*?)\//);
-                        if (driveMatch && driveMatch[1]) { imgThumbnailUrl = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`; }
-                        previewHtml += `<div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 overflow-hidden relative group shadow-sm"><p class="text-[10px] font-bold text-indigo-400 p-2 border-b border-slate-700 bg-slate-800/50">🖼️ Uploaded Proof ${index + 1}</p><a href="${url}" target="_blank" class="block relative"><img src="${imgThumbnailUrl}" class="w-full h-auto max-h-48 object-contain bg-black/40"><div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white text-xs font-black bg-indigo-600 px-3 py-1.5 rounded-full shadow-lg">🔍 Click to Enlarge</span></div></a></div>`; 
-                    }
-                }
-            });
+// Add this inside openModal(orderId) around line where STAGE 7 msg is built
 
-            if (hasFiles && stagesRequiringShare.includes(stageNum)) {
-                let isShared = localStorage.getItem('shared_' + order.orderId + '_' + stageNum) === 'true';
-                let btnClass = isShared ? "bg-[#128C7E]/40 text-white border-[#128C7E]/50" : "bg-[#25D366] text-white border-[#25D366] animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(37,211,102,0.5)]";
-                let btnText = isShared ? "✓ Shared to WhatsApp" : "📤 Share to Group (MANDATORY)";
-                previewHtml += `<button onclick="shareToGroup(${stageNum}, '${urlData}')" class="mt-2 w-full ${btnClass} text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border"><span>${isShared ? '✓' : '📤'}</span> ${btnText}</button>`;
+if (stageNum === 7 && order.stageUrls) {
+    let finalMsgAdditions = "";
+    
+    // Explicit labels for each stage index
+    const photoLabels = {
+        2: "*📦 Aapka stock ka photo dekhne ke liye niche click kare:*",       // Stage 3 (Index 2)
+        3: "*📄 Aapka bill (invoice) dekhne ke liye niche click kare:*",     // Stage 4 (Index 3)
+        4: "*📦 Aapke pack kiye hue box ka photo dekhne ke liye niche click kare:*" // Stage 5 (Index 4)
+    };
+
+    [2, 3, 4].forEach(idx => {
+        let cellData = order.stageUrls[idx] || "";
+        let urlData = "";
+        
+        if (cellData.includes("||")) {
+            let parts = cellData.split("||");
+            if (parts[0].includes("http")) urlData = parts[0].trim();
+            else if (parts.length > 1 && parts[1].includes("http")) urlData = parts[1].trim();
+        } else if (cellData.includes("http")) {
+            urlData = cellData.trim();
+        }
+        
+        if (urlData) {
+            let links = urlData.split(',').map(l => l.trim()).filter(l => l.includes("http"));
+            if (links.length > 0) {
+                // Append the specific label followed by the links
+                finalMsgAdditions += `\n\n${photoLabels[idx]}\n${links.join('\n')}`;
             }
-            previewHtml += `</div>`;
-            
-            uiHtml = `<div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition"><div class="flex justify-between items-start"><div><span class="text-emerald-400 text-sm font-black block mb-1.5">${stageNum}. ${displayStageName}</span><div class="flex items-center gap-2 flex-wrap">${timestampDisplay}${timeTakenDisplay}</div></div><span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest shrink-0 ml-2">✔ DONE</span></div>${previewHtml}</div>`;
-        } else if (isLocked) {
-            uiHtml = `<div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
-        } else if (isActive) {
-            let inputHtml = '';
-            if (stageNum === 1) { 
-                inputHtml = `<button onclick="generateTallyCSV('${order.orderId}')" class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Sales Order for Tally (CSV)</button><p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div><div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button></div><button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Confirm Check & Execute</button>`;
-            } else if (stageNum === 6) { 
-                inputHtml += `<div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner"><p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-base">🚚</span> Logistics Tracking Engine</p><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">1. Who took the order?</label><select id="runnerSelect" class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" onchange="if(this.value==='Others'){document.getElementById('runnerOther').classList.remove('hidden')}else{document.getElementById('runnerOther').classList.add('hidden')}"><option value="" disabled selected>Select Delivery Person...</option><option value="Vishal Gunjal">Vishal Gunjal</option><option value="Preetam Bogawat">Preetam Bogawat</option><option value="Raghav Korekar">Raghav Korekar</option><option value="Yash Barlota">Yash Barlota</option><option value="Rickshaw wala">Rickshaw wala</option><option value="Others">Others (Type Below)</option></select><input type="text" id="runnerOther" placeholder="Enter person's name..." class="hidden w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-4 font-bold text-sm"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">2. Which Transport?</label><select id="transportSelect" class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" onchange="if(this.value==='Others'){document.getElementById('transportOther').classList.remove('hidden')}else{document.getElementById('transportOther').classList.add('hidden')}"><option value="" disabled selected>Select Transport Partner...</option><option value="Local">Local</option><option value="Adhunik Transport">Adhunik Transport</option><option value="Ambika Transport">Ambika Transport</option><option value="Blue Express">Blue Express</option><option value="Others">Others (Type Below)</option></select><input type="text" id="transportOther" placeholder="Enter transport name..." class="hidden w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-4 font-bold text-sm"><button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Allocate Logistics & Proceed</button></div>`;
-            } else if (stageNum === 2 || stageNum === 7) { 
-                let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
-                let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
+        }
+    });
+
+    if (finalMsgAdditions !== "") {
+        finalMsg += finalMsgAdditions;
+    }
+}
                 
                 // =========================================================
                 // NEW FEATURE: AUTOFETCH ALL PHOTOS FOR WHATSAPP (STAGE 7)
