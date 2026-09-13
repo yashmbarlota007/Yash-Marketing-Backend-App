@@ -3,6 +3,10 @@
 function updateTatTimers() {
     document.querySelectorAll('.tat-timer').forEach(el => {
         let target = parseInt(el.getAttribute('data-target'));
+        
+        // BUG FIX: Agar target missing ya invalid hai, toh calculation bypass karein
+        if (isNaN(target)) return;
+        
         let now = new Date().getTime();
         let diff = target - now;
         
@@ -21,6 +25,9 @@ function updateTatTimers() {
 
 function showNotification(title, message) {
     const area = document.getElementById('notificationArea');
+    // Safety check in case notification area doesn't exist
+    if (!area) return; 
+    
     const toast = document.createElement('div');
     
     toast.className = "bg-[#131C31] text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(79,70,229,0.4)] border border-indigo-500 flex items-center gap-4 toast-enter pointer-events-auto mb-2";
@@ -46,7 +53,8 @@ function parseCustomDate(dateStr) {
         return new Date();
     }
     let d = new Date(dateStr);
-    if (!isNaN(d)) {
+    // JS natively parsed it perfectly (e.g., standard ISO string)
+    if (!isNaN(d.getTime()) && typeof dateStr !== 'string') {
         return d;
     }
     
@@ -54,9 +62,16 @@ function parseCustomDate(dateStr) {
     if (parts.length >= 1) {
         let dateParts = parts[0].split(/[\/\-]/);
         if (dateParts.length === 3) {
-            let day = parseInt(dateParts[0]);
-            let month = parseInt(dateParts[1]) - 1;
-            let year = parseInt(dateParts[2]);
+            let day = parseInt(dateParts[0], 10);
+            let month = parseInt(dateParts[1], 10) - 1;
+            let year = parseInt(dateParts[2], 10);
+            
+            // BUG FIX: If date comes as YYYY-MM-DD, swap day and year properly
+            if (day > 31) {
+                let tempYear = day;
+                day = year;
+                year = tempYear;
+            }
             
             if (year < 100) {
                 year += 2000;
@@ -65,14 +80,14 @@ function parseCustomDate(dateStr) {
             let hours = 0, mins = 0, secs = 0;
             if (parts.length >= 2) {
                 let timeParts = parts[1].split(':');
-                hours = parseInt(timeParts[0]) || 0; 
-                mins = parseInt(timeParts[1]) || 0; 
-                secs = parseInt(timeParts[2]) || 0;
+                hours = parseInt(timeParts[0], 10) || 0; 
+                mins = parseInt(timeParts[1], 10) || 0; 
+                secs = parseInt(timeParts[2], 10) || 0;
             }
             return new Date(year, month, day, hours, mins, secs);
         }
     }
-    return new Date();
+    return new Date(dateStr) || new Date();
 }
 
 function formatExactDate(dateString) {
@@ -100,7 +115,7 @@ function getTimeAgoUI(dateString) {
     }
     
     const orderDate = parseCustomDate(dateString);
-    const diffInMs = new Date() - orderDate;
+    const diffInMs = new Date().getTime() - orderDate.getTime();
     
     if (diffInMs < 0) {
         return { text: "Just now", color: "text-emerald-400", isSLAWarning: false };
@@ -134,6 +149,9 @@ function getTimeAgoUI(dateString) {
 }
 
 function makeDirectDriveLink(url) {
+    // BUG FIX: Prevent crash if url is undefined, null, or empty
+    if (!url) return ""; 
+    
     let match = url.match(/\/d\/(.*?)\//);
     if (match && match[1]) {
         return `https://lh3.googleusercontent.com/d/${match[1]}`;
