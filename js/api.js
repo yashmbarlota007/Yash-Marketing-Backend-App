@@ -274,3 +274,21 @@ async function fetchHandoverNotes() {
         historyDiv.innerHTML = `<div class="text-center text-pink-500 text-xs py-4">Error loading notes.</div>`; 
     }
 }
+// ==========================================
+// NEW: AI INVOICE VERIFICATION API CALL
+// ==========================================
+async function verifyInvoiceWithAI(orderId, base64Image) {
+    try {
+        const payload = {
+            action: 'verifyInvoice',
+            orderId: orderId,
+            base64Image: base64Image
+        };
+
+        const response = await gasRequest(payload);
+        return response;
+    } catch (err) {
+        console.error("AI Verification Failed:", err);
+        throw new Error("Failed to connect to AI server. Please try again.");
+    }
+}
