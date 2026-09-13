@@ -524,15 +524,6 @@ function renderPipeline() {
             tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
         }
         
-        let mergeBadge = "";
-        let orderDateStr = parseCustomDate(order.date).toDateString();
-        let pendingCount = filteredData.filter(o => o.shopName === order.shopName && parseCustomDate(o.date).toDateString() === orderDateStr && o.completedStages < 3 && !o.creditLocked && !(o.stageUrls.some(url => url && url.includes("Merged into")))).length;
-        let isCurrentMerged = order.stageUrls.some(url => url && url.includes("Merged into"));
-
-        if (order.completedStages < 3 && pendingCount > 1 && !order.creditLocked && !isCurrentMerged) {
-            mergeBadge = `<span class="text-[9px] bg-blue-500/20 text-blue-400 font-black border border-blue-500 px-2 py-1 rounded tracking-widest shrink-0" title="Pack this together with another pending order!">🔗 MERGE AVAIL</span>`;
-        }
-
         const fullCardHtml = `
             <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-500/30 bg-emerald-900/5' : ''}">
                 ${lockOverlay}
@@ -659,17 +650,6 @@ function openModal(orderId) {
     }
     itemsHtml += `</div></div>`; 
     container.innerHTML += itemsHtml;
-
-    let mergeActionHtml = "";
-    let orderDateStr = parseCustomDate(order.date).toDateString();
-    let isAlreadyMerged = order.stageUrls.some(url => url && url.includes("Merged into"));
-    let secondaryOrders = filteredData.filter(o => o.shopName === order.shopName && parseCustomDate(o.date).toDateString() === orderDateStr && o.completedStages < 3 && o.orderId !== order.orderId && !o.creditLocked && !(o.stageUrls.some(url => url && url.includes("Merged into"))));
-
-    if (order.completedStages < 3 && secondaryOrders.length > 0 && !order.creditLocked && !isAlreadyMerged) {
-        let secondaryIds = secondaryOrders.map(o => o.orderId).join(',');
-        mergeActionHtml = `<button onclick="executeMerge('${order.orderId}', '${order.shopName}', '${secondaryIds}', this)" class="w-full mt-2 mb-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white font-black py-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2 uppercase tracking-widest border border-blue-500/50">🔗 1-Click Merge: Combine ${secondaryOrders.length} other pending order(s) into this one</button>`;
-    }
-    container.innerHTML += mergeActionHtml;
 
     let stagesListHtml = '<div class="space-y-4">';
     let needsShare = false;
