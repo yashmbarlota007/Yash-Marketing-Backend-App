@@ -64,9 +64,6 @@ function renderMdoDashboard() {
             brandStats[brandName] += itemVal; 
         });
 
-        // ==========================================
-        // LEADERBOARD FIX: Tracking Orders & Value
-        // ==========================================
         if (o.lastUpdatedBy && o.lastUpdatedBy !== "System") {
             let staffKey = o.lastUpdatedBy;
             if(!staffScores[staffKey]) {
@@ -276,7 +273,8 @@ function renderMdoDashboard() {
     
     setTimeout(() => { 
         const ctx = document.getElementById('brandPieChart');
-        if (ctx) {
+        // BUG FIX: Ensure Chart.js is actually loaded before trying to initialize it
+        if (ctx && typeof Chart !== 'undefined') {
             if (brandChartInstance) {
                 brandChartInstance.destroy();
             }
@@ -487,7 +485,6 @@ function renderPipeline() {
         
         // =========================================================
         // AGGRESSIVE HIGHLIGHT FOR SPLIT ORDERS
-        // Normal orders ke beech alag chamkega
         // =========================================================
         if (isSplit && activeStageFilter !== 'completed') {
              vipClass = "bg-purple-900/20 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.25)]";
@@ -524,6 +521,7 @@ function renderPipeline() {
             tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
         }
         
+        // BUG FIX: Removed undefined ${mergeBadge} variable to prevent rendering crash
         const fullCardHtml = `
             <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-500/30 bg-emerald-900/5' : ''}">
                 ${lockOverlay}
@@ -539,7 +537,7 @@ function renderPipeline() {
                         <span class="bg-[#0B1121] ${activeStageFilter === 'completed' ? 'text-emerald-400' : timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
                             ${activeStageFilter === 'completed' ? '✅ COMPLETED' : '⏱️ ' + timeData.text}
                         </span>
-                        ${tatBadge}${slaBadge}${mergeBadge}
+                        ${tatBadge}${slaBadge}
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2 items-center">
                         <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${isCod ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">${order.paymentMode || 'N/A'}</span>
@@ -777,9 +775,6 @@ function openModal(orderId) {
                 let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
                 let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
                 
-                // =========================================================
-                // WHATSAPP PHOTO LABELS FIX (STAGE 7)
-                // =========================================================
                 if (stageNum === 7 && order.stageUrls) {
                     let finalMsgAdditions = "";
                     const photoLabels = {
