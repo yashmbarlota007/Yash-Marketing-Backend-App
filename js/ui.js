@@ -851,6 +851,11 @@ function openModal(orderId) {
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">`;
                 } else {
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div>`;
+                    
+                    // ==========================================
+                    // NEW: AI VERIFY INVOICE BUTTON INJECTED HERE
+                    // ==========================================
+                    inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-[#0B1121] hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/50 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
                 }
                 
                 inputHtml += `<div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button></div>`;
@@ -1015,4 +1020,104 @@ function generateTallyCSV(orderId) {
     document.body.removeChild(link);
     
     showNotification("Tally SO Exported", `Ensure file is CLOSED before importing in Tally.`);
+}
+
+// ==========================================
+// NEW: AI INVOICE SCANNER LOGIC (PLUG & PLAY)
+// ==========================================
+let currentAiOrderId = null;
+
+function openAiScanner(orderId) {
+    currentAiOrderId = orderId;
+    
+    document.getElementById('aiScannerOrderId').innerHTML = `Order: <span class="font-bold text-white">${orderId}</span>`;
+    document.getElementById('invoiceImageInput').value = '';
+    
+    document.getElementById('btnTriggerCamera').classList.remove('hidden');
+    document.getElementById('aiScanningLoader').classList.add('hidden');
+    document.getElementById('aiScanResult').classList.add('hidden');
+    document.getElementById('btnAiContinue').classList.add('hidden');
+    
+    document.getElementById('aiScannerModal').classList.remove('hidden');
+}
+
+function closeAiScanner() {
+    document.getElementById('aiScannerModal').classList.add('hidden');
+    currentAiOrderId = null;
+}
+
+async function previewAndScanInvoice(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 1. Show Loading State
+    document.getElementById('btnTriggerCamera').classList.add('hidden');
+    document.getElementById('aiScanningLoader').classList.remove('hidden');
+
+    try {
+        // 2. Convert to Base64
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        
+        reader.onload = async function () {
+            // Remove 'data:image/jpeg;base64,' prefix for Gemini API payload
+            const base64Data = reader.result.split(',')[1];
+            
+            try {
+                // 3. Call backend API (ensure verifyInvoiceWithAI is present in api.js)
+                const response = await verifyInvoiceWithAI(currentAiOrderId, base64Data);
+                
+                // 4. Handle Response
+                document.getElementById('aiScanningLoader').classList.add('hidden');
+                const resultDiv = document.getElementById('aiScanResult');
+                resultDiv.classList.remove('hidden');
+                document.getElementById('btnAiContinue').classList.remove('hidden');
+                document.getElementById('btnAiContinue').innerText = 'Acknowledge & Close';
+
+                if (response.status === 'success' && response.verification) {
+                    const status = response.verification.status;
+                    const msg = response.verification.message;
+
+                    document.getElementById('aiResultTitle').innerText = status;
+                    document.getElementById('aiResultMessage').innerText = msg;
+
+                    if (status.toLowerCase() === 'match') {
+                        document.getElementById('aiResultIcon').innerText = '✅';
+                        resultDiv.className = 'text-left mt-4 p-4 rounded-xl border border-emerald-500 bg-emerald-900/20';
+                        document.getElementById('aiResultTitle').className = 'text-lg font-black text-emerald-400';
+                    } else {
+                        document.getElementById('aiResultIcon').innerText = '⚠️';
+                        resultDiv.className = 'text-left mt-4 p-4 rounded-xl border border-orange-500 bg-orange-900/20';
+                        document.getElementById('aiResultTitle').className = 'text-lg font-black text-orange-400';
+                    }
+                } else {
+                    throw new Error(response.message || "Invalid AI Response from Server");
+                }
+            } catch (apiErr) {
+                // Error Fallback
+                document.getElementById('aiScanningLoader').classList.add('hidden');
+                const resultDiv = document.getElementById('aiScanResult');
+                resultDiv.classList.remove('hidden');
+                resultDiv.className = 'text-left mt-4 p-4 rounded-xl border border-pink-500 bg-pink-900/20';
+                
+                document.getElementById('aiResultIcon').innerText = '❌';
+                document.getElementById('aiResultTitle').innerText = 'Verification Failed';
+                document.getElementById('aiResultTitle').className = 'text-lg font-black text-pink-400';
+                document.getElementById('aiResultMessage').innerText = apiErr.message;
+                
+                document.getElementById('btnAiContinue').innerText = 'Close & Try Again';
+                document.getElementById('btnAiContinue').classList.remove('hidden');
+            }
+        };
+        
+        reader.onerror = function (error) {
+            console.error('File Error: ', error);
+            alert("Error reading file! Please try uploading again.");
+            closeAiScanner();
+        };
+
+    } catch (err) {
+        alert("System error during scan initiation.");
+        closeAiScanner();
+    }
 }
