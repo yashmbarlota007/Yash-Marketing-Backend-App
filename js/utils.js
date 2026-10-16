@@ -50,44 +50,121 @@ function showNotification(title, message) {
 
 function parseCustomDate(dateStr) {
     if (!dateStr) {
-        return new Date();
-    }
-    let d = new Date(dateStr);
-    // JS natively parsed it perfectly (e.g., standard ISO string)
-    if (!isNaN(d.getTime()) && typeof dateStr !== 'string') {
-        return d;
+        let now = new Date();
+        now._hasTime = false;
+        return now;
     }
     
-    let parts = String(dateStr).split(' ');
-    if (parts.length >= 1) {
-        let dateParts = parts[0].split(/[\/\-]/);
-        if (dateParts.length === 3) {
-            let day = parseInt(dateParts[0], 10);
-            let month = parseInt(dateParts[1], 10) - 1;
-            let year = parseInt(dateParts[2], 10);
-            
-            // BUG FIX: If date comes as YYYY-MM-DD, swap day and year properly
-            if (day > 31) {
-                let tempYear = day;
-                day = year;
-                year = tempYear;
-            }
-            
-            if (year < 100) {
-                year += 2000;
-            }
-            
-            let hours = 0, mins = 0, secs = 0;
-            if (parts.length >= 2) {
-                let timeParts = parts[1].split(':');
-                hours = parseInt(timeParts[0], 10) || 0; 
-                mins = parseInt(timeParts[1], 10) || 0; 
-                secs = parseInt(timeParts[2], 10) || 0;
-            }
-            return new Date(year, month, day, hours, mins, secs);
+    // If already a Date object
+    if (dateStr instanceof Date) {
+        return isNaN(dateStr.getTime()) ? new Date() : dateStr;
+    }
+    
+    // If timestamp number
+    if (typeof dateStr === 'number' && !isNaN(dateStr)) {
+        let d = new Date(dateStr);
+        d._hasTime = true;
+        return d;
+    }
+
+    let str = String(dateStr).trim();
+
+    // Timestamp as numeric string (e.g., "1697463320000")
+    if (/^\d{11,14}$/.test(str)) {
+        let d = new Date(parseInt(str, 10));
+        if (!isNaN(d.getTime())) {
+            d._hasTime = true;
+            return d;
         }
     }
-    return new Date(dateStr) || new Date();
+
+    // ISO string handling (e.g., "2026-10-16T14:35:22.000Z", "2026-10-16T14:35:22")
+    if (str.includes('T')) {
+        let d = new Date(str);
+        if (!isNaN(d.getTime())) {
+            // Check if it was midnight (date-only) vs has explicit time
+            d._hasTime = !(d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0);
+            return d;
+        }
+    }
+
+    let parts = str.split(/\s+/);
+    let datePart = parts[0];
+    let timePart = parts[1];
+    let ampmPart = parts[2];
+
+    let ampm = "";
+    if (ampmPart && /^(AM|PM)$/i.test(ampmPart)) {
+        ampm = ampmPart.toUpperCase();
+    } else if (timePart && /(AM|PM)$/i.test(timePart)) {
+        let m = timePart.match(/(AM|PM)$/i);
+        ampm = m[1].toUpperCase();
+        timePart = timePart.replace(/(AM|PM)$/i, '');
+    }
+
+    let dParts = datePart.split(/[\/\-.]/);
+    if (dParts.length === 3) {
+        let p0 = parseInt(dParts[0], 10);
+        let p1 = parseInt(dParts[1], 10);
+        let p2 = parseInt(dParts[2], 10);
+        let year, month, day;
+
+        // If first part is 4 digits (e.g. YYYY-MM-DD or YYYY/MM/DD)
+        if (p0 > 31) {
+            year = p0;
+            month = p1 - 1;
+            day = p2;
+        } else {
+            // Standard format in India: DD/MM/YYYY
+            year = p2;
+            if (p0 > 12) {
+                day = p0;
+                month = p1 - 1;
+            } else if (p1 > 12) {
+                day = p1;
+                month = p0 - 1;
+            } else {
+                day = p0;
+                month = p1 - 1;
+            }
+        }
+
+        if (year < 100) {
+            year += 2000;
+        }
+
+        let hasTime = false;
+        let hours = 0, mins = 0, secs = 0;
+        if (timePart) {
+            let tParts = timePart.split(':');
+            if (tParts.length >= 2) {
+                hasTime = true;
+                hours = parseInt(tParts[0], 10) || 0;
+                mins = parseInt(tParts[1], 10) || 0;
+                secs = parseInt(tParts[2], 10) || 0;
+
+                if (ampm === 'PM' && hours < 12) {
+                    hours += 12;
+                } else if (ampm === 'AM' && hours === 12) {
+                    hours = 0;
+                }
+            }
+        }
+
+        let d = new Date(year, month, day, hours, mins, secs);
+        d._hasTime = hasTime;
+        return d;
+    }
+
+    let fallback = new Date(str);
+    if (!isNaN(fallback.getTime())) {
+        fallback._hasTime = true;
+        return fallback;
+    }
+
+    let defDate = new Date();
+    defDate._hasTime = false;
+    return defDate;
 }
 
 function formatExactDate(dateString) {
@@ -98,6 +175,11 @@ function formatExactDate(dateString) {
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
+    
+    // If no time was present in original date (date-only)
+    if (d._hasTime === false) {
+        return `Received: ${day}/${month}/${year}`;
+    }
     
     let hours = d.getHours(); 
     const ampm = hours >= 12 ? 'PM' : 'AM'; 
@@ -115,7 +197,26 @@ function getTimeAgoUI(dateString) {
     }
     
     const orderDate = parseCustomDate(dateString);
-    const diffInMs = new Date().getTime() - orderDate.getTime();
+    const now = new Date();
+    
+    // If date has no time component (date-only)
+    if (orderDate._hasTime === false) {
+        let today = new Date(now); today.setHours(0,0,0,0);
+        let orderDay = new Date(orderDate); orderDay.setHours(0,0,0,0);
+        let diffDays = Math.round((today.getTime() - orderDay.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 0) {
+            return { text: "Today", color: "text-emerald-400", isSLAWarning: false };
+        } else if (diffDays === 1) {
+            return { text: "Yesterday", color: "text-emerald-400", isSLAWarning: false };
+        } else if (diffDays === 2) {
+            return { text: "2d ago", color: "text-yellow-400", isSLAWarning: true };
+        } else {
+            return { text: `${diffDays}d ago`, color: "text-pink-500", isSLAWarning: true };
+        }
+    }
+    
+    const diffInMs = now.getTime() - orderDate.getTime();
     
     if (diffInMs < 0) {
         return { text: "Just now", color: "text-emerald-400", isSLAWarning: false };

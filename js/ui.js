@@ -515,7 +515,7 @@ function renderPipeline() {
         let slaBadge = timeData.isSLAWarning ? `<span class="text-[9px] bg-yellow-500/20 text-yellow-400 font-black border border-yellow-500 px-2 py-1 rounded animate-pulse tracking-widest shrink-0">⏳ NEAR BREACH</span>` : "";
         let tatBadge = ""; 
         
-        if (orderDateObj.getHours() < 18 && order.completedStages < 5 && activeStageFilter !== 'completed') { 
+        if (orderDateObj._hasTime !== false && orderDateObj.getHours() < 18 && order.completedStages < 5 && activeStageFilter !== 'completed') { 
             let targetTime = orderDateObj.getTime() + (60 * 60 * 1000);
             tatBadge = `<span class="tat-timer bg-orange-900/30 text-orange-400 text-[10px] px-2 py-1 rounded font-black border border-orange-500/30 shrink-0 animate-pulse" data-target="${targetTime}">⏳ TAT: Calc...</span>`;
         }
@@ -596,7 +596,7 @@ function openModal(orderId) {
     document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
     let tatBadgeEl = document.getElementById('modalTatTimer'); 
-    let isBefore6PM = orderDateObj.getHours() < 18;
+    let isBefore6PM = orderDateObj._hasTime !== false && orderDateObj.getHours() < 18;
     
     if (isBefore6PM && order.completedStages < 5) { 
         let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); 
