@@ -571,7 +571,7 @@ function renderPipeline() {
     });
 }
 
-function openModal(orderId) {
+function openModal(orderId, options = {}) {
     const order = window.appData.orders[orderId];
     if (!order) return;
     
@@ -652,9 +652,14 @@ function openModal(orderId) {
     let lastCompletedStage = order.completedStages;
     const stagesRequiringShare = [1, 3, 4, 5, 8]; 
     
-    if (stagesRequiringShare.includes(lastCompletedStage) && localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') { 
+    let lastCompletedUrls = (order.stageUrls && order.stageUrls[lastCompletedStage - 1]) || "";
+    let hasLastCompletedFiles = lastCompletedUrls.includes("http");
+
+    if (hasLastCompletedFiles && stagesRequiringShare.includes(lastCompletedStage) && localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') { 
         needsShare = true;
     }
+
+    const photos = typeof getOrderPhotos === 'function' ? getOrderPhotos(order) : { stock: '', invoice: '', box: '', isLegacyShifted: false };
     
     for (let i = 0; i < 9; i++) { 
         const stageNum = i + 1; 
@@ -663,12 +668,24 @@ function openModal(orderId) {
         const isLocked = i > order.completedStages;
         let displayStageName = STAGE_NAMES[i]; 
         
-        if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : " 2 (Out-for-delivery)";
+        if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
         
         let uiHtml = '';
         
         if (isCompleted) {
             let cellData = order.stageUrls ? order.stageUrls[i] : ""; 
+
+            // Photo mapping override to ensure exact stock, invoice, and box photos under their matching stages
+            if (stageNum === 3 && photos.stock) {
+                cellData = photos.stock;
+            } else if (stageNum === 4 && photos.invoice) {
+                cellData = photos.invoice;
+            } else if (stageNum === 5 && photos.box) {
+                cellData = photos.box;
+            } else if (photos.isLegacyShifted && stageNum >= 6 && order.stageUrls) {
+                cellData = order.stageUrls[i + 1] || "";
+            }
+
             let timestampDisplay = "", timeTakenDisplay = "", thisEpoch = null; 
             let previousEpoch = parseCustomDate(order.date).getTime(); 
             let staffName = "System";
@@ -780,36 +797,34 @@ function openModal(orderId) {
                     <option value="Others">Others (Type Below)</option>
                 </select><input type="text" id="transportOther" placeholder="Enter transport name..." class="hidden w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-4 font-bold text-sm"><button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Allocate Logistics & Proceed</button></div>`;
             } else if (stageNum === 2 || stageNum === 7) { 
-                let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
-                let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
+                let defaultTemplate = stageNum === 2 
+                    ? "Hello {{shop}}, your order {{orderId}} has been confirmed." 
+                    : (isCod ? "Hello {{shop}}, order {{orderId}} is out for delivery. Total: ₹{{amount}} (COD)." : "Hello {{shop}}, order {{orderId}} is out for delivery.");
+                let msgTemplate = (stageNum === 2 ? window.appSettings?.waMsgStage3 : (isCod ? window.appSettings?.waMsgStage7COD : window.appSettings?.waMsgStage7Prepaid)) || defaultTemplate;
+                let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName || '').replace(/{{orderId}}/g, order.orderId || '').replace(/{{paymentMode}}/g, order.paymentMode || '').replace(/{{amount}}/g, order.totalValue || '0');
                 
                 if (stageNum === 7 && order.stageUrls) {
                     let finalMsgAdditions = "";
-                    const photoLabels = {
-                        2: "*📦 Aapka stock ka photo dekhne ke liye niche click kare:*",
-                        3: "*📄 Aapka bill (invoice) dekhne ke liye niche click kare:*",
-                        4: "*📦 Aapke pack kiye hue box ka photo dekhne ke liye niche click kare:*"
-                    };
+                    const photos = typeof getOrderPhotos === 'function' ? getOrderPhotos(order) : { stock: '', invoice: '', box: '' };
 
-                    [2, 3, 4].forEach(idx => {
-                        let cellData = order.stageUrls[idx] || "";
-                        let urlData = "";
-                        
-                        if (cellData.includes("||")) {
-                            let parts = cellData.split("||");
-                            if (parts[0].includes("http")) urlData = parts[0].trim();
-                            else if (parts.length > 1 && parts[1].includes("http")) urlData = parts[1].trim();
-                        } else if (cellData.includes("http")) {
-                            urlData = cellData.trim();
+                    if (photos.stock) {
+                        let links = extractHttpLinks(photos.stock);
+                        if (links.length > 0) {
+                            finalMsgAdditions += `\n\n*📦 Aapka stock ka photo dekhne ke liye niche click kare:*\n${links.join('\n')}`;
                         }
-                        
-                        if (urlData) {
-                            let links = urlData.split(',').map(l => l.trim()).filter(l => l.includes("http"));
-                            if (links.length > 0) {
-                                finalMsgAdditions += `\n\n${photoLabels[idx]}\n${links.join('\n')}`;
-                            }
+                    }
+                    if (photos.invoice) {
+                        let links = extractHttpLinks(photos.invoice);
+                        if (links.length > 0) {
+                            finalMsgAdditions += `\n\n*📄 Aapka bill (invoice) dekhne ke liye niche click kare:*\n${links.join('\n')}`;
                         }
-                    });
+                    }
+                    if (photos.box) {
+                        let links = extractHttpLinks(photos.box);
+                        if (links.length > 0) {
+                            finalMsgAdditions += `\n\n*📦 Aapke pack kiye hue box ka photo dekhne ke liye niche click kare:*\n${links.join('\n')}`;
+                        }
+                    }
 
                     if (finalMsgAdditions !== "") {
                         finalMsg += finalMsgAdditions;
@@ -853,9 +868,11 @@ function openModal(orderId) {
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div>`;
                     
                     // ==========================================
-                    // NEW: AI VERIFY INVOICE BUTTON INJECTED HERE
+                    // NEW: AI VERIFY INVOICE BUTTON INJECTED HERE (STAGE 4 ONLY)
                     // ==========================================
-                    inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-[#0B1121] hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/50 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
+                    if (stageNum === 4) {
+                        inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-[#0B1121] hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/50 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
+                    }
                 }
                 
                 inputHtml += `<div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button></div>`;
@@ -881,6 +898,7 @@ function openModal(orderId) {
 }
 
 function closeModal() { 
+    queuedFiles = [];
     document.getElementById('orderModal').classList.add('hidden'); 
     fetchOrders(true); 
 }
@@ -949,12 +967,18 @@ function clearQueuedFiles(stageNum) {
 }
 
 window.shareToGroup = function(stageNum, fileUrlsString) {
+    if (!currentActiveOrder) return;
     const orderId = currentActiveOrder.orderId; 
     const shop = currentActiveOrder.shopName; 
-    const stageName = STAGE_NAMES[stageNum - 1]; 
+    const stageName = STAGE_NAMES[stageNum - 1] || `Stage ${stageNum}`; 
     
-    let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
-    let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
+    let links = (fileUrlsString && typeof fileUrlsString === 'string') 
+        ? fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).filter(Boolean).join('\n') 
+        : '';
+    let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}`;
+    if (links) {
+        msg += `\n\n*Attached Files/Proof:*\n${links}`;
+    }
     
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     
@@ -1089,6 +1113,24 @@ async function previewAndScanInvoice(event) {
                         document.getElementById('aiResultIcon').innerText = '⚠️';
                         resultDiv.className = 'text-left mt-4 p-4 rounded-xl border border-orange-500 bg-orange-900/20';
                         document.getElementById('aiResultTitle').className = 'text-lg font-black text-orange-400';
+                    }
+
+                    // Auto-queue the scanned invoice photo for Stage 4 (Invoiced)
+                    queuedFiles = [file];
+                    const statusLabel = document.getElementById('fileStatusText_4');
+                    const clearBtn = document.getElementById('clearFilesBtn_4');
+                    const container = document.getElementById('fileStatusContainer_4');
+                    const previewBox = document.getElementById('previewBox_4');
+                    
+                    if (statusLabel) {
+                        statusLabel.innerText = `✓ 1 File Ready (AI Scanned Bill)`;
+                        statusLabel.classList.remove('hidden');
+                    }
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                    if (container) container.classList.remove('hidden');
+                    if (previewBox) {
+                        previewBox.innerHTML = `<img src="${reader.result}" class="w-12 h-12 object-cover rounded border border-emerald-500 shadow-sm">`;
+                        previewBox.classList.remove('hidden');
                     }
                 } else {
                     throw new Error(response.message || "Invalid AI Response from Server");

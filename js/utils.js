@@ -313,3 +313,58 @@ function getBase64(file) {
         reader.onerror = error => reject(error);
     });
 }
+
+function extractHttpLinks(cellData) {
+    if (!cellData || typeof cellData !== 'string') return [];
+    let urlData = "";
+    if (cellData.includes("||")) {
+        let parts = cellData.split("||");
+        if (parts[0].includes("http")) urlData = parts[0].trim();
+        else if (parts.length > 1 && parts[1].includes("http")) urlData = parts[1].trim();
+    } else if (cellData.includes("http")) {
+        urlData = cellData.trim();
+    }
+    if (!urlData) return [];
+    return urlData.split(',').map(l => l.trim()).filter(l => l.includes("http"));
+}
+
+function getOrderPhotos(order) {
+    if (!order || !order.stageUrls) {
+        return { stock: '', invoice: '', box: '', isLegacyShifted: false };
+    }
+    
+    const isImage = (str) => {
+        if (!str || typeof str !== 'string') return false;
+        if (!str.includes('http')) return false;
+        let lower = str.toLowerCase();
+        if (lower.includes('audio') || lower.includes('.mp3') || lower.includes('.m4a') || lower.includes('.wav')) return false;
+        return true;
+    };
+
+    let u2 = isImage(order.stageUrls[2]) ? order.stageUrls[2] : '';
+    let u3 = isImage(order.stageUrls[3]) ? order.stageUrls[3] : '';
+    let u4 = isImage(order.stageUrls[4]) ? order.stageUrls[4] : '';
+    let u5 = isImage(order.stageUrls[5]) ? order.stageUrls[5] : '';
+
+    // If u5 contains an image, or u3 has an image and u2 is empty, it's the legacy-shifted layout (Col 13=Stock, Col 14=Invoice, Col 15=Box)
+    let isLegacyShifted = (u5 !== '') || (!u2 && u3 !== '' && !isImage(order.stageUrls[1]));
+
+    if (isLegacyShifted) {
+        return {
+            stock: u3,
+            invoice: u4,
+            box: u5,
+            isLegacyShifted: true
+        };
+    }
+
+    return {
+        stock: u2,
+        invoice: u3,
+        box: u4,
+        isLegacyShifted: false
+    };
+}
+
+window.extractHttpLinks = extractHttpLinks;
+window.getOrderPhotos = getOrderPhotos;

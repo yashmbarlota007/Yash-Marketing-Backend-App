@@ -1,27 +1,62 @@
 // js/api.js
 
 // --- MASTER KEY BYPASS SYSTEM ---
-// --- MASTER KEY BYPASS SYSTEM (NO HEADERS) ---
-async function gasRequest(payloadObj) {
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            // Yahan se humne 'headers' puri tarah hata diye hain. 
-            // Isse browser isey 'text/plain' manega aur CORS block nahi karega.
-            body: JSON.stringify(payloadObj)
-        });
-        
-        const textResponse = await res.text();
-        
+// --- MASTER KEY BYPASS SYSTEM (NO HEADERS + AUTO RETRY) ---
+async function gasRequest(payloadObj, options = {}) {
+    const maxRetries = options.retries !== undefined ? options.retries : 2;
+    const timeoutMs = options.timeoutMs || 35000;
+    const onRetry = options.onRetry || null;
+    let lastError = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
-            return JSON.parse(textResponse);
-        } catch (parseErr) {
-            console.error("Backend sent HTML instead of JSON:", textResponse);
-            throw new Error("System Error: Google script failed to return JSON.");
+            if (attempt > 0 && typeof onRetry === 'function') {
+                onRetry(attempt, maxRetries);
+            }
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                // Keep no custom headers so browser sends as text/plain avoiding CORS preflight
+                body: JSON.stringify(payloadObj),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            const textResponse = await res.text();
+
+            try {
+                return JSON.parse(textResponse);
+            } catch (parseErr) {
+                console.error(`gasRequest (attempt ${attempt + 1}/${maxRetries + 1}) non-JSON response:`, textResponse);
+                // If Google Apps Script sent an HTML warmup/busy page, retry if attempts remain
+                if (attempt < maxRetries) {
+                    await new Promise(r => setTimeout(r, (attempt + 1) * 1500));
+                    continue;
+                }
+                throw new Error("System Error: Google script failed to return valid JSON.");
+            }
+        } catch (networkErr) {
+            clearTimeout(timeoutId);
+            lastError = networkErr;
+
+            const isAbort = networkErr.name === 'AbortError';
+            console.warn(`gasRequest attempt ${attempt + 1}/${maxRetries + 1} failed:`, isAbort ? "Request timed out" : networkErr.message);
+
+            if (attempt < maxRetries) {
+                const delayMs = (attempt + 1) * 1500;
+                await new Promise(r => setTimeout(r, delayMs));
+                continue;
+            }
         }
-    } catch (networkErr) {
-        throw new Error("Failed to fetch: Check internet or Google Apps Script URL.");
     }
+
+    if (lastError && lastError.name === 'AbortError') {
+        throw new Error("Request timed out. Server is busy, please tap to retry.");
+    }
+    throw new Error(lastError?.message || "Failed to fetch: Check internet or Google Apps Script URL.");
 }
 
 async function fetchOrders(isSilent = false) {
@@ -33,7 +68,7 @@ async function fetchOrders(isSilent = false) {
     }
     
     try {
-        const response = await gasRequest({ action: 'getOrders', staffName: currentUserName });
+        const response = await gasRequest({ action: 'getOrders', staffName: currentUserName }, { retries: 1 });
         
         if (response.status === 'success') {
             if (response.settings) window.appSettings = response.settings;
@@ -82,10 +117,16 @@ async function executeUnblock(orderId) {
 }
 
 async function submitStage(stageNum) {
+    // 1. Double-submit prevention lock
+    if (window.isSubmittingStage) {
+        console.warn("Stage submission already in progress. Ignoring duplicate click.");
+        return;
+    }
+
     const btn = document.getElementById(`submitBtn_${stageNum}`); 
     const statusLabel = document.getElementById(`status_${stageNum}`);
     
-    // BUG FIX: Added safety check for currentActiveOrder
+    // Safety check for active order
     if (!currentActiveOrder) {
         alert("System Error: No active order found to process.");
         return;
@@ -93,12 +134,22 @@ async function submitStage(stageNum) {
 
     let isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
 
-    let payload = { action: 'updateStage', orderId: currentActiveOrder.orderId, stage: stageNum, files: [], isNoResponse: false, isWhatsAppOnly: false, partialStock: null, staffName: currentUserName };
+    let payload = { 
+        action: 'updateStage', 
+        orderId: currentActiveOrder.orderId, 
+        stage: stageNum, 
+        files: [], 
+        isNoResponse: false, 
+        isWhatsAppOnly: false, 
+        partialStock: null, 
+        staffName: currentUserName 
+    };
+
     const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
     if (noRespCheckbox && noRespCheckbox.checked) payload.isNoResponse = true; 
     
+    // Stage 6 Validation
     if (stageNum === 6) { 
-        // BUG FIX: Used optional chaining to prevent crash if DOM elements are missing
         let runnerVal = document.getElementById('runnerSelect')?.value;
         let transportVal = document.getElementById('transportSelect')?.value;
         
@@ -106,51 +157,25 @@ async function submitStage(stageNum) {
         let transport = transportVal === "Others" ? document.getElementById('transportOther')?.value : transportVal;
         
         if (!runner || !transport) { 
-            alert("Accountability requires data!"); 
-            if (btn) { btn.disabled = false; btn.innerText = "Allocate Logistics & Proceed"; } 
+            alert("Accountability requires data! Please select both runner and transport."); 
             return; 
         }
         payload.actionText = `Runner: ${runner} | Transport: ${transport}`;
     }
     
-    let fileRequired = !(payload.isNoResponse || stageNum === 9 || stageNum === 6 || stageNum === 2 || (stageNum === 7 && !isCod));
-    if (fileRequired && queuedFiles.length === 0) { 
-        alert(stageNum === 7 && isCod ? "For COD Orders, Call Recording is MANDATORY." : "A file proof (Screenshot/Photo) is mandatory."); 
-        return; 
-    }
-    if (!fileRequired && queuedFiles.length === 0 && (stageNum === 2 || stageNum === 7)) payload.isWhatsAppOnly = true; 
-    
-    // ==========================================
-    // NEW: BUFFER ANIMATION & BUTTON LOCK
-    // ==========================================
-    if (btn) { 
-        btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> EXECUTING (WAIT 3-4s)...`;
-        btn.disabled = true; 
-        btn.classList.add('opacity-70', 'cursor-not-allowed');
-    }
-    
-    // Convert files (Ensure compressImage and getBase64 are defined in utils.js)
-    if (typeof compressImage === 'function' && typeof getBase64 === 'function') {
-        for (let i = 0; i < queuedFiles.length; i++) {
-            let f = queuedFiles[i];
-            payload.files.push(f.type.startsWith('image/') ? await compressImage(f) : await getBase64(f)); 
-        }
-    }
-    
+    // Stage 9 Validation
     if (stageNum === 9) { 
-        // BUG FIX: Prevent crash if rating input is missing
         const rating = document.getElementById('ratingInput')?.value;
         if (!rating) { 
             alert("Customer Rating is mandatory."); 
-            if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
             return; 
         }
         payload.rating = rating;
     }
 
+    // Stage 3 Validation
     if (stageNum === 3) { 
         let processed = [], short = [];
-        // BUG FIX: Ensure items array exists before iterating
         if (currentActiveOrder.items && currentActiveOrder.items.length > 0) {
             currentActiveOrder.items.forEach((item, idx) => {
                 let chk = document.getElementById(`chk_item_${idx}`);
@@ -171,65 +196,170 @@ async function submitStage(stageNum) {
         
         if (processed.length === 0) { 
             alert("You must dispatch at least one item."); 
-            if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
             return; 
         }
         if (short.length > 0) payload.partialStock = { processedItems: processed, shortItems: short }; 
     }
-    
+
+    // File Proof Validation
+    let fileRequired = !(payload.isNoResponse || stageNum === 9 || stageNum === 6 || stageNum === 2 || (stageNum === 7 && !isCod));
+    if (fileRequired && queuedFiles.length === 0) { 
+        alert(stageNum === 7 && isCod ? "For COD Orders, Call Recording is MANDATORY." : "A file proof (Screenshot/Photo) is mandatory."); 
+        return; 
+    }
+    if (!fileRequired && queuedFiles.length === 0 && (stageNum === 2 || stageNum === 7)) payload.isWhatsAppOnly = true; 
+
+    // --- LOCK SUBMISSION & SHOW SPINNER ---
+    window.isSubmittingStage = true;
+    if (btn) { 
+        btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> PROCESSING...`;
+        btn.disabled = true; 
+        btn.classList.add('opacity-70', 'cursor-not-allowed');
+    }
     if (statusLabel) { 
-        statusLabel.innerText = "📡 Uplinking Data..."; 
+        statusLabel.innerText = "⏳ Preparing Payload..."; 
         statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
         statusLabel.classList.remove('hidden'); 
     }
 
     try {
-        const data = await gasRequest(payload);
-        if (data.status === 'success') { 
+        // Step A: Process files with compression & safe fallback
+        if (queuedFiles.length > 0) {
+            for (let i = 0; i < queuedFiles.length; i++) {
+                let f = queuedFiles[i];
+                if (statusLabel) {
+                    statusLabel.innerText = `📸 Compressing Photo (${i + 1}/${queuedFiles.length})...`;
+                }
+                try {
+                    if (f.type.startsWith('image/') && typeof compressImage === 'function') {
+                        payload.files.push(await compressImage(f)); 
+                    } else if (typeof getBase64 === 'function') {
+                        payload.files.push(await getBase64(f)); 
+                    }
+                } catch (imgErr) {
+                    console.warn("Image compression failed, falling back to raw base64:", imgErr);
+                    if (typeof getBase64 === 'function') {
+                        payload.files.push(await getBase64(f));
+                    }
+                }
+            }
+        }
+
+        // Step B: Transmit to Google Apps Script
+        if (statusLabel) { 
+            statusLabel.innerText = "📡 Uplinking Data to Server..."; 
+            statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
+        }
+        if (btn) {
+            btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> TRANSMITTING...`;
+        }
+
+        const data = await gasRequest(payload, {
+            retries: 2,
+            timeoutMs: 35000,
+            onRetry: (attempt, maxRetries) => {
+                if (statusLabel) {
+                    statusLabel.innerText = `🔄 Server warming up... Auto-retrying (${attempt}/${maxRetries})`;
+                    statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-yellow-400 block animate-pulse text-center uppercase";
+                }
+                if (btn) {
+                    btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> RETRYING (${attempt}/${maxRetries})...`;
+                }
+            }
+        });
+
+        // Step C: On Successful Backend Execution
+        if (data && data.status === 'success') { 
             if (btn) { 
-                btn.innerHTML = "✓ SUCCESS"; 
-                btn.classList.remove('opacity-70', 'cursor-not-allowed'); 
-                btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+                btn.innerHTML = "✓ SUBMITTED SUCCESSFULLY"; 
+                btn.classList.remove('opacity-70', 'cursor-not-allowed', 'bg-indigo-600', 'bg-pink-600', 'hover:bg-indigo-500', 'hover:bg-pink-500'); 
+                btn.classList.add('bg-emerald-600');
             } 
+            if (statusLabel) {
+                statusLabel.innerText = "✓ Confirmed by Server";
+                statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-emerald-400 block text-center uppercase";
+            }
+
             queuedFiles = []; 
+
             if (data.splitOrderId) { 
                 alert(`✂️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); 
                 showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); 
             }
-            
-            // ====================================================
-            // NEW: CAPTURE GOOGLE DRIVE IMAGE URLS FOR WHATSAPP
-            // ====================================================
-            if (stageNum === 7 && data.fileUrls && data.fileUrls.length > 0) {
-                currentActiveOrder.recentFileUrls = data.fileUrls;
+
+            // 1. Optimistic Local State Update
+            const targetOrderId = currentActiveOrder.orderId;
+            const newCompletedStage = Math.max(Number(currentActiveOrder.completedStages) || 0, stageNum);
+            currentActiveOrder.completedStages = newCompletedStage;
+
+            if (!Array.isArray(currentActiveOrder.stageUrls)) {
+                currentActiveOrder.stageUrls = [];
             }
 
-            await fetchOrders(true); 
-            
-            // Check if openModal is defined to prevent errors
-            if (typeof openModal === 'function') {
-                if (stageNum === 7 && currentActiveOrder.recentFileUrls) {
-                    openModal(currentActiveOrder.orderId, { triggerWhatsApp: true });
-                } else {
-                    openModal(currentActiveOrder.orderId); 
+            let savedUrlText = "";
+            if (data.fileUrls && data.fileUrls.length > 0) {
+                let fileUrlsStr = data.fileUrls.join(',');
+                savedUrlText = payload.actionText ? `[${payload.actionText}] || ${fileUrlsStr}` : fileUrlsStr;
+                if (stageNum === 7) {
+                    currentActiveOrder.recentFileUrls = data.fileUrls;
                 }
+            } else if (payload.actionText) {
+                savedUrlText = `[${payload.actionText}]`;
+            } else if (payload.isWhatsAppOnly) {
+                savedUrlText = "[WhatsApp Sent]";
+            } else if (payload.isNoResponse) {
+                savedUrlText = "[No Response]";
             }
+
+            if (savedUrlText) {
+                currentActiveOrder.stageUrls[stageNum - 1] = savedUrlText;
+            }
+
+            // Sync with global window.appData.orders
+            if (window.appData && window.appData.orders && window.appData.orders[targetOrderId]) {
+                Object.assign(window.appData.orders[targetOrderId], currentActiveOrder);
+            }
+
+            // Refresh grid cards in background
+            if (typeof applyDateFilter === 'function') {
+                try { applyDateFilter(); } catch(e) { console.error(e); }
+            }
+
+            // 2. Advance Modal UI smoothly (after brief 400ms confirmation feedback)
+            setTimeout(() => {
+                if (typeof openModal === 'function') {
+                    if (stageNum === 7 && currentActiveOrder.recentFileUrls) {
+                        openModal(targetOrderId, { triggerWhatsApp: true });
+                    } else if (stageNum >= 9) {
+                        showNotification("ORDER COMPLETED", `Order ${targetOrderId} is successfully completed!`);
+                        if (typeof closeModal === 'function') closeModal();
+                    } else {
+                        openModal(targetOrderId); 
+                    }
+                }
+            }, 400);
+
+            // 3. Silent background refresh to guarantee complete data parity with sheet
+            fetchOrders(true).catch(e => console.warn("Background fetchOrders notice:", e));
             
         } else { 
-            throw new Error(data.message); 
+            throw new Error(data?.message || "Server rejected stage update."); 
         }
     } catch (err) {
+        console.error("submitStage error:", err);
         if (statusLabel) { 
-            statusLabel.innerText = "❌ " + (err.message || "Network Drop."); 
+            statusLabel.innerText = "❌ " + (err.message || "Network Drop. Please tap Retry."); 
             statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
         }
         if (btn) { 
             btn.innerText = "Retry Transmission"; 
-            btn.classList.replace('bg-indigo-600', 'bg-pink-600'); 
-            btn.classList.replace('hover:bg-indigo-500', 'hover:bg-pink-500'); 
+            btn.classList.remove('bg-indigo-600', 'bg-emerald-600', 'hover:bg-indigo-500'); 
+            btn.classList.add('bg-pink-600', 'hover:bg-pink-500'); 
             btn.disabled = false; 
             btn.classList.remove('opacity-70', 'cursor-not-allowed');
         }
+    } finally {
+        window.isSubmittingStage = false;
     }
 }
 
