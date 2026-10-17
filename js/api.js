@@ -231,7 +231,8 @@ async function submitStage(stageNum) {
                     statusLabel.innerText = `📸 Compressing Photo (${i + 1}/${queuedFiles.length})...`;
                 }
                 try {
-                    if (f.type.startsWith('image/') && typeof compressImage === 'function') {
+                    let isAudio = f.type.startsWith('audio/') || /\.(mp3|m4a|wav|aac|ogg)$/i.test(f.name);
+                    if (!isAudio && typeof compressImage === 'function') {
                         payload.files.push(await compressImage(f)); 
                     } else if (typeof getBase64 === 'function') {
                         payload.files.push(await getBase64(f)); 

@@ -455,7 +455,7 @@ function renderPipeline() {
         
         if (order.completedStages < 9) {
             if (order.completedStages === 6) {
-                nextStepName = isCod ? "Call 2" : " 2";
+                nextStepName = isCod ? "Call 2" : "WhatsApp 2";
             } else {
                 nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
             }
@@ -885,7 +885,26 @@ function openModal(orderId, options = {}) {
             }
             
             if (needsShare) {
-                uiHtml = `<div class="bg-orange-900/10 border-2 border-orange-500/30 rounded-xl p-5 relative overflow-hidden mt-4"><div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div><div class="flex justify-between items-center mb-2"><span class="text-white font-black text-lg text-opacity-50">${stageNum}. ${displayStageName}</span><span class="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase">🔒 LOCKED</span></div><p class="text-xs text-orange-400 font-bold mt-3">⚠️ Action Required: Upar scroll karein aur agla step unlock karne ke liye flashing green "Share to Group" button daba kar update share karein.</p></div>`;
+                let prevStageName = STAGE_NAMES[lastCompletedStage - 1] || `Step ${lastCompletedStage}`;
+                uiHtml = `
+                    <div class="bg-orange-900/10 border-2 border-orange-500/30 rounded-xl p-5 relative overflow-hidden mt-4">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-white font-black text-lg text-opacity-50">${stageNum}. ${displayStageName}</span>
+                            <span class="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase">🔒 LOCKED</span>
+                        </div>
+                        <p class="text-xs text-orange-400 font-bold mt-2">
+                            ⚠️ Action Required: Pichla step (${prevStageName}) WhatsApp group me share karein taaki ye step unlock ho sake.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <button onclick="shareToGroup(${lastCompletedStage}, '${lastCompletedUrls}')" class="bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-black py-2.5 px-4 rounded-xl flex items-center gap-2 shadow-lg transition-all active:scale-95 uppercase tracking-wider">
+                                <span>📤</span> Share Update to WhatsApp
+                            </button>
+                            <button onclick="localStorage.setItem('shared_${order.orderId}_${lastCompletedStage}', 'true'); openModal('${order.orderId}');" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-2.5 px-4 rounded-xl border border-slate-700 transition-all active:scale-95">
+                                ✓ Already Shared / Proceed
+                            </button>
+                        </div>
+                    </div>`;
             } else {
                 uiHtml = `<div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]"><div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div><div class="flex justify-between items-center mb-2"><span class="text-white font-black text-lg">${stageNum}. ${displayStageName}</span><span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span></div><div id="actionArea_${stageNum}">${inputHtml}</div><p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p></div>`;
             }
@@ -906,18 +925,23 @@ function closeModal() {
 function handleFileSelection(inputElement, stageNum) {
     const newFiles = Array.from(inputElement.files);
     const validFiles = [];
-    const MAX_SIZE = 6 * 1024 * 1024; 
+    const MAX_AUDIO_SIZE = 6 * 1024 * 1024; // 6MB for audio recordings
+    const MAX_IMAGE_SIZE = 35 * 1024 * 1024; // 35MB for camera photos (will be compressed by canvas)
 
     for (let f of newFiles) {
-        if (f.size > MAX_SIZE) {
-            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB.`);
+        let isAudio = f.type.startsWith('audio/') || /\.(mp3|m4a|wav|aac|ogg)$/i.test(f.name);
+        let limit = isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
+        if (f.size > limit) {
+            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep ${isAudio ? 'audio recordings under 6MB' : 'photos under 35MB'}.`);
         } else {
             validFiles.push(f);
         }
     }
 
+    // Reset input value so re-selecting same photo or retaking camera photo works
+    inputElement.value = '';
+
     if (validFiles.length === 0) {
-        inputElement.value = ''; 
         return;
     }
 
@@ -929,8 +953,10 @@ function handleFileSelection(inputElement, stageNum) {
     const previewBox = document.getElementById(`previewBox_${stageNum}`);
     
     if (queuedFiles.length > 0) {
-        statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
-        statusLabel.classList.remove('hidden'); 
+        if (statusLabel) {
+            statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
+            statusLabel.classList.remove('hidden'); 
+        }
         
         if (clearBtn) clearBtn.classList.remove('hidden'); 
         if (container) container.classList.remove('hidden');
@@ -940,12 +966,19 @@ function handleFileSelection(inputElement, stageNum) {
             previewBox.classList.remove('hidden');
             
             queuedFiles.forEach(file => {
-                if (file.type.startsWith('audio/')) {
-                    previewBox.innerHTML += `<div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">🎤<br/>Audio</div>`; 
+                let isAudio = file.type.startsWith('audio/') || /\.(mp3|m4a|wav|aac|ogg)$/i.test(file.name);
+                if (isAudio) {
+                    let audioBadge = document.createElement('div');
+                    audioBadge.className = "w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner";
+                    audioBadge.innerHTML = "🎤<br/>Audio";
+                    previewBox.appendChild(audioBadge);
                 } else { 
                     const reader = new FileReader(); 
                     reader.onload = function(e) { 
-                        previewBox.innerHTML += `<img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">`; 
+                        let imgThumb = document.createElement('img');
+                        imgThumb.src = e.target.result;
+                        imgThumb.className = "w-12 h-12 object-cover rounded border border-slate-600 shadow-sm";
+                        previewBox.appendChild(imgThumb);
                     }; 
                     reader.readAsDataURL(file); 
                 }
@@ -956,6 +989,11 @@ function handleFileSelection(inputElement, stageNum) {
 
 function clearQueuedFiles(stageNum) {
     queuedFiles = [];
+    
+    const actionArea = document.getElementById(`actionArea_${stageNum}`);
+    if (actionArea) {
+        actionArea.querySelectorAll('input[type="file"]').forEach(i => i.value = '');
+    }
     
     if (document.getElementById(`fileStatusText_${stageNum}`)) document.getElementById(`fileStatusText_${stageNum}`).classList.add('hidden'); 
     if (document.getElementById(`clearFilesBtn_${stageNum}`)) document.getElementById(`clearFilesBtn_${stageNum}`).classList.add('hidden'); 

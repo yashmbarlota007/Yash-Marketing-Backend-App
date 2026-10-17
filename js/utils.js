@@ -262,40 +262,79 @@ function makeDirectDriveLink(url) {
 
 function compressImage(file) {
     return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
+        // Safety timeout of 10s so it never hangs indefinitely
+        const timeout = setTimeout(() => {
+            reject(new Error("Image compression timed out"));
+        }, 10000);
 
-        img.onload = () => {
-            // Instantly free up the memory pointer once the image is loaded
-            URL.revokeObjectURL(objectUrl);
+        const renderCanvas = (img) => {
+            try {
+                const canvas = document.createElement('canvas');
+                const MAX_DIM = 900;
+                let scale = 1;
 
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            let scale = 1;
+                if (img.width > MAX_DIM || img.height > MAX_DIM) {
+                    scale = Math.min(MAX_DIM / img.width, MAX_DIM / img.height);
+                }
 
-            if (img.width > MAX_WIDTH) {
-                scale = MAX_WIDTH / img.width;
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                let base64Data = canvas.toDataURL('image/jpeg', 0.80);
+                let splitData = base64Data.split(',')[1];
+                resolve({
+                    name: file.name,
+                    mimeType: 'image/jpeg',
+                    base64: splitData
+                });
+            } catch (err) {
+                reject(err);
             }
-
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
-
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            resolve({
-                name: file.name,
-                mimeType: 'image/jpeg',
-                base64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
-            });
         };
 
-        img.onerror = (error) => {
-            URL.revokeObjectURL(objectUrl);
-            reject(error);
+        const tryWithDataUrl = () => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img2 = new Image();
+                img2.onload = () => {
+                    clearTimeout(timeout);
+                    renderCanvas(img2);
+                };
+                img2.onerror = (err) => {
+                    clearTimeout(timeout);
+                    reject(err);
+                };
+                img2.src = e.target.result;
+            };
+            reader.onerror = (err) => {
+                clearTimeout(timeout);
+                reject(err);
+            };
+            reader.readAsDataURL(file);
         };
 
-        img.src = objectUrl;
+        try {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+
+            img.onload = () => {
+                clearTimeout(timeout);
+                URL.revokeObjectURL(objectUrl);
+                renderCanvas(img);
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(objectUrl);
+                tryWithDataUrl();
+            };
+
+            img.src = objectUrl;
+        } catch (e) {
+            tryWithDataUrl();
+        }
     });
 }
 
