@@ -628,14 +628,32 @@ function openModal(orderId) {
     if (order.items && order.items.length > 0) {
         order.items.forEach(item => {
             let imgTag = item.image ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
+            let itemRate = parseFloat(item.unitPrice || 0);
+            let itemTotal = parseFloat(item.totalValue !== undefined && item.totalValue !== null && item.totalValue !== "" ? item.totalValue : (itemRate * parseInt(item.qty || 1)));
+
             itemsHtml += `
-                <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
+                <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800 hover:border-slate-700 transition-all">
                     ${imgTag}
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs text-slate-300 font-bold leading-tight text-wrap-custom">${item.name}</p>
-                        <div class="mt-2 flex items-center gap-2">
-                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Qty:</span>
-                            <span class="text-xs font-black text-indigo-400 bg-indigo-900/30 border border-indigo-500/20 px-2 py-0.5 rounded shadow-inner">${item.qty}</span>
+                        <p class="text-xs text-slate-200 font-bold leading-tight text-wrap-custom">${item.name}</p>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <!-- Qty -->
+                            <div class="flex items-center gap-1.5 bg-indigo-950/40 border border-indigo-500/30 px-2 py-0.5 rounded shadow-inner">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Qty:</span>
+                                <span class="text-xs font-black text-indigo-400">${item.qty}</span>
+                            </div>
+                            
+                            <!-- Per Item Rate -->
+                            <div class="flex items-center gap-1.5 bg-amber-950/30 border border-amber-500/30 px-2 py-0.5 rounded shadow-inner">
+                                <span class="text-[9px] font-black text-amber-300/70 uppercase tracking-widest">Rate:</span>
+                                <span class="text-xs font-black text-amber-400">₹${itemRate.toLocaleString('en-IN')}</span>
+                            </div>
+
+                            <!-- Total Value -->
+                            <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded shadow-inner">
+                                <span class="text-[9px] font-black text-emerald-300/70 uppercase tracking-widest">Total:</span>
+                                <span class="text-xs font-black text-emerald-400">₹${itemTotal.toLocaleString('en-IN')}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -842,7 +860,9 @@ function openModal(orderId) {
                     inputHtml += `<div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner"><p class="text-sm text-slate-300 mb-4 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-xl">☑</span> Confirm Available Stock</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto hide-scrollbar p-2">`;
                     order.items.forEach((item, idx) => {
                         let imgTag = item.image ? `<img src="${item.image}" class="w-16 h-16 object-contain rounded-lg bg-white p-1 shrink-0 shadow-sm border border-slate-600">` : `<div class="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
-                        inputHtml += `<div class="flex flex-col bg-[#1E293B] p-4 rounded-xl border-2 border-slate-700 hover:border-indigo-500 transition-all shadow-md"><div class="flex items-start gap-4"><input type="checkbox" id="chk_item_${idx}" checked class="w-6 h-6 rounded border-slate-600 bg-slate-800 text-indigo-500 mt-1 cursor-pointer shrink-0">${imgTag}<div class="flex-1 min-w-0"><h4 class="text-base font-black text-white leading-tight break-words">${item.name}</h4><div class="mt-4 flex items-center justify-between bg-[#0B1121] p-2 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Process Qty:</span><input type="number" id="qty_item_${idx}" value="${item.qty}" max="${item.qty}" min="0" class="w-16 bg-[#131C31] text-indigo-400 text-lg font-black p-1.5 rounded-lg border border-indigo-500/30 text-center outline-none focus:border-indigo-400"></div></div></div></div>`;
+                        let itemRate = parseFloat(item.unitPrice || 0);
+                        let itemTotal = parseFloat(item.totalValue !== undefined && item.totalValue !== null && item.totalValue !== "" ? item.totalValue : (itemRate * parseInt(item.qty || 1)));
+                        inputHtml += `<div class="flex flex-col bg-[#1E293B] p-4 rounded-xl border-2 border-slate-700 hover:border-indigo-500 transition-all shadow-md"><div class="flex items-start gap-4"><input type="checkbox" id="chk_item_${idx}" checked class="w-6 h-6 rounded border-slate-600 bg-slate-800 text-indigo-500 mt-1 cursor-pointer shrink-0">${imgTag}<div class="flex-1 min-w-0"><h4 class="text-base font-black text-white leading-tight break-words">${item.name}</h4><div class="mt-4 flex flex-wrap items-center justify-between gap-2 bg-[#0B1121] p-2 rounded-lg border border-slate-800"><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Process Qty:</span><input type="number" id="qty_item_${idx}" value="${item.qty}" max="${item.qty}" min="0" class="w-16 bg-[#131C31] text-indigo-400 text-lg font-black p-1.5 rounded-lg border border-indigo-500/30 text-center outline-none focus:border-indigo-400"></div><div class="flex items-center gap-2 text-xs"><span class="text-amber-400 font-bold bg-amber-950/30 px-2 py-1 rounded border border-amber-500/20">Rate: ₹${itemRate.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-black bg-emerald-950/30 px-2 py-1 rounded border border-emerald-500/20">Total: ₹${itemTotal.toLocaleString('en-IN')}</span></div></div></div></div></div>`;
                     });
                     inputHtml += `</div><p class="text-[10px] text-orange-400 mt-4 font-bold leading-tight bg-orange-900/10 p-3 rounded-lg border border-orange-500/20 text-center uppercase tracking-widest">* Unchecked items or reduced quantities automatically create a new SPLIT-ORDER.</p></div>`;
                 }
@@ -1005,7 +1025,9 @@ function generateTallyCSV(orderId) {
     let formattedDate = parseCustomDate(order.date).toLocaleDateString('en-GB'); 
     
     order.items.forEach(item => { 
-        csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},0,0\n`; 
+        let itemRate = parseFloat(item.unitPrice || 0);
+        let itemTotal = parseFloat(item.totalValue !== undefined && item.totalValue !== null && item.totalValue !== "" ? item.totalValue : (itemRate * parseInt(item.qty || 1)));
+        csvContent += `${formattedDate},Sales Order,${order.orderId},"${order.shopName}","${item.name}",${item.qty},${itemRate},${itemTotal}\n`; 
     });
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
