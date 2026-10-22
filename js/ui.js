@@ -465,6 +465,12 @@ function renderPipeline() {
         let exactDateStr = formatExactDate(order.date);
         let timeData = getTimeAgoUI(order.date);
         let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
+        let cardComment = "";
+        (order.items || []).forEach(it => {
+            let m = (it.name || "").match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*(.*)/i);
+            if (m) cardComment = m[1] ? m[1].trim() : it.name;
+        });
+        let commentBadge = cardComment ? `<div class="mt-2.5 bg-amber-500/10 border border-amber-500/40 rounded-lg p-2 text-xs font-bold text-amber-300 flex items-start gap-1.5 shadow-sm"><span class="shrink-0 text-sm">💬</span> <span class="leading-tight break-words"><b class="text-amber-400 uppercase text-[9px] tracking-wider block mb-0.5">Dealer Comment:</b> ${cardComment}</span></div>` : "";
         
         let isSplit = String(order.orderId).toUpperCase().includes('SPLIT');
         let splitBadge = "";
@@ -530,6 +536,7 @@ function renderPipeline() {
                         <div class="flex gap-1">${vipBadge}${splitBadge}</div>
                     </div>
                     <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">${order.shopName}</p>
+                    ${commentBadge}
                     <div class="flex gap-1 items-center flex-wrap mb-3">
                         <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${exactDateStr}</span>
                         <span class="bg-[#0B1121] ${activeStageFilter === 'completed' ? 'text-emerald-400' : timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
@@ -614,9 +621,59 @@ function openModal(orderId) {
     
     document.getElementById('modalTotalValue').innerText = `Amount: ₹${order.totalValue || '0'}`;
     
-    const container = document.getElementById('stagesContainer'); 
+        const container = document.getElementById('stagesContainer'); 
     container.innerHTML = '';
-    
+
+    // Extract Dealer Comment and separate Discounts/Schemes from physical products
+    let dealerComment = "";
+    let discounts = [];
+    let physicalProducts = [];
+
+    (order.items || []).forEach(item => {
+        let name = (item.name || "").trim();
+        let commentMatch = name.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*(.*)/i);
+        if (commentMatch) {
+            dealerComment = commentMatch[1] ? commentMatch[1].trim() : name;
+        } else if (name.match(/(?:Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i)) {
+            discounts.push(item);
+        } else {
+            physicalProducts.push(item);
+        }
+    });
+
+    let extraSectionsHtml = "";
+
+    // 1. Dealer Comment Callout Box (Prominent & High-Visibility)
+    if (dealerComment) {
+        extraSectionsHtml += `
+            <div class="mb-5 bg-gradient-to-r from-amber-500/15 to-orange-500/10 border-2 border-amber-500/50 rounded-2xl p-4 shadow-xl">
+                <div class="text-[11px] text-amber-400 uppercase font-black tracking-widest mb-2 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><span class="text-xl">💬</span> DEALER COMMENT / ORDER REMARK:</span>
+                    <span class="bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">IMPORTANT</span>
+                </div>
+                <div class="text-sm font-black text-amber-100 leading-relaxed bg-[#0B1121] p-3 rounded-xl border border-amber-500/30 shadow-inner">
+                    "${dealerComment}"
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. Discounts & Schemes Applied Section (Where discount used to show)
+    if (discounts.length > 0) {
+        extraSectionsHtml += `
+            <div class="mb-5 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 shadow-inner">
+                <span class="text-[10px] text-indigo-300 uppercase font-black tracking-widest block mb-2.5 flex items-center gap-1.5">
+                    <span>🏷️</span> Discounts, Schemes & Rewards Applied:
+                </span>
+                <div class="flex flex-wrap gap-2">
+                    ${discounts.map(d => `<span class="text-xs font-bold bg-[#0B1121] border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-xl shadow-sm">${d.name}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = extraSectionsHtml;
+
     let itemsHtml = `
         <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
             <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -625,8 +682,9 @@ function openModal(orderId) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
     `;
     
-    if (order.items && order.items.length > 0) {
-        order.items.forEach(item => {
+    let displayList = physicalProducts.length > 0 ? physicalProducts : order.items;
+    if (displayList && displayList.length > 0) {
+        displayList.forEach(item => {
             let imgTag = item.image ? `<img src="${item.image}" class="w-12 h-12 object-contain rounded bg-white p-1 shrink-0 shadow-sm">` : `<div class="w-12 h-12 bg-slate-800 rounded flex items-center justify-center text-[9px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
             let itemRate = parseFloat(item.unitPrice || 0);
             let itemTotal = parseFloat(item.totalValue !== undefined && item.totalValue !== null && item.totalValue !== "" ? item.totalValue : (itemRate * parseInt(item.qty || 1)));
