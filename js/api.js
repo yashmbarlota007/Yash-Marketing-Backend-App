@@ -27,7 +27,7 @@ async function gasRequest(payloadObj) {
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
-    // BUG FIX: Added safety check in case grid element doesn't exist yet
+    // Safety check in case grid element doesn't exist yet
     if (grid && !isSilent && window.appData.rawArray.length === 0) {
         grid.innerHTML = `<div class="col-span-full py-20 text-center" id="empty-state"><div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div><p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">Syncing with Mainframe...</p></div>`;
     }
@@ -39,21 +39,40 @@ async function fetchOrders(isSilent = false) {
             if (response.settings) window.appSettings = response.settings;
             if (response.backendEarnings !== undefined && response.backendEarnings > 0) {
                 let bBadge = document.getElementById('backendEarningsBadge');
-                // BUG FIX: Ensure element exists before manipulating it
                 if (bBadge) {
                     bBadge.innerText = `💰 Earned Today: ₹${response.backendEarnings}`;
                     bBadge.classList.remove('hidden');
                 }
             }
 
-            window.appData.rawArray = response.data || [];
-            window.appData.orders = {}; 
-            window.appData.rawArray.forEach(o => { window.appData.orders[o.orderId] = o; });
+            let incoming = response.data || [];
+            
+            // CRITICAL SAFEGUARD: Do not let a stale read replica revert a stage
+            // that was already submitted and marked completed in this active session
+            incoming.forEach(o => {
+                let existing = window.appData.orders[o.orderId];
+                if (existing) {
+                    if ((existing.completedStages || 0) > (o.completedStages || 0)) {
+                        o.completedStages = existing.completedStages;
+                        if (existing.stageUrls) {
+                            if (!o.stageUrls) o.stageUrls = Array(9).fill("");
+                            for (let s = 0; s < 9; s++) {
+                                if (existing.stageUrls[s] && !o.stageUrls[s]) {
+                                    o.stageUrls[s] = existing.stageUrls[s];
+                                }
+                            }
+                        }
+                    }
+                }
+                window.appData.orders[o.orderId] = o;
+            });
+
+            window.appData.rawArray = incoming;
             
             try { 
                 applyDateFilter(); 
             } catch(uiError) { 
-                throw new Error("UI Error: " + uiError.message); 
+                console.warn("UI Filter Notice:", uiError.message); 
             }
         } else {
             throw new Error(response.message || "Sync Failed.");
@@ -85,9 +104,15 @@ async function submitStage(stageNum) {
     const btn = document.getElementById(`submitBtn_${stageNum}`); 
     const statusLabel = document.getElementById(`status_${stageNum}`);
     
-    // BUG FIX: Added safety check for currentActiveOrder
+    // Safety check for currentActiveOrder
     if (!currentActiveOrder) {
         alert("System Error: No active order found to process.");
+        return;
+    }
+
+    // Safety lock: prevent duplicate click while submission is transmitting
+    if (btn && btn.disabled) {
+        console.warn("Stage submission already in progress.");
         return;
     }
 
@@ -98,7 +123,6 @@ async function submitStage(stageNum) {
     if (noRespCheckbox && noRespCheckbox.checked) payload.isNoResponse = true; 
     
     if (stageNum === 6) { 
-        // BUG FIX: Used optional chaining to prevent crash if DOM elements are missing
         let runnerVal = document.getElementById('runnerSelect')?.value;
         let transportVal = document.getElementById('transportSelect')?.value;
         
@@ -121,10 +145,10 @@ async function submitStage(stageNum) {
     if (!fileRequired && queuedFiles.length === 0 && (stageNum === 2 || stageNum === 7)) payload.isWhatsAppOnly = true; 
     
     // ==========================================
-    // NEW: BUFFER ANIMATION & BUTTON LOCK
+    // INSTANT SUBMIT LOCK & REALISTIC FEEDBACK
     // ==========================================
     if (btn) { 
-        btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> EXECUTING (WAIT 3-4s)...`;
+        btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> UPLOADING & SUBMITTING...`;
         btn.disabled = true; 
         btn.classList.add('opacity-70', 'cursor-not-allowed');
     }
@@ -138,7 +162,6 @@ async function submitStage(stageNum) {
     }
     
     if (stageNum === 9) { 
-        // BUG FIX: Prevent crash if rating input is missing
         const rating = document.getElementById('ratingInput')?.value;
         if (!rating) { 
             alert("Customer Rating is mandatory."); 
@@ -150,7 +173,6 @@ async function submitStage(stageNum) {
 
     if (stageNum === 3) { 
         let processed = [], short = [];
-        // BUG FIX: Ensure items array exists before iterating
         if (currentActiveOrder.items && currentActiveOrder.items.length > 0) {
             currentActiveOrder.items.forEach((item, idx) => {
                 let chk = document.getElementById(`chk_item_${idx}`);
@@ -178,7 +200,7 @@ async function submitStage(stageNum) {
     }
     
     if (statusLabel) { 
-        statusLabel.innerText = "📡 Uplinking Data..."; 
+        statusLabel.innerText = "⏳ Transmitting Proof & Advancing Stage..."; 
         statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
         statusLabel.classList.remove('hidden'); 
     }
@@ -191,22 +213,48 @@ async function submitStage(stageNum) {
                 btn.classList.remove('opacity-70', 'cursor-not-allowed'); 
                 btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
             } 
-            queuedFiles = []; 
-            if (data.splitOrderId) { 
-                alert(`✂️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); 
-                showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); 
-            }
             
             // ====================================================
-            // NEW: CAPTURE GOOGLE DRIVE IMAGE URLS FOR WHATSAPP
+            // 1. OPTIMISTIC STATE UPDATE (INSTANT ADVANCEMENT!)
             // ====================================================
+            let proofUrls = (data.fileUrls && data.fileUrls.length > 0)
+                ? data.fileUrls.join(', ')
+                : (payload.actionText || (payload.isWhatsAppOnly ? "[WhatsApp Communication Sent]" : "Completed"));
+            let stageEntry = `${proofUrls} || TIME: ${Date.now()} || STAFF: ${currentUserName || 'Staff'}`;
+            
+            if (!currentActiveOrder.stageUrls) {
+                currentActiveOrder.stageUrls = Array(9).fill("");
+            }
+            currentActiveOrder.stageUrls[stageNum - 1] = stageEntry;
+            currentActiveOrder.completedStages = Math.max(currentActiveOrder.completedStages || 0, stageNum);
+            
             if (stageNum === 7 && data.fileUrls && data.fileUrls.length > 0) {
                 currentActiveOrder.recentFileUrls = data.fileUrls;
             }
 
-            await fetchOrders(true); 
+            // Sync with global store memory immediately
+            window.appData.orders[currentActiveOrder.orderId] = currentActiveOrder;
+            if (Array.isArray(window.appData.rawArray)) {
+                let rIdx = window.appData.rawArray.findIndex(o => o.orderId === currentActiveOrder.orderId);
+                if (rIdx !== -1) {
+                    window.appData.rawArray[rIdx].completedStages = currentActiveOrder.completedStages;
+                    window.appData.rawArray[rIdx].stageUrls = currentActiveOrder.stageUrls;
+                }
+            }
             
-            // Check if openModal is defined to prevent errors
+            // Clear queued files
+            queuedFiles = []; 
+            
+            if (data.splitOrderId) { 
+                alert(`⚠️ SPLIT ORDER CREATED!\nNew ID: ${data.splitOrderId}`); 
+                showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); 
+            }
+            
+            showNotification("STAGE ADVANCED", `Stage ${stageNum} (${STAGE_NAMES[stageNum - 1] || 'Dispatched'}) completed!`);
+
+            // ====================================================
+            // 2. INSTANT MODAL RE-RENDER (Zero lag on 1st click!)
+            // ====================================================
             if (typeof openModal === 'function') {
                 if (stageNum === 7 && currentActiveOrder.recentFileUrls) {
                     openModal(currentActiveOrder.orderId, { triggerWhatsApp: true });
@@ -214,6 +262,11 @@ async function submitStage(stageNum) {
                     openModal(currentActiveOrder.orderId); 
                 }
             }
+            
+            // ====================================================
+            // 3. BACKGROUND MAINFRAME SYNC (Non-blocking)
+            // ====================================================
+            fetchOrders(true).catch(bgErr => console.warn("Background order sync notice:", bgErr));
             
         } else { 
             throw new Error(data.message); 
@@ -228,13 +281,12 @@ async function submitStage(stageNum) {
             btn.classList.replace('bg-indigo-600', 'bg-pink-600'); 
             btn.classList.replace('hover:bg-indigo-500', 'hover:bg-pink-500'); 
             btn.disabled = false; 
-            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            btn.classList.remove('opacity-70', 'cursor-not-allowed'); 
         }
     }
 }
 
 async function saveHandover() {
-    // BUG FIX: Ensure input exists to avoid crash
     let inputElem = document.getElementById('handoverNoteInput');
     if (!inputElem) return alert("System Error: Handover input box not found.");
     
@@ -260,7 +312,7 @@ async function saveHandover() {
 
 async function fetchHandoverNotes() {
     let historyDiv = document.getElementById('handoverHistory');
-    if (!historyDiv) return; // Prevent crash if missing
+    if (!historyDiv) return;
 
     historyDiv.innerHTML = `<div class="text-center text-slate-500 text-xs py-4">Loading notes...</div>`;
     try {
@@ -274,6 +326,7 @@ async function fetchHandoverNotes() {
         historyDiv.innerHTML = `<div class="text-center text-pink-500 text-xs py-4">Error loading notes.</div>`; 
     }
 }
+
 // ==========================================
 // NEW: AI INVOICE VERIFICATION API CALL
 // ==========================================
