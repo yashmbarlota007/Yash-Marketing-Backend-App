@@ -916,7 +916,12 @@ function openModal(orderId) {
             } else {
                 if (stageNum === 3) { 
                     inputHtml += `<div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner"><p class="text-sm text-slate-300 mb-4 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-xl">☑</span> Confirm Available Stock</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto hide-scrollbar p-2">`;
-                    order.items.forEach((item, idx) => {
+ stockItems = (order.items || []).filter(item => {
+                        let n = (item.name || ").trim();
+                        return !n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE|Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i);
+                    });
+                    if (stockItems.length === 0) stockItems = order.items || [];
+                    stockItems.forEach((item, idx) => {
                         let imgTag = item.image ? `<img src="${item.image}" class="w-16 h-16 object-contain rounded-lg bg-white p-1 shrink-0 shadow-sm border border-slate-600">` : `<div class="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
                         inputHtml += `<div class="flex flex-col bg-[#1E293B] p-4 rounded-xl border-2 border-slate-700 hover:border-indigo-500 transition-all shadow-md"><div class="flex items-start gap-4"><input type="checkbox" id="chk_item_${idx}" checked class="w-6 h-6 rounded border-slate-600 bg-slate-800 text-indigo-500 mt-1 cursor-pointer shrink-0">${imgTag}<div class="flex-1 min-w-0"><h4 class="text-base font-black text-white leading-tight break-words">${item.name}</h4><div class="mt-4 flex items-center justify-between bg-[#0B1121] p-2 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Process Qty:</span><input type="number" id="qty_item_${idx}" value="${item.qty}" max="${item.qty}" min="0" class="w-16 bg-[#131C31] text-indigo-400 text-lg font-black p-1.5 rounded-lg border border-indigo-500/30 text-center outline-none focus:border-indigo-400"></div></div></div></div>`;
                     });
