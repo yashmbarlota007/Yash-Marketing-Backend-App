@@ -54,17 +54,20 @@ async function fetchOrders(isSilent = false) {
                 if (existing) {
                     if ((existing.completedStages || 0) > (o.completedStages || 0)) {
                         o.completedStages = existing.completedStages;
-                        if (existing.stageUrls) {
-                            if (!o.stageUrls) o.stageUrls = Array(9).fill("");
-                            for (let s = 0; s < 9; s++) {
-                                if (existing.stageUrls[s] && !o.stageUrls[s]) {
-                                    o.stageUrls[s] = existing.stageUrls[s];
-                                }
+                    }
+                    if (existing.stageUrls && Array.isArray(existing.stageUrls)) {
+                        if (!o.stageUrls) o.stageUrls = Array(9).fill("");
+                        for (let s = 0; s < 9; s++) {
+                            if (existing.stageUrls[s] && !o.stageUrls[s]) {
+                                o.stageUrls[s] = existing.stageUrls[s];
                             }
                         }
                     }
                 }
                 window.appData.orders[o.orderId] = o;
+                if (currentActiveOrder && currentActiveOrder.orderId === o.orderId) {
+                    currentActiveOrder = o;
+                }
             });
 
             window.appData.rawArray = incoming;
@@ -153,12 +156,11 @@ async function submitStage(stageNum) {
         btn.classList.add('opacity-70', 'cursor-not-allowed');
     }
     
-    // Convert files (Ensure compressImage and getBase64 are defined in utils.js)
+    // Convert files in parallel for fastest execution
     if (typeof compressImage === 'function' && typeof getBase64 === 'function') {
-        for (let i = 0; i < queuedFiles.length; i++) {
-            let f = queuedFiles[i];
-            payload.files.push(f.type.startsWith('image/') ? await compressImage(f) : await getBase64(f)); 
-        }
+        payload.files = await Promise.all(queuedFiles.map(f => {
+            return f.type.startsWith('image/') ? compressImage(f) : getBase64(f);
+        }));
     }
     
     if (stageNum === 9) { 
@@ -173,23 +175,27 @@ async function submitStage(stageNum) {
 
     if (stageNum === 3) { 
         let processed = [], short = [];
-        if (currentActiveOrder.items && currentActiveOrder.items.length > 0) {
-            currentActiveOrder.items.forEach((item, idx) => {
-                let chk = document.getElementById(`chk_item_${idx}`);
-                let qtyInput = document.getElementById(`qty_item_${idx}`);
-                if (chk && qtyInput) {
-                    let userQty = parseInt(qtyInput.value) || 0;
-                    let origQty = parseInt(item.qty) || 0;
-                    
-                    if (chk.checked && userQty > 0) { 
-                        processed.push({ name: item.name, qty: userQty }); 
-                        if (userQty < origQty) short.push({ name: item.name, qty: origQty - userQty }); 
-                    } else { 
-                        short.push({ name: item.name, qty: origQty }); 
-                    }
+        let stockItems = (currentActiveOrder.items || []).filter(item => {
+            let n = (item.name || "").trim();
+            return !n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE|Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i);
+        });
+        if (stockItems.length === 0) stockItems = currentActiveOrder.items || [];
+        
+        stockItems.forEach((item, idx) => {
+            let chk = document.getElementById(`chk_item_${idx}`);
+            let qtyInput = document.getElementById(`qty_item_${idx}`);
+            if (chk && qtyInput) {
+                let userQty = parseInt(qtyInput.value) || 0;
+                let origQty = parseInt(item.qty) || 0;
+                
+                if (chk.checked && userQty > 0) { 
+                    processed.push({ name: item.name, qty: userQty }); 
+                    if (userQty < origQty) short.push({ name: item.name, qty: origQty - userQty }); 
+                } else { 
+                    short.push({ name: item.name, qty: origQty }); 
                 }
-            });
-        }
+            }
+        });
         
         if (processed.length === 0) { 
             alert("You must dispatch at least one item."); 
@@ -250,7 +256,7 @@ async function submitStage(stageNum) {
                 showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); 
             }
             
-            showNotification("STAGE ADVANCED", `Stage ${stageNum} (${STAGE_NAMES[stageNum - 1] || 'Dispatched'}) completed!`);
+            showNotification("STAGE ADVANCED", `Stage ${stageNum} (${STAGE_NAMES[stageNum - 1] || 'Completed'}) completed!`);
 
             // ====================================================
             // 2. INSTANT MODAL RE-RENDER (Zero lag on 1st click!)
