@@ -286,7 +286,7 @@ function compressImage(file) {
             resolve({
                 name: file.name,
                 mimeType: 'image/jpeg',
-                base64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+                base64: canvas.toDataURL('image/jpeg', 0.72).split(',')[1]
             });
         };
 
