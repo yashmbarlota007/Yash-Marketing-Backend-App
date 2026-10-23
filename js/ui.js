@@ -916,8 +916,8 @@ function openModal(orderId) {
             } else {
                 if (stageNum === 3) { 
                     inputHtml += `<div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner"><p class="text-sm text-slate-300 mb-4 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-xl">☑</span> Confirm Available Stock</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto hide-scrollbar p-2">`;
- stockItems = (order.items || []).filter(item => {
-                        let n = (item.name || ").trim();
+ let stockItems = (order.items || []).filter(item => {
+                        let n = (item.name || '').trim();
                         return !n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE|Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i);
                     });
                     if (stockItems.length === 0) stockItems = order.items || [];
