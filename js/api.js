@@ -121,7 +121,16 @@ async function submitStage(stageNum) {
 
     let isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
 
-    let payload = { action: 'updateStage', orderId: currentActiveOrder.orderId, stage: stageNum, files: [], isNoResponse: false, isWhatsAppOnly: false, partialStock: null, staffName: currentUserName };
+    let payload = { 
+        action: 'updateStage', 
+        orderId: currentActiveOrder.orderId, 
+        stage: stageNum, 
+        files: [], 
+        isNoResponse: false, 
+        isWhatsAppOnly: false, 
+        partialStock: null, 
+        staffName: currentUserName 
+    };
     const noRespCheckbox = document.getElementById(`noResponse_${stageNum}`);
     if (noRespCheckbox && noRespCheckbox.checked) payload.isNoResponse = true; 
     
@@ -146,72 +155,80 @@ async function submitStage(stageNum) {
         return; 
     }
     if (!fileRequired && queuedFiles.length === 0 && (stageNum === 2 || stageNum === 7)) payload.isWhatsAppOnly = true; 
-    
-    // ==========================================
-    // INSTANT SUBMIT LOCK & REALISTIC FEEDBACK
-    // ==========================================
-    if (btn) { 
-        btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> UPLOADING & SUBMITTING...`;
-        btn.disabled = true; 
-        btn.classList.add('opacity-70', 'cursor-not-allowed');
-    }
-    
-    // Convert files in parallel for fastest execution
-    if (typeof compressImage === 'function' && typeof getBase64 === 'function') {
-        payload.files = await Promise.all(queuedFiles.map(f => {
-            return f.type.startsWith('image/') ? compressImage(f) : getBase64(f);
-        }));
-    }
-    
-    if (stageNum === 9) { 
-        const rating = document.getElementById('ratingInput')?.value;
-        if (!rating) { 
-            alert("Customer Rating is mandatory."); 
-            if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
-            return; 
-        }
-        payload.rating = rating;
-    }
 
-    if (stageNum === 3) { 
-        let processed = [], short = [];
-        let stockItems = (currentActiveOrder.items || []).filter(item => {
-            let n = (item.name || "").trim();
-            return !n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE|Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i);
-        });
-        if (stockItems.length === 0) stockItems = currentActiveOrder.items || [];
-        
-        stockItems.forEach((item, idx) => {
-            let chk = document.getElementById(`chk_item_${idx}`);
-            let qtyInput = document.getElementById(`qty_item_${idx}`);
-            if (chk && qtyInput) {
-                let userQty = parseInt(qtyInput.value) || 0;
-                let origQty = parseInt(item.qty) || 0;
-                
-                if (chk.checked && userQty > 0) { 
-                    processed.push({ name: item.name, qty: userQty }); 
-                    if (userQty < origQty) short.push({ name: item.name, qty: origQty - userQty }); 
-                } else { 
-                    short.push({ name: item.name, qty: origQty }); 
-                }
-            }
-        });
-        
-        if (processed.length === 0) { 
-            alert("You must dispatch at least one item."); 
-            if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
-            return; 
-        }
-        if (short.length > 0) payload.partialStock = { processedItems: processed, shortItems: short }; 
-    }
-    
-    if (statusLabel) { 
-        statusLabel.innerText = "⏳ Transmitting Proof & Advancing Stage..."; 
-        statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
-        statusLabel.classList.remove('hidden'); 
-    }
-
+    // Wrap entire execution in try/catch to ensure button state is always safely restored
     try {
+        if (btn) { 
+            btn.innerHTML = `<svg class="animate-spin inline-block w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> UPLOADING & SUBMITTING...`;
+            btn.disabled = true; 
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+        }
+
+        if (statusLabel) { 
+            statusLabel.innerText = "⏳ Processing Proof Photos..."; 
+            statusLabel.className = "text-[10px] font-black tracking-widest mt-3 text-indigo-400 block animate-pulse text-center uppercase"; 
+            statusLabel.classList.remove('hidden'); 
+        }
+
+        // Convert files in parallel with safety fallback
+        if (queuedFiles.length > 0) {
+            const convertFile = async (f) => {
+                if (f.type.startsWith('image/')) {
+                    if (typeof compressImage === 'function') {
+                        return await compressImage(f);
+                    }
+                }
+                return typeof getBase64 === 'function' ? await getBase64(f) : { name: f.name, mimeType: f.type || 'image/jpeg', base64: '' };
+            };
+            payload.files = await Promise.all(queuedFiles.map(convertFile));
+        }
+
+        if (stageNum === 9) { 
+            const rating = document.getElementById('ratingInput')?.value;
+            if (!rating) { 
+                alert("Customer Rating is mandatory."); 
+                if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
+                return; 
+            }
+            payload.rating = rating;
+        }
+
+        if (stageNum === 3) { 
+            let processed = [], short = [];
+            let stockItems = (currentActiveOrder.items || []).filter(item => {
+                let n = (item.name || "").trim();
+                return !n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE|Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i);
+            });
+            if (stockItems.length === 0) stockItems = currentActiveOrder.items || [];
+            
+            stockItems.forEach((item, idx) => {
+                let chk = document.getElementById(`chk_item_${idx}`);
+                let qtyInput = document.getElementById(`qty_item_${idx}`);
+                if (chk && qtyInput) {
+                    let userQty = parseInt(qtyInput.value) || 0;
+                    let origQty = parseInt(item.qty) || 0;
+                    
+                    if (chk.checked && userQty > 0) { 
+                        processed.push({ name: item.name, qty: userQty }); 
+                        if (userQty < origQty) short.push({ name: item.name, qty: origQty - userQty }); 
+                    } else { 
+                        short.push({ name: item.name, qty: origQty }); 
+                    }
+                }
+            });
+            
+            if (processed.length === 0) { 
+                alert("You must dispatch at least one item."); 
+                if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); } 
+                return; 
+            }
+            if (short.length > 0) payload.partialStock = { processedItems: processed, shortItems: short }; 
+        }
+
+        if (statusLabel) { 
+            statusLabel.innerText = "⏳ Transmitting Proof & Updating Server..."; 
+        }
+
         const data = await gasRequest(payload);
         if (data.status === 'success') { 
             if (btn) { 
@@ -278,6 +295,7 @@ async function submitStage(stageNum) {
             throw new Error(data.message); 
         }
     } catch (err) {
+        console.error("Submission failed:", err);
         if (statusLabel) { 
             statusLabel.innerText = "❌ " + (err.message || "Network Drop."); 
             statusLabel.className = "text-[10px] font-black mt-3 text-pink-500 block text-center uppercase"; 
@@ -291,7 +309,6 @@ async function submitStage(stageNum) {
         }
     }
 }
-
 async function saveHandover() {
     let inputElem = document.getElementById('handoverNoteInput');
     if (!inputElem) return alert("System Error: Handover input box not found.");
