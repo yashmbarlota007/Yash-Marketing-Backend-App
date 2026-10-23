@@ -929,9 +929,11 @@ function openModal(orderId) {
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div>`;
                     
                     // ==========================================
-                    // NEW: AI VERIFY INVOICE BUTTON INJECTED HERE
+                    // NEW: AI VERIFY INVOICE BUTTON (Stage 4 Invoiced Only)
                     // ==========================================
-                    inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-[#0B1121] hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/50 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
+                    if (stageNum === 4) {
+                        inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-[#0B1121] hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/50 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
+                    }
                 }
                 
                 inputHtml += `<div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button></div>`;
