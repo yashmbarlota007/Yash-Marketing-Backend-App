@@ -261,41 +261,78 @@ function makeDirectDriveLink(url) {
 }
 
 function compressImage(file) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
-
-        img.onload = () => {
-            // Instantly free up the memory pointer once the image is loaded
-            URL.revokeObjectURL(objectUrl);
-
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            let scale = 1;
-
-            if (img.width > MAX_WIDTH) {
-                scale = MAX_WIDTH / img.width;
+    return new Promise((resolve) => {
+        // Safety timeout: If canvas/image processing takes longer than 2.5 seconds,
+        // instantly fallback to direct FileReader getBase64! Never hang!
+        let hasResolved = false;
+        const timer = setTimeout(() => {
+            if (!hasResolved) {
+                hasResolved = true;
+                console.warn("compressImage timed out, falling back to direct getBase64 for:", file.name);
+                getBase64(file).then(resolve).catch(() => {
+                    resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
+                });
             }
+        }, 2500);
 
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
+        try {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
 
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            img.onload = () => {
+                if (hasResolved) return;
+                clearTimeout(timer);
+                hasResolved = true;
+                try {
+                    URL.revokeObjectURL(objectUrl);
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    let width = img.width || 800;
+                    let height = img.height || 600;
+                    let scale = width > MAX_WIDTH ? (MAX_WIDTH / width) : 1;
 
-            resolve({
-                name: file.name,
-                mimeType: 'image/jpeg',
-                base64: canvas.toDataURL('image/jpeg', 0.72).split(',')[1]
-            });
-        };
+                    canvas.width = Math.round(width * scale);
+                    canvas.height = Math.round(height * scale);
 
-        img.onerror = (error) => {
-            URL.revokeObjectURL(objectUrl);
-            reject(error);
-        };
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        img.src = objectUrl;
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.70);
+                    const base64 = dataUrl.split(',')[1] || '';
+
+                    resolve({
+                        name: file.name,
+                        mimeType: 'image/jpeg',
+                        base64: base64
+                    });
+                } catch(canvasErr) {
+                    console.warn("Canvas compression failed, falling back to getBase64:", canvasErr);
+                    getBase64(file).then(resolve).catch(() => {
+                        resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
+                    });
+                }
+            };
+
+            img.onerror = () => {
+                if (hasResolved) return;
+                clearTimeout(timer);
+                hasResolved = true;
+                try { URL.revokeObjectURL(objectUrl); } catch(e){}
+                getBase64(file).then(resolve).catch(() => {
+                    resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
+                });
+            };
+
+            img.src = objectUrl;
+        } catch(err) {
+            if (!hasResolved) {
+                clearTimeout(timer);
+                hasResolved = true;
+                getBase64(file).then(resolve).catch(() => {
+                    resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
+                });
+            }
+        }
     });
 }
 
