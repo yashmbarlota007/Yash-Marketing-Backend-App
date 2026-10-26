@@ -1,4 +1,4 @@
-﻿﻿// js/utils.js
+﻿﻿﻿// js/utils.js
 
 function updateTatTimers() {
     document.querySelectorAll('.tat-timer').forEach(el => {
@@ -191,6 +191,57 @@ function formatExactDate(dateString) {
     return `Received: ${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
 }
 
+function resolveProductDetails(item) {
+    if (!item) return { name: "Product", qty: 1, unitPrice: 0, totalValue: 0 };
+
+    let rawName = String(item.name || item.productName || '').trim();
+    let qty = parseInt(item.qty || item.quantity || 1, 10);
+    if (isNaN(qty) || qty <= 0) qty = 1;
+
+    let unitPrice = parseFloat(item.unitPrice || item.DealerPrice || item.dealerPrice || item.rate || item.price || 0);
+    if (isNaN(unitPrice)) unitPrice = 0;
+
+    let totalValue = parseFloat(item.totalValue !== undefined && item.totalValue !== null && item.totalValue !== "" ? item.totalValue : 0);
+    if (isNaN(totalValue)) totalValue = 0;
+
+    // Check for product codes like YM1192, Product YM1192, YM-0980, etc.
+    let codeMatch = rawName.match(/\b(YM[-_ ]?\d{3,5})\b/i);
+    let cleanCode = codeMatch ? codeMatch[1].replace(/[-_ ]/g, '').toUpperCase() : '';
+
+    let catalogMap = window.PRODUCT_CATALOG || {};
+    let matched = null;
+
+    if (cleanCode && catalogMap[cleanCode]) {
+        matched = catalogMap[cleanCode];
+    } else if (catalogMap[rawName.toUpperCase()]) {
+        matched = catalogMap[rawName.toUpperCase()];
+    }
+
+    let finalName = rawName;
+    if (matched) {
+        // If generic code name like "Product YM1192", replace with actual catalog name
+        if (rawName.startsWith("Product ") || rawName.match(/^YM\d+/i) || !rawName) {
+            finalName = matched[0] || rawName;
+        }
+        // If unitPrice was 0, resolve from catalog
+        if (unitPrice === 0 && matched[1] > 0) {
+            unitPrice = matched[1];
+        }
+    }
+
+    if (totalValue === 0 && unitPrice > 0) {
+        totalValue = unitPrice * qty;
+    }
+
+    return {
+        name: finalName || "Product",
+        qty: qty,
+        unitPrice: unitPrice,
+        totalValue: totalValue
+    };
+}
+
+
 function getOrderRelativeDateBadge(dateString) {
     if (!dateString) {
         return {
@@ -233,11 +284,13 @@ function getOrderRelativeDateBadge(dateString) {
         timeStr = `${hours}:${mins} ${ampm}`;
     }
 
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    let dayMonth = `${orderDate.getDate()} ${months[orderDate.getMonth()]}`;
+    let day = String(orderDate.getDate()).padStart(2, '0');
+    let month = String(orderDate.getMonth() + 1).padStart(2, '0');
+    let year = orderDate.getFullYear();
+    let exactCalDate = `${day}/${month}/${year}`;
 
     if (diffDays <= 0) {
-        let subText = timeStr ? `Today • ${timeStr}` : `Today, ${dayMonth}`;
+        let subText = timeStr ? `Today (${exactCalDate}) • ${timeStr}` : `Today (${exactCalDate})`;
         return {
             label: "Today",
             subText: subText,
@@ -248,7 +301,7 @@ function getOrderRelativeDateBadge(dateString) {
             diffDays: 0
         };
     } else if (diffDays === 1) {
-        let subText = timeStr ? `Yesterday • ${timeStr}` : `Yesterday, ${dayMonth}`;
+        let subText = timeStr ? `Yesterday (${exactCalDate}) • ${timeStr}` : `Yesterday (${exactCalDate})`;
         return {
             label: "Yesterday",
             subText: subText,
@@ -259,7 +312,7 @@ function getOrderRelativeDateBadge(dateString) {
             diffDays: 1
         };
     } else if (diffDays === 2) {
-        let subText = timeStr ? `2d ago (${dayMonth}) • ${timeStr}` : `2 days ago (${dayMonth})`;
+        let subText = timeStr ? `2d ago (${exactCalDate}) • ${timeStr}` : `2 days ago (${exactCalDate})`;
         return {
             label: "2d ago",
             subText: subText,
@@ -270,7 +323,7 @@ function getOrderRelativeDateBadge(dateString) {
             diffDays: 2
         };
     } else {
-        let subText = timeStr ? `${diffDays}d ago (${dayMonth}) • ${timeStr}` : `${diffDays} days ago (${dayMonth})`;
+        let subText = timeStr ? `${diffDays}d ago (${exactCalDate}) • ${timeStr}` : `${diffDays} days ago (${exactCalDate})`;
         return {
             label: `${diffDays}d ago`,
             subText: subText,
@@ -282,6 +335,7 @@ function getOrderRelativeDateBadge(dateString) {
         };
     }
 }
+
 function getTimeAgoUI(dateString) {
     if (!dateString) {
         return { text: "", color: "text-slate-400", isSLAWarning: false };
@@ -614,6 +668,8 @@ function toggleFullScreen() {
         }
     }
 }
+
+
 
 
 
