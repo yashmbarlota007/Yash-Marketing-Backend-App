@@ -1302,7 +1302,27 @@ function renderTvKdsBoard() {
         });
     }
 
+    window.currentTvFilteredOrders = filteredForTv;
     renderTvOrderCards(filteredForTv);
+
+    if (typeof checkTvPendingOrdersSlaAlert === 'function') {
+        checkTvPendingOrdersSlaAlert(allOrders);
+    }
+
+    if (!window._tvSlaTickInterval) {
+        window._tvSlaTickInterval = setInterval(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isTv = window.isTvMode || (typeof currentUserRole !== 'undefined' && currentUserRole === 'TV') || urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
+            if (isTv) {
+                if (typeof checkTvPendingOrdersSlaAlert === 'function') {
+                    checkTvPendingOrdersSlaAlert(window.appData && window.appData.rawArray ? window.appData.rawArray : []);
+                }
+                if (window.currentTvFilteredOrders && typeof renderTvOrderCards === 'function') {
+                    renderTvOrderCards(window.currentTvFilteredOrders);
+                }
+            }
+        }, 15000);
+    }
     return true;
 }
 
@@ -1395,13 +1415,25 @@ function renderTvOrderCards(pendingOrders) {
         const dealerComment = getOrderDealerComment(o);
         const dateBadge = getOrderRelativeDateBadge(o.date);
 
-        const cardBorderClass = isBrandNew
-            ? "border-4 border-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.9)] bg-gradient-to-br from-[#2c1c08] via-[#131C31] to-[#0B1121] scale-[1.02] animate-pulse"
-            : (stageNum >= 5 
-                ? "border border-sky-500/50 bg-[#131C31] shadow-xl hover:border-sky-400" 
-                : (stageNum >= 2 
-                    ? "border border-purple-500/50 bg-[#131C31] shadow-xl hover:border-purple-400" 
-                    : "border border-amber-500/40 bg-[#131C31] shadow-xl hover:border-amber-400"));
+                const slaInfo = (typeof getOrderTvSlaInfo === 'function') ? getOrderTvSlaInfo(o) : {
+            isPending: false, label: '1 तास Target', timeText: '1 तास', progressPct: 0,
+            sideBadgeClass: 'bg-cyan-950/90 text-cyan-300 border-cyan-500/50',
+            containerBorderClass: 'border-slate-800',
+            timeTextColor: 'text-cyan-300', progressColor: 'bg-cyan-400', dotClass: 'bg-cyan-400',
+            isWarning: false, isBreached: false
+        };
+
+        const cardBorderClass = slaInfo.isBreached
+            ? "border-4 border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.9)] bg-gradient-to-br from-[#2c0808] via-[#131C31] to-[#0B1121] scale-[1.02] animate-pulse"
+            : (slaInfo.isWarning
+                ? "border-2 border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.7)] bg-[#1e1507] hover:border-amber-300"
+                : (isBrandNew
+                    ? "border-4 border-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.9)] bg-gradient-to-br from-[#2c1c08] via-[#131C31] to-[#0B1121] scale-[1.02] animate-pulse"
+                    : (stageNum >= 5 
+                        ? "border border-sky-500/50 bg-[#131C31] shadow-xl hover:border-sky-400" 
+                        : (stageNum >= 2 
+                            ? "border border-purple-500/50 bg-[#131C31] shadow-xl hover:border-purple-400" 
+                            : "border border-amber-500/40 bg-[#131C31] shadow-xl hover:border-amber-400"))));
 
         const highlightBadge = isBrandNew
             ? `<div class="bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white text-xs px-3 py-1 rounded-full font-black uppercase tracking-wider animate-bounce shadow-[0_0_20px_#f59e0b] flex items-center gap-1.5 shrink-0">
@@ -1437,7 +1469,13 @@ function renderTvOrderCards(pendingOrders) {
                                 </span>
                             </div>
                         </div>
-                        ${highlightBadge}
+<div class="flex flex-col items-end gap-1.5 shrink-0">
+                            ${highlightBadge}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${slaInfo.sideBadgeClass}">
+                                <span class="w-1.5 h-1.5 rounded-full ${slaInfo.dotClass}"></span>
+                                <span>${slaInfo.label}</span>
+                            </span>
+                        </div>
                     </div>
 
                     <div class="mt-3">
@@ -1459,6 +1497,21 @@ function renderTvOrderCards(pendingOrders) {
                         </div>
                     </div>
                     ` : ''}
+
+                                        <div class="mt-2.5 p-2 rounded-xl bg-[#0B1121]/90 border ${slaInfo.containerBorderClass} transition-all">
+                        <div class="flex items-center justify-between text-[11px] font-bold">
+                            <span class="flex items-center gap-1.5 text-slate-300">
+                                <span class="w-2 h-2 rounded-full ${slaInfo.dotClass}"></span>
+                                <span class="font-extrabold text-white text-[11px]">TARGET: 1 तास (1 HR)</span>
+                            </span>
+                            <span class="${slaInfo.timeTextColor} font-mono font-black text-xs">
+                                ${slaInfo.timeText}
+                            </span>
+                        </div>
+                        <div class="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-1.5 flex">
+                            <div class="${slaInfo.progressColor} h-full transition-all duration-500" style="width: ${slaInfo.progressPct}%"></div>
+                        </div>
+                    </div>
 
                     <div class="mt-3 bg-[#0B1121]/90 rounded-xl p-3 border border-slate-800/80">
                         <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between">
