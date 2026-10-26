@@ -564,46 +564,84 @@ function playTone(freq, startOffset, duration, type = 'triangle', gainVal = 0.5)
     osc.stop(startTime + duration + 0.05);
 }
 
-function playChimeSequence() {
-    try {
-        // High visibility order arrival chime: G5 (784Hz) -> C6 (1046Hz) -> E6 (1318Hz) -> G6 (1568Hz)
-        playTone(784, 0.0, 0.15, 'triangle', 0.5);
-        playTone(1046, 0.15, 0.18, 'triangle', 0.6);
-        playTone(1318, 0.35, 0.22, 'triangle', 0.7);
-        playTone(1568, 0.58, 0.45, 'sine', 0.8);
-    } catch(err) {
-        console.warn("Chime playback error:", err);
+// =========================================================
+// 1. POLICE SIREN AUDIO SYNTHESIS FOR NEW ORDERS
+// Oscillating pitch sweep: 650Hz <-> 1400Hz (Wee-Ooo Police Siren)
+// =========================================================
+function playPoliceSirenSequence(durationSeconds = 5) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+
+    // Volume Envelope
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.55, now + 0.05);
+
+    // Police Siren Wail: 650Hz <-> 1400Hz
+    const cycleDuration = 0.70;
+    const totalCycles = Math.ceil(durationSeconds / cycleDuration) + 1;
+
+    for (let i = 0; i < totalCycles; i++) {
+        const cycleStart = now + (i * cycleDuration);
+        const halfCycle = cycleStart + (cycleDuration / 2);
+        const cycleEnd = cycleStart + cycleDuration;
+
+        osc.frequency.setValueAtTime(650, cycleStart);
+        osc.frequency.linearRampToValueAtTime(1400, halfCycle);
+        osc.frequency.linearRampToValueAtTime(650, cycleEnd);
     }
+
+    gain.gain.setValueAtTime(0.55, now + durationSeconds - 0.15);
+    gain.gain.linearRampToValueAtTime(0.001, now + durationSeconds);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + durationSeconds + 0.1);
 }
 
 function playNewOrderAlarm(durationSeconds = 5) {
-    unlockAudioEngine();
-    updateAlarmStatusBadge(true, true);
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
+    if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
 
-    // Initial sequence
-    playChimeSequence();
-
-    // Loop chime sequence every 1.1s for sustained 5s alarm
-    const intervalId = setInterval(() => {
-        playChimeSequence();
-    }, 1100);
-
-    // Stop after exact duration (5 seconds requested by user)
-    const stopMs = Math.max(1000, (durationSeconds * 1000) - 100);
-    setTimeout(() => {
-        clearInterval(intervalId);
-    }, stopMs);
+    try {
+        playPoliceSirenSequence(durationSeconds);
+    } catch(err) {
+        console.warn("Police siren error:", err);
+    }
 
     setTimeout(() => {
-        updateAlarmStatusBadge(true, false);
+        if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, false);
     }, durationSeconds * 1000);
 }
 
-function testOrEnableAlarm() {
-    unlockAudioEngine();
+function testNewOrderPoliceSiren() {
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
     playNewOrderAlarm(5);
-    showNotification("🔊 ALARM TEST", "5-Second Order Alert Chime Active & Tested!");
+    if (typeof showNotification === 'function') {
+        showNotification("🚨 POLICE SIREN TEST", "New Order Police Siren Active & Tested (5s)!");
+    }
 }
+
+function testLateTimerAlarm() {
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
+    playPendingOrderSlaAlarm(5);
+    if (typeof showNotification === 'function') {
+        showNotification("⏰ LATE TIMER ALARM TEST", "1-Hour / 30-Min Late Alert Beeps Active & Tested (5s)!");
+    }
+}
+
+function testOrEnableAlarm() {
+    testNewOrderPoliceSiren();
+}
+
 function updateAlarmStatusBadge(isActive, isTriggered = false) {
     const btn = document.getElementById('alarmToggleBtn');
     const text = document.getElementById('alarmText');
@@ -612,15 +650,15 @@ function updateAlarmStatusBadge(isActive, isTriggered = false) {
 
     if (isTriggered) {
         btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border border-red-500 bg-red-950/80 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-bounce";
-        text.innerText = "🚨 NEW ORDER!";
+        text.innerText = "🚨 POLICE SIREN ACTIVE!";
         setTimeout(() => updateAlarmStatusBadge(true, false), 4000);
         return;
     }
 
     if (isActive) {
-        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
-        text.innerText = "Alarm: Active (Test)";
-        icon.innerText = "🔔";
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border border-red-500/50 bg-red-950/60 text-red-300 hover:bg-red-900/80 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
+        text.innerText = "Test: Police Siren (New Order)";
+        icon.innerText = "🚨";
     }
 }
 
@@ -822,17 +860,33 @@ function getOrderTvSlaInfo(order) {
 }
 
 // DISTINCT TONE: Urgent Dual Buzzer for Late SLA (Noticeably different from new order pleasant chime!)
-function playWarningBuzzerSequence() {
-    try {
-        if (typeof playTone === 'function') {
-            // Rapid double alert beep + low warning buzz
-            playTone(950, 0.0, 0.10, 'sawtooth', 0.55);
-            playTone(950, 0.15, 0.10, 'sawtooth', 0.55);
-            playTone(440, 0.32, 0.28, 'square', 0.50);
-            playTone(350, 0.65, 0.25, 'sawtooth', 0.45);
-        }
-    } catch(err) {
-        console.warn("Buzzer audio error:", err);
+// =========================================================
+// 2. DIGITAL TIMER ALARM FOR 1 TASS / 30-MIN DELAYS (BEEP-BEEP-BEEP-BEEP)
+// Sharp 2200Hz digital timer burst, totally distinct from Police Siren!
+// =========================================================
+function playDigitalTimerBeepBurst(startTime, freq = 2200) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    // 4 sharp staccato beeps (0.07s on, 0.04s off)
+    for (let i = 0; i < 4; i++) {
+        const beepStart = startTime + (i * 0.11);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, beepStart);
+
+        gain.gain.setValueAtTime(0.001, beepStart);
+        gain.gain.linearRampToValueAtTime(0.40, beepStart + 0.01);
+        gain.gain.setValueAtTime(0.40, beepStart + 0.06);
+        gain.gain.linearRampToValueAtTime(0.001, beepStart + 0.07);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(beepStart);
+        osc.stop(beepStart + 0.08);
     }
 }
 
@@ -840,17 +894,18 @@ function playPendingOrderSlaAlarm(durationSeconds = 5) {
     if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
     if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
 
-    // Play urgent warning buzzer
-    playWarningBuzzerSequence();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
 
-    const intervalId = setInterval(() => {
-        playWarningBuzzerSequence();
-    }, 1050);
+    const now = ctx.currentTime;
+    const burstInterval = 0.75;
+    const totalBursts = Math.floor(durationSeconds / burstInterval);
 
-    const stopMs = Math.max(1000, (durationSeconds * 1000) - 100);
-    setTimeout(() => {
-        clearInterval(intervalId);
-    }, stopMs);
+    for (let i = 0; i < totalBursts; i++) {
+        const burstTime = now + (i * burstInterval);
+        playDigitalTimerBeepBurst(burstTime, 2200);
+    }
 
     setTimeout(() => {
         if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, false);
