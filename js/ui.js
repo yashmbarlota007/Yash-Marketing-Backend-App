@@ -1,3 +1,16 @@
+﻿if (typeof getOrderRelativeDateBadge !== 'function') {
+    window.getOrderRelativeDateBadge = function(d) {
+        return {
+            label: "Today",
+            subText: "Today",
+            badgeClass: "bg-emerald-950/80 text-emerald-300 border-emerald-500/50",
+            dotColor: "bg-emerald-400",
+            isToday: true,
+            isYesterday: false,
+            diffDays: 0
+        };
+    };
+}
 ﻿﻿// js/ui.js
 
 function renderMdoDashboard() {
@@ -604,8 +617,8 @@ function openModal(orderId) {
     let timeData = getTimeAgoUI(order.date);
     
     let dateBadge = getOrderRelativeDateBadge(order.date);
-    document.getElementById('modalReceiptDate').innerText = ${dateBadge.label.toUpperCase()} • ;
-    document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
+    document.getElementById('modalReceiptDate').innerText = (dateBadge ? dateBadge.label.toUpperCase() + ' - ' : '') + exactDateStr;
+    document.getElementById('modalTimeElapsed').innerText = '🕒 ' + timeData.text;
     document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
     let tatBadgeEl = document.getElementById('modalTatTimer'); 
@@ -1473,3 +1486,5 @@ function renderTvOrderCards(pendingOrders) {
         `;
     }).join('');
 }
+
+
