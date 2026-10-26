@@ -1,4 +1,4 @@
-// js/api.js
+﻿// js/api.js
 
 // --- MASTER KEY BYPASS SYSTEM ---
 // --- MASTER KEY BYPASS SYSTEM (NO HEADERS) ---
@@ -75,6 +75,20 @@ async function fetchOrders(isSilent = false) {
                 window.isInitialOrdersLoaded = true;
             }
             
+                        // Auto-enrich product names, unit prices, and images from catalog
+            incoming.forEach(o => {
+                if (Array.isArray(o.items)) {
+                    o.items.forEach(it => {
+                        if (typeof resolveProductDetails === 'function') {
+                            const res = resolveProductDetails(it);
+                            it.name = res.name;
+                            it.unitPrice = res.unitPrice;
+                            it.totalValue = res.totalValue;
+                        }
+                    });
+                }
+            });
+
             // CRITICAL SAFEGUARD: Do not let a stale read replica revert a stage
             // that was already submitted and marked completed in this active session
             incoming.forEach(o => {
@@ -396,3 +410,4 @@ async function verifyInvoiceWithAI(orderId, base64Image) {
         throw new Error("Failed to connect to AI server. Please try again.");
     }
 }
+
