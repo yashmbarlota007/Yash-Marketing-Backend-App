@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20261026_v2">
+    <link rel="stylesheet" href="css/style.css?v=20261026_v3">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
@@ -119,6 +119,7 @@
                     <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">⚡ Split</button>
                     <button onclick="openHandover()" class="ml-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">📝 NOTES</button>
                     <button onclick="generateEODReport()" class="ml-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">📊 EOD</button>
+                    <button onclick="switchToTvMode()" class="ml-1 bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-[0_0_15px_rgba(99,102,241,0.25)]">📺 TV MODE</button>
                     <button onclick="logout()" class="ml-1 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all">LOGOUT</button>
                 </div>
 
@@ -133,7 +134,7 @@
                     <button onclick="fetchOrders(false)" class="px-3 py-2 rounded-xl text-xs font-bold transition-all border border-slate-700 bg-[#131C31] text-slate-300 hover:text-white">
                         🔄 Refresh
                     </button>
-                    <button onclick="logout()" class="px-3 py-2 rounded-xl text-xs font-bold transition-all bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white">
+                    <button onclick="exitTvMode()" class="px-3 py-2 rounded-xl text-xs font-bold transition-all bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white">
                         Exit TV
                     </button>
                 </div>
@@ -163,19 +164,19 @@
                         </div>
                         <div class="mt-2">
                             <span id="tvMetricPending" class="text-3xl md:text-5xl font-black text-amber-400 tracking-tight">0</span>
-                            <span class="text-[11px] text-amber-300/70 block font-semibold mt-1">Taiyari / Process Me</span>
+                            <span class="text-[11px] text-amber-300/70 block font-semibold mt-1">Kitne Pending Hai</span>
                         </div>
                     </div>
 
-                    <!-- Metric 3: Kitne balance check kiye hai -->
+                                        <!-- Metric 3: Kitne process hue hai -->
                     <div class="bg-[#131C31] border border-purple-500/40 rounded-2xl p-4 md:p-5 shadow-[0_0_25px_rgba(168,85,247,0.15)] flex flex-col justify-between">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-black uppercase tracking-wider text-purple-400">⚖️ Balance Check</span>
-                            <span class="text-lg">💳</span>
+                            <span class="text-xs font-black uppercase tracking-wider text-purple-400">⚙️ Process Hue</span>
+                            <span class="text-lg">🔄</span>
                         </div>
                         <div class="mt-2">
-                            <span id="tvMetricBalance" class="text-3xl md:text-5xl font-black text-purple-300 tracking-tight">0</span>
-                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Checked / Cleared</span>
+                            <span id="tvMetricProcessed" class="text-3xl md:text-5xl font-black text-purple-300 tracking-tight">0</span>
+                            <span class="text-[11px] text-purple-300/70 block font-semibold mt-1">Kitne Process Hue</span>
                         </div>
                     </div>
 
@@ -187,7 +188,7 @@
                         </div>
                         <div class="mt-2">
                             <span id="tvMetricDispatched" class="text-3xl md:text-5xl font-black text-sky-400 tracking-tight">0</span>
-                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Raste Me / Bheje Gaye</span>
+                            <span class="text-[11px] text-sky-300/70 block font-semibold mt-1">Kitne Dispatch Hue</span>
                         </div>
                     </div>
 
@@ -199,7 +200,7 @@
                         </div>
                         <div class="mt-2">
                             <span id="tvMetricCompleted" class="text-3xl md:text-5xl font-black text-emerald-400 tracking-tight">0</span>
-                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Puri Tarah Deliver</span>
+                            <span class="text-[11px] text-emerald-300/70 block font-semibold mt-1">Kitne Completed Hai</span>
                         </div>
                     </div>
                 </div>
@@ -314,11 +315,13 @@
     </div>
 
     <!-- External JavaScript Files -->
-    <script src="js/config.js?v=20261026_v2"></script>
-    <script src="js/utils.js?v=20261026_v2"></script>
-    <script src="js/api.js?v=20261026_v2"></script>
-    <script src="js/ui.js?v=20261026_v2"></script>
-    <script src="js/main.js?v=20261026_v2"></script>
+    <script src="js/config.js?v=20261026_v3"></script>
+    <script src="js/utils.js?v=20261026_v3"></script>
+    <script src="js/api.js?v=20261026_v3"></script>
+    <script src="js/ui.js?v=20261026_v3"></script>
+    <script src="js/main.js?v=20261026_v3"></script>
 
 </body>
 </html>
+
+
