@@ -1,4 +1,4 @@
-// js/main.js
+﻿// js/main.js
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -258,19 +258,31 @@ function showDashboard(name, role) {
 
         const tvControls = document.getElementById('tvHeaderControls');
         if (tvControls) tvControls.classList.remove('hidden');
+
+        const tvScreen = document.getElementById('tvDisplayScreen');
+        if (tvScreen) tvScreen.classList.remove('hidden');
+
+        const staffArea = document.getElementById('staffDashboardArea');
+        if (staffArea) staffArea.classList.add('hidden');
     } else {
         const staffFilters = document.getElementById('staffFilterControls');
         if (staffFilters) staffFilters.classList.remove('hidden');
 
         const tvControls = document.getElementById('tvHeaderControls');
         if (tvControls) tvControls.classList.add('hidden');
+
+        const tvScreen = document.getElementById('tvDisplayScreen');
+        if (tvScreen) tvScreen.classList.add('hidden');
+
+        const staffArea = document.getElementById('staffDashboardArea');
+        if (staffArea) staffArea.classList.remove('hidden');
     }
 
     fetchOrders(false);
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     
-    // Faster refresh for TV (12 seconds) so new orders & alarms trigger quickly
-    const refreshRate = isTv ? 12000 : 30000;
+    // Faster refresh for TV (10 seconds) so new orders & alarms trigger quickly
+    const refreshRate = isTv ? 10000 : 30000;
     
     autoRefreshInterval = setInterval(() => { 
         if (document.getElementById('orderModal').classList.contains('hidden') &&
@@ -281,11 +293,22 @@ function showDashboard(name, role) {
     }, refreshRate); 
 }
 
-function startTvMode() {
+function switchToTvMode() {
     window.isTvMode = true;
     localStorage.setItem('yash_user', 'Office TV Display');
     localStorage.setItem('yash_role', 'TV');
     showDashboard('Office TV Display', 'TV');
+}
+
+function exitTvMode() {
+    window.isTvMode = false;
+    localStorage.removeItem('yash_user');
+    localStorage.removeItem('yash_role');
+    location.reload();
+}
+
+function startTvMode() {
+    switchToTvMode();
 }
 
 function logout() { 
@@ -363,3 +386,5 @@ function applyDateFilter() {
         renderTvKdsBoard();
     }
 }
+
+
