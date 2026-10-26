@@ -431,30 +431,34 @@ function playChimeSequence() {
     }
 }
 
-function playNewOrderAlarm(repeatCount = 2) {
+function playNewOrderAlarm(durationSeconds = 5) {
     unlockAudioEngine();
-    playChimeSequence();
-    
-    if (repeatCount > 1) {
-        setTimeout(() => {
-            playChimeSequence();
-        }, 1100);
-    }
-    if (repeatCount > 2) {
-        setTimeout(() => {
-            playChimeSequence();
-        }, 2200);
-    }
-    
     updateAlarmStatusBadge(true, true);
+
+    // Initial sequence
+    playChimeSequence();
+
+    // Loop chime sequence every 1.1s for sustained 5s alarm
+    const intervalId = setInterval(() => {
+        playChimeSequence();
+    }, 1100);
+
+    // Stop after exact duration (5 seconds requested by user)
+    const stopMs = Math.max(1000, (durationSeconds * 1000) - 100);
+    setTimeout(() => {
+        clearInterval(intervalId);
+    }, stopMs);
+
+    setTimeout(() => {
+        updateAlarmStatusBadge(true, false);
+    }, durationSeconds * 1000);
 }
 
 function testOrEnableAlarm() {
     unlockAudioEngine();
-    playNewOrderAlarm(1);
-    showNotification("🔊 ALARM TEST", "Order Alert Chime is Active and Working!");
+    playNewOrderAlarm(5);
+    showNotification("🔊 ALARM TEST", "5-Second Order Alert Chime Active & Tested!");
 }
-
 function updateAlarmStatusBadge(isActive, isTriggered = false) {
     const btn = document.getElementById('alarmToggleBtn');
     const text = document.getElementById('alarmText');
