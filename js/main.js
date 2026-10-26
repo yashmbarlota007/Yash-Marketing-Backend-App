@@ -249,8 +249,21 @@ function showDashboard(name, role) {
     const urlParams = new URLSearchParams(window.location.search);
     const isTv = window.isTvMode || role === 'TV' || urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
     if (isTv) {
+        window.isTvMode = true;
         const tvBadge = document.getElementById('tvModeBadge');
         if (tvBadge) tvBadge.classList.remove('hidden');
+
+        const staffFilters = document.getElementById('staffFilterControls');
+        if (staffFilters) staffFilters.classList.add('hidden');
+
+        const tvControls = document.getElementById('tvHeaderControls');
+        if (tvControls) tvControls.classList.remove('hidden');
+    } else {
+        const staffFilters = document.getElementById('staffFilterControls');
+        if (staffFilters) staffFilters.classList.remove('hidden');
+
+        const tvControls = document.getElementById('tvHeaderControls');
+        if (tvControls) tvControls.classList.add('hidden');
     }
 
     fetchOrders(false);
@@ -346,4 +359,7 @@ function applyDateFilter() {
 
     renderMdoDashboard(); 
     renderPipeline();
+    if (typeof renderTvKdsBoard === 'function') {
+        renderTvKdsBoard();
+    }
 }
