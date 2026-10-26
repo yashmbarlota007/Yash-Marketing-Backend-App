@@ -1286,7 +1286,7 @@ function renderTvKdsBoard() {
     if (elCompleted) elCompleted.innerText = completedCount;
 
     // Calculate Today's specific metrics requested by user:
-    // "jise aaj 10 order ayi hai lekin 5 he process hui hai aisa chahiye"
+    // "order completed parsent today and avrage order time"
     const todayOrders = allOrders.filter(o => {
         const b = (typeof getOrderRelativeDateBadge === 'function') ? getOrderRelativeDateBadge(o.date) : { isToday: false };
         return b.isToday;
@@ -1295,28 +1295,50 @@ function renderTvKdsBoard() {
     const todayTotalCount = todayOrders.length;
     const todayPendingCount = todayOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 2).length;
     const todayProcessedCount = todayOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 2).length;
+    const todayCompletedCount = todayOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 8).length;
+    const todayCompletionPercent = todayTotalCount > 0 ? Math.round((todayCompletedCount / todayTotalCount) * 100) : 0;
+
+    let totalMinsElapsed = 0;
+    let validTimeOrdersCount = 0;
+    const nowTimeObj = new Date();
+
+    todayOrders.forEach(o => {
+        const d = (typeof parseCustomDate === 'function') ? parseCustomDate(o.date) : new Date(o.date);
+        if (d && !isNaN(d.getTime()) && d._hasTime !== false) {
+            const diffMs = Math.max(0, nowTimeObj.getTime() - d.getTime());
+            const mins = Math.floor(diffMs / (1000 * 60));
+            totalMinsElapsed += mins;
+            validTimeOrdersCount++;
+        }
+    });
+
+    const avgMins = validTimeOrdersCount > 0 ? Math.round(totalMinsElapsed / validTimeOrdersCount) : 0;
+    const avgTimeFormatted = avgMins >= 60 ? (Math.floor(avgMins / 60) + 'h ' + (avgMins % 60) + 'm') : (avgMins + ' mins');
 
     // Update Today's Summary Strip & Badges
     const elTodaySummary = document.getElementById('tvTodaySummaryText');
     const elTodayTotal = document.getElementById('tvTodayBadgeTotal');
     const elTodayProcessed = document.getElementById('tvTodayBadgeProcessed');
     const elTodayPending = document.getElementById('tvTodayBadgePending');
+    const elTodayPercent = document.getElementById('tvTodayBadgePercent');
+    const elTodayAvgTime = document.getElementById('tvTodayBadgeAvgTime');
 
     if (elTodaySummary) {
-        elTodaySummary.innerText = `Aaj ${todayTotalCount} Order Aaye • ${todayProcessedCount} Process Hue • ${todayPendingCount} Abhi Pending`;
+        elTodaySummary.innerText = "Aaj " + todayTotalCount + " Order Aaye â€¢ " + todayProcessedCount + " Process Hue â€¢ " + todayPendingCount + " Abhi Pending â€¢ Completed: " + todayCompletionPercent + "% â€¢ Avg Time: " + avgTimeFormatted;
     }
     if (elTodayTotal) elTodayTotal.innerText = todayTotalCount;
     if (elTodayProcessed) elTodayProcessed.innerText = todayProcessedCount;
     if (elTodayPending) elTodayPending.innerText = todayPendingCount;
+    if (elTodayPercent) elTodayPercent.innerText = todayCompletionPercent + "%";
+    if (elTodayAvgTime) elTodayAvgTime.innerText = avgTimeFormatted;
 
     const elMTodayTotal = document.getElementById('tvMetricTodayTotal');
     const elMTodayPending = document.getElementById('tvMetricTodayPending');
     const elMTodayProcessed = document.getElementById('tvMetricTodayProcessed');
-    if (elMTodayTotal) elMTodayTotal.innerText = `Aaj Aaye: ${todayTotalCount}`;
-    if (elMTodayPending) elMTodayPending.innerText = `Aaj Pending: ${todayPendingCount}`;
-    if (elMTodayProcessed) elMTodayProcessed.innerText = `Aaj Process: ${todayProcessedCount}`;
+    if (elMTodayTotal) elMTodayTotal.innerText = "Aaj Aaye: " + todayTotalCount;
+    if (elMTodayPending) elMTodayPending.innerText = "Aaj Pending: " + todayPendingCount;
+    if (elMTodayProcessed) elMTodayProcessed.innerText = "Aaj Process: " + todayProcessedCount;
 
-    // Active orders for TV screen: only active orders that are not fully delivered
     const activeOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8);
     
     // Apply quick timeline filter (Today, Yesterday, All)
@@ -1448,6 +1470,24 @@ function renderTvOrderCards(pendingOrders) {
         const rawItems = o.items || [];
         const totalOrderQty = rawItems.reduce((acc, it) => {
             const q = parseInt(it.qty || it.quantity || 1, 10);
+
+        const orderDateObj = (typeof parseCustomDate === 'function') ? parseCustomDate(o.date) : new Date(o.date || Date.now());
+        let formattedTime = "N/A";
+        if (orderDateObj && !isNaN(orderDateObj.getTime()) && orderDateObj._hasTime !== false) {
+            let hours = orderDateObj.getHours();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            let mins = String(orderDateObj.getMinutes()).padStart(2, '0');
+            // Format with dot as requested: "ex 10.10"
+            formattedTime = hours + '.' + mins + ' ' + ampm;
+        }
+
+        const nowTime = new Date();
+        const diffInMs = Math.max(0, nowTime.getTime() - orderDateObj.getTime());
+        const elapsedHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const elapsedMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+        let timeAgoText = elapsedHours > 0 ? (elapsedHours + 'h ' + elapsedMins + 'm pehle') : (elapsedMins + ' min pehle');
             return acc + (isNaN(q) || q <= 0 ? 1 : q);
         }, 0) || Number(o.itemsCount || 1);
 
@@ -1534,29 +1574,42 @@ function renderTvOrderCards(pendingOrders) {
                     </div>
                     ` : ''}
 
-                                        <div class="mt-2.5 p-2 rounded-xl bg-[#0B1121]/90 border ${slaInfo.containerBorderClass} transition-all">
-                        <div class="flex items-center justify-between text-[11px] font-bold">
-                            <span class="flex items-center gap-1.5 text-slate-300">
-                                <span class="w-2 h-2 rounded-full ${slaInfo.dotClass}"></span>
-                                <span class="font-extrabold text-white text-[11px]">TARGET: 1 तास (1 HR)</span>
-                                <span class="bg-indigo-900/80 text-indigo-200 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">Total: ${totalOrderQty} Qty</span></span>
-                            </span>
-                            <span class="${slaInfo.timeTextColor} font-mono font-black text-xs">
-                                ${slaInfo.timeText}
-                            </span>
+                                        <!-- ORDER TIMING, ELAPSED & 1-HOUR SLA SECTION (Items photo table removed as requested) -->
+                    <div class="mt-3 p-3 rounded-2xl bg-[#0B1121]/95 border border-slate-800 flex flex-col gap-2.5 shadow-inner">
+                        <div class="flex items-center justify-between text-xs flex-wrap gap-2 pb-2 border-b border-slate-800/80">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-indigo-400 font-bold text-xs flex items-center gap-1">
+                                    <span>ðŸ•’</span> Order Time:
+                                </span>
+                                <span class="text-white font-mono font-black text-xs bg-indigo-950/90 border border-indigo-500/40 px-2.5 py-0.5 rounded-lg shadow-sm">
+                                    ${formattedTime}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-amber-400 font-bold text-xs flex items-center gap-1">
+                                    <span>â±ï¸</span> Kitna Time Hua:
+                                </span>
+                                <span class="text-amber-300 font-mono font-black text-xs bg-amber-950/90 border border-amber-500/40 px-2.5 py-0.5 rounded-lg shadow-sm">
+                                    ${timeAgoText}
+                                </span>
+                            </div>
                         </div>
-                        <div class="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-1.5 flex">
-                            <div class="${slaInfo.progressColor} h-full transition-all duration-500" style="width: ${slaInfo.progressPct}%"></div>
-                        </div>
-                    </div>
 
-                    <div class="mt-3 bg-[#0B1121]/90 rounded-xl p-3 border border-slate-800/80">
-                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between">
-                            <span class="text-indigo-300 font-bold flex items-center gap-1.5"><span>Item & Quantity</span><span class="bg-indigo-600 text-white px-2 py-0.5 rounded-md font-mono text-[10px] font-black shadow-sm">Total: ${totalOrderQty} Qty</span></span>
-                            <span class="text-amber-400 font-mono font-bold">Rate & Amount</span>
-                        </div>
-                        <div class="space-y-1 max-h-36 overflow-y-auto hide-scrollbar">
-                            ${formatTvItemsHtml(o)}
+                        <!-- 1 TASS SLA TARGET & REMAINING BAR -->
+                        <div class="p-2.5 rounded-xl bg-[#070c18] border ${slaInfo.containerBorderClass} transition-all">
+                            <div class="flex items-center justify-between text-[11px] font-bold">
+                                <span class="flex items-center gap-1.5 text-slate-300">
+                                    <span class="w-2 h-2 rounded-full ${slaInfo.dotClass}"></span>
+                                    <span class="font-extrabold text-white text-[11px]">TARGET: 1 à¤¤à¤¾à¤¸ (1 HR)</span>
+                                    <span class="bg-indigo-900/80 text-indigo-200 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">Total: ${totalOrderQty} Qty</span>
+                                </span>
+                                <span class="${slaInfo.timeTextColor} font-mono font-black text-xs">
+                                    ${slaInfo.timeText}
+                                </span>
+                            </div>
+                            <div class="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden mt-1.5 flex">
+                                <div class="${slaInfo.progressColor} h-full transition-all duration-500" style="width: ${slaInfo.progressPct}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
