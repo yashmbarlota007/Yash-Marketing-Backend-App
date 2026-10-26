@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20261026_v8">
+    <link rel="stylesheet" href="css/style.css?v=20261026_v9">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
@@ -152,7 +152,7 @@
                         </div>
                         <div class="mt-2">
                             <span id="tvMetricTotal" class="text-3xl md:text-5xl font-black text-white tracking-tight">0</span>
-                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Kul Aaye Orders</span>
+                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Kul Aaye Orders</span><span id="tvMetricTodayTotal" class="text-[10px] text-indigo-300 font-bold block mt-1 bg-indigo-950/70 border border-indigo-500/30 rounded px-1.5 py-0.5 w-fit">Aaj Aaye: 0</span>
                         </div>
                     </div>
 
@@ -164,7 +164,7 @@
                         </div>
                         <div class="mt-2">
                             <span id="tvMetricPending" class="text-3xl md:text-5xl font-black text-amber-400 tracking-tight">0</span>
-                            <span class="text-[11px] text-amber-300/70 block font-semibold mt-1">Kitne Pending Hai</span>
+                            <span class="text-[11px] text-amber-300/70 block font-semibold mt-1">Kitne Pending Hai</span><span id="tvMetricTodayPending" class="text-[10px] text-amber-300 font-bold block mt-1 bg-amber-950/70 border border-amber-500/30 rounded px-1.5 py-0.5 w-fit">Aaj Pending: 0</span>
                         </div>
                     </div>
 
@@ -176,7 +176,7 @@
                         </div>
                         <div class="mt-2">
                             <span id="tvMetricProcessed" class="text-3xl md:text-5xl font-black text-purple-300 tracking-tight">0</span>
-                            <span class="text-[11px] text-purple-300/70 block font-semibold mt-1">Kitne Process Hue</span>
+                            <span class="text-[11px] text-purple-300/70 block font-semibold mt-1">Kitne Process Hue</span><span id="tvMetricTodayProcessed" class="text-[10px] text-purple-300 font-bold block mt-1 bg-purple-950/70 border border-purple-500/30 rounded px-1.5 py-0.5 w-fit">Aaj Process: 0</span>
                         </div>
                     </div>
 
@@ -201,6 +201,35 @@
                         <div class="mt-2">
                             <span id="tvMetricCompleted" class="text-3xl md:text-5xl font-black text-emerald-400 tracking-tight">0</span>
                             <span class="text-[11px] text-emerald-300/70 block font-semibold mt-1">Kitne Completed Hai</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TODAY'S PIPELINE SUMMARY BAR (AAJ KITNE AAYE, PROCESS, PENDING) -->
+                <div id="tvTodaySummaryStrip" class="bg-gradient-to-r from-[#171c38] via-[#131C31] to-[#0d1424] border-2 border-indigo-500/50 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+                        <div>
+                            <span class="text-xs uppercase font-black text-indigo-400 tracking-wider flex items-center gap-1.5">
+                                <span>📅</span> TODAY'S LIVE PIPELINE:
+                            </span>
+                            <div id="tvTodaySummaryText" class="text-base md:text-lg font-black text-white mt-0.5">
+                                Aaj 0 Order Aaye • 0 Process Hue • 0 Abhi Pending
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <div class="bg-indigo-950/80 text-indigo-200 border border-indigo-500/50 px-3.5 py-1.5 rounded-xl font-black text-xs shadow-inner flex items-center gap-2">
+                            <span>Aaj Aaye:</span>
+                            <span id="tvTodayBadgeTotal" class="text-white text-sm bg-indigo-600/60 px-2 py-0.5 rounded font-mono">0</span>
+                        </div>
+                        <div class="bg-purple-950/80 text-purple-200 border border-purple-500/50 px-3.5 py-1.5 rounded-xl font-black text-xs shadow-inner flex items-center gap-2">
+                            <span>Process Hue:</span>
+                            <span id="tvTodayBadgeProcessed" class="text-white text-sm bg-purple-600/60 px-2 py-0.5 rounded font-mono">0</span>
+                        </div>
+                        <div class="bg-amber-950/80 text-amber-200 border border-amber-500/50 px-3.5 py-1.5 rounded-xl font-black text-xs shadow-inner flex items-center gap-2">
+                            <span>Abhi Pending:</span>
+                            <span id="tvTodayBadgePending" class="text-white text-sm bg-amber-600/60 px-2 py-0.5 rounded font-mono animate-pulse">0</span>
                         </div>
                     </div>
                 </div>
@@ -320,11 +349,11 @@
     </div>
 
     <!-- External JavaScript Files -->
-    <script src="js/config.js?v=20261026_v8"></script>
-    <script src="js/utils.js?v=20261026_v8"></script>
-    <script src="js/api.js?v=20261026_v8"></script>
-    <script src="js/ui.js?v=20261026_v8"></script>
-    <script src="js/main.js?v=20261026_v8"></script>
+    <script src="js/config.js?v=20261026_v9"></script>
+    <script src="js/utils.js?v=20261026_v9"></script>
+    <script src="js/api.js?v=20261026_v9"></script>
+    <script src="js/ui.js?v=20261026_v9"></script>
+    <script src="js/main.js?v=20261026_v9"></script>
 
 </body>
 </html>
