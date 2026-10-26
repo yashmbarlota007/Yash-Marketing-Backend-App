@@ -1204,3 +1204,182 @@ async function previewAndScanInvoice(event) {
         closeAiScanner();
     }
 }
+
+
+// ==========================================
+// McDONALD'S / DOMINO'S KDS TV DISPLAY ENGINE
+// Dedicated for Office TV - Focuses strictly on New / Active Orders
+// ==========================================
+function renderTvKdsBoard() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTv = window.isTvMode || currentUserRole === 'TV' || urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
+
+    const tvScreen = document.getElementById('tvDisplayScreen');
+    const staffArea = document.getElementById('staffDashboardArea');
+
+    if (!isTv) {
+        if (tvScreen) tvScreen.classList.add('hidden');
+        if (staffArea) staffArea.classList.remove('hidden');
+        return false;
+    }
+
+    if (staffArea) staffArea.classList.add('hidden');
+    if (tvScreen) tvScreen.classList.remove('hidden');
+
+    const allOrders = window.appData.rawArray || [];
+
+    // Calculate the 5 specific metrics requested by user:
+    const totalOrdersCount = allOrders.length;
+    const pendingOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 9);
+    const balanceCheckedCount = allOrders.filter(o => (Number(o.completedStages) || 0) >= 1).length;
+    const dispatchedCount = allOrders.filter(o => (Number(o.completedStages) || 0) >= 5).length;
+    const completedCount = allOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 9).length;
+
+    // Update KPI Counter Cards
+    const elTotal = document.getElementById('tvMetricTotal');
+    const elPending = document.getElementById('tvMetricPending');
+    const elBalance = document.getElementById('tvMetricBalance');
+    const elDispatched = document.getElementById('tvMetricDispatched');
+    const elCompleted = document.getElementById('tvMetricCompleted');
+
+    if (elTotal) elTotal.innerText = totalOrdersCount;
+    if (elPending) elPending.innerText = pendingOrders.length;
+    if (elBalance) elBalance.innerText = balanceCheckedCount;
+    if (elDispatched) elDispatched.innerText = dispatchedCount;
+    if (elCompleted) elCompleted.innerText = completedCount;
+
+    // Render Active / New Orders Queue
+    renderTvOrderCards(pendingOrders);
+    return true;
+}
+
+function formatTvItemsHtml(order) {
+    const items = order.items || [];
+    if (!Array.isArray(items) || items.length === 0) {
+        return `<div class="text-[11px] text-slate-400 italic py-1">Order details in mainframe...</div>`;
+    }
+
+    return items.map((it, idx) => {
+        const name = (it.name || it.productName || `Item #${idx+1}`).trim();
+        const qty = Number(it.qty || it.quantity || 1);
+        const rate = Number(it.rate || it.price || 0);
+        const total = Number(it.total || it.amount || (qty * rate));
+        
+        return `
+            <div class="flex justify-between items-center text-xs py-1 border-b border-slate-800/80 last:border-b-0">
+                <span class="text-slate-200 font-bold truncate max-w-[55%]" title="${name}">
+                    ${name}
+                </span>
+                <span class="font-mono text-slate-300 text-right whitespace-nowrap text-[11px]">
+                    <span class="bg-indigo-950/80 text-indigo-300 px-1.5 py-0.5 rounded font-bold mr-1">Qty: ${qty}</span>
+                    ${rate > 0 ? `<span class="text-slate-400 text-[10px]">@₹${rate}</span> = ` : ''}
+                    <span class="text-emerald-400 font-bold">₹${total.toLocaleString('en-IN')}</span>
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderTvOrderCards(pendingOrders) {
+    const grid = document.getElementById('tvOrderGrid');
+    if (!grid) return;
+
+    if (!pendingOrders || pendingOrders.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full py-16 text-center">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-4xl mb-4 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                    ✨
+                </div>
+                <h3 class="text-2xl font-black text-white">All Orders Cleared & Ready!</h3>
+                <p class="text-slate-400 text-sm mt-2 font-mono">Abhi koi pending order nahi hai. Naya order aate hi yahan live highlight hoga aur 5 second alarm bajega.</p>
+                <div class="inline-flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full bg-[#0B1121] border border-slate-700 text-xs text-indigo-300 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    Standing By for Live Incoming Orders...
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const sorted = [...pendingOrders].sort((a, b) => {
+        const isANew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(a.orderId))) ? 1 : 0;
+        const isBNew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(b.orderId))) ? 1 : 0;
+        if (isANew !== isBNew) return isBNew - isANew;
+        return (b.completedStages === 0 ? 1 : 0) - (a.completedStages === 0 ? 1 : 0);
+    });
+
+    grid.innerHTML = sorted.map(o => {
+        const isBrandNew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(o.orderId))) || (o.completedStages === 0);
+        const stageNum = Number(o.completedStages || 0);
+        const stageLabel = (stageNum >= 0 && stageNum < 9) ? (STAGE_NAMES[stageNum] || `Stage ${stageNum}`) : 'Processing';
+        const totalVal = Number(o.totalAmount || o.orderTotal || o.totalValue || 0);
+        const isVip = Boolean(o.isVIP);
+
+        const cardBorderClass = isBrandNew
+            ? "border-4 border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.85)] bg-gradient-to-br from-[#241b0b] via-[#131C31] to-[#0B1121] scale-[1.02] animate-pulse"
+            : "border border-slate-700/80 bg-[#131C31] shadow-xl hover:border-indigo-500/60";
+
+        const highlightBadge = isBrandNew
+            ? `<div class="bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white text-xs px-3 py-1 rounded-full font-black uppercase tracking-wider animate-bounce shadow-[0_0_20px_#f59e0b] flex items-center gap-1.5 shrink-0">
+                 <span>🔥</span> NAYAA ORDER
+               </div>`
+            : `<div class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider shrink-0">
+                 Stage ${stageNum}/9
+               </div>`;
+
+        return `
+            <div onclick="openModal('${o.orderId}')" class="${cardBorderClass} rounded-2xl p-5 flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden group">
+                ${isBrandNew ? `<div class="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/20 blur-2xl rounded-full pointer-events-none"></div>` : ''}
+                
+                <div>
+                    <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl md:text-3xl font-black text-white font-mono tracking-tight">${o.orderId}</span>
+                                ${isVip ? `<span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded font-black animate-pulse">VIP</span>` : ''}
+                            </div>
+                            <span class="text-[11px] text-slate-400 font-mono">${o.date || 'Today'}</span>
+                        </div>
+                        ${highlightBadge}
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="text-lg md:text-xl font-black text-indigo-300 leading-snug line-clamp-1" title="${o.shopName}">
+                            ${o.shopName || 'Dealer Shop'}
+                        </div>
+                        <div class="text-xs text-slate-400 font-medium flex items-center justify-between mt-1">
+                            <span>📞 ${o.phone || 'No Phone'}</span>
+                            <span class="text-xs font-black uppercase text-purple-400">${o.paymentMode || 'COD'}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 bg-[#0B1121]/90 rounded-xl p-3 border border-slate-800/80">
+                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between">
+                            <span>Ordered Items (${(o.items && o.items.length) || 1})</span>
+                            <span class="text-emerald-400 font-mono">Rate & Qty</span>
+                        </div>
+                        <div class="space-y-1 max-h-32 overflow-y-auto hide-scrollbar">
+                            ${formatTvItemsHtml(o)}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-800">
+                    <div class="flex items-center justify-between text-xs mb-2">
+                        <span class="text-slate-400 font-bold flex items-center gap-1.5 truncate max-w-[60%]">
+                            <span class="w-2 h-2 rounded-full shrink-0 ${stageNum >= 5 ? 'bg-sky-400' : (stageNum >= 1 ? 'bg-purple-400' : 'bg-amber-400')}"></span>
+                            <span class="truncate">${stageLabel}</span>
+                        </span>
+                        <span class="text-lg md:text-xl font-black text-emerald-400 font-mono">
+                            ₹${totalVal.toLocaleString('en-IN')}
+                        </span>
+                    </div>
+
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
+                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, (stageNum / 9) * 100)}%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
