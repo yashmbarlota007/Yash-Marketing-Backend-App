@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20261026_v3">
+    <link rel="stylesheet" href="css/style.css?v=20261026_v4">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
@@ -219,10 +219,15 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1 rounded-full font-bold">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <div class="flex items-center gap-1 bg-[#0B1121] p-1 rounded-xl border border-slate-800">
+                                <button id="tvFilterAll" onclick="setTvTimelineFilter('all', this)" class="tv-filter-btn px-3 py-1 rounded-lg text-xs font-black bg-indigo-600 text-white transition-all shadow-[0_0_10px_rgba(79,70,229,0.3)]">All Active</button>
+                                <button id="tvFilterToday" onclick="setTvTimelineFilter('today', this)" class="tv-filter-btn px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-all">🟢 Today</button>
+                                <button id="tvFilterYesterday" onclick="setTvTimelineFilter('yesterday', this)" class="tv-filter-btn px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-all">🟡 Yesterday</button>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-full font-bold">
                                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                                Live Syncing (12s)
+                                Live (10s)
                             </span>
                         </div>
                     </div>
@@ -315,13 +320,15 @@
     </div>
 
     <!-- External JavaScript Files -->
-    <script src="js/config.js?v=20261026_v3"></script>
-    <script src="js/utils.js?v=20261026_v3"></script>
-    <script src="js/api.js?v=20261026_v3"></script>
-    <script src="js/ui.js?v=20261026_v3"></script>
-    <script src="js/main.js?v=20261026_v3"></script>
+    <script src="js/config.js?v=20261026_v4"></script>
+    <script src="js/utils.js?v=20261026_v4"></script>
+    <script src="js/api.js?v=20261026_v4"></script>
+    <script src="js/ui.js?v=20261026_v4"></script>
+    <script src="js/main.js?v=20261026_v4"></script>
 
 </body>
 </html>
+
+
 
 
