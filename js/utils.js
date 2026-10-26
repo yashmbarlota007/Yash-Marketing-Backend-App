@@ -350,3 +350,172 @@ function getBase64(file) {
         reader.onerror = error => reject(error);
     });
 }
+
+
+// ==========================================
+// OFFICE TV AUDIBLE ALARM SYSTEM (WEB AUDIO SYNTHESIZER)
+// Zero latency, zero external asset dependencies, works on Smart TVs
+// ==========================================
+let alarmAudioCtx = null;
+let isAudioEngineUnlocked = false;
+
+function getAudioContext() {
+    if (!alarmAudioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            alarmAudioCtx = new AudioContextClass();
+        }
+    }
+    return alarmAudioCtx;
+}
+
+function unlockAudioEngine() {
+    try {
+        const ctx = getAudioContext();
+        if (ctx) {
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            isAudioEngineUnlocked = true;
+            updateAlarmStatusBadge(true);
+        }
+    } catch(e) {
+        console.warn("Audio unlock notice:", e);
+    }
+}
+
+// Automatically unlock audio on first interaction anywhere on screen
+['click', 'keydown', 'touchstart'].forEach(evt => {
+    window.addEventListener(evt, () => {
+        if (!isAudioEngineUnlocked) {
+            unlockAudioEngine();
+        }
+    }, { passive: true });
+});
+
+function playTone(freq, startOffset, duration, type = 'triangle', gainVal = 0.5) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    
+    if (ctx.state === 'suspended') {
+        ctx.resume();
+    }
+
+    const startTime = ctx.currentTime + startOffset;
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+
+    gainNode.gain.setValueAtTime(0.001, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(gainVal, startTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+}
+
+function playChimeSequence() {
+    try {
+        // High visibility order arrival chime: G5 (784Hz) -> C6 (1046Hz) -> E6 (1318Hz) -> G6 (1568Hz)
+        playTone(784, 0.0, 0.15, 'triangle', 0.5);
+        playTone(1046, 0.15, 0.18, 'triangle', 0.6);
+        playTone(1318, 0.35, 0.22, 'triangle', 0.7);
+        playTone(1568, 0.58, 0.45, 'sine', 0.8);
+    } catch(err) {
+        console.warn("Chime playback error:", err);
+    }
+}
+
+function playNewOrderAlarm(repeatCount = 2) {
+    unlockAudioEngine();
+    playChimeSequence();
+    
+    if (repeatCount > 1) {
+        setTimeout(() => {
+            playChimeSequence();
+        }, 1100);
+    }
+    if (repeatCount > 2) {
+        setTimeout(() => {
+            playChimeSequence();
+        }, 2200);
+    }
+    
+    updateAlarmStatusBadge(true, true);
+}
+
+function testOrEnableAlarm() {
+    unlockAudioEngine();
+    playNewOrderAlarm(1);
+    showNotification("🔊 ALARM TEST", "Order Alert Chime is Active and Working!");
+}
+
+function updateAlarmStatusBadge(isActive, isTriggered = false) {
+    const btn = document.getElementById('alarmToggleBtn');
+    const text = document.getElementById('alarmText');
+    const icon = document.getElementById('alarmIcon');
+    if (!btn || !text || !icon) return;
+
+    if (isTriggered) {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border border-red-500 bg-red-950/80 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-bounce";
+        text.innerText = "🚨 NEW ORDER!";
+        setTimeout(() => updateAlarmStatusBadge(true, false), 4000);
+        return;
+    }
+
+    if (isActive) {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
+        text.innerText = "Alarm: Active (Test)";
+        icon.innerText = "🔔";
+    }
+}
+
+function showNewOrderAlertBanner(orders) {
+    const banner = document.getElementById('newOrderBanner');
+    const bannerText = document.getElementById('newOrderBannerText');
+    const bannerSub = document.getElementById('newOrderBannerSub');
+    if (!banner || !bannerText || !bannerSub) return;
+
+    if (!Array.isArray(orders) || orders.length === 0) return;
+
+    if (orders.length === 1) {
+        const o = orders[0];
+        bannerText.innerText = `${o.orderId || 'NEW ORDER'} • ${o.shopName || 'Dealer'}`;
+        bannerSub.innerText = `Total: ₹${o.totalAmount || o.orderTotal || '0'} • Items: ${o.itemsCount || (o.items ? o.items.length : '1')} • Just Now`;
+    } else {
+        bannerText.innerText = `🎉 ${orders.length} NAYE ORDERS AAYE HAIN!`;
+        const ids = orders.map(o => o.orderId).slice(0, 3).join(', ');
+        bannerSub.innerText = `${ids}${orders.length > 3 ? '...' : ''} • Check Dashboard Now`;
+    }
+
+    banner.classList.remove('hidden');
+
+    if (window._bannerDismissTimer) clearTimeout(window._bannerDismissTimer);
+    window._bannerDismissTimer = setTimeout(() => {
+        dismissNewOrderBanner();
+    }, 15000);
+}
+
+function dismissNewOrderBanner() {
+    const banner = document.getElementById('newOrderBanner');
+    if (banner) {
+        banner.classList.add('hidden');
+    }
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.warn("Fullscreen request error:", err);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
