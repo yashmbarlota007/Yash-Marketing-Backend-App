@@ -1,4 +1,4 @@
-﻿// js/ui.js
+﻿﻿// js/ui.js
 
 function renderMdoDashboard() {
     const userName = localStorage.getItem('yash_user') || "";
@@ -464,6 +464,7 @@ function renderPipeline() {
         let orderDateObj = parseCustomDate(order.date);
         let exactDateStr = formatExactDate(order.date);
         let timeData = getTimeAgoUI(order.date);
+        let dateBadge = getOrderRelativeDateBadge(order.date);
         let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
         let cardComment = "";
         (order.items || []).forEach(it => {
@@ -538,9 +539,13 @@ function renderPipeline() {
                     <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">${order.shopName}</p>
                     ${commentBadge}
                     <div class="flex gap-1 items-center flex-wrap mb-3">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black border ${dateBadge.badgeClass}">
+                            <span class="w-1.5 h-1.5 rounded-full ${dateBadge.dotColor}"></span>
+                            ${dateBadge.label}
+                        </span>
                         <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${exactDateStr}</span>
                         <span class="bg-[#0B1121] ${activeStageFilter === 'completed' ? 'text-emerald-400' : timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
-                            ${activeStageFilter === 'completed' ? '✅ COMPLETED' : '⏱️ ' + timeData.text}
+                            ${activeStageFilter === 'completed' ? '✓ COMPLETED' : '🕒 ' + timeData.text}
                         </span>
                         ${tatBadge}${slaBadge}
                     </div>
@@ -598,7 +603,8 @@ function openModal(orderId) {
     let exactDateStr = formatExactDate(order.date); 
     let timeData = getTimeAgoUI(order.date);
     
-    document.getElementById('modalReceiptDate').innerText = exactDateStr;
+    let dateBadge = getOrderRelativeDateBadge(order.date);
+    document.getElementById('modalReceiptDate').innerText = ${dateBadge.label.toUpperCase()} • ;
     document.getElementById('modalTimeElapsed').innerText = `⏱️ ${timeData.text}`;
     document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
 
@@ -1210,6 +1216,19 @@ async function previewAndScanInvoice(event) {
 // McDONALD'S / DOMINO'S KDS TV DISPLAY ENGINE
 // Dedicated for Office TV - Focuses strictly on New / Active Orders (McDonald's / Domino's KDS)
 // ==========================================
+let activeTvTimelineFilter = 'all';
+
+function setTvTimelineFilter(filter, btnElement) {
+    activeTvTimelineFilter = filter;
+    if (btnElement) {
+        document.querySelectorAll('.tv-filter-btn').forEach(b => {
+            b.className = "tv-filter-btn px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all";
+        });
+        btnElement.className = "tv-filter-btn px-3 py-1 rounded-lg text-xs font-black bg-indigo-600 text-white transition-all shadow-[0_0_10px_rgba(79,70,229,0.3)]";
+    }
+    renderTvKdsBoard();
+}
+
 function renderTvKdsBoard() {
     const urlParams = new URLSearchParams(window.location.search);
     const isTv = window.isTvMode || currentUserRole === 'TV' || urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
@@ -1255,7 +1274,22 @@ function renderTvKdsBoard() {
 
     // Active orders for TV screen: only active orders that are not fully delivered
     const activeOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8);
-    renderTvOrderCards(activeOrders);
+    
+    // Apply quick timeline filter (Today, Yesterday, All)
+    let filteredForTv = activeOrders;
+    if (activeTvTimelineFilter === 'today') {
+        filteredForTv = activeOrders.filter(o => {
+            const b = getOrderRelativeDateBadge(o.date);
+            return b.isToday;
+        });
+    } else if (activeTvTimelineFilter === 'yesterday') {
+        filteredForTv = activeOrders.filter(o => {
+            const b = getOrderRelativeDateBadge(o.date);
+            return b.isYesterday;
+        });
+    }
+
+    renderTvOrderCards(filteredForTv);
     return true;
 }
 
@@ -1342,6 +1376,7 @@ function renderTvOrderCards(pendingOrders) {
         const totalVal = Number(o.totalAmount || o.orderTotal || o.totalValue || 0);
         const isVip = Boolean(o.isVIP);
         const dealerComment = getOrderDealerComment(o);
+        const dateBadge = getOrderRelativeDateBadge(o.date);
 
         const cardBorderClass = isBrandNew
             ? "border-4 border-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.9)] bg-gradient-to-br from-[#2c1c08] via-[#131C31] to-[#0B1121] scale-[1.02] animate-pulse"
@@ -1378,7 +1413,12 @@ function renderTvOrderCards(pendingOrders) {
                                 <span class="text-2xl md:text-3xl font-black text-white font-mono tracking-tight">${o.orderId}</span>
                                 ${isVip ? `<span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded font-black animate-pulse">VIP</span>` : ''}
                             </div>
-                            <span class="text-[11px] text-slate-400 font-mono">${o.date || 'Today'}</span>
+                            <div class="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${dateBadge.badgeClass}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${dateBadge.dotColor} ${dateBadge.isToday ? 'animate-ping' : ''}"></span>
+                                    ${dateBadge.subText}
+                                </span>
+                            </div>
                         </div>
                         ${highlightBadge}
                     </div>
