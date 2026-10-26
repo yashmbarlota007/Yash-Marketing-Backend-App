@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const trackId = urlParams.get('track');
     const portalEmpId = urlParams.get('empId');
 
+    const portalRole = urlParams.get('role');
+    const isTvModeParam = urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv' || 
+                          (portalEmpId && portalEmpId.toUpperCase() === 'TV') || 
+                          (portalRole && portalRole.toUpperCase() === 'TV');
+
     if (trackId) {
         // DEALER TRACKING VIEW
         document.getElementById('mainAppWrapper').classList.add('hidden');
@@ -12,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('displayTrackId').innerText = trackId;
         
         runTrackerMode(trackId);
+    } else if (isTvModeParam) {
+        // OFFICE TV DIRECT DISPLAY MODE (NO PIN REQUIRED)
+        window.isTvMode = true;
+        localStorage.setItem('yash_user', 'Office TV Display');
+        localStorage.setItem('yash_role', 'TV');
+        showDashboard('Office TV Display', 'TV');
     } else {
         // STAFF OS VIEW
         const savedUser = localStorage.getItem('yash_user');
@@ -235,8 +246,18 @@ function showDashboard(name, role) {
     document.getElementById('dashboardScreen').classList.remove('hidden');
     document.getElementById('userName').innerText = name.toUpperCase();
     
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTv = window.isTvMode || role === 'TV' || urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
+    if (isTv) {
+        const tvBadge = document.getElementById('tvModeBadge');
+        if (tvBadge) tvBadge.classList.remove('hidden');
+    }
+
     fetchOrders(false);
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    
+    // Faster refresh for TV (12 seconds) so new orders & alarms trigger quickly
+    const refreshRate = isTv ? 12000 : 30000;
     
     autoRefreshInterval = setInterval(() => { 
         if (document.getElementById('orderModal').classList.contains('hidden') &&
@@ -244,7 +265,14 @@ function showDashboard(name, role) {
             document.getElementById('handoverModal').classList.contains('hidden')) {
             fetchOrders(true); 
         }
-    }, 30000); 
+    }, refreshRate); 
+}
+
+function startTvMode() {
+    window.isTvMode = true;
+    localStorage.setItem('yash_user', 'Office TV Display');
+    localStorage.setItem('yash_role', 'TV');
+    showDashboard('Office TV Display', 'TV');
 }
 
 function logout() { 
