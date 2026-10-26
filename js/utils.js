@@ -673,3 +673,250 @@ function toggleFullScreen() {
 
 
 
+
+
+// =========================================================
+// OFFICE TV 1-HOUR (1 तास) SLA & PENDING ALARM SYSTEM
+// =========================================================
+
+function getOrderTvSlaInfo(order) {
+    if (!order) {
+        return {
+            isPending: false,
+            elapsedMinutes: 0,
+            remainingMinutes: 60,
+            status: 'safe',
+            label: '1 तास Target',
+            timeText: '1 तास (60m)',
+            badgeClass: 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40',
+            sideBadgeClass: 'bg-cyan-950/90 text-cyan-300 border-cyan-500/50',
+            containerBorderClass: 'border-slate-800',
+            timeTextColor: 'text-cyan-300',
+            progressColor: 'bg-cyan-400',
+            progressPct: 0,
+            dotClass: 'bg-cyan-400',
+            isWarning: false,
+            isBreached: false
+        };
+    }
+
+    const stageNum = Number(order.completedStages || 0);
+    const isPending = !order.isFullyCompleted && stageNum < 2;
+    const stageNamesList = (typeof STAGE_NAMES !== 'undefined' && Array.isArray(STAGE_NAMES)) ? STAGE_NAMES : [];
+    const stageLabel = (stageNum >= 0 && stageNum < stageNamesList.length) ? stageNamesList[stageNum] : ('Stage ' + stageNum);
+
+    // If order has passed pending (stage 2+ or fully completed)
+    if (!isPending) {
+        return {
+            isPending: false,
+            elapsedMinutes: 0,
+            remainingMinutes: 0,
+            status: 'processed',
+            label: 'Processed',
+            timeText: 'Processed (' + stageLabel + ')',
+            badgeClass: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40',
+            sideBadgeClass: 'bg-emerald-950/90 text-emerald-300 border-emerald-500/50',
+            containerBorderClass: 'border-emerald-500/30 bg-emerald-950/20',
+            timeTextColor: 'text-emerald-400',
+            progressColor: 'bg-emerald-500',
+            progressPct: 100,
+            dotClass: 'bg-emerald-400',
+            isWarning: false,
+            isBreached: false
+        };
+    }
+
+    const orderDate = (typeof parseCustomDate === 'function') ? parseCustomDate(order.date) : new Date(order.date || Date.now());
+    const now = new Date();
+    const diffMs = now.getTime() - orderDate.getTime();
+    const elapsedMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+    const totalAllowedMinutes = 60; // 1 tass = 1 hour
+    const remainingMinutes = totalAllowedMinutes - elapsedMinutes;
+
+    if (elapsedMinutes < 30) {
+        const progressPct = Math.min(100, Math.max(5, Math.round((elapsedMinutes / 60) * 100)));
+        return {
+            isPending: true,
+            elapsedMinutes: elapsedMinutes,
+            remainingMinutes: remainingMinutes,
+            status: 'safe',
+            label: '1 तास: ' + remainingMinutes + 'm baki',
+            timeText: remainingMinutes + 'm baki (1 Hr Target)',
+            badgeClass: 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-sm',
+            sideBadgeClass: 'bg-cyan-950/90 text-cyan-300 border-cyan-500/50',
+            containerBorderClass: 'border-slate-800 bg-[#080d1a]',
+            timeTextColor: 'text-cyan-300',
+            progressColor: 'bg-cyan-400',
+            progressPct: progressPct,
+            dotClass: 'bg-cyan-400',
+            isWarning: false,
+            isBreached: false
+        };
+    } else if (elapsedMinutes <= 60) {
+        const progressPct = Math.min(100, Math.round((elapsedMinutes / 60) * 100));
+        return {
+            isPending: true,
+            elapsedMinutes: elapsedMinutes,
+            remainingMinutes: remainingMinutes,
+            status: 'warning',
+            label: '1 तास: ' + remainingMinutes + 'm baki',
+            timeText: remainingMinutes + 'm baki (Pending > ' + elapsedMinutes + 'm!)',
+            badgeClass: 'bg-amber-950/90 text-amber-300 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse',
+            sideBadgeClass: 'bg-amber-950/90 text-amber-300 border-amber-400 animate-pulse',
+            containerBorderClass: 'border-amber-500/70 bg-amber-950/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]',
+            timeTextColor: 'text-amber-300',
+            progressColor: 'bg-amber-400 animate-pulse',
+            progressPct: progressPct,
+            dotClass: 'bg-amber-400 animate-ping',
+            isWarning: true,
+            isBreached: false
+        };
+    } else {
+        const overdueMins = elapsedMinutes - 60;
+        return {
+            isPending: true,
+            elapsedMinutes: elapsedMinutes,
+            remainingMinutes: remainingMinutes,
+            status: 'breached',
+            label: '1 तास OVERDUE (+' + overdueMins + 'm)',
+            timeText: 'OVERDUE by ' + overdueMins + 'm (1 तास Breached!)',
+            badgeClass: 'bg-red-950/90 text-red-200 border-2 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.8)] animate-bounce',
+            sideBadgeClass: 'bg-red-950/90 text-red-200 border-2 border-red-500 animate-bounce',
+            containerBorderClass: 'border-red-500 bg-red-950/40 shadow-[0_0_20px_rgba(239,68,68,0.3)]',
+            timeTextColor: 'text-red-400',
+            progressColor: 'bg-red-500',
+            progressPct: 100,
+            dotClass: 'bg-red-500 animate-ping',
+            isWarning: true,
+            isBreached: true
+        };
+    }
+}
+
+function playWarningChimeSequence() {
+    try {
+        if (typeof playTone === 'function') {
+            playTone(880, 0.0, 0.16, 'sawtooth', 0.45);
+            playTone(698, 0.18, 0.20, 'triangle', 0.55);
+            playTone(880, 0.40, 0.22, 'sine', 0.65);
+        }
+    } catch(err) {
+        console.warn("Warning chime playback error:", err);
+    }
+}
+
+function playPendingOrderSlaAlarm(durationSeconds = 5) {
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
+    if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
+
+    playWarningChimeSequence();
+
+    const intervalId = setInterval(() => {
+        playWarningChimeSequence();
+    }, 1000);
+
+    const stopMs = Math.max(1000, (durationSeconds * 1000) - 100);
+    setTimeout(() => {
+        clearInterval(intervalId);
+    }, stopMs);
+
+    setTimeout(() => {
+        if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, false);
+    }, durationSeconds * 1000);
+}
+
+function checkTvPendingOrdersSlaAlert(orders) {
+    if (!orders || !Array.isArray(orders)) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTv = window.isTvMode || (typeof currentUserRole !== 'undefined' && currentUserRole === 'TV') || urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
+    if (!isTv) return;
+
+    window.slaAlertedMilestones = window.slaAlertedMilestones || {};
+    window.lastSlaAlarmTime = window.lastSlaAlarmTime || 0;
+
+    const now = Date.now();
+    const criticalPendingOrders = [];
+    let shouldRingAlarm = false;
+    let alarmReason = "";
+
+    orders.forEach(o => {
+        const stageNum = Number(o.completedStages || 0);
+        if (o.isFullyCompleted || stageNum >= 2) return;
+
+        const sla = getOrderTvSlaInfo(o);
+        if (!sla || !sla.isPending) return;
+
+        const orderIdStr = String(o.orderId);
+
+        if (sla.elapsedMinutes >= 30 && sla.elapsedMinutes < 45) {
+            criticalPendingOrders.push(o);
+            const key = orderIdStr + '_30m';
+            if (!window.slaAlertedMilestones[key]) {
+                window.slaAlertedMilestones[key] = true;
+                shouldRingAlarm = true;
+                alarmReason = 'Order #' + orderIdStr + ' 30 min se pending hai! 1 तास time running out!';
+            }
+        } else if (sla.elapsedMinutes >= 45 && sla.elapsedMinutes < 60) {
+            criticalPendingOrders.push(o);
+            const key = orderIdStr + '_45m';
+            if (!window.slaAlertedMilestones[key]) {
+                window.slaAlertedMilestones[key] = true;
+                shouldRingAlarm = true;
+                alarmReason = 'Order #' + orderIdStr + ' 45 min se pending hai! Sirf 15m baki!';
+            }
+        } else if (sla.elapsedMinutes >= 60) {
+            criticalPendingOrders.push(o);
+            const key = orderIdStr + '_60m';
+            if (!window.slaAlertedMilestones[key]) {
+                window.slaAlertedMilestones[key] = true;
+                shouldRingAlarm = true;
+                alarmReason = 'Order #' + orderIdStr + ' 1 तास TAT OVERDUE ho gaya hai!';
+            }
+        }
+    });
+
+    if (criticalPendingOrders.length > 0) {
+        if ((now - window.lastSlaAlarmTime) > 90000) {
+            shouldRingAlarm = true;
+            if (!alarmReason) {
+                alarmReason = criticalPendingOrders.length + ' order(s) 30 min se zyada pending hain!';
+            }
+        }
+    }
+
+    if (shouldRingAlarm) {
+        window.lastSlaAlarmTime = now;
+        console.warn('[TV SLA ALARM]', alarmReason);
+        playPendingOrderSlaAlarm(5);
+        showPendingOrderAlertBanner(criticalPendingOrders, alarmReason);
+    }
+}
+
+function showPendingOrderAlertBanner(orders, reason) {
+    const banner = document.getElementById('newOrderBanner');
+    const bannerText = document.getElementById('newOrderBannerText');
+    const bannerSub = document.getElementById('newOrderBannerSub');
+    if (!banner || !bannerText || !bannerSub) return;
+    if (!Array.isArray(orders) || orders.length === 0) return;
+
+    banner.className = "fixed top-5 left-1/2 -translate-x-1/2 z-[300] max-w-xl w-[90%] bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 p-1 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.9)] animate-pulse pointer-events-auto";
+    bannerText.innerText = '⚠️ 1 तास PENDING ALERT! (' + orders.length + ' Order)';
+    const ids = orders.map(o => o.orderId).slice(0, 3).join(', ');
+    bannerSub.innerText = (reason || 'Orders pending > 30 mins!') + ' (IDs: ' + ids + ')';
+
+    banner.classList.remove('hidden');
+
+    if (window._bannerDismissTimer) clearTimeout(window._bannerDismissTimer);
+    window._bannerDismissTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 12000);
+}
+
+// User-interaction auto-unlocker for TV audio
+window.addEventListener('click', function() {
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
+});
+window.addEventListener('keydown', function() {
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
+});
