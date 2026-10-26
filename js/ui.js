@@ -1309,7 +1309,7 @@ function renderTvKdsBoard() {
 function formatTvItemsHtml(order) {
     const rawItems = order.items || [];
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
-        return `<div class="text-[11px] text-slate-400 italic py-1">Order details in mainframe...</div>`;
+        return '<div class="text-[11px] text-slate-400 italic py-1">Order details in mainframe...</div>';
     }
 
     // Filter out dealer comment and scheme notes from physical product lines
@@ -1322,25 +1322,29 @@ function formatTvItemsHtml(order) {
 
     return displayItems.map((it, idx) => {
         const enriched = (typeof resolveProductDetails === 'function') ? resolveProductDetails(it) : it;
-        const name = (enriched.name || it.name || `Item #${idx+1}`).trim();
         const qty = Number(enriched.qty || it.qty || 1);
         const rate = Number(enriched.unitPrice || it.unitPrice || it.rate || it.price || 0);
         const total = Number(enriched.totalValue || (rate * qty) || it.totalValue || 0);
+        const rateLabel = rate > 0 ? ('Rate: ₹' + rate.toLocaleString('en-IN')) : 'Rate: N/A';
+        const totalLabel = total > 0 ? ('<span class="text-emerald-400 font-black text-xs bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-lg">= ₹' + total.toLocaleString('en-IN') + '</span>') : '';
 
         return `
             <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/80 last:border-b-0 gap-2">
-                <span class="text-slate-100 font-bold leading-snug line-clamp-2 max-w-[55%]" title="${name}">
-                    ${name}
+                <span class="inline-flex items-center gap-1.5 bg-indigo-950/80 text-indigo-200 px-2.5 py-1 rounded-lg font-black text-xs border border-indigo-500/30 shrink-0">
+                    <span class="text-indigo-400 font-mono">#${idx + 1}</span>
+                    <span class="text-white font-extrabold text-sm">Qty: ${qty}</span>
                 </span>
-                <span class="font-mono text-slate-300 text-right whitespace-nowrap text-xs shrink-0 flex items-center gap-1.5">
-                    <span class="bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded font-black border border-indigo-500/30">Qty: ${qty}</span>
-                    <span class="text-amber-400 font-bold">${rate > 0 ? `@₹${rate.toLocaleString('en-IN')}` : ''}</span>
-                    <span class="text-emerald-400 font-black">= ₹${total.toLocaleString('en-IN')}</span>
+                <span class="font-mono text-slate-300 text-right whitespace-nowrap text-xs shrink-0 flex items-center gap-2">
+                    <span class="text-amber-400 font-bold bg-amber-950/40 border border-amber-500/30 px-2.5 py-1 rounded-lg text-xs">
+                        ${rateLabel}
+                    </span>
+                    ${totalLabel}
                 </span>
             </div>
         `;
     }).join('');
 }
+
 function getOrderDealerComment(order) {
     if (order.comment && String(order.comment).trim()) return String(order.comment).trim();
     if (order.notes && String(order.notes).trim()) return String(order.notes).trim();
@@ -1458,8 +1462,8 @@ function renderTvOrderCards(pendingOrders) {
 
                     <div class="mt-3 bg-[#0B1121]/90 rounded-xl p-3 border border-slate-800/80">
                         <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between">
-                            <span>Ordered Items</span>
-                            <span class="text-emerald-400 font-mono">Rate & Qty</span>
+                            <span class="text-indigo-300 font-bold">Item & Quantity</span>
+                            <span class="text-amber-400 font-mono font-bold">Rate & Amount</span>
                         </div>
                         <div class="space-y-1 max-h-36 overflow-y-auto hide-scrollbar">
                             ${formatTvItemsHtml(o)}
