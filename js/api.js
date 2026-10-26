@@ -54,13 +54,20 @@ async function fetchOrders(isSilent = false) {
                 const brandNewOrders = incoming.filter(o => o && o.orderId && !window.knownOrderIds.has(String(o.orderId)));
                 if (brandNewOrders.length > 0) {
                     console.log(`🚨 [ORDER ALARM] ${brandNewOrders.length} brand new order(s) detected:`, brandNewOrders);
-                    brandNewOrders.forEach(o => window.knownOrderIds.add(String(o.orderId)));
+                                        window.recentNewOrderIds = window.recentNewOrderIds || new Set();
+                    brandNewOrders.forEach(o => {
+                        window.knownOrderIds.add(String(o.orderId));
+                        window.recentNewOrderIds.add(String(o.orderId));
+                    });
                     
                     if (typeof playNewOrderAlarm === 'function') {
-                        playNewOrderAlarm(2);
+                        playNewOrderAlarm(5);
                     }
                     if (typeof showNewOrderAlertBanner === 'function') {
                         showNewOrderAlertBanner(brandNewOrders);
+                    }
+                    if (typeof renderTvKdsBoard === 'function') {
+                        renderTvKdsBoard();
                     }
                 }
             } else {
