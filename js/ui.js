@@ -1,4 +1,4 @@
-﻿if (typeof getOrderRelativeDateBadge !== 'function') {
+﻿﻿if (typeof getOrderRelativeDateBadge !== 'function') {
     window.getOrderRelativeDateBadge = function(d) {
         return {
             label: "Today",
@@ -1321,26 +1321,26 @@ function formatTvItemsHtml(order) {
     const displayItems = physicalItems.length > 0 ? physicalItems : rawItems;
 
     return displayItems.map((it, idx) => {
-        const name = (it.name || it.productName || `Item #${idx+1}`).trim();
-        const qty = Number(it.qty || it.quantity || 1);
-        const rate = Number(it.rate || it.price || 0);
-        const total = Number(it.total || it.amount || (qty * rate));
-        
+        const enriched = (typeof resolveProductDetails === 'function') ? resolveProductDetails(it) : it;
+        const name = (enriched.name || it.name || `Item #${idx+1}`).trim();
+        const qty = Number(enriched.qty || it.qty || 1);
+        const rate = Number(enriched.unitPrice || it.unitPrice || it.rate || it.price || 0);
+        const total = Number(enriched.totalValue || (rate * qty) || it.totalValue || 0);
+
         return `
-            <div class="flex justify-between items-center text-xs py-1.5 border-b border-slate-800/80 last:border-b-0">
-                <span class="text-slate-200 font-bold truncate max-w-[55%]" title="${name}">
+            <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/80 last:border-b-0 gap-2">
+                <span class="text-slate-100 font-bold leading-snug line-clamp-2 max-w-[55%]" title="${name}">
                     ${name}
                 </span>
-                <span class="font-mono text-slate-300 text-right whitespace-nowrap text-[11px]">
-                    <span class="bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded font-bold mr-1">Qty: ${qty}</span>
-                    ${rate > 0 ? `<span class="text-slate-400 text-[10px]">@₹${rate}</span> = ` : ''}
-                    <span class="text-emerald-400 font-bold">₹${total.toLocaleString('en-IN')}</span>
+                <span class="font-mono text-slate-300 text-right whitespace-nowrap text-xs shrink-0 flex items-center gap-1.5">
+                    <span class="bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded font-black border border-indigo-500/30">Qty: ${qty}</span>
+                    <span class="text-amber-400 font-bold">${rate > 0 ? `@₹${rate.toLocaleString('en-IN')}` : ''}</span>
+                    <span class="text-emerald-400 font-black">= ₹${total.toLocaleString('en-IN')}</span>
                 </span>
             </div>
         `;
     }).join('');
 }
-
 function getOrderDealerComment(order) {
     if (order.comment && String(order.comment).trim()) return String(order.comment).trim();
     if (order.notes && String(order.notes).trim()) return String(order.notes).trim();
@@ -1423,7 +1423,7 @@ function renderTvOrderCards(pendingOrders) {
                     <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="text-2xl md:text-3xl font-black text-white font-mono tracking-tight">${o.orderId}</span>
+                                <span class="text-lg md:text-xl font-black text-white font-mono tracking-tight break-all" title="${o.orderId}">${o.orderId}</span>
                                 ${isVip ? `<span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded font-black animate-pulse">VIP</span>` : ''}
                             </div>
                             <div class="mt-1.5 flex items-center gap-1.5 flex-wrap">
@@ -1486,5 +1486,7 @@ function renderTvOrderCards(pendingOrders) {
         `;
     }).join('');
 }
+
+
 
 
