@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20261026_v9">
+    <link rel="stylesheet" href="css/style.css?v=20261026_v10">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
@@ -124,20 +124,20 @@
                 </div>
 
                 <div id="tvHeaderControls" class="hidden flex items-center justify-end gap-2 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
-                    <button id="alarmToggleBtn" onclick="testOrEnableAlarm()" title="Click to test 5-second loud alarm" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all border border-emerald-500/40 bg-emerald-950/60 text-emerald-400 hover:bg-emerald-900/80 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-                        <span id="alarmIcon">🔔</span>
-                        <span id="alarmText">Alarm: Active (5s Buzzer)</span>
+                    <button id="alarmToggleBtn" onclick="testNewOrderPoliceSiren()" title="Click to test Police Siren for new orders" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all border border-red-500/50 bg-red-950/60 text-red-300 hover:bg-red-900/80 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                        <span id="alarmIcon">🚨</span>
+                        <span id="alarmText">Test: Police Siren (New Order)</span>
+                    </button>
+                    <button onclick="testLateTimerAlarm()" title="Click to test 1-hour late timer alarm" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all border border-amber-500/50 bg-amber-950/60 text-amber-300 hover:bg-amber-900/80 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                        <span>⏰</span>
+                        <span>Test: Late Timer (1 Tass)</span>
                     </button>
                     <button onclick="toggleFullScreen()" title="Toggle Fullscreen" class="px-3 py-2 rounded-xl text-xs font-bold transition-all border border-slate-700 bg-[#131C31] text-slate-300 hover:text-white hover:border-indigo-500">
                         ⛶ Fullscreen
                     </button>
-                    <button onclick="fetchOrders(false)" class="px-3 py-2 rounded-xl text-xs font-bold transition-all border border-slate-700 bg-[#131C31] text-slate-300 hover:text-white">
-                        🔄 Refresh
-                    </button>
-                    <button onclick="exitTvMode()" class="px-3 py-2 rounded-xl text-xs font-bold transition-all bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white">
+                    <button onclick="exitTvMode()" class="px-3 py-2 rounded-xl text-xs font-black transition-all border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-white hover:bg-red-950/80 hover:border-red-500">
                         Exit TV
-                    </button>
-                </div>
+                    </button></div>
             </div>
 
             <!-- McDONALD'S / DOMINO'S OFFICE TV LIVE KDS DISPLAY -->
@@ -349,11 +349,11 @@
     </div>
 
     <!-- External JavaScript Files -->
-    <script src="js/config.js?v=20261026_v9"></script>
-    <script src="js/utils.js?v=20261026_v9"></script>
-    <script src="js/api.js?v=20261026_v9"></script>
-    <script src="js/ui.js?v=20261026_v9"></script>
-    <script src="js/main.js?v=20261026_v9"></script>
+    <script src="js/config.js?v=20261026_v10"></script>
+    <script src="js/utils.js?v=20261026_v10"></script>
+    <script src="js/api.js?v=20261026_v10"></script>
+    <script src="js/ui.js?v=20261026_v10"></script>
+    <script src="js/main.js?v=20261026_v10"></script>
 
 </body>
 </html>
