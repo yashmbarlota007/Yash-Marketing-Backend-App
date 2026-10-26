@@ -1285,6 +1285,37 @@ function renderTvKdsBoard() {
     if (elDispatched) elDispatched.innerText = dispatchedCount;
     if (elCompleted) elCompleted.innerText = completedCount;
 
+    // Calculate Today's specific metrics requested by user:
+    // "jise aaj 10 order ayi hai lekin 5 he process hui hai aisa chahiye"
+    const todayOrders = allOrders.filter(o => {
+        const b = (typeof getOrderRelativeDateBadge === 'function') ? getOrderRelativeDateBadge(o.date) : { isToday: false };
+        return b.isToday;
+    });
+
+    const todayTotalCount = todayOrders.length;
+    const todayPendingCount = todayOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 2).length;
+    const todayProcessedCount = todayOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 2).length;
+
+    // Update Today's Summary Strip & Badges
+    const elTodaySummary = document.getElementById('tvTodaySummaryText');
+    const elTodayTotal = document.getElementById('tvTodayBadgeTotal');
+    const elTodayProcessed = document.getElementById('tvTodayBadgeProcessed');
+    const elTodayPending = document.getElementById('tvTodayBadgePending');
+
+    if (elTodaySummary) {
+        elTodaySummary.innerText = `Aaj ${todayTotalCount} Order Aaye • ${todayProcessedCount} Process Hue • ${todayPendingCount} Abhi Pending`;
+    }
+    if (elTodayTotal) elTodayTotal.innerText = todayTotalCount;
+    if (elTodayProcessed) elTodayProcessed.innerText = todayProcessedCount;
+    if (elTodayPending) elTodayPending.innerText = todayPendingCount;
+
+    const elMTodayTotal = document.getElementById('tvMetricTodayTotal');
+    const elMTodayPending = document.getElementById('tvMetricTodayPending');
+    const elMTodayProcessed = document.getElementById('tvMetricTodayProcessed');
+    if (elMTodayTotal) elMTodayTotal.innerText = `Aaj Aaye: ${todayTotalCount}`;
+    if (elMTodayPending) elMTodayPending.innerText = `Aaj Pending: ${todayPendingCount}`;
+    if (elMTodayProcessed) elMTodayProcessed.innerText = `Aaj Process: ${todayProcessedCount}`;
+
     // Active orders for TV screen: only active orders that are not fully delivered
     const activeOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8);
     
@@ -1414,6 +1445,11 @@ function renderTvOrderCards(pendingOrders) {
         const isVip = Boolean(o.isVIP);
         const dealerComment = getOrderDealerComment(o);
         const dateBadge = getOrderRelativeDateBadge(o.date);
+        const rawItems = o.items || [];
+        const totalOrderQty = rawItems.reduce((acc, it) => {
+            const q = parseInt(it.qty || it.quantity || 1, 10);
+            return acc + (isNaN(q) || q <= 0 ? 1 : q);
+        }, 0) || Number(o.itemsCount || 1);
 
                 const slaInfo = (typeof getOrderTvSlaInfo === 'function') ? getOrderTvSlaInfo(o) : {
             isPending: false, label: '1 तास Target', timeText: '1 तास', progressPct: 0,
@@ -1503,6 +1539,7 @@ function renderTvOrderCards(pendingOrders) {
                             <span class="flex items-center gap-1.5 text-slate-300">
                                 <span class="w-2 h-2 rounded-full ${slaInfo.dotClass}"></span>
                                 <span class="font-extrabold text-white text-[11px]">TARGET: 1 तास (1 HR)</span>
+                                <span class="bg-indigo-900/80 text-indigo-200 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">Total: ${totalOrderQty} Qty</span></span>
                             </span>
                             <span class="${slaInfo.timeTextColor} font-mono font-black text-xs">
                                 ${slaInfo.timeText}
@@ -1515,7 +1552,7 @@ function renderTvOrderCards(pendingOrders) {
 
                     <div class="mt-3 bg-[#0B1121]/90 rounded-xl p-3 border border-slate-800/80">
                         <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between">
-                            <span class="text-indigo-300 font-bold">Item & Quantity</span>
+                            <span class="text-indigo-300 font-bold flex items-center gap-1.5"><span>Item & Quantity</span><span class="bg-indigo-600 text-white px-2 py-0.5 rounded-md font-mono text-[10px] font-black shadow-sm">Total: ${totalOrderQty} Qty</span></span>
                             <span class="text-amber-400 font-mono font-bold">Rate & Amount</span>
                         </div>
                         <div class="space-y-1 max-h-36 overflow-y-auto hide-scrollbar">
@@ -1530,9 +1567,12 @@ function renderTvOrderCards(pendingOrders) {
                             <span class="w-2 h-2 rounded-full shrink-0 ${stageNum >= 5 ? 'bg-sky-400' : (stageNum >= 2 ? 'bg-purple-400' : 'bg-amber-400')}"></span>
                             <span class="truncate">${stageLabel}</span>
                         </span>
-                        <span class="text-lg md:text-xl font-black text-emerald-400 font-mono">
-                            ₹${totalVal.toLocaleString('en-IN')}
-                        </span>
+                        <div class="text-right">
+                            <div class="text-[10px] font-mono text-slate-400 font-bold">Total Qty: <span class="text-indigo-300 font-black">${totalOrderQty} Pcs</span></div>
+                            <span class="text-lg md:text-xl font-black text-emerald-400 font-mono">
+                                ₹${totalVal.toLocaleString('en-IN')}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
