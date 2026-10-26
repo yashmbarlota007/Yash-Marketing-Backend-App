@@ -1,4 +1,4 @@
-// js/utils.js
+﻿// js/utils.js
 
 function updateTatTimers() {
     document.querySelectorAll('.tat-timer').forEach(el => {
@@ -191,6 +191,97 @@ function formatExactDate(dateString) {
     return `Received: ${day}/${month}/${year} ${hours}:${mins} ${ampm}`;
 }
 
+function getOrderRelativeDateBadge(dateString) {
+    if (!dateString) {
+        return {
+            label: "Today",
+            subText: "Today",
+            badgeClass: "bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]",
+            dotColor: "bg-emerald-400",
+            isToday: true,
+            isYesterday: false,
+            diffDays: 0
+        };
+    }
+
+    const orderDate = parseCustomDate(dateString);
+    if (!orderDate || isNaN(orderDate.getTime())) {
+        return {
+            label: "Today",
+            subText: "Today",
+            badgeClass: "bg-emerald-950/80 text-emerald-300 border-emerald-500/50",
+            dotColor: "bg-emerald-400",
+            isToday: true,
+            isYesterday: false,
+            diffDays: 0
+        };
+    }
+
+    const now = new Date();
+    let today = new Date(now); today.setHours(0,0,0,0);
+    let orderDay = new Date(orderDate); orderDay.setHours(0,0,0,0);
+
+    let diffDays = Math.round((today.getTime() - orderDay.getTime()) / (1000 * 60 * 60 * 24));
+
+    let timeStr = "";
+    if (orderDate._hasTime !== false) {
+        let hours = orderDate.getHours();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        let mins = String(orderDate.getMinutes()).padStart(2, '0');
+        timeStr = `${hours}:${mins} ${ampm}`;
+    }
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let dayMonth = `${orderDate.getDate()} ${months[orderDate.getMonth()]}`;
+
+    if (diffDays <= 0) {
+        let subText = timeStr ? `Today • ${timeStr}` : `Today, ${dayMonth}`;
+        return {
+            label: "Today",
+            subText: subText,
+            badgeClass: "bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]",
+            dotColor: "bg-emerald-400",
+            isToday: true,
+            isYesterday: false,
+            diffDays: 0
+        };
+    } else if (diffDays === 1) {
+        let subText = timeStr ? `Yesterday • ${timeStr}` : `Yesterday, ${dayMonth}`;
+        return {
+            label: "Yesterday",
+            subText: subText,
+            badgeClass: "bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]",
+            dotColor: "bg-amber-400",
+            isToday: false,
+            isYesterday: true,
+            diffDays: 1
+        };
+    } else if (diffDays === 2) {
+        let subText = timeStr ? `2d ago (${dayMonth}) • ${timeStr}` : `2 days ago (${dayMonth})`;
+        return {
+            label: "2d ago",
+            subText: subText,
+            badgeClass: "bg-orange-950/80 text-orange-300 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.25)]",
+            dotColor: "bg-orange-400",
+            isToday: false,
+            isYesterday: false,
+            diffDays: 2
+        };
+    } else {
+        let subText = timeStr ? `${diffDays}d ago (${dayMonth}) • ${timeStr}` : `${diffDays} days ago (${dayMonth})`;
+        return {
+            label: `${diffDays}d ago`,
+            subText: subText,
+            badgeClass: "bg-slate-800 text-slate-300 border-slate-700",
+            dotColor: "bg-slate-400",
+            isToday: false,
+            isYesterday: false,
+            diffDays: diffDays
+        };
+    }
+}
 function getTimeAgoUI(dateString) {
     if (!dateString) {
         return { text: "", color: "text-slate-400", isSLAWarning: false };
@@ -523,3 +614,4 @@ function toggleFullScreen() {
         }
     }
 }
+
