@@ -1324,7 +1324,7 @@ function renderTvKdsBoard() {
     const elTodayAvgTime = document.getElementById('tvTodayBadgeAvgTime');
 
     if (elTodaySummary) {
-        elTodaySummary.innerText = "Aaj " + todayTotalCount + " Order Aaye â€¢ " + todayProcessedCount + " Process Hue â€¢ " + todayPendingCount + " Abhi Pending â€¢ Completed: " + todayCompletionPercent + "% â€¢ Avg Time: " + avgTimeFormatted;
+        elTodaySummary.innerText = "Aaj " + todayTotalCount + " Order Aaye  |  " + todayProcessedCount + " Process Hue  |  " + todayPendingCount + " Abhi Pending  |  Completed: " + todayCompletionPercent + "%  |  Avg Time: " + avgTimeFormatted;
     }
     if (elTodayTotal) elTodayTotal.innerText = todayTotalCount;
     if (elTodayProcessed) elTodayProcessed.innerText = todayProcessedCount;
@@ -1439,10 +1439,10 @@ function renderTvOrderCards(pendingOrders) {
         grid.innerHTML = `
             <div class="col-span-full py-16 text-center">
                 <div class="w-20 h-20 mx-auto rounded-3xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-4xl mb-4 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
-                    ✨
+                    âœ“
                 </div>
                 <h3 class="text-2xl font-black text-white">All Orders Cleared & Ready!</h3>
-                <p class="text-slate-400 text-sm mt-2 font-mono">Abhi koi pending order nahi hai. Naya order aate hi yahan live highlight hoga aur 5 second alarm bajega.</p>
+                <p class="text-slate-400 text-sm mt-2 font-mono">Abhi koi pending order nahi hai. Naya order aate hi yahan live highlight hoga aur alarm bajega.</p>
                 <div class="inline-flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full bg-[#0B1121] border border-slate-700 text-xs text-indigo-300 font-bold">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                     Standing By for Live Incoming Orders...
@@ -1462,14 +1462,17 @@ function renderTvOrderCards(pendingOrders) {
     grid.innerHTML = sorted.map(o => {
         const isBrandNew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(o.orderId))) || (o.completedStages === 0);
         const stageNum = Number(o.completedStages || 0);
-        const stageLabel = (stageNum >= 0 && stageNum < 9) ? (STAGE_NAMES[stageNum] || `Stage ${stageNum}`) : 'Processing';
+        const stageLabel = (stageNum >= 0 && stageNum < 9) ? (STAGE_NAMES[stageNum] || ('Stage ' + stageNum)) : 'Processing';
         const totalVal = Number(o.totalAmount || o.orderTotal || o.totalValue || 0);
         const isVip = Boolean(o.isVIP);
         const dealerComment = getOrderDealerComment(o);
         const dateBadge = getOrderRelativeDateBadge(o.date);
+
         const rawItems = o.items || [];
         const totalOrderQty = rawItems.reduce((acc, it) => {
             const q = parseInt(it.qty || it.quantity || 1, 10);
+            return acc + (isNaN(q) || q <= 0 ? 1 : q);
+        }, 0) || Number(o.itemsCount || 1);
 
         const orderDateObj = (typeof parseCustomDate === 'function') ? parseCustomDate(o.date) : new Date(o.date || Date.now());
         let formattedTime = "N/A";
@@ -1479,7 +1482,7 @@ function renderTvOrderCards(pendingOrders) {
             hours = hours % 12;
             hours = hours ? hours : 12;
             let mins = String(orderDateObj.getMinutes()).padStart(2, '0');
-            // Format with dot as requested: "ex 10.10"
+            // Format with dot as requested by user: "ex 10.10"
             formattedTime = hours + '.' + mins + ' ' + ampm;
         }
 
@@ -1488,11 +1491,9 @@ function renderTvOrderCards(pendingOrders) {
         const elapsedHours = Math.floor(diffInMs / (1000 * 60 * 60));
         const elapsedMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
         let timeAgoText = elapsedHours > 0 ? (elapsedHours + 'h ' + elapsedMins + 'm pehle') : (elapsedMins + ' min pehle');
-            return acc + (isNaN(q) || q <= 0 ? 1 : q);
-        }, 0) || Number(o.itemsCount || 1);
 
-                const slaInfo = (typeof getOrderTvSlaInfo === 'function') ? getOrderTvSlaInfo(o) : {
-            isPending: false, label: '1 तास Target', timeText: '1 तास', progressPct: 0,
+        const slaInfo = (typeof getOrderTvSlaInfo === 'function') ? getOrderTvSlaInfo(o) : {
+            isPending: false, label: '1 à¤¤à¤¾à¤¸ Target', timeText: '1 à¤¤à¤¾à¤¸', progressPct: 0,
             sideBadgeClass: 'bg-cyan-950/90 text-cyan-300 border-cyan-500/50',
             containerBorderClass: 'border-slate-800',
             timeTextColor: 'text-cyan-300', progressColor: 'bg-cyan-400', dotClass: 'bg-cyan-400',
@@ -1513,18 +1514,18 @@ function renderTvOrderCards(pendingOrders) {
 
         const highlightBadge = isBrandNew
             ? `<div class="bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white text-xs px-3 py-1 rounded-full font-black uppercase tracking-wider animate-bounce shadow-[0_0_20px_#f59e0b] flex items-center gap-1.5 shrink-0">
-                 <span>🔥</span> NAYAA ORDER
+                 <span>ðŸš¨</span> NAYAA ORDER
                </div>`
             : (stageNum >= 5 
                 ? `<div class="bg-sky-950/80 text-sky-300 border border-sky-500/50 text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-                     <span>🚚</span> DISPATCHED
+                     <span>ðŸ“¦</span> DISPATCHED
                    </div>`
                 : (stageNum >= 2 
                     ? `<div class="bg-purple-950/80 text-purple-300 border border-purple-500/50 text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-                         <span>⚙️</span> PROCESS ME
+                         <span>âš™ï¸</span> PROCESS ME
                        </div>`
                     : `<div class="bg-amber-950/80 text-amber-300 border border-amber-500/50 text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-                         <span>⏳</span> PENDING
+                         <span>â³</span> PENDING
                        </div>`));
 
         return `
@@ -1545,7 +1546,7 @@ function renderTvOrderCards(pendingOrders) {
                                 </span>
                             </div>
                         </div>
-<div class="flex flex-col items-end gap-1.5 shrink-0">
+                        <div class="flex flex-col items-end gap-1.5 shrink-0">
                             ${highlightBadge}
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${slaInfo.sideBadgeClass}">
                                 <span class="w-1.5 h-1.5 rounded-full ${slaInfo.dotClass}"></span>
@@ -1559,14 +1560,14 @@ function renderTvOrderCards(pendingOrders) {
                             ${o.shopName || 'Dealer Shop'}
                         </div>
                         <div class="text-xs text-slate-400 font-medium flex items-center justify-between mt-1">
-                            <span>📞 ${o.phone || 'No Phone'}</span>
+                            <span>ðŸ“ž ${o.phone || 'No Phone'}</span>
                             <span class="text-xs font-black uppercase text-purple-400">${o.paymentMode || 'COD'}</span>
                         </div>
                     </div>
 
                     ${dealerComment ? `
                     <div class="mt-2.5 p-2.5 bg-amber-950/40 border border-amber-500/40 rounded-xl text-amber-300 text-xs font-semibold flex items-start gap-2 shadow-sm">
-                        <span class="text-base leading-none shrink-0">💬</span>
+                        <span class="text-base leading-none shrink-0">ðŸ’¬</span>
                         <div class="overflow-hidden">
                             <span class="text-amber-400 uppercase text-[9px] font-black tracking-wider block">Dealer Comment:</span>
                             <span class="text-amber-100 font-medium break-words leading-tight">${dealerComment}</span>
@@ -1574,7 +1575,7 @@ function renderTvOrderCards(pendingOrders) {
                     </div>
                     ` : ''}
 
-                                        <!-- ORDER TIMING, ELAPSED & 1-HOUR SLA SECTION (Items photo table removed as requested) -->
+                    <!-- ORDER TIMING, ELAPSED & 1-HOUR SLA SECTION (Items photo table removed as requested) -->
                     <div class="mt-3 p-3 rounded-2xl bg-[#0B1121]/95 border border-slate-800 flex flex-col gap-2.5 shadow-inner">
                         <div class="flex items-center justify-between text-xs flex-wrap gap-2 pb-2 border-b border-slate-800/80">
                             <div class="flex items-center gap-1.5">
@@ -1616,14 +1617,14 @@ function renderTvOrderCards(pendingOrders) {
 
                 <div class="mt-4 pt-3 border-t border-slate-800">
                     <div class="flex items-center justify-between text-xs mb-2">
-                        <span class="text-slate-400 font-bold flex items-center gap-1.5 truncate max-w-[60%]">
+                        <span class="text-slate-400 font-bold flex items-center gap-1.5 truncate max-w-[55%]">
                             <span class="w-2 h-2 rounded-full shrink-0 ${stageNum >= 5 ? 'bg-sky-400' : (stageNum >= 2 ? 'bg-purple-400' : 'bg-amber-400')}"></span>
                             <span class="truncate">${stageLabel}</span>
                         </span>
                         <div class="text-right">
                             <div class="text-[10px] font-mono text-slate-400 font-bold">Total Qty: <span class="text-indigo-300 font-black">${totalOrderQty} Pcs</span></div>
                             <span class="text-lg md:text-xl font-black text-emerald-400 font-mono">
-                                ₹${totalVal.toLocaleString('en-IN')}
+                                â‚¹${totalVal.toLocaleString('en-IN')}
                             </span>
                         </div>
                     </div>
@@ -1636,7 +1637,3 @@ function renderTvOrderCards(pendingOrders) {
         `;
     }).join('');
 }
-
-
-
-
