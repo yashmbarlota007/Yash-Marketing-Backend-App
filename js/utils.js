@@ -726,6 +726,34 @@ function getOrderTvSlaInfo(order) {
         };
     }
 
+    // Check if order is from TODAY
+    // USER REQUIREMENT: "jo old order hai unka alarm nhi bajna chahiye sirf jo today ke order hai uska alarm bajna chahiye"
+    const dateBadge = (typeof getOrderRelativeDateBadge === 'function') 
+        ? getOrderRelativeDateBadge(order.date) 
+        : { isToday: true, label: "Today" };
+
+    if (!dateBadge.isToday) {
+        return {
+            isPending: false, // Old orders do not trigger late alarm
+            isOldOrder: true,
+            elapsedMinutes: 0,
+            remainingMinutes: 0,
+            status: 'old_order',
+            label: (dateBadge.label || 'Old Order'),
+            timeText: (dateBadge.label || 'Old Order') + ' (Pending)',
+            badgeClass: 'bg-slate-800 text-slate-300 border-slate-700',
+            sideBadgeClass: 'bg-slate-800 text-slate-300 border-slate-700',
+            containerBorderClass: 'border-slate-800 bg-[#0B1121]',
+            timeTextColor: 'text-slate-400',
+            progressColor: 'bg-slate-600',
+            progressPct: 100,
+            dotClass: 'bg-slate-500',
+            isWarning: false,
+            isBreached: false
+        };
+    }
+
+    // TODAY's Pending Order: Calculate elapsed time against 1 hour (60 minutes)
     const orderDate = (typeof parseCustomDate === 'function') ? parseCustomDate(order.date) : new Date(order.date || Date.now());
     const now = new Date();
     const diffMs = now.getTime() - orderDate.getTime();
@@ -759,7 +787,7 @@ function getOrderTvSlaInfo(order) {
             elapsedMinutes: elapsedMinutes,
             remainingMinutes: remainingMinutes,
             status: 'warning',
-            label: '1 तास: ' + remainingMinutes + 'm baki',
+            label: '⚠️ 1 तास: ' + remainingMinutes + 'm baki',
             timeText: remainingMinutes + 'm baki (Pending > ' + elapsedMinutes + 'm!)',
             badgeClass: 'bg-amber-950/90 text-amber-300 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse',
             sideBadgeClass: 'bg-amber-950/90 text-amber-300 border-amber-400 animate-pulse',
@@ -778,7 +806,7 @@ function getOrderTvSlaInfo(order) {
             elapsedMinutes: elapsedMinutes,
             remainingMinutes: remainingMinutes,
             status: 'breached',
-            label: '1 तास OVERDUE (+' + overdueMins + 'm)',
+            label: '🚨 1 तास OVERDUE (+' + overdueMins + 'm)',
             timeText: 'OVERDUE by ' + overdueMins + 'm (1 तास Breached!)',
             badgeClass: 'bg-red-950/90 text-red-200 border-2 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.8)] animate-bounce',
             sideBadgeClass: 'bg-red-950/90 text-red-200 border-2 border-red-500 animate-bounce',
@@ -793,15 +821,18 @@ function getOrderTvSlaInfo(order) {
     }
 }
 
-function playWarningChimeSequence() {
+// DISTINCT TONE: Urgent Dual Buzzer for Late SLA (Noticeably different from new order pleasant chime!)
+function playWarningBuzzerSequence() {
     try {
         if (typeof playTone === 'function') {
-            playTone(880, 0.0, 0.16, 'sawtooth', 0.45);
-            playTone(698, 0.18, 0.20, 'triangle', 0.55);
-            playTone(880, 0.40, 0.22, 'sine', 0.65);
+            // Rapid double alert beep + low warning buzz
+            playTone(950, 0.0, 0.10, 'sawtooth', 0.55);
+            playTone(950, 0.15, 0.10, 'sawtooth', 0.55);
+            playTone(440, 0.32, 0.28, 'square', 0.50);
+            playTone(350, 0.65, 0.25, 'sawtooth', 0.45);
         }
     } catch(err) {
-        console.warn("Warning chime playback error:", err);
+        console.warn("Buzzer audio error:", err);
     }
 }
 
@@ -809,11 +840,12 @@ function playPendingOrderSlaAlarm(durationSeconds = 5) {
     if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
     if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
 
-    playWarningChimeSequence();
+    // Play urgent warning buzzer
+    playWarningBuzzerSequence();
 
     const intervalId = setInterval(() => {
-        playWarningChimeSequence();
-    }, 1000);
+        playWarningBuzzerSequence();
+    }, 1050);
 
     const stopMs = Math.max(1000, (durationSeconds * 1000) - 100);
     setTimeout(() => {
@@ -844,6 +876,13 @@ function checkTvPendingOrdersSlaAlert(orders) {
         const stageNum = Number(o.completedStages || 0);
         if (o.isFullyCompleted || stageNum >= 2) return;
 
+        // CRITICAL CHECK: ONLY TODAY'S ORDERS RING THE LATE ALARM!
+        // "jo old order hai unka alarm nhi bajna chahiye sirf jo today ke order hai uska alarm bajna chahiye"
+        const dateBadge = (typeof getOrderRelativeDateBadge === 'function') 
+            ? getOrderRelativeDateBadge(o.date) 
+            : { isToday: false };
+        if (!dateBadge.isToday) return;
+
         const sla = getOrderTvSlaInfo(o);
         if (!sla || !sla.isPending) return;
 
@@ -855,7 +894,7 @@ function checkTvPendingOrdersSlaAlert(orders) {
             if (!window.slaAlertedMilestones[key]) {
                 window.slaAlertedMilestones[key] = true;
                 shouldRingAlarm = true;
-                alarmReason = 'Order #' + orderIdStr + ' 30 min se pending hai! 1 तास time running out!';
+                alarmReason = 'Aaj ka Order #' + orderIdStr + ' 30 min se pending hai! 1 तास time running out!';
             }
         } else if (sla.elapsedMinutes >= 45 && sla.elapsedMinutes < 60) {
             criticalPendingOrders.push(o);
@@ -863,7 +902,7 @@ function checkTvPendingOrdersSlaAlert(orders) {
             if (!window.slaAlertedMilestones[key]) {
                 window.slaAlertedMilestones[key] = true;
                 shouldRingAlarm = true;
-                alarmReason = 'Order #' + orderIdStr + ' 45 min se pending hai! Sirf 15m baki!';
+                alarmReason = 'Aaj ka Order #' + orderIdStr + ' 45 min se pending hai! Sirf 15m baki!';
             }
         } else if (sla.elapsedMinutes >= 60) {
             criticalPendingOrders.push(o);
@@ -871,7 +910,7 @@ function checkTvPendingOrdersSlaAlert(orders) {
             if (!window.slaAlertedMilestones[key]) {
                 window.slaAlertedMilestones[key] = true;
                 shouldRingAlarm = true;
-                alarmReason = 'Order #' + orderIdStr + ' 1 तास TAT OVERDUE ho gaya hai!';
+                alarmReason = 'Aaj ka Order #' + orderIdStr + ' 1 तास TAT OVERDUE ho gaya hai!';
             }
         }
     });
@@ -880,14 +919,14 @@ function checkTvPendingOrdersSlaAlert(orders) {
         if ((now - window.lastSlaAlarmTime) > 90000) {
             shouldRingAlarm = true;
             if (!alarmReason) {
-                alarmReason = criticalPendingOrders.length + ' order(s) 30 min se zyada pending hain!';
+                alarmReason = criticalPendingOrders.length + ' aaj ke order(s) 30 min se zyada pending hain!';
             }
         }
     }
 
     if (shouldRingAlarm) {
         window.lastSlaAlarmTime = now;
-        console.warn('[TV SLA ALARM]', alarmReason);
+        console.warn('[TV SLA ALARM (TODAY ORDERS ONLY)]', alarmReason);
         playPendingOrderSlaAlarm(5);
         showPendingOrderAlertBanner(criticalPendingOrders, alarmReason);
     }
@@ -903,7 +942,7 @@ function showPendingOrderAlertBanner(orders, reason) {
     banner.className = "fixed top-5 left-1/2 -translate-x-1/2 z-[300] max-w-xl w-[90%] bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 p-1 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.9)] animate-pulse pointer-events-auto";
     bannerText.innerText = '⚠️ 1 तास PENDING ALERT! (' + orders.length + ' Order)';
     const ids = orders.map(o => o.orderId).slice(0, 3).join(', ');
-    bannerSub.innerText = (reason || 'Orders pending > 30 mins!') + ' (IDs: ' + ids + ')';
+    bannerSub.innerText = (reason || 'Aaj ke orders pending > 30 mins!') + ' (IDs: ' + ids + ')';
 
     banner.classList.remove('hidden');
 
