@@ -46,6 +46,27 @@ async function fetchOrders(isSilent = false) {
             }
 
             let incoming = response.data || [];
+
+            // ==========================================
+            // OFFICE TV ALARM & NEW ORDER DETECTION
+            // ==========================================
+            if (window.knownOrderIds && window.isInitialOrdersLoaded) {
+                const brandNewOrders = incoming.filter(o => o && o.orderId && !window.knownOrderIds.has(String(o.orderId)));
+                if (brandNewOrders.length > 0) {
+                    console.log(`🚨 [ORDER ALARM] ${brandNewOrders.length} brand new order(s) detected:`, brandNewOrders);
+                    brandNewOrders.forEach(o => window.knownOrderIds.add(String(o.orderId)));
+                    
+                    if (typeof playNewOrderAlarm === 'function') {
+                        playNewOrderAlarm(2);
+                    }
+                    if (typeof showNewOrderAlertBanner === 'function') {
+                        showNewOrderAlertBanner(brandNewOrders);
+                    }
+                }
+            } else {
+                window.knownOrderIds = new Set(incoming.filter(o => o && o.orderId).map(o => String(o.orderId)));
+                window.isInitialOrdersLoaded = true;
+            }
             
             // CRITICAL SAFEGUARD: Do not let a stale read replica revert a stage
             // that was already submitted and marked completed in this active session
