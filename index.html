@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20261026_v1">
+    <link rel="stylesheet" href="css/style.css?v=20261026_v2">
 </head>
 <body class="min-h-screen p-2 md:p-6 lg:p-8 selection:bg-indigo-500 selection:text-white">
 
@@ -108,16 +108,7 @@
                         <span class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded group-hover:text-white">Cmd+K</span>
                     </button>
                 </div>
-                <div class="flex flex-wrap items-center justify-end gap-1.5 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
-                    <!-- TV Alarm & Fullscreen Controls -->
-                    <button id="alarmToggleBtn" onclick="testOrEnableAlarm()" title="Click to test or enable loud alarm" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                        <span id="alarmIcon">🔔</span>
-                        <span id="alarmText">Alarm: Active (Test)</span>
-                    </button>
-                    <button onclick="toggleFullScreen()" title="Toggle Fullscreen" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-700 bg-[#131C31] text-slate-300 hover:text-white hover:border-indigo-500">
-                        ⛶ Fullscreen
-                    </button>
-                    <div class="w-px h-5 bg-slate-700 mx-1"></div>
+                <div id="staffFilterControls" class="flex flex-wrap items-center justify-end gap-1.5 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
                     <button onclick="setDateRange('all', this)" class="date-filter-btn active-filter px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">All Time</button>
                     <button onclick="setDateRange('today', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Today</button>
                     <button onclick="setDateRange('yesterday', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Yesterday</button>
@@ -125,21 +116,131 @@
                     <button onclick="setDateRange('lastMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Last Month</button>
                     <button onclick="setDateRange('thisMonth', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-all">This Month</button>
                     <div class="w-px h-5 bg-slate-700 mx-1"></div>
-                    <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">✂️ Split</button>
+                    <button onclick="setDateRange('split', this)" class="date-filter-btn px-2.5 py-1.5 rounded-lg text-[10px] text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-all uppercase font-black tracking-widest">⚡ Split</button>
                     <button onclick="openHandover()" class="ml-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">📝 NOTES</button>
                     <button onclick="generateEODReport()" class="ml-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">📊 EOD</button>
                     <button onclick="logout()" class="ml-1 bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all">LOGOUT</button>
                 </div>
-            </div>
-            
-            <!-- Command Center -->
-            <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
 
-            <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2"><span class="text-indigo-400">🌊</span> Operational Pipeline</h3>
-            <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar snap-x snap-mandatory w-full"></div>
-            <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-        </div>
-    </div> <!-- End Main App Wrapper -->
+                <div id="tvHeaderControls" class="hidden flex items-center justify-end gap-2 w-full lg:w-3/5 bg-[#0B1121] p-1.5 rounded-xl border border-slate-800">
+                    <button id="alarmToggleBtn" onclick="testOrEnableAlarm()" title="Click to test 5-second loud alarm" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all border border-emerald-500/40 bg-emerald-950/60 text-emerald-400 hover:bg-emerald-900/80 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                        <span id="alarmIcon">🔔</span>
+                        <span id="alarmText">Alarm: Active (5s Buzzer)</span>
+                    </button>
+                    <button onclick="toggleFullScreen()" title="Toggle Fullscreen" class="px-3 py-2 rounded-xl text-xs font-bold transition-all border border-slate-700 bg-[#131C31] text-slate-300 hover:text-white hover:border-indigo-500">
+                        ⛶ Fullscreen
+                    </button>
+                    <button onclick="fetchOrders(false)" class="px-3 py-2 rounded-xl text-xs font-bold transition-all border border-slate-700 bg-[#131C31] text-slate-300 hover:text-white">
+                        🔄 Refresh
+                    </button>
+                    <button onclick="logout()" class="px-3 py-2 rounded-xl text-xs font-bold transition-all bg-pink-500/10 text-pink-400 border border-pink-500/30 hover:bg-pink-500 hover:text-white">
+                        Exit TV
+                    </button>
+                </div>
+            </div>
+
+            <!-- McDONALD'S / DOMINO'S OFFICE TV LIVE KDS DISPLAY -->
+            <div id="tvDisplayScreen" class="hidden space-y-6">
+                <!-- TV TOP METRIC COUNTER STRIP (5 METRICS SPECIFIED BY USER) -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                    <!-- Metric 1: Kitne order aaye -->
+                    <div class="bg-[#131C31] border border-indigo-500/40 rounded-2xl p-4 md:p-5 shadow-[0_0_25px_rgba(79,70,229,0.15)] flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-indigo-400">📦 Total Orders</span>
+                            <span class="text-lg">📋</span>
+                        </div>
+                        <div class="mt-2">
+                            <span id="tvMetricTotal" class="text-3xl md:text-5xl font-black text-white tracking-tight">0</span>
+                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Kul Aaye Orders</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2: Kitne pending hai -->
+                    <div class="bg-[#131C31] border border-amber-500/50 rounded-2xl p-4 md:p-5 shadow-[0_0_30px_rgba(245,158,11,0.2)] flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-amber-400">⏳ Pending Orders</span>
+                            <span class="text-lg animate-spin" style="animation-duration: 4s;">⚙️</span>
+                        </div>
+                        <div class="mt-2">
+                            <span id="tvMetricPending" class="text-3xl md:text-5xl font-black text-amber-400 tracking-tight">0</span>
+                            <span class="text-[11px] text-amber-300/70 block font-semibold mt-1">Taiyari / Process Me</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: Kitne balance check kiye hai -->
+                    <div class="bg-[#131C31] border border-purple-500/40 rounded-2xl p-4 md:p-5 shadow-[0_0_25px_rgba(168,85,247,0.15)] flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-purple-400">⚖️ Balance Check</span>
+                            <span class="text-lg">💳</span>
+                        </div>
+                        <div class="mt-2">
+                            <span id="tvMetricBalance" class="text-3xl md:text-5xl font-black text-purple-300 tracking-tight">0</span>
+                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Checked / Cleared</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 4: Kitne dispatch hue -->
+                    <div class="bg-[#131C31] border border-sky-500/40 rounded-2xl p-4 md:p-5 shadow-[0_0_25px_rgba(14,165,233,0.15)] flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-sky-400">🚚 Dispatched</span>
+                            <span class="text-lg">📦</span>
+                        </div>
+                        <div class="mt-2">
+                            <span id="tvMetricDispatched" class="text-3xl md:text-5xl font-black text-sky-400 tracking-tight">0</span>
+                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Raste Me / Bheje Gaye</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 5: Kitne completed hai -->
+                    <div class="bg-[#131C31] border border-emerald-500/40 rounded-2xl p-4 md:p-5 shadow-[0_0_25px_rgba(16,185,129,0.15)] flex flex-col justify-between col-span-2 sm:col-span-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-emerald-400">✅ Completed</span>
+                            <span class="text-lg">🎉</span>
+                        </div>
+                        <div class="mt-2">
+                            <span id="tvMetricCompleted" class="text-3xl md:text-5xl font-black text-emerald-400 tracking-tight">0</span>
+                            <span class="text-[11px] text-slate-400 block font-semibold mt-1">Puri Tarah Deliver</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- McDONALD'S / DOMINO'S TV ORDERS BOARD -->
+                <div class="bg-[#131C31] border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 mb-6 border-b border-slate-800 gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl animate-bounce">🔥</span>
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                                    Active Orders Board
+                                    <span class="bg-indigo-900/60 text-indigo-300 text-xs px-2.5 py-0.5 rounded-full font-bold border border-indigo-500/30">Live KDS</span>
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Naye aur pending orders yahan live highlight honge (Auto 12s Refresh)</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1 rounded-full font-bold">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                Live Syncing (12s)
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- TV Cards Grid -->
+                    <div id="tvOrderGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        <!-- Populated by renderTvOrderCards() -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAFF DASHBOARD AREA (STANDARD PIPELINE & COMMAND CENTER - UNCHANGED FOR STAFF) -->
+            <div id="staffDashboardArea">
+                <div id="mdoCommandCenter" class="hidden mb-8 space-y-4"></div>
+                <h3 class="text-lg font-black text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2"><span class="text-indigo-400">⚡</span> Operational Pipeline</h3>
+                <div id="stageFilterBar" class="flex overflow-x-auto gap-3 mb-6 pb-2 hide-scrollbar snap-x snap-mandatory w-full"></div>
+                <div id="orderGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+            </div>
+        </div></div> <!-- End Main App Wrapper -->
 
     <!-- Order Execution Task Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-[#0B1121]/95 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4 transition-all">
@@ -213,11 +314,11 @@
     </div>
 
     <!-- External JavaScript Files -->
-    <script src="js/config.js?v=20261026_v1"></script>
-    <script src="js/utils.js?v=20261026_v1"></script>
-    <script src="js/api.js?v=20261026_v1"></script>
-    <script src="js/ui.js?v=20261026_v1"></script>
-    <script src="js/main.js?v=20261026_v1"></script>
+    <script src="js/config.js?v=20261026_v2"></script>
+    <script src="js/utils.js?v=20261026_v2"></script>
+    <script src="js/api.js?v=20261026_v2"></script>
+    <script src="js/ui.js?v=20261026_v2"></script>
+    <script src="js/main.js?v=20261026_v2"></script>
 
 </body>
 </html>
