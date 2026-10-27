@@ -1462,7 +1462,8 @@ function renderTvOrderCards(pendingOrders) {
     grid.innerHTML = sorted.map(o => {
         const isBrandNew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(o.orderId))) || (o.completedStages === 0);
         const stageNum = Number(o.completedStages || 0);
-        const stageLabel = (stageNum >= 0 && stageNum < 9) ? (STAGE_NAMES[stageNum] || ('Stage ' + stageNum)) : 'Processing';
+        const stageNamesList = (typeof STAGE_NAMES !== 'undefined' && Array.isArray(STAGE_NAMES)) ? STAGE_NAMES : [];
+        const stageLabel = (stageNum >= 0 && stageNum < stageNamesList.length) ? stageNamesList[stageNum] : ('Stage ' + stageNum);
         const totalVal = Number(o.totalAmount || o.orderTotal || o.totalValue || 0);
         const isVip = Boolean(o.isVIP);
         const dealerComment = getOrderDealerComment(o);
@@ -1482,7 +1483,6 @@ function renderTvOrderCards(pendingOrders) {
             hours = hours % 12;
             hours = hours ? hours : 12;
             let mins = String(orderDateObj.getMinutes()).padStart(2, '0');
-            // Format with dot as requested by user: "ex 10.10"
             formattedTime = hours + '.' + mins + ' ' + ampm;
         }
 
@@ -1493,7 +1493,7 @@ function renderTvOrderCards(pendingOrders) {
         let timeAgoText = elapsedHours > 0 ? (elapsedHours + 'h ' + elapsedMins + 'm pehle') : (elapsedMins + ' min pehle');
 
         const slaInfo = (typeof getOrderTvSlaInfo === 'function') ? getOrderTvSlaInfo(o) : {
-            isPending: false, label: '1 à¤¤à¤¾à¤¸ Target', timeText: '1 à¤¤à¤¾à¤¸', progressPct: 0,
+            isPending: false, label: '1 Hr Target', timeText: '1 Hr Target', progressPct: 0,
             sideBadgeClass: 'bg-cyan-950/90 text-cyan-300 border-cyan-500/50',
             containerBorderClass: 'border-slate-800',
             timeTextColor: 'text-cyan-300', progressColor: 'bg-cyan-400', dotClass: 'bg-cyan-400',
@@ -1575,7 +1575,7 @@ function renderTvOrderCards(pendingOrders) {
                     </div>
                     ` : ''}
 
-                    <!-- ORDER TIMING, ELAPSED & 1-HOUR SLA SECTION (Items photo table removed as requested) -->
+                    <!-- CURRENT PENDING TASK BANNER (VISIBLE UNTIL COMPLETED) -->
                     <div class="mt-3 p-3 rounded-2xl bg-[#0B1121]/95 border border-slate-800 flex flex-col gap-2.5 shadow-inner">
                         <div class="flex items-center justify-between text-xs flex-wrap gap-2 pb-2 border-b border-slate-800/80">
                             <div class="flex items-center gap-1.5">
@@ -1596,19 +1596,34 @@ function renderTvOrderCards(pendingOrders) {
                             </div>
                         </div>
 
-                        <!-- 1 TASS SLA TARGET & REMAINING BAR -->
+                        <!-- HIGHLIGHTED PENDING TASK -->
+                        <div class="p-2.5 rounded-xl bg-gradient-to-r from-[#0d1424] to-[#131C31] border border-indigo-500/40 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <span class="text-amber-400 font-black flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full ${stageNum >= 5 ? 'bg-sky-400' : (stageNum >= 2 ? 'bg-purple-400' : 'bg-amber-400 animate-ping')}"></span>
+                                    PENDING TASK:
+                                </span>
+                                <span class="text-white font-extrabold uppercase bg-indigo-950/90 px-2 py-0.5 rounded-lg border border-indigo-400/30">
+                                    ${stageLabel} (Step ${stageNum + 1}/9)
+                                </span>
+                            </div>
+                            <span class="text-indigo-300 font-mono text-[11px] font-bold">
+                                Total: <strong class="text-white">${totalOrderQty} Qty</strong>
+                            </span>
+                        </div>
+
+                        <!-- CLEAN 1-HOUR SLA COUNTDOWN PROGRESS BAR -->
                         <div class="p-2.5 rounded-xl bg-[#070c18] border ${slaInfo.containerBorderClass} transition-all">
                             <div class="flex items-center justify-between text-[11px] font-bold">
                                 <span class="flex items-center gap-1.5 text-slate-300">
                                     <span class="w-2 h-2 rounded-full ${slaInfo.dotClass}"></span>
-                                    <span class="font-extrabold text-white text-[11px]">TARGET: 1 à¤¤à¤¾à¤¸ (1 HR)</span>
-                                    <span class="bg-indigo-900/80 text-indigo-200 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">Total: ${totalOrderQty} Qty</span>
+                                    <span class="font-extrabold text-white text-[11px]">1-Hour SLA Target</span>
                                 </span>
                                 <span class="${slaInfo.timeTextColor} font-mono font-black text-xs">
                                     ${slaInfo.timeText}
                                 </span>
                             </div>
-                            <div class="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden mt-1.5 flex">
+                            <div class="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-1.5 flex">
                                 <div class="${slaInfo.progressColor} h-full transition-all duration-500" style="width: ${slaInfo.progressPct}%"></div>
                             </div>
                         </div>
