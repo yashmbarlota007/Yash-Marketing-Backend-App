@@ -60,8 +60,11 @@ async function fetchOrders(isSilent = false) {
                         window.recentNewOrderIds.add(String(o.orderId));
                     });
                     
-                    if (typeof playNewOrderAlarm === 'function') {
-                        playNewOrderAlarm(5);
+                    // Alarm strictly only triggers in TV mode
+                    if (typeof isTvModeActive === 'function' && isTvModeActive()) {
+                        if (typeof playNewOrderAlarm === 'function') {
+                            playNewOrderAlarm(5);
+                        }
                     }
                     if (typeof showNewOrderAlertBanner === 'function') {
                         showNewOrderAlertBanner(brandNewOrders);
