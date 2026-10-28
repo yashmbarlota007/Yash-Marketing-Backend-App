@@ -1,4 +1,4 @@
-﻿﻿// js/api.js
+﻿﻿﻿// js/api.js
 
 // --- MASTER KEY BYPASS SYSTEM ---
 // --- MASTER KEY BYPASS SYSTEM (NO HEADERS) ---
@@ -53,7 +53,7 @@ async function fetchOrders(isSilent = false) {
             if (window.knownOrderIds && window.isInitialOrdersLoaded) {
                 const brandNewOrders = incoming.filter(o => o && o.orderId && !window.knownOrderIds.has(String(o.orderId)));
                 if (brandNewOrders.length > 0) {
-                    console.log(ðŸš¨ [ORDER ALARM]  brand new order(s) detected:, brandNewOrders);
+                    console.log("🚨 [ORDER ALARM] brand new order(s) detected:", brandNewOrders);
                     window.recentNewOrderIds = window.recentNewOrderIds || new Set();
                     brandNewOrders.forEach(o => {
                         window.knownOrderIds.add(String(o.orderId));
@@ -88,7 +88,7 @@ async function fetchOrders(isSilent = false) {
                         const b = (typeof getOrderRelativeDateBadge === 'function') ? getOrderRelativeDateBadge(o.date) : { isToday: false };
                         if (!b.isToday) return false;
                         const d = (typeof parseCustomDate === 'function') ? parseCustomDate(o.date) : new Date(o.date || 0);
-                        return (nowTime - d.getTime()) < 15 * 60 * 1000;
+                        return (nowTime - d.getTime()) < 45 * 60 * 1000;
                     });
 
                     if (freshRecentOrders.length > 0) {
@@ -451,5 +451,6 @@ async function verifyInvoiceWithAI(orderId, base64Image) {
         throw new Error("Failed to connect to AI server. Please try again.");
     }
 }
+
 
 
