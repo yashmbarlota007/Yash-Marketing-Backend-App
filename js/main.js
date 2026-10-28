@@ -1,4 +1,4 @@
-﻿// js/main.js
+﻿﻿// js/main.js
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -282,7 +282,7 @@ function showDashboard(name, role) {
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     
     // Faster refresh for TV (10 seconds) so new orders & alarms trigger quickly
-    const refreshRate = isTv ? 10000 : 30000;
+    const refreshRate = isTv ? 6000 : 15000;
     
     autoRefreshInterval = setInterval(() => { 
         if (document.getElementById('orderModal').classList.contains('hidden') &&
@@ -386,5 +386,6 @@ function applyDateFilter() {
         renderTvKdsBoard();
     }
 }
+
 
 
