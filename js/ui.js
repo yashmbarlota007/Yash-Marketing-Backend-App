@@ -1,4 +1,4 @@
-﻿﻿﻿if (typeof getOrderRelativeDateBadge !== 'function') {
+﻿﻿﻿﻿if (typeof getOrderRelativeDateBadge !== 'function') {
     window.getOrderRelativeDateBadge = function(d) {
         return {
             label: "Today",
@@ -1681,3 +1681,8 @@ function renderTvOrderCards(pendingOrders) {
     }).join('');
 }
 
+
+
+
+// Alias for backwards compatibility
+window.renderTvDisplayScreen = renderTvKdsBoard;
