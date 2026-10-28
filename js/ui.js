@@ -1,4 +1,4 @@
-﻿﻿if (typeof getOrderRelativeDateBadge !== 'function') {
+﻿﻿﻿if (typeof getOrderRelativeDateBadge !== 'function') {
     window.getOrderRelativeDateBadge = function(d) {
         return {
             label: "Today",
@@ -1355,6 +1355,9 @@ function renderTvKdsBoard() {
         });
     }
 
+        if (typeof isAudioEngineUnlocked !== 'undefined' && !isAudioEngineUnlocked) {
+        if (typeof showTvAudioUnlockBanner === 'function') showTvAudioUnlockBanner();
+    }
     window.currentTvFilteredOrders = filteredForTv;
     renderTvOrderCards(filteredForTv);
 
@@ -1453,10 +1456,35 @@ function renderTvOrderCards(pendingOrders) {
     }
 
     const sorted = [...pendingOrders].sort((a, b) => {
+        // 1. Brand new incoming orders ALWAYS come first (Card #1)
         const isANew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(a.orderId))) ? 1 : 0;
         const isBNew = (window.recentNewOrderIds && window.recentNewOrderIds.has(String(b.orderId))) ? 1 : 0;
         if (isANew !== isBNew) return isBNew - isANew;
-        return (b.completedStages === 0 ? 1 : 0) - (a.completedStages === 0 ? 1 : 0);
+
+        // 2. Today's orders come before older backlog orders
+        const badgeA = (typeof getOrderRelativeDateBadge === 'function') ? getOrderRelativeDateBadge(a.date) : { isToday: false, isYesterday: false };
+        const badgeB = (typeof getOrderRelativeDateBadge === 'function') ? getOrderRelativeDateBadge(b.date) : { isToday: false, isYesterday: false };
+        const aToday = badgeA.isToday ? 1 : 0;
+        const bToday = badgeB.isToday ? 1 : 0;
+        if (aToday !== bToday) return bToday - aToday;
+
+        const aYest = badgeA.isYesterday ? 1 : 0;
+        const bYest = badgeB.isYesterday ? 1 : 0;
+        if (aYest !== bYest) return bYest - aYest;
+
+        // 3. Stage 0 (fresh unstarted) orders come before in-progress
+        const aFresh = (Number(a.completedStages || 0) === 0) ? 1 : 0;
+        const bFresh = (Number(b.completedStages || 0) === 0) ? 1 : 0;
+        if (aFresh !== bFresh) return bFresh - aFresh;
+
+        // 4. Strict chronological descending (Newest timestamp first)
+        const dateA = (typeof parseCustomDate === 'function') ? parseCustomDate(a.date) : new Date(a.date || 0);
+        const dateB = (typeof parseCustomDate === 'function') ? parseCustomDate(b.date) : new Date(b.date || 0);
+        const timeDiff = dateB.getTime() - dateA.getTime();
+        if (timeDiff !== 0) return timeDiff;
+
+        // 5. Fallback to order ID numeric sequence descending
+        return String(b.orderId || '').localeCompare(String(a.orderId || ''));
     });
 
     grid.innerHTML = sorted.map(o => {
@@ -1652,3 +1680,4 @@ function renderTvOrderCards(pendingOrders) {
         `;
     }).join('');
 }
+
