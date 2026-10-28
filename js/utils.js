@@ -1,4 +1,4 @@
-﻿﻿﻿// js/utils.js
+﻿﻿﻿﻿// js/utils.js
 
 function updateTatTimers() {
     document.querySelectorAll('.tat-timer').forEach(el => {
@@ -514,23 +514,61 @@ function getAudioContext() {
     return alarmAudioCtx;
 }
 
-function unlockAudioEngine() {
+function unlockAudioEngine(playChime = false) {
     try {
         const ctx = getAudioContext();
         if (ctx) {
             if (ctx.state === 'suspended') {
-                ctx.resume();
+                ctx.resume().then(() => {
+                    isAudioEngineUnlocked = true;
+                    hideTvAudioUnlockBanner();
+                    updateAlarmStatusBadge(true);
+                    if (playChime) playAudioReadyChime();
+                }).catch(e => console.warn("Audio unlock notice:", e));
+            } else {
+                isAudioEngineUnlocked = true;
+                hideTvAudioUnlockBanner();
+                updateAlarmStatusBadge(true);
+                if (playChime) playAudioReadyChime();
             }
-            isAudioEngineUnlocked = true;
-            updateAlarmStatusBadge(true);
         }
     } catch(e) {
         console.warn("Audio unlock notice:", e);
     }
 }
 
-// Automatically unlock audio on first interaction anywhere on screen
-['click', 'keydown', 'touchstart'].forEach(evt => {
+function playAudioReadyChime() {
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1320, now + 0.15);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.16);
+    } catch(e) {}
+}
+
+function showTvAudioUnlockBanner() {
+    const banner = document.getElementById('tvAudioUnlockPrompt');
+    if (banner) banner.classList.remove('hidden');
+}
+
+function hideTvAudioUnlockBanner() {
+    const banner = document.getElementById('tvAudioUnlockPrompt');
+    if (banner) banner.classList.add('hidden');
+}
+
+// Automatically unlock audio audio on first interaction anywhere on screen
+['click', 'keydown', 'touchstart', 'pointerdown'].forEach(evt => {
     window.addEventListener(evt, () => {
         if (!isAudioEngineUnlocked) {
             unlockAudioEngine();
@@ -607,9 +645,15 @@ function playPoliceSirenSequence(durationSeconds = 5) {
     osc.stop(now + durationSeconds + 0.1);
 }
 
-function playNewOrderAlarm(durationSeconds = 5) {
-    if (!isTvModeActive()) return;
-    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
+function playNewOrderAlarm(durationSeconds = 5, force = false) {
+    if (!force && !isTvModeActive()) return;
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine(false);
+
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+        if (typeof showTvAudioUnlockBanner === 'function') showTvAudioUnlockBanner();
+    }
+
     if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
 
     try {
@@ -625,7 +669,7 @@ function playNewOrderAlarm(durationSeconds = 5) {
 
 function testNewOrderPoliceSiren() {
     if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
-    playNewOrderAlarm(5);
+    playNewOrderAlarm(5, true);
     if (typeof showNotification === 'function') {
         showNotification("🚨 POLICE SIREN TEST", "New Order Police Siren Active & Tested (5s)!");
     }
@@ -633,7 +677,7 @@ function testNewOrderPoliceSiren() {
 
 function testLateTimerAlarm() {
     if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
-    playPendingOrderSlaAlarm(5);
+    playPendingOrderSlaAlarm(5, true);
     if (typeof showNotification === 'function') {
         showNotification("⏰ LATE TIMER ALARM TEST", "1-Hour / 30-Min Late Alert Beeps Active & Tested (5s)!");
     }
@@ -901,13 +945,18 @@ function playDigitalTimerBeepBurst(startTime, freq = 2200) {
 }
 
 // LATE PENDING ALARM: STRICTLY ONLY PLAYS IN TV MODE!
-function playPendingOrderSlaAlarm(durationSeconds = 5) {
-    if (!isTvModeActive()) return;
+function playPendingOrderSlaAlarm(durationSeconds = 5, force = false) {
+    if (!force && !isTvModeActive()) return;
 
-    if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
-    if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
+    if (typeof unlockAudioEngine === 'function') unlockAudioEngine(false);
 
     const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+        if (typeof showTvAudioUnlockBanner === 'function') showTvAudioUnlockBanner();
+    }
+
+    if (typeof updateAlarmStatusBadge === 'function') updateAlarmStatusBadge(true, true);
+
     if (!ctx) return;
     if (ctx.state === 'suspended') ctx.resume();
 
@@ -991,7 +1040,7 @@ function checkTvPendingOrdersSlaAlert(orders) {
     if (shouldRingAlarm) {
         window.lastSlaAlarmTime = now;
         console.warn('[TV SLA ALARM (TODAY ORDERS ONLY)]', alarmReason);
-        playPendingOrderSlaAlarm(5);
+        playPendingOrderSlaAlarm(5, true);
         showPendingOrderAlertBanner(criticalPendingOrders, alarmReason);
     }
 }
@@ -1023,3 +1072,4 @@ window.addEventListener('click', function() {
 window.addEventListener('keydown', function() {
     if (typeof unlockAudioEngine === 'function') unlockAudioEngine();
 });
+
