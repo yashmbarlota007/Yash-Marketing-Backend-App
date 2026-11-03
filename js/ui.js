@@ -993,8 +993,12 @@ function handleFileSelection(inputElement, stageNum) {
     const MAX_SIZE = 6 * 1024 * 1024; 
 
     for (let f of newFiles) {
+        if (!f || f.size === 0 || f.size < 50) {
+            alert(`File "${f.name}" is empty or corrupted (0 KB). Please capture again.`);
+            continue;
+        }
         if (f.size > MAX_SIZE) {
-            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep audio recordings under 6MB.`);
+            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep files under 12MB.`);
         } else {
             validFiles.push(f);
         }
