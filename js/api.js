@@ -1,3 +1,39 @@
+// ==========================================
+// DEALER COMMENTS LIVE SYNC SYSTEM (FALLBACK & CACHE)
+// ==========================================
+window._dealerCommentsCache = window._dealerCommentsCache || {};
+const DEALER_GAS_URL = "https://script.google.com/macros/s/AKfycbw_HtJl9dqW4J4OnjMZkDTM98nKmuvcwfnh7vnoBKWJGdlB2afWqKRi2nn19AgVkm1t8A/exec";
+
+async function fetchMissingDealerComment(order) {
+    if (!order || !order.orderId) return "";
+    if (window._dealerCommentsCache[order.orderId]) {
+        return window._dealerCommentsCache[order.orderId];
+    }
+    if (!order.phone) return "";
+
+    try {
+        const res = await fetch(DEALER_GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getDealerOrders', phone: String(order.phone).trim() })
+        });
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.data)) {
+            json.data.forEach(dOrder => {
+                if (dOrder && dOrder.orderId && dOrder.items) {
+                    const m = String(dOrder.items).match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
+                    if (m) {
+                        const clean = m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim();
+                        window._dealerCommentsCache[dOrder.orderId] = clean;
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.warn("Dealer comment live sync notice:", e);
+    }
+    return window._dealerCommentsCache[order.orderId] || "";
+}
+
 ﻿﻿﻿// js/api.js
 
 // --- MASTER KEY BYPASS SYSTEM ---
@@ -108,7 +144,28 @@ async function fetchOrders(isSilent = false) {
                 }
             }
             
-                        // Auto-enrich product names, unit prices, and images from catalog
+                        // Extract Dealer Comments from items, remarks, or cache
+            incoming.forEach(o => {
+                let c = "";
+                (o.items || []).forEach(it => {
+                    let n = (it.name || it.productName || "").trim();
+                    let m = n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
+                    if (m) {
+                        c = m[1] ? m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim() : n;
+                    }
+                });
+                if (c) {
+                    o.dealerComment = c;
+                    window._dealerCommentsCache[o.orderId] = c;
+                } else if (window._dealerCommentsCache[o.orderId]) {
+                    o.dealerComment = window._dealerCommentsCache[o.orderId];
+                } else if (o.remarks && String(o.remarks).trim()) {
+                    o.dealerComment = String(o.remarks).trim();
+                    window._dealerCommentsCache[o.orderId] = o.dealerComment;
+                }
+            });
+
+            // Auto-enrich product names, unit prices, and images from catalog
             incoming.forEach(o => {
                 if (Array.isArray(o.items)) {
                     o.items.forEach(it => {
@@ -146,6 +203,45 @@ async function fetchOrders(isSilent = false) {
             });
 
             window.appData.rawArray = incoming;
+
+            // Background prefetch missing dealer comments for active/recent orders
+            try {
+                const activeNeedingComments = incoming.filter(o => 
+                    !o.dealerComment && 
+                    o.phone && 
+                    (o.completedStages < 9 || (typeof getOrderRelativeDateBadge === 'function' && getOrderRelativeDateBadge(o.date).isToday)) && 
+                    window._dealerCommentsCache[o.orderId] === undefined
+                );
+                const phonesToQuery = [...new Set(activeNeedingComments.map(o => String(o.phone).trim()))];
+                phonesToQuery.slice(0, 8).forEach(phone => {
+                    fetchMissingDealerComment({ orderId: '__batch__', phone: phone }).then(() => {
+                        let updatedAny = false;
+                        incoming.forEach(ord => {
+                            if (!ord.dealerComment && window._dealerCommentsCache[ord.orderId]) {
+                                ord.dealerComment = window._dealerCommentsCache[ord.orderId];
+                                updatedAny = true;
+                            }
+                        });
+                        if (updatedAny) {
+                            if (typeof applyDateFilter === 'function') applyDateFilter();
+                            if (typeof isTvModeActive === 'function' && isTvModeActive() && typeof renderTvDisplayScreen === 'function') {
+                                renderTvDisplayScreen();
+                            }
+                        }
+                        if (currentActiveOrder && window._dealerCommentsCache[currentActiveOrder.orderId]) {
+                            currentActiveOrder.dealerComment = window._dealerCommentsCache[currentActiveOrder.orderId];
+                            const box = document.getElementById('modalDealerCommentBox');
+                            const txt = document.getElementById('modalDealerCommentText');
+                            if (box && txt) {
+                                txt.innerText = `"${currentActiveOrder.dealerComment}"`;
+                                box.classList.remove('hidden');
+                            }
+                        }
+                    }).catch(() => {});
+                });
+            } catch(commentPrefetchErr) {
+                console.warn("Dealer comments prefetch notice:", commentPrefetchErr);
+            }
             
             try { 
                 applyDateFilter(); 
