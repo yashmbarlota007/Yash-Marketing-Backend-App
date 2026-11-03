@@ -479,12 +479,8 @@ function renderPipeline() {
         let timeData = getTimeAgoUI(order.date);
         let dateBadge = getOrderRelativeDateBadge(order.date);
         let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
-        let cardComment = "";
-        (order.items || []).forEach(it => {
-            let m = (it.name || "").match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*(.*)/i);
-            if (m) cardComment = m[1] ? m[1].trim() : it.name;
-        });
-        let commentBadge = cardComment ? `<div class="mt-2.5 bg-amber-500/10 border border-amber-500/40 rounded-lg p-2 text-xs font-bold text-amber-300 flex items-start gap-1.5 shadow-sm"><span class="shrink-0 text-sm">💬</span> <span class="leading-tight break-words"><b class="text-amber-400 uppercase text-[9px] tracking-wider block mb-0.5">Dealer Comment:</b> ${cardComment}</span></div>` : "";
+        let cardComment = getOrderDealerComment(order);
+        let commentBadge = cardComment ? `<div class="mt-2.5 bg-amber-500/15 border border-amber-500/50 rounded-lg p-2 text-xs font-bold text-amber-300 flex items-start gap-1.5 shadow-sm"><span class="shrink-0 text-sm">💬</span> <span class="leading-tight break-words whitespace-pre-line"><b class="text-amber-400 uppercase text-[9px] tracking-wider block mb-0.5">Dealer Comment:</b> ${cardComment}</span></div>` : "";
         
         let isSplit = String(order.orderId).toUpperCase().includes('SPLIT');
         let splitBadge = "";
@@ -644,15 +640,14 @@ function openModal(orderId) {
     container.innerHTML = '';
 
     // Extract Dealer Comment and separate Discounts/Schemes from physical products
-    let dealerComment = "";
+    let dealerComment = getOrderDealerComment(order);
     let discounts = [];
     let physicalProducts = [];
 
     (order.items || []).forEach(item => {
         let name = (item.name || "").trim();
-        let commentMatch = name.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*(.*)/i);
-        if (commentMatch) {
-            dealerComment = commentMatch[1] ? commentMatch[1].trim() : name;
+        if (name.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE)/i)) {
+            // Handled via getOrderDealerComment
         } else if (name.match(/(?:Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i)) {
             discounts.push(item);
         } else {
@@ -662,20 +657,18 @@ function openModal(orderId) {
 
     let extraSectionsHtml = "";
 
-    // 1. Dealer Comment Callout Box (Prominent & High-Visibility)
-    if (dealerComment) {
-        extraSectionsHtml += `
-            <div class="mb-5 bg-gradient-to-r from-amber-500/15 to-orange-500/10 border-2 border-amber-500/50 rounded-2xl p-4 shadow-xl">
-                <div class="text-[11px] text-amber-400 uppercase font-black tracking-widest mb-2 flex items-center justify-between">
-                    <span class="flex items-center gap-2"><span class="text-xl">💬</span> DEALER COMMENT / ORDER REMARK:</span>
-                    <span class="bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">IMPORTANT</span>
-                </div>
-                <div class="text-sm font-black text-amber-100 leading-relaxed bg-[#0B1121] p-3 rounded-xl border border-amber-500/30 shadow-inner">
-                    "${dealerComment}"
-                </div>
+    // 1. Dealer Comment Callout Box (Prominent, High-Visibility & Multi-line Support)
+    extraSectionsHtml += `
+        <div id="modalDealerCommentBox" class="mb-5 bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-500/20 border-2 border-amber-500/60 rounded-2xl p-4 shadow-xl ${dealerComment ? '' : 'hidden'}">
+            <div class="text-[11px] text-amber-400 uppercase font-black tracking-widest mb-2 flex items-center justify-between">
+                <span class="flex items-center gap-2"><span class="text-xl">💬</span> DEALER COMMENT / ORDER REMARK:</span>
+                <span class="bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">IMPORTANT</span>
             </div>
-        `;
-    }
+            <div id="modalDealerCommentText" class="text-sm font-black text-amber-100 leading-relaxed bg-[#0B1121] p-3.5 rounded-xl border border-amber-500/40 shadow-inner whitespace-pre-line">
+                ${dealerComment ? `"${dealerComment}"` : ''}
+            </div>
+        </div>
+    `;
 
     // 2. Discounts & Schemes Applied Section (Where discount used to show)
     if (discounts.length > 0) {
@@ -692,6 +685,21 @@ function openModal(orderId) {
     }
 
     container.innerHTML = extraSectionsHtml;
+
+    // Asynchronously fetch missing dealer comment if not yet in cache
+    if (!dealerComment && typeof fetchMissingDealerComment === 'function' && order.phone) {
+        fetchMissingDealerComment(order).then(comment => {
+            if (comment && currentActiveOrder && currentActiveOrder.orderId === order.orderId) {
+                currentActiveOrder.dealerComment = comment;
+                const cBox = document.getElementById('modalDealerCommentBox');
+                const cTxt = document.getElementById('modalDealerCommentText');
+                if (cBox && cTxt) {
+                    cTxt.innerText = `"${comment}"`;
+                    cBox.classList.remove('hidden');
+                }
+            }
+        }).catch(() => {});
+    }
 
     let itemsHtml = `
         <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
@@ -1426,15 +1434,26 @@ function formatTvItemsHtml(order) {
 }
 
 function getOrderDealerComment(order) {
+    if (!order) return "";
+    if (order.dealerComment && String(order.dealerComment).trim()) return String(order.dealerComment).trim();
+    if (window._dealerCommentsCache && window._dealerCommentsCache[order.orderId]) {
+        return window._dealerCommentsCache[order.orderId];
+    }
     if (order.comment && String(order.comment).trim()) return String(order.comment).trim();
     if (order.notes && String(order.notes).trim()) return String(order.notes).trim();
     if (order.remarks && String(order.remarks).trim()) return String(order.remarks).trim();
     
     let comment = "";
     (order.items || []).forEach(it => {
-        let m = (it.name || "").match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*(.*)/i);
-        if (m) comment = m[1] ? m[1].trim() : it.name;
+        let name = (it.name || it.productName || "").trim();
+        let m = name.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
+        if (m) {
+            comment = m[1] ? m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim() : name;
+        }
     });
+    if (comment && window._dealerCommentsCache) {
+        window._dealerCommentsCache[order.orderId] = comment;
+    }
     return comment;
 }
 
@@ -1602,7 +1621,7 @@ function renderTvOrderCards(pendingOrders) {
                         <span class="text-base leading-none shrink-0">ðŸ’¬</span>
                         <div class="overflow-hidden">
                             <span class="text-amber-400 uppercase text-[9px] font-black tracking-wider block">Dealer Comment:</span>
-                            <span class="text-amber-100 font-medium break-words leading-tight">${dealerComment}</span>
+                            <span class="text-amber-100 font-medium break-words leading-tight whitespace-pre-line">${dealerComment}</span>
                         </div>
                     </div>
                     ` : ''}
