@@ -253,17 +253,32 @@ async function submitStage(stageNum) {
             statusLabel.classList.remove('hidden'); 
         }
 
-        // Convert files in parallel with safety fallback
+        // Convert files in parallel with safety fallback and strict validation
         if (queuedFiles.length > 0) {
             const convertFile = async (f) => {
-                if (f.type.startsWith('image/')) {
+                if (f.type && (f.type.startsWith('image/') || f.type.includes('png') || f.type.includes('jpeg') || f.type.includes('jpg') || f.name.match(/\.(jpe?g|png|webp|heic)$/i))) {
                     if (typeof compressImage === 'function') {
                         return await compressImage(f);
                     }
                 }
                 return typeof getBase64 === 'function' ? await getBase64(f) : { name: f.name, mimeType: f.type || 'image/jpeg', base64: '' };
             };
-            payload.files = await Promise.all(queuedFiles.map(convertFile));
+            try {
+                const converted = await Promise.all(queuedFiles.map(convertFile));
+                payload.files = converted.filter(f => f && f.base64 && f.base64.length > 100);
+            } catch(procErr) {
+                alert("Photo Processing Error: " + (procErr.message || "Failed to process photo proof."));
+                if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); }
+                if (statusLabel) statusLabel.classList.add('hidden');
+                return;
+            }
+
+            if (fileRequired && payload.files.length === 0) {
+                alert("Proof photos could not be processed or were 0 bytes. Please capture/select again.");
+                if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); }
+                if (statusLabel) statusLabel.classList.add('hidden');
+                return;
+            }
         }
 
         if (stageNum === 9) { 
