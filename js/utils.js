@@ -406,19 +406,56 @@ function makeDirectDriveLink(url) {
 }
 
 function compressImage(file) {
-    return new Promise((resolve) => {
-        // Safety timeout: If canvas/image processing takes longer than 2.5 seconds,
-        // instantly fallback to direct FileReader getBase64! Never hang!
+    if (!file || file.size === 0) {
+        return Promise.reject(new Error("File is empty or corrupted (0 bytes)."));
+    }
+
+    // ? Fast path: Hardware-accelerated createImageBitmap (instant, low memory for mobile)
+    if ('createImageBitmap' in window) {
+        return createImageBitmap(file).then(bitmap => {
+            const MAX_WIDTH = 1200;
+            let width = bitmap.width;
+            let height = bitmap.height;
+            if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0, width, height);
+            try { bitmap.close(); } catch(e){}
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            const base64 = dataUrl.split(',')[1] || '';
+            if (base64.length > 200) {
+                return {
+                    name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                    mimeType: 'image/jpeg',
+                    base64: base64
+                };
+            }
+            throw new Error("createImageBitmap produced empty base64");
+        }).catch(err => {
+            console.warn("createImageBitmap fallback to canvas:", err);
+            return fallbackCanvasCompress(file);
+        });
+    }
+
+    return fallbackCanvasCompress(file);
+}
+
+function fallbackCanvasCompress(file) {
+    return new Promise((resolve, reject) => {
         let hasResolved = false;
         const timer = setTimeout(() => {
             if (!hasResolved) {
                 hasResolved = true;
-                console.warn("compressImage timed out, falling back to direct getBase64 for:", file.name);
-                getBase64(file).then(resolve).catch(() => {
-                    resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
-                });
+                console.warn("Canvas compression timed out (15s), falling back to getBase64 for:", file.name);
+                getBase64(file).then(resolve).catch(reject);
             }
-        }, 2500);
+        }, 15000);
 
         try {
             const img = new Image();
@@ -431,30 +468,34 @@ function compressImage(file) {
                 try {
                     URL.revokeObjectURL(objectUrl);
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    let width = img.width || 800;
-                    let height = img.height || 600;
-                    let scale = width > MAX_WIDTH ? (MAX_WIDTH / width) : 1;
+                    const MAX_WIDTH = 1200;
+                    let width = img.naturalWidth || img.width || 800;
+                    let height = img.naturalHeight || img.height || 600;
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
 
-                    canvas.width = Math.round(width * scale);
-                    canvas.height = Math.round(height * scale);
-
+                    canvas.width = width;
+                    canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, width, height);
 
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.70);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
                     const base64 = dataUrl.split(',')[1] || '';
 
-                    resolve({
-                        name: file.name,
-                        mimeType: 'image/jpeg',
-                        base64: base64
-                    });
+                    if (base64.length > 200) {
+                        resolve({
+                            name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                            mimeType: 'image/jpeg',
+                            base64: base64
+                        });
+                    } else {
+                        getBase64(file).then(resolve).catch(reject);
+                    }
                 } catch(canvasErr) {
                     console.warn("Canvas compression failed, falling back to getBase64:", canvasErr);
-                    getBase64(file).then(resolve).catch(() => {
-                        resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
-                    });
+                    getBase64(file).then(resolve).catch(reject);
                 }
             };
 
@@ -463,9 +504,7 @@ function compressImage(file) {
                 clearTimeout(timer);
                 hasResolved = true;
                 try { URL.revokeObjectURL(objectUrl); } catch(e){}
-                getBase64(file).then(resolve).catch(() => {
-                    resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
-                });
+                getBase64(file).then(resolve).catch(reject);
             };
 
             img.src = objectUrl;
@@ -473,9 +512,7 @@ function compressImage(file) {
             if (!hasResolved) {
                 clearTimeout(timer);
                 hasResolved = true;
-                getBase64(file).then(resolve).catch(() => {
-                    resolve({ name: file.name, mimeType: file.type || 'image/jpeg', base64: '' });
-                });
+                getBase64(file).then(resolve).catch(reject);
             }
         }
     });
@@ -483,19 +520,30 @@ function compressImage(file) {
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
+        if (!file || file.size === 0) {
+            return reject(new Error("File is empty (0 bytes)."));
+        }
         const reader = new FileReader(); 
         reader.readAsDataURL(file);
         
-        reader.onload = () => resolve({ 
-            name: file.name, 
-            mimeType: file.type, 
-            base64: reader.result.split(',')[1] 
-        });
+        reader.onload = () => {
+            const result = reader.result || '';
+            const parts = result.split(',');
+            const base64 = parts[1] || '';
+            if (!base64 || base64.length < 100) {
+                reject(new Error("Failed to encode photo (empty data)."));
+            } else {
+                resolve({ 
+                    name: file.name, 
+                    mimeType: file.type || 'image/jpeg', 
+                    base64: base64 
+                });
+            }
+        };
         
         reader.onerror = error => reject(error);
     });
 }
-
 
 // ==========================================
 // OFFICE TV AUDIBLE ALARM SYSTEM (WEB AUDIO SYNTHESIZER)
