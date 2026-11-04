@@ -999,58 +999,90 @@ function closeModal() {
     fetchOrders(true); 
 }
 
-function handleFileSelection(inputElement, stageNum) {
-    const newFiles = Array.from(inputElement.files);
-    const validFiles = [];
-    const MAX_SIZE = 6 * 1024 * 1024; 
+async function handleFileSelection(inputElement, stageNum) {
+    const rawFiles = Array.from(inputElement.files || []);
+    if (rawFiles.length === 0) return;
 
-    for (let f of newFiles) {
-        if (!f || f.size === 0 || f.size < 50) {
-            alert(`File "${f.name}" is empty or corrupted (0 KB). Please capture again.`);
-            continue;
-        }
-        if (f.size > MAX_SIZE) {
-            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep files under 12MB.`);
-        } else {
-            validFiles.push(f);
-        }
-    }
-
-    if (validFiles.length === 0) {
-        inputElement.value = ''; 
-        return;
-    }
-
-    queuedFiles = queuedFiles.concat(validFiles);
-    
     const statusLabel = document.getElementById(`fileStatusText_${stageNum}`);
     const clearBtn = document.getElementById(`clearFilesBtn_${stageNum}`);
     const container = document.getElementById(`fileStatusContainer_${stageNum}`);
     const previewBox = document.getElementById(`previewBox_${stageNum}`);
-    
+
+    if (statusLabel) {
+        statusLabel.innerText = "⏳ Processing photo...";
+        statusLabel.className = "text-[10px] font-black text-amber-400 py-2 animate-pulse";
+        statusLabel.classList.remove('hidden');
+    }
+    if (container) container.classList.remove('hidden');
+
+    const MAX_ALLOWED_SIZE = 25 * 1024 * 1024; // 25 MB allow high-res modern mobile photos
+    for (let f of rawFiles) {
+        if (!f || f.size === 0) {
+            alert(`File "${f ? f.name : 'Photo'}" is empty. Please capture again.`);
+            continue;
+        }
+        if (f.size > MAX_ALLOWED_SIZE) {
+            alert(`File "${f.name}" is too large (${(f.size/1024/1024).toFixed(1)}MB). Please keep files under 25MB.`);
+            continue;
+        }
+
+        try {
+            if (f.type && f.type.startsWith('audio/')) {
+                const b64 = await getBase64(f);
+                queuedFiles.push({
+                    name: f.name,
+                    mimeType: f.type || 'audio/mp3',
+                    base64: b64.base64,
+                    isAudio: true
+                });
+            } else {
+                // Compress photo immediately while file handle is fresh in RAM
+                const comp = await compressImage(f);
+                if (comp && comp.base64 && comp.base64.length > 50) {
+                    queuedFiles.push(comp);
+                }
+            }
+        } catch(err) {
+            console.warn("Direct compression fallback for", f.name, err);
+            try {
+                const b64 = await getBase64(f);
+                if (b64 && b64.base64 && b64.base64.length > 50) {
+                    queuedFiles.push(b64);
+                }
+            } catch(e2) {
+                alert(`Could not process "${f.name}": ` + (err.message || "Please take photo again."));
+            }
+        }
+    }
+
+    inputElement.value = '';
+
     if (queuedFiles.length > 0) {
-        statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`; 
-        statusLabel.classList.remove('hidden'); 
-        
-        if (clearBtn) clearBtn.classList.remove('hidden'); 
+        if (statusLabel) {
+            statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`;
+            statusLabel.className = "text-[10px] font-black text-emerald-400 py-2";
+            statusLabel.classList.remove('hidden');
+        }
+        if (clearBtn) clearBtn.classList.remove('hidden');
         if (container) container.classList.remove('hidden');
-        
+
         if (previewBox) {
-            previewBox.innerHTML = ''; 
+            previewBox.innerHTML = '';
             previewBox.classList.remove('hidden');
-            
-            queuedFiles.forEach(file => {
-                if (file.type.startsWith('audio/')) {
-                    previewBox.innerHTML += `<div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">🎤<br/>Audio</div>`; 
-                } else { 
-                    const reader = new FileReader(); 
-                    reader.onload = function(e) { 
-                        previewBox.innerHTML += `<img src="${e.target.result}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm">`; 
-                    }; 
-                    reader.readAsDataURL(file); 
+            queuedFiles.forEach((item, idx) => {
+                if (item.isAudio || (item.mimeType && item.mimeType.startsWith('audio/'))) {
+                    previewBox.innerHTML += `<div class="w-12 h-12 bg-indigo-900/50 flex flex-col items-center justify-center rounded border border-indigo-500 text-[8px] text-indigo-300 font-bold p-1 overflow-hidden shadow-inner">🎤<br/>Audio</div>`;
+                } else {
+                    const src = item.previewUrl || `data:${item.mimeType || 'image/jpeg'};base64,${item.base64}`;
+                    previewBox.innerHTML += `<img src="${src}" class="w-12 h-12 object-cover rounded border border-slate-600 shadow-sm" alt="Proof ${idx+1}">`;
                 }
             });
         }
+    } else {
+        if (statusLabel) statusLabel.classList.add('hidden');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        if (container) container.classList.add('hidden');
+        if (previewBox) previewBox.classList.add('hidden');
     }
 }
 
