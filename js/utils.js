@@ -405,144 +405,190 @@ function makeDirectDriveLink(url) {
     return url;
 }
 
-function compressImage(file) {
-    if (!file || file.size === 0) {
-        return Promise.reject(new Error("File is empty or corrupted (0 bytes)."));
-    }
-
-    // ? Fast path: Hardware-accelerated createImageBitmap (instant, low memory for mobile)
-    if ('createImageBitmap' in window) {
-        return createImageBitmap(file).then(bitmap => {
-            const MAX_WIDTH = 1200;
-            let width = bitmap.width;
-            let height = bitmap.height;
-            if (width > MAX_WIDTH) {
-                height = Math.round((height * MAX_WIDTH) / width);
-                width = MAX_WIDTH;
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(bitmap, 0, 0, width, height);
-            try { bitmap.close(); } catch(e){}
-
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            const base64 = dataUrl.split(',')[1] || '';
-            if (base64.length > 200) {
-                return {
-                    name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
-                    mimeType: 'image/jpeg',
-                    base64: base64
-                };
-            }
-            throw new Error("createImageBitmap produced empty base64");
-        }).catch(err => {
-            console.warn("createImageBitmap fallback to canvas:", err);
-            return fallbackCanvasCompress(file);
-        });
-    }
-
-    return fallbackCanvasCompress(file);
-}
-
-function fallbackCanvasCompress(file) {
+function readFileAsDataURL(file) {
     return new Promise((resolve, reject) => {
-        let hasResolved = false;
-        const timer = setTimeout(() => {
-            if (!hasResolved) {
-                hasResolved = true;
-                console.warn("Canvas compression timed out (15s), falling back to getBase64 for:", file.name);
-                getBase64(file).then(resolve).catch(reject);
-            }
-        }, 15000);
-
-        try {
-            const img = new Image();
-            const objectUrl = URL.createObjectURL(file);
-
-            img.onload = () => {
-                if (hasResolved) return;
-                clearTimeout(timer);
-                hasResolved = true;
-                try {
-                    URL.revokeObjectURL(objectUrl);
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200;
-                    let width = img.naturalWidth || img.width || 800;
-                    let height = img.naturalHeight || img.height || 600;
-                    if (width > MAX_WIDTH) {
-                        height = Math.round((height * MAX_WIDTH) / width);
-                        width = MAX_WIDTH;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-                    const base64 = dataUrl.split(',')[1] || '';
-
-                    if (base64.length > 200) {
-                        resolve({
-                            name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
-                            mimeType: 'image/jpeg',
-                            base64: base64
-                        });
-                    } else {
-                        getBase64(file).then(resolve).catch(reject);
-                    }
-                } catch(canvasErr) {
-                    console.warn("Canvas compression failed, falling back to getBase64:", canvasErr);
-                    getBase64(file).then(resolve).catch(reject);
-                }
-            };
-
-            img.onerror = () => {
-                if (hasResolved) return;
-                clearTimeout(timer);
-                hasResolved = true;
-                try { URL.revokeObjectURL(objectUrl); } catch(e){}
-                getBase64(file).then(resolve).catch(reject);
-            };
-
-            img.src = objectUrl;
-        } catch(err) {
-            if (!hasResolved) {
-                clearTimeout(timer);
-                hasResolved = true;
-                getBase64(file).then(resolve).catch(reject);
-            }
-        }
+        if (!file) return reject(new Error("No file selected."));
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result || '');
+        reader.onerror = () => reject(new Error("Cannot read file from device storage."));
+        reader.readAsDataURL(file);
     });
 }
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
-        if (!file || file.size === 0) {
-            return reject(new Error("File is empty (0 bytes)."));
+        if (!file) return reject(new Error("No file selected."));
+        if (file.base64 && typeof file.base64 === 'string') {
+            return resolve({
+                name: file.name || "proof.jpg",
+                mimeType: file.mimeType || "image/jpeg",
+                base64: file.base64
+            });
         }
-        const reader = new FileReader(); 
-        reader.readAsDataURL(file);
-        
-        reader.onload = () => {
-            const result = reader.result || '';
-            const parts = result.split(',');
+        readFileAsDataURL(file).then(dataUrl => {
+            const parts = (dataUrl || '').split(',');
             const base64 = parts[1] || '';
-            if (!base64 || base64.length < 100) {
-                reject(new Error("Failed to encode photo (empty data)."));
-            } else {
-                resolve({ 
-                    name: file.name, 
-                    mimeType: file.type || 'image/jpeg', 
-                    base64: base64 
-                });
-            }
-        };
-        
-        reader.onerror = error => reject(error);
+            resolve({
+                name: file.name || "proof.jpg",
+                mimeType: file.type || 'image/jpeg',
+                base64: base64
+            });
+        }).catch(reject);
     });
+}
+
+async function compressImage(file) {
+    if (!file) return { name: "proof.jpg", mimeType: "image/jpeg", base64: "" };
+
+    // Already compressed object check
+    if (file.base64 && typeof file.base64 === 'string' && file.base64.length > 50) {
+        return {
+            name: file.name || "proof.jpg",
+            mimeType: file.mimeType || "image/jpeg",
+            base64: file.base64,
+            previewUrl: file.previewUrl || `data:${file.mimeType || 'image/jpeg'};base64,${file.base64}`
+        };
+    }
+
+    const fileName = (file.name || "proof.jpg").replace(/\.[^/.]+$/, "") + ".jpg";
+    const MAX_DIM = 1200; // Optimal HD resolution for invoices, barcodes & box photos (120-180 KB)
+
+    // Strategy 1: Hardware-accelerated createImageBitmap (Instant decode, very low RAM footprint on Android/Samsung)
+    if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
+        try {
+            let bitmap;
+            try {
+                // Hardware resize at decode time if supported (Chrome 54+, Android)
+                bitmap = await createImageBitmap(file, {
+                    resizeWidth: MAX_DIM,
+                    resizeQuality: 'medium'
+                });
+            } catch(e) {
+                bitmap = await createImageBitmap(file);
+            }
+
+            if (bitmap) {
+                let width = bitmap.width;
+                let height = bitmap.height;
+                if (width > MAX_DIM || height > MAX_DIM) {
+                    if (width > height) {
+                        height = Math.round((height * MAX_DIM) / width);
+                        width = MAX_DIM;
+                    } else {
+                        width = Math.round((width * MAX_DIM) / height);
+                        height = MAX_DIM;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, width);
+                canvas.height = Math.max(1, height);
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(bitmap, 0, 0, width, height);
+                    try { bitmap.close(); } catch(e){}
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+                    const base64 = dataUrl.split(',')[1] || '';
+                    if (base64.length > 100) {
+                        return {
+                            name: fileName,
+                            mimeType: 'image/jpeg',
+                            base64: base64,
+                            previewUrl: dataUrl
+                        };
+                    }
+                }
+            }
+        } catch(bitmapErr) {
+            console.warn("createImageBitmap failed, falling back to Canvas Image:", bitmapErr);
+        }
+    }
+
+    // Strategy 2: Image element with canvas downscaling (Standard fallback)
+    try {
+        const dataUrl = await readFileAsDataURL(file);
+        if (dataUrl && dataUrl.length > 50) {
+            const result = await new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        let width = img.naturalWidth || img.width || 800;
+                        let height = img.naturalHeight || img.height || 600;
+                        if (width > MAX_DIM || height > MAX_DIM) {
+                            if (width > height) {
+                                height = Math.round((height * MAX_DIM) / width);
+                                width = MAX_DIM;
+                            } else {
+                                width = Math.round((width * MAX_DIM) / height);
+                                height = MAX_DIM;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, width);
+                        canvas.height = Math.max(1, height);
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0, width, height);
+                            const cDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+                            const base64 = cDataUrl.split(',')[1] || '';
+                            if (base64.length > 100) {
+                                return resolve({
+                                    name: fileName,
+                                    mimeType: 'image/jpeg',
+                                    base64: base64,
+                                    previewUrl: cDataUrl
+                                });
+                            }
+                        }
+                    } catch(canvasErr) {
+                        console.warn("Canvas draw failed, using direct dataUrl:", canvasErr);
+                    }
+                    // Fallback to raw base64 if canvas failed
+                    const rawBase64 = dataUrl.split(',')[1] || '';
+                    resolve({
+                        name: fileName,
+                        mimeType: file.type || 'image/jpeg',
+                        base64: rawBase64,
+                        previewUrl: dataUrl
+                    });
+                };
+                img.onerror = () => {
+                    // Fallback for non-standard image decoders (e.g. HEIC or raw)
+                    const rawBase64 = dataUrl.split(',')[1] || '';
+                    resolve({
+                        name: fileName,
+                        mimeType: file.type || 'image/jpeg',
+                        base64: rawBase64,
+                        previewUrl: dataUrl
+                    });
+                };
+                img.src = dataUrl;
+            });
+
+            if (result && result.base64 && result.base64.length > 50) {
+                return result;
+            }
+        }
+    } catch(imgErr) {
+        console.warn("Image/Canvas strategy failed:", imgErr);
+    }
+
+    // Strategy 3: Direct FileReader fallback (Never fails if file is readable)
+    try {
+        const raw = await getBase64(file);
+        if (raw && raw.base64 && raw.base64.length > 50) {
+            return {
+                name: fileName,
+                mimeType: raw.mimeType || 'image/jpeg',
+                base64: raw.base64,
+                previewUrl: `data:${raw.mimeType || 'image/jpeg'};base64,${raw.base64}`
+            };
+        }
+    } catch(rawErr) {
+        console.error("Direct getBase64 failed:", rawErr);
+    }
+
+    throw new Error("Phone camera photo could not be read. Please tap 'Live Camera' or 'Multi Gallery' again.");
 }
 
 // ==========================================
