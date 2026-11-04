@@ -378,28 +378,36 @@ async function submitStage(stageNum) {
             statusLabel.classList.remove('hidden'); 
         }
 
-        // Convert files in parallel with safety fallback and strict validation
+        // Convert files in parallel with pre-compressed in-memory objects
         if (queuedFiles.length > 0) {
             const convertFile = async (f) => {
+                if (f && f.base64 && f.base64.length > 50) {
+                    return {
+                        name: f.name || "proof.jpg",
+                        mimeType: f.mimeType || "image/jpeg",
+                        base64: f.base64
+                    };
+                }
                 if (f.type && (f.type.startsWith('image/') || f.type.includes('png') || f.type.includes('jpeg') || f.type.includes('jpg') || f.name.match(/\.(jpe?g|png|webp|heic)$/i))) {
                     if (typeof compressImage === 'function') {
                         return await compressImage(f);
                     }
                 }
-                return typeof getBase64 === 'function' ? await getBase64(f) : { name: f.name, mimeType: f.type || 'image/jpeg', base64: '' };
+                return typeof getBase64 === 'function' ? await getBase64(f) : { name: f.name || "proof.jpg", mimeType: f.type || 'image/jpeg', base64: '' };
             };
             try {
                 const converted = await Promise.all(queuedFiles.map(convertFile));
-                payload.files = converted.filter(f => f && f.base64 && f.base64.length > 100);
+                payload.files = converted.filter(f => f && f.base64 && f.base64.length > 50);
             } catch(procErr) {
-                alert("Photo Processing Error: " + (procErr.message || "Failed to process photo proof."));
+                console.error("Photo processing notice:", procErr);
+                alert("Photo Processing Notice: " + (procErr.message || "Please take photo again."));
                 if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); }
                 if (statusLabel) statusLabel.classList.add('hidden');
                 return;
             }
 
             if (fileRequired && payload.files.length === 0) {
-                alert("Proof photos could not be processed or were 0 bytes. Please capture/select again.");
+                alert("Proof photo was empty. Please capture/select again.");
                 if (btn) { btn.disabled = false; btn.innerText = "Execute & Proceed"; btn.classList.remove('opacity-70', 'cursor-not-allowed'); }
                 if (statusLabel) statusLabel.classList.add('hidden');
                 return;
