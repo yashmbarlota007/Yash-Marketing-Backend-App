@@ -38,26 +38,41 @@ async function fetchMissingDealerComment(order) {
 
 // --- MASTER KEY BYPASS SYSTEM ---
 // --- MASTER KEY BYPASS SYSTEM (NO HEADERS) ---
-async function gasRequest(payloadObj) {
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            // Yahan se humne 'headers' puri tarah hata diye hain. 
-            // Isse browser isey 'text/plain' manega aur CORS block nahi karega.
-            body: JSON.stringify(payloadObj)
-        });
-        
-        const textResponse = await res.text();
-        
+async function gasRequest(payloadObj, retries = 2) {
+    let lastError = null;
+    for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-            return JSON.parse(textResponse);
-        } catch (parseErr) {
-            console.error("Backend sent HTML instead of JSON:", textResponse);
-            throw new Error("System Error: Google script failed to return JSON.");
+            const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            const timeoutId = controller ? setTimeout(() => controller.abort(), 28000) : null;
+            
+            const fetchOptions = {
+                method: 'POST',
+                // Yahan se humne 'headers' puri tarah hata diye hain taaki browser isey 'text/plain' manega aur CORS block nahi karega.
+                body: JSON.stringify(payloadObj)
+            };
+            if (controller) fetchOptions.signal = controller.signal;
+
+            const res = await fetch(API_URL, fetchOptions);
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            const textResponse = await res.text();
+            
+            try {
+                return JSON.parse(textResponse);
+            } catch (parseErr) {
+                console.error("Backend sent HTML instead of JSON:", textResponse);
+                throw new Error("System Error: Google script failed to return JSON.");
+            }
+        } catch (networkErr) {
+            lastError = networkErr;
+            console.warn(`gasRequest attempt ${attempt + 1}/${retries + 1} notice:`, networkErr.message || networkErr);
+            if (attempt < retries) {
+                // Short wait before retry (1.2s, 2.4s) to overcome mobile network/DNS blips
+                await new Promise(r => setTimeout(r, (attempt + 1) * 1200));
+            }
         }
-    } catch (networkErr) {
-        throw new Error("Failed to fetch: Check internet or Google Apps Script URL.");
     }
+    throw new Error("Failed to fetch: Check internet or Google Apps Script URL.");
 }
 
 async function fetchOrders(isSilent = false) {
@@ -72,6 +87,10 @@ async function fetchOrders(isSilent = false) {
         const response = await gasRequest({ action: 'getOrders', staffName: currentUserName });
         
         if (response.status === 'success') {
+            // Remove any previous sync error banner immediately upon success
+            const prevErrorBanner = document.getElementById('system-sync-error');
+            if (prevErrorBanner) prevErrorBanner.remove();
+
             if (response.settings) window.appSettings = response.settings;
             if (response.backendEarnings !== undefined && response.backendEarnings > 0) {
                 let bBadge = document.getElementById('backendEarningsBadge');
@@ -213,32 +232,35 @@ async function fetchOrders(isSilent = false) {
                     window._dealerCommentsCache[o.orderId] === undefined
                 );
                 const phonesToQuery = [...new Set(activeNeedingComments.map(o => String(o.phone).trim()))];
-                phonesToQuery.slice(0, 8).forEach(phone => {
-                    fetchMissingDealerComment({ orderId: '__batch__', phone: phone }).then(() => {
-                        let updatedAny = false;
-                        incoming.forEach(ord => {
-                            if (!ord.dealerComment && window._dealerCommentsCache[ord.orderId]) {
-                                ord.dealerComment = window._dealerCommentsCache[ord.orderId];
-                                updatedAny = true;
-                            }
-                        });
-                        if (updatedAny) {
-                            if (typeof applyDateFilter === 'function') applyDateFilter();
-                            if (typeof isTvModeActive === 'function' && isTvModeActive() && typeof renderTvDisplayScreen === 'function') {
-                                renderTvDisplayScreen();
-                            }
+                // Paced sequential fetch of max 3 active orders so mobile connections aren't congested
+                (async () => {
+                    for (const phone of phonesToQuery.slice(0, 3)) {
+                        await fetchMissingDealerComment({ orderId: '__batch__', phone: phone }).catch(() => {});
+                        await new Promise(r => setTimeout(r, 800));
+                    }
+                    let updatedAny = false;
+                    incoming.forEach(ord => {
+                        if (!ord.dealerComment && window._dealerCommentsCache[ord.orderId]) {
+                            ord.dealerComment = window._dealerCommentsCache[ord.orderId];
+                            updatedAny = true;
                         }
-                        if (currentActiveOrder && window._dealerCommentsCache[currentActiveOrder.orderId]) {
-                            currentActiveOrder.dealerComment = window._dealerCommentsCache[currentActiveOrder.orderId];
-                            const box = document.getElementById('modalDealerCommentBox');
-                            const txt = document.getElementById('modalDealerCommentText');
-                            if (box && txt) {
-                                txt.innerText = `"${currentActiveOrder.dealerComment}"`;
-                                box.classList.remove('hidden');
-                            }
+                    });
+                    if (updatedAny) {
+                        if (typeof applyDateFilter === 'function') applyDateFilter();
+                        if (typeof isTvModeActive === 'function' && isTvModeActive() && typeof renderTvDisplayScreen === 'function') {
+                            renderTvDisplayScreen();
                         }
-                    }).catch(() => {});
-                });
+                    }
+                    if (currentActiveOrder && window._dealerCommentsCache[currentActiveOrder.orderId]) {
+                        currentActiveOrder.dealerComment = window._dealerCommentsCache[currentActiveOrder.orderId];
+                        const box = document.getElementById('modalDealerCommentBox');
+                        const txt = document.getElementById('modalDealerCommentText');
+                        if (box && txt) {
+                            txt.innerText = `"${currentActiveOrder.dealerComment}"`;
+                            box.classList.remove('hidden');
+                        }
+                    }
+                })().catch(() => {});
             } catch(commentPrefetchErr) {
                 console.warn("Dealer comments prefetch notice:", commentPrefetchErr);
             }
@@ -262,7 +284,14 @@ async function fetchOrders(isSilent = false) {
     } catch (err) { 
         console.error(err); 
         if (!isSilent && grid) {
-            grid.innerHTML = `<div class="col-span-full py-10 bg-red-900/10 border border-red-500/30 rounded-2xl text-center mx-2 mt-8 shadow-lg"><div class="text-3xl mb-3 animate-bounce">⚠️</div><p class="text-red-400 font-black tracking-widest uppercase text-sm mb-2">System Sync Failed</p><p class="text-white text-xs mb-6 font-mono px-4 text-wrap-custom">${err.message}</p><button onclick="fetchOrders(false)" class="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all">Retry Connection</button></div>`;
+            // Only overwrite full grid if no orders exist yet; otherwise keep existing cards visible
+            if (!window.appData.rawArray || window.appData.rawArray.length === 0) {
+                grid.innerHTML = `<div id="system-sync-error" class="col-span-full py-10 bg-red-900/10 border border-red-500/30 rounded-2xl text-center mx-2 mt-8 shadow-lg"><div class="text-3xl mb-3 animate-bounce">⚠️</div><p class="text-red-400 font-black tracking-widest uppercase text-sm mb-2">System Sync Failed</p><p class="text-white text-xs mb-6 font-mono px-4 text-wrap-custom">${err.message}</p><button onclick="fetchOrders(false)" class="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all">Retry Connection</button></div>`;
+            } else {
+                if (typeof showNotification === 'function') {
+                    showNotification("Sync Notice", "Network slow: Reconnecting in background...", "warning");
+                }
+            }
         }
     }
 }
