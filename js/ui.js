@@ -444,6 +444,10 @@ function renderPipeline() {
     if (emptyState) {
         emptyState.remove();
     }
+    const syncError = document.getElementById('system-sync-error');
+    if (syncError) {
+        syncError.remove();
+    }
 
     const userName = localStorage.getItem('yash_user') || "";
     const isOwner = currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'owner' || userName.toLowerCase().includes('yash');
