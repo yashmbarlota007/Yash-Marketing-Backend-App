@@ -117,7 +117,7 @@ function renderMdoDashboard() {
     let healthColor = healthScore >= 80 ? 'text-emerald-400' : (healthScore >= 50 ? 'text-orange-400' : 'text-pink-500');
 
     let mdoHtml = `
-        <div class="flex justify-between items-center bg-[#0B1121] border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg">
+        <div class="flex justify-between items-center bg-white border border-slate-200 p-4 rounded-2xl mb-4 shadow-xs">
             <div>
                 <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 tracking-widest uppercase">
                     🔴 LIVE WAR ROOM
@@ -139,7 +139,7 @@ function renderMdoDashboard() {
                     Total Volume & Value
                 </div>
                 <div class="flex items-end gap-2 mt-2">
-                    <span class="text-2xl font-black text-white">${totalVolume} U</span>
+                    <span class="text-2xl font-black text-slate-900">${totalVolume} U</span>
                     <span class="text-xs text-indigo-400 font-bold mb-1 pb-1">₹${totalOrderValue.toLocaleString()}</span>
                 </div>
             </div>
@@ -160,7 +160,7 @@ function renderMdoDashboard() {
                 <div class="text-[10px] ${slaBreaches > 0 ? 'text-pink-400' : 'text-slate-400'} uppercase font-black tracking-widest mb-1 flex items-center gap-2">
                     ${slaBreaches > 0 ? '<span class="animate-pulse">⚠️</span>' : '✅'} SLA Breaches
                 </div>
-                <span class="text-2xl font-black ${slaBreaches > 0 ? 'text-pink-500' : 'text-white'} mt-2 block">
+                <span class="text-2xl font-black ${slaBreaches > 0 ? 'text-pink-600' : 'text-slate-900'} mt-2 block">
                     ${slaBreaches}
                 </span>
                 <div class="text-[9px] text-slate-500 mt-1 font-semibold">
@@ -183,13 +183,13 @@ function renderMdoDashboard() {
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span class="text-yellow-400">🔥</span> Hot Movers
                 </h3>
                 <div class="space-y-3">
                     ${sortedSKUs.length > 0 ? sortedSKUs.map((sku, i) => `
-                        <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="text-xs font-bold text-slate-300 truncate mb-1">
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                            <div class="text-xs font-bold text-slate-800 truncate mb-1">
                                 ${i+1}. ${sku[0]}
                             </div>
                             <div class="flex justify-between items-end">
@@ -206,13 +206,13 @@ function renderMdoDashboard() {
             </div>
             
             <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span class="text-amber-400">🏆</span> Leaderboard
                 </h3>
                 <div class="space-y-3">
                     ${sortedStaff.length > 0 ? sortedStaff.map((staff, i) => `
-                        <div class="flex justify-between items-center bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <span class="text-xs font-bold text-slate-300">#${i+1} ${staff[0]}</span>
+                        <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                            <span class="text-xs font-bold text-slate-800">#${i+1} ${staff[0]}</span>
                             <div class="text-right">
                                 <span class="block text-xs font-black text-emerald-400">₹${staff[1].value.toLocaleString()}</span>
                                 <span class="block text-[9px] text-slate-500 font-bold tracking-widest">${staff[1].orders} ORDERS</span>
@@ -223,15 +223,15 @@ function renderMdoDashboard() {
             </div>
 
             <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span class="text-emerald-400">👑</span> VIP Dealers
                 </h3>
                 <div class="space-y-3 max-h-60 overflow-y-auto hide-scrollbar pr-2">
                     ${sortedShops.length > 0 ? sortedShops.slice(0, 5).map((v, i) => `
-                        <div class="relative w-full bg-[#0B1121] rounded-lg p-2.5 overflow-hidden border border-slate-800 group">
+                        <div class="relative w-full bg-slate-50 rounded-xl p-2.5 overflow-hidden border border-slate-200 group">
                             <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-900/40 to-transparent" style="width: ${(v[1].value / topShopVolume) * 100}%"></div>
                             <div class="relative z-10">
-                                <div class="text-xs font-bold text-slate-200 truncate group-hover:text-white">
+                                <div class="text-xs font-bold text-slate-800 truncate group-hover:text-blue-600">
                                     ${v[0]}
                                 </div>
                                 <div class="text-[9px] text-slate-400 uppercase tracking-widest mb-1">
@@ -247,13 +247,13 @@ function renderMdoDashboard() {
             </div>
             
             <div class="glass-panel p-5 rounded-2xl lg:col-span-1">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span class="text-blue-400">📍</span> Area Heatmap
                 </h3>
                 <div class="space-y-3">
                     ${sortedCities.length > 0 ? sortedCities.map((city, i) => `
-                        <div class="bg-[#0B1121] p-2.5 rounded-lg border border-slate-800">
-                            <div class="text-xs font-bold text-slate-300 truncate mb-1">
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                            <div class="text-xs font-bold text-slate-800 truncate mb-1">
                                 #${i+1} ${city[0]}
                             </div>
                             <div class="flex justify-between items-end">
@@ -270,7 +270,7 @@ function renderMdoDashboard() {
             </div>
             
             <div class="glass-panel p-5 rounded-2xl lg:col-span-1 flex flex-col">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex justify-between items-center">
                     <span class="flex items-center gap-2">
                         <span class="text-purple-400">📊</span> Brand Matrix
                     </span>
@@ -370,26 +370,26 @@ function renderPipeline() {
     let filterHtml = `
         <div 
             onclick="setStageFilter(null)" 
-            class="snap-start cursor-pointer ${activeStageFilter === null ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all"
+            class="snap-start cursor-pointer ${activeStageFilter === null ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'} flex flex-col justify-between p-3 rounded-xl border min-w-[125px] shrink-0 transition-all"
         >
-            <span class="${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Overview</span>
-            <span class="text-white text-sm font-black mb-2">All Pending</span>
-            <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                <span class="text-[10px] ${activeStageFilter === null ? 'text-indigo-200' : 'text-slate-600'} font-bold">COUNT</span>
-                <span class="${activeStageFilter === null ? 'bg-white text-indigo-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${pendingOrders.length}</span>
+            <span class="${activeStageFilter === null ? 'text-slate-300' : 'text-slate-400'} text-[10px] font-extrabold uppercase tracking-wider mb-1">Overview</span>
+            <span class="${activeStageFilter === null ? 'text-white' : 'text-slate-900'} text-sm font-extrabold mb-2">All Pending</span>
+            <div class="flex items-center justify-between mt-auto pt-2 border-t ${activeStageFilter === null ? 'border-slate-800' : 'border-slate-100'}">
+                <span class="text-[10px] ${activeStageFilter === null ? 'text-slate-300' : 'text-slate-500'} font-bold">COUNT</span>
+                <span class="${activeStageFilter === null ? 'bg-white text-slate-900' : 'bg-slate-100 text-slate-700 border border-slate-200'} px-2 py-0.5 rounded-lg text-xs font-black">${pendingOrders.length}</span>
             </div>
         </div>
         
-        <!-- NEW: COMPLETED ORDERS TAB -->
+        <!-- COMPLETED ORDERS TAB -->
         <div 
             onclick="setStageFilter('completed')" 
-            class="snap-start cursor-pointer ${activeStageFilter === 'completed' ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[120px] shrink-0 transition-all"
+            class="snap-start cursor-pointer ${activeStageFilter === 'completed' ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'} flex flex-col justify-between p-3 rounded-xl border min-w-[125px] shrink-0 transition-all"
         >
-            <span class="${activeStageFilter === 'completed' ? 'text-emerald-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">History</span>
-            <span class="text-white text-sm font-black mb-2">Completed</span>
-            <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                <span class="text-[10px] ${activeStageFilter === 'completed' ? 'text-emerald-200' : 'text-slate-600'} font-bold">DONE</span>
-                <span class="${activeStageFilter === 'completed' ? 'bg-white text-emerald-900' : 'bg-[#0B1121] text-slate-400'} px-2 py-0.5 rounded text-xs font-black">${completedOrders.length}</span>
+            <span class="${activeStageFilter === 'completed' ? 'text-emerald-100' : 'text-slate-400'} text-[10px] font-extrabold uppercase tracking-wider mb-1">History</span>
+            <span class="${activeStageFilter === 'completed' ? 'text-white' : 'text-slate-900'} text-sm font-extrabold mb-2">Completed</span>
+            <div class="flex items-center justify-between mt-auto pt-2 border-t ${activeStageFilter === 'completed' ? 'border-emerald-500' : 'border-slate-100'}">
+                <span class="text-[10px] ${activeStageFilter === 'completed' ? 'text-emerald-100' : 'text-slate-500'} font-bold">DONE</span>
+                <span class="${activeStageFilter === 'completed' ? 'bg-white text-emerald-800' : 'bg-slate-100 text-slate-700 border border-slate-200'} px-2 py-0.5 rounded-lg text-xs font-black">${completedOrders.length}</span>
             </div>
         </div>
     `;
@@ -406,13 +406,15 @@ function renderPipeline() {
         filterHtml += `
             <div 
                 onclick="setStageFilter(${idx})" 
-                class="snap-start cursor-pointer ${isActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-[#131C31] border-slate-800 hover:bg-slate-800'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all"
+                class="snap-start cursor-pointer ${isActive ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'} flex flex-col justify-between p-3 rounded-xl border min-w-[130px] shrink-0 transition-all"
             >
-                <span class="${isActive ? 'text-indigo-200' : 'text-slate-500'} text-[9px] font-black uppercase tracking-widest mb-1">Step ${idx+1}</span>
-                <span class="${isActive ? 'text-white' : 'text-slate-400'} text-xs font-bold mb-2 leading-tight">${filterName}</span>
-                <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-                    <span class="text-[10px] ${isActive ? 'text-indigo-200' : 'text-slate-600'} font-bold">STUCK</span>
-                    <span class="${orderCount > 0 ? (isActive ? 'bg-white text-indigo-900' : 'bg-pink-500/20 text-pink-400 border border-pink-500/20') : (isActive ? 'bg-indigo-900 text-indigo-300' : 'bg-[#0B1121] text-slate-600')} px-2 py-0.5 rounded text-xs font-black">${orderCount}</span>
+                <span class="${isActive ? 'text-blue-100' : 'text-slate-400'} text-[10px] font-extrabold uppercase tracking-wider mb-1 flex items-center">
+                    <span class="${isActive ? 'bg-white text-blue-700' : 'bg-slate-100 text-slate-600'} w-4 h-4 rounded-full text-[10px] font-bold inline-flex items-center justify-center mr-1.5">${idx+1}</span> Step ${idx+1}
+                </span>
+                <span class="${isActive ? 'text-white' : 'text-slate-800'} text-xs font-extrabold mb-2 leading-tight">${filterName}</span>
+                <div class="flex items-center justify-between mt-auto pt-2 border-t ${isActive ? 'border-blue-500' : 'border-slate-100'}">
+                    <span class="text-[10px] ${isActive ? 'text-blue-100' : 'text-slate-500'} font-bold">STUCK</span>
+                    <span class="${orderCount > 0 ? (isActive ? 'bg-white text-blue-800' : 'bg-rose-50 text-rose-700 border border-rose-200') : (isActive ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-500 border border-slate-200')} px-2 py-0.5 rounded-lg text-xs font-black">${orderCount}</span>
                 </div>
             </div>
         `;
@@ -432,9 +434,9 @@ function renderPipeline() {
     
     if (displayOrders.length === 0) { 
         grid.innerHTML = `
-            <div class="col-span-full bg-[#131C31] border border-slate-800 p-10 rounded-2xl text-center" id="empty-state">
+            <div class="col-span-full bg-white border border-slate-200 p-10 rounded-2xl text-center shadow-xs" id="empty-state">
                 <div class="text-4xl mb-3">${activeStageFilter === 'completed' ? '📦' : '🍃'}</div>
-                <p class="text-slate-400 text-lg font-bold">${activeStageFilter === 'completed' ? 'No completed orders found.' : 'Inbox Zero for this view.'}</p>
+                <p class="text-slate-700 text-lg font-bold">${activeStageFilter === 'completed' ? 'No completed orders found.' : 'Inbox Zero for this view.'}</p>
             </div>
         `; 
         return; 
@@ -484,7 +486,7 @@ function renderPipeline() {
         let dateBadge = getOrderRelativeDateBadge(order.date);
         let orderItemsCount = order.items.reduce((sum, item) => sum + parseInt(item.qty || 1), 0);
         let cardComment = getOrderDealerComment(order);
-        let commentBadge = cardComment ? `<div class="mt-2.5 bg-amber-500/15 border border-amber-500/50 rounded-lg p-2 text-xs font-bold text-amber-300 flex items-start gap-1.5 shadow-sm"><span class="shrink-0 text-sm">💬</span> <span class="leading-tight break-words whitespace-pre-line"><b class="text-amber-400 uppercase text-[9px] tracking-wider block mb-0.5">Dealer Comment:</b> ${cardComment}</span></div>` : "";
+        let commentBadge = cardComment ? `<div class="mt-2.5 bg-amber-50/90 border border-amber-200 rounded-xl p-2.5 text-xs font-semibold text-amber-900 flex items-start gap-2 shadow-2xs"><span class="shrink-0 text-base leading-none">💬</span> <span class="leading-tight break-words whitespace-pre-line"><b class="text-amber-800 uppercase text-[9px] tracking-wider block mb-0.5 font-bold">Dealer Comment:</b> ${cardComment}</span></div>` : "";
         
         let isSplit = String(order.orderId).toUpperCase().includes('SPLIT');
         let splitBadge = "";
@@ -500,13 +502,13 @@ function renderPipeline() {
         let lockOverlay = ""; 
         let clickAction = `onclick="openModal('${order.orderId}')"`; 
         let cursorStyle = "cursor-pointer"; 
-        let vipClass = order.isVIP ? "vip-corridor bg-[#131C31]" : "bg-[#131C31] hover:border-indigo-500 border-slate-800";
+        let vipClass = order.isVIP ? "vip-corridor bg-white border-red-500" : "bg-white hover:border-blue-500 border-slate-200/90";
         
         // =========================================================
         // AGGRESSIVE HIGHLIGHT FOR SPLIT ORDERS
         // =========================================================
         if (isSplit && activeStageFilter !== 'completed') {
-             vipClass = "bg-purple-900/20 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.25)]";
+             vipClass = "bg-purple-50/40 border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.15)]";
         }        
         if (order.creditLocked && !order.ceoOverride) {
             let unlockBtn = isOwner ? `
@@ -541,45 +543,46 @@ function renderPipeline() {
         }
         
         const fullCardHtml = `
-            <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-lg flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-500/30 bg-emerald-900/5' : ''}">
+            <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-xs hover:shadow-lg hover:border-blue-500 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-200 bg-emerald-50/20' : ''}">
                 ${lockOverlay}
-                <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full transition-transform group-hover:scale-125"></div>
-                <div class="mb-4 relative z-10">
-                    <div class="flex justify-between items-start mb-1.5">
-                        <h3 class="font-black text-sm text-white tracking-wider">${order.orderId}</h3>
+                <div class="mb-3 relative z-10">
+                    <div class="flex justify-between items-start mb-1">
+                        <h3 class="font-mono font-bold text-xs text-slate-500 uppercase tracking-wider">${order.orderId}</h3>
                         <div class="flex gap-1">${vipBadge}${splitBadge}</div>
                     </div>
-                    <p class="text-indigo-300 font-bold text-xs leading-tight text-wrap-custom mb-3">${order.shopName}</p>
+                    <h4 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition leading-snug mb-2">${order.shopName}</h4>
                     ${commentBadge}
-                    <div class="flex gap-1 items-center flex-wrap mb-3">
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black border ${dateBadge.badgeClass}">
+                    <div class="flex gap-1.5 items-center flex-wrap mb-3 mt-2">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${dateBadge.badgeClass}">
                             <span class="w-1.5 h-1.5 rounded-full ${dateBadge.dotColor}"></span>
                             ${dateBadge.label}
                         </span>
-                        <span class="bg-[#0B1121] text-[9px] px-2 py-1 rounded text-slate-400 font-mono tracking-widest border border-slate-800">${exactDateStr}</span>
-                        <span class="bg-[#0B1121] ${activeStageFilter === 'completed' ? 'text-emerald-400' : timeData.color} text-[9px] px-2 py-1 rounded font-black tracking-widest border border-slate-800">
+                        <span class="bg-slate-100 text-[10px] px-2 py-0.5 rounded text-slate-600 font-mono tracking-wider border border-slate-200">${exactDateStr}</span>
+                        <span class="bg-slate-100 ${activeStageFilter === 'completed' ? 'text-emerald-700' : timeData.color} text-[10px] px-2 py-0.5 rounded font-bold tracking-wider border border-slate-200">
                             ${activeStageFilter === 'completed' ? '✓ COMPLETED' : '🕒 ' + timeData.text}
                         </span>
                         ${tatBadge}${slaBadge}
                     </div>
-                    <div class="mt-3 flex flex-wrap gap-2 items-center">
-                        <span class="text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase border ${isCod ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">${order.paymentMode || 'N/A'}</span>
-                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-900/20 px-2 py-1 rounded border border-yellow-500/20">₹${order.totalValue || '0'}</span>
-                        <span class="text-[10px] font-black text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700">Qty: ${orderItemsCount}</span>
+                    <div class="mt-2 flex flex-wrap gap-2 items-center">
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${isCod ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}">${order.paymentMode || 'N/A'}</span>
+                        <span class="text-sm font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">₹${order.totalValue || '0'}</span>
+                        <span class="text-xs font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200">Qty: ${orderItemsCount}</span>
                     </div>
                 </div>
                 <div>
-                    <div class="bg-[#0B1121] p-2.5 rounded-lg mb-3 border border-slate-800 flex justify-between items-center group-hover:border-indigo-500/30 transition-colors">
-                        <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Next Action:</span>
-                        <span class="text-[10px] ${activeStageFilter === 'completed' ? 'text-emerald-500' : 'text-emerald-400'} font-black bg-emerald-900/20 px-2 py-1 rounded truncate max-w-[55%] border border-emerald-500/10">${nextStepName}</span>
+                    <div class="bg-slate-50 p-2.5 rounded-xl mb-3 border border-slate-200/80 flex justify-between items-center group-hover:border-blue-200 transition-colors">
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Next Action:</span>
+                        <span class="text-xs font-extrabold ${activeStageFilter === 'completed' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200'} px-2.5 py-1 rounded-lg truncate max-w-[60%] border">${nextStepName}</span>
                     </div>
-                    <div class="flex justify-between text-[9px] text-slate-500 mb-1.5 font-black uppercase tracking-widest">
-                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-500' : 'text-indigo-400'}">${order.completedStages}/9</span>
+                    <div class="flex justify-between text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">
+                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${order.completedStages}/9</span>
                     </div>
-                    <div class="w-full bg-[#0B1121] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                        <div class="${activeStageFilter === 'completed' ? 'bg-emerald-500' : 'bg-gradient-to-r from-indigo-600 to-purple-500'} h-1.5 rounded-full relative" style="width: ${progress}%">
-                            <div class="absolute inset-0 bg-white/20 w-full ${activeStageFilter === 'completed' ? '' : 'animate-[pulse_2s_ease-in-out_infinite]'}"></div>
-                        </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                        <div class="${activeStageFilter === 'completed' ? 'bg-emerald-500' : 'bg-blue-600'} h-2 rounded-full relative" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <span class="font-bold text-blue-600 flex items-center gap-1">⚡ Tap to open</span>
+                        <span class="py-1 px-2.5 bg-blue-600 group-hover:bg-blue-700 text-white font-bold rounded-lg shadow-2xs transition">Action Required ➔</span>
                     </div>
                 </div>
             </div>
@@ -619,7 +622,7 @@ function openModal(orderId) {
     let dateBadge = getOrderRelativeDateBadge(order.date);
     document.getElementById('modalReceiptDate').innerText = (dateBadge ? dateBadge.label.toUpperCase() + ' - ' : '') + exactDateStr;
     document.getElementById('modalTimeElapsed').innerText = '🕒 ' + timeData.text;
-    document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-800 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-700`;
+    document.getElementById('modalTimeElapsed').className = `text-[10px] bg-slate-100 px-2 py-1 rounded ${timeData.color} font-black tracking-widest border border-slate-200`;
 
     let tatBadgeEl = document.getElementById('modalTatTimer'); 
     let isBefore6PM = orderDateObj._hasTime !== false && orderDateObj.getHours() < 18;
@@ -627,7 +630,7 @@ function openModal(orderId) {
     if (isBefore6PM && order.completedStages < 5) { 
         let targetTime = orderDateObj.getTime() + (60 * 60 * 1000); 
         tatBadgeEl.setAttribute('data-target', targetTime); 
-        tatBadgeEl.className = "tat-timer text-[10px] bg-orange-900/30 text-orange-400 px-2 py-1 rounded font-black tracking-widest border border-orange-500/30 animate-pulse inline-block"; 
+        tatBadgeEl.className = "tat-timer text-[10px] bg-amber-50 text-amber-800 px-2 py-1 rounded font-black tracking-widest border border-amber-200 animate-pulse inline-block"; 
         tatBadgeEl.innerText = "⏳ TAT: Calc...";
     } else {
         tatBadgeEl.className = "hidden";
@@ -636,7 +639,7 @@ function openModal(orderId) {
     let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD'); 
     let payBadge = document.getElementById('modalPaymentMode'); 
     payBadge.innerText = order.paymentMode || 'N/A';
-    payBadge.className = isCod ? `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-500/10 text-orange-400 border-orange-500/20` : `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
+    payBadge.className = isCod ? `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-50 text-orange-700 border-orange-200` : `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-50 text-emerald-700 border-emerald-200`;
     
     document.getElementById('modalTotalValue').innerText = `Amount: ₹${order.totalValue || '0'}`;
     
@@ -661,28 +664,28 @@ function openModal(orderId) {
 
     let extraSectionsHtml = "";
 
-    // 1. Dealer Comment Callout Box (Prominent, High-Visibility & Multi-line Support)
+    // 1. Dealer Comment Callout Box (Clean White Theme)
     extraSectionsHtml += `
-        <div id="modalDealerCommentBox" class="mb-5 bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-500/20 border-2 border-amber-500/60 rounded-2xl p-4 shadow-xl ${dealerComment ? '' : 'hidden'}">
-            <div class="text-[11px] text-amber-400 uppercase font-black tracking-widest mb-2 flex items-center justify-between">
-                <span class="flex items-center gap-2"><span class="text-xl">💬</span> DEALER COMMENT / ORDER REMARK:</span>
-                <span class="bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">IMPORTANT</span>
+        <div id="modalDealerCommentBox" class="mb-5 bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 shadow-xs ${dealerComment ? '' : 'hidden'}">
+            <div class="text-[11px] text-amber-800 uppercase font-black tracking-wider mb-2 flex items-center justify-between">
+                <span class="flex items-center gap-2"><span class="text-lg">💬</span> DEALER COMMENT / ORDER REMARK:</span>
+                <span class="bg-amber-500 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">IMPORTANT</span>
             </div>
-            <div id="modalDealerCommentText" class="text-sm font-black text-amber-100 leading-relaxed bg-[#0B1121] p-3.5 rounded-xl border border-amber-500/40 shadow-inner whitespace-pre-line">
+            <div id="modalDealerCommentText" class="text-sm font-bold text-amber-900 leading-relaxed bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs whitespace-pre-line">
                 ${dealerComment ? `"${dealerComment}"` : ''}
             </div>
         </div>
     `;
 
-    // 2. Discounts & Schemes Applied Section (Where discount used to show)
+    // 2. Discounts & Schemes Applied Section (Clean White Theme)
     if (discounts.length > 0) {
         extraSectionsHtml += `
-            <div class="mb-5 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 shadow-inner">
-                <span class="text-[10px] text-indigo-300 uppercase font-black tracking-widest block mb-2.5 flex items-center gap-1.5">
+            <div class="mb-5 bg-indigo-50/70 border border-indigo-200 rounded-2xl p-4 shadow-2xs">
+                <span class="text-[11px] text-indigo-900 uppercase font-black tracking-wider block mb-2.5 flex items-center gap-1.5">
                     <span>🏷️</span> Discounts, Schemes & Rewards Applied:
                 </span>
                 <div class="flex flex-wrap gap-2">
-                    ${discounts.map(d => `<span class="text-xs font-bold bg-[#0B1121] border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-xl shadow-sm">${d.name}</span>`).join('')}
+                    ${discounts.map(d => `<span class="text-xs font-bold bg-white border border-indigo-200 text-indigo-800 px-3 py-1.5 rounded-xl shadow-2xs">${d.name}</span>`).join('')}
                 </div>
             </div>
         `;
@@ -706,9 +709,9 @@ function openModal(orderId) {
     }
 
     let itemsHtml = `
-        <div class="mb-6 bg-[#131C31] border border-slate-700 rounded-xl p-4 shadow-inner">
-            <h3 class="text-xs font-black text-white uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span class="text-indigo-400 text-lg">📦</span> Order Manifest
+        <div class="mb-6 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span class="text-blue-600 text-lg">📦</span> Order Manifest
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
     `;
@@ -721,27 +724,27 @@ function openModal(orderId) {
             let itemTotal = parseFloat(item.totalValue !== undefined && item.totalValue !== null && item.totalValue !== "" ? item.totalValue : (itemRate * parseInt(item.qty || 1)));
 
             itemsHtml += `
-                <div class="flex items-start gap-3 bg-[#0B1121] p-2.5 rounded-lg border border-slate-800 hover:border-slate-700 transition-all">
+                <div class="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 hover:border-slate-300 transition-all">
                     ${imgTag}
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs text-slate-200 font-bold leading-tight text-wrap-custom">${item.name}</p>
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                        <p class="text-xs text-slate-800 font-bold leading-snug text-wrap-custom">${item.name}</p>
+                        <div class="mt-2.5 flex flex-wrap items-center gap-2">
                             <!-- Qty -->
-                            <div class="flex items-center gap-1.5 bg-indigo-950/40 border border-indigo-500/30 px-2 py-0.5 rounded shadow-inner">
-                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Qty:</span>
-                                <span class="text-xs font-black text-indigo-400">${item.qty}</span>
+                            <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-lg">
+                                <span class="text-[9px] font-bold text-blue-700 uppercase tracking-wider">Qty:</span>
+                                <span class="text-xs font-black text-blue-800">${item.qty}</span>
                             </div>
                             
                             <!-- Per Item Rate -->
-                            <div class="flex items-center gap-1.5 bg-amber-950/30 border border-amber-500/30 px-2 py-0.5 rounded shadow-inner">
-                                <span class="text-[9px] font-black text-amber-300/70 uppercase tracking-widest">Rate:</span>
-                                <span class="text-xs font-black text-amber-400">\u20B9${itemRate.toLocaleString('en-IN')}</span>
+                            <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
+                                <span class="text-[9px] font-bold text-amber-800 uppercase tracking-wider">Rate:</span>
+                                <span class="text-xs font-black text-amber-900">\u20B9${itemRate.toLocaleString('en-IN')}</span>
                             </div>
 
                             <!-- Total Value -->
-                            <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded shadow-inner">
-                                <span class="text-[9px] font-black text-emerald-300/70 uppercase tracking-widest">Total:</span>
-                                <span class="text-xs font-black text-emerald-400">\u20B9${itemTotal.toLocaleString('en-IN')}</span>
+                            <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                                <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">Total:</span>
+                                <span class="text-xs font-black text-emerald-800">\u20B9${itemTotal.toLocaleString('en-IN')}</span>
                             </div>
                         </div>
                     </div>
@@ -829,7 +832,7 @@ function openModal(orderId) {
             let previewHtml = `<div class="flex flex-col gap-2 mt-3">`;
             
             if (actionStr && actionStr !== "Completed") {
-                previewHtml += `<div class="bg-indigo-900/30 border border-indigo-500/30 p-2.5 rounded-lg mb-2 text-indigo-300 text-xs font-bold leading-relaxed whitespace-pre-wrap shadow-inner">📋 ${actionStr}</div>`;
+                previewHtml += `<div class="bg-blue-50 border border-blue-200 p-2.5 rounded-xl mb-2 text-blue-800 text-xs font-bold leading-relaxed whitespace-pre-wrap">📋 ${actionStr}</div>`;
             }
             
             fileUrls.forEach((url, index) => {
@@ -843,10 +846,10 @@ function openModal(orderId) {
                             streamUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`; 
                         }
                         previewHtml += `
-                            <div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 p-2 shadow-sm">
-                                <p class="text-[10px] font-bold text-indigo-400 mb-2">🎤 Call Recording</p>
-                                <audio controls src="${streamUrl}" class="h-10 w-full outline-none bg-slate-800 rounded border border-slate-700"></audio>
-                                <a href="${url}" target="_blank" class="block mt-2 text-[9px] text-center font-bold text-slate-400 hover:text-white underline uppercase tracking-widest transition-colors">
+                            <div class="mt-2 bg-slate-50 rounded-xl border border-slate-200 p-3 shadow-2xs">
+                                <p class="text-[10px] font-bold text-blue-700 mb-2">🎤 Call Recording</p>
+                                <audio controls src="${streamUrl}" class="h-10 w-full outline-none bg-white rounded border border-slate-200"></audio>
+                                <a href="${url}" target="_blank" class="block mt-2 text-[9px] text-center font-bold text-slate-500 hover:text-slate-800 underline uppercase tracking-widest transition-colors">
                                     Click to Open in Google Drive ↗
                                 </a>
                             </div>`; 
@@ -854,7 +857,7 @@ function openModal(orderId) {
                         let imgThumbnailUrl = url;
                         let driveMatch = url.match(/\/d\/(.*?)\//);
                         if (driveMatch && driveMatch[1]) { imgThumbnailUrl = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`; }
-                        previewHtml += `<div class="mt-2 bg-[#0B1121] rounded-lg border border-slate-700 overflow-hidden relative group shadow-sm"><p class="text-[10px] font-bold text-indigo-400 p-2 border-b border-slate-700 bg-slate-800/50">🖼️ Uploaded Proof ${index + 1}</p><a href="${url}" target="_blank" class="block relative"><img src="${imgThumbnailUrl}" class="w-full h-auto max-h-48 object-contain bg-black/40"><div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white text-xs font-black bg-indigo-600 px-3 py-1.5 rounded-full shadow-lg">🔍 Click to Enlarge</span></div></a></div>`; 
+                        previewHtml += `<div class="mt-2 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden relative group shadow-2xs"><p class="text-[10px] font-bold text-blue-700 p-2 border-b border-slate-200 bg-white">🖼️ Uploaded Proof ${index + 1}</p><a href="${url}" target="_blank" class="block relative"><img src="${imgThumbnailUrl}" class="w-full h-auto max-h-48 object-contain bg-white"><div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white text-xs font-black bg-indigo-600 px-3 py-1.5 rounded-full shadow-lg">🔍 Click to Enlarge</span></div></a></div>`; 
                     }
                 }
             });
@@ -867,15 +870,15 @@ function openModal(orderId) {
             }
             previewHtml += `</div>`;
             
-            uiHtml = `<div class="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 hover:bg-emerald-900/20 transition"><div class="flex justify-between items-start"><div><span class="text-emerald-400 text-sm font-black block mb-1.5">${stageNum}. ${displayStageName}</span><div class="flex items-center gap-2 flex-wrap">${timestampDisplay}${timeTakenDisplay}</div></div><span class="bg-emerald-950 text-emerald-500 font-black text-[9px] px-2 py-1 rounded shadow-inner uppercase tracking-widest shrink-0 ml-2">✔ DONE</span></div>${previewHtml}</div>`;
+            uiHtml = `<div class="bg-white border border-emerald-200 rounded-2xl p-4 hover:border-emerald-300 transition shadow-xs"><div class="flex justify-between items-start"><div><span class="text-emerald-700 text-sm font-black block mb-1.5">${stageNum}. ${displayStageName}</span><div class="flex items-center gap-2 flex-wrap">${timestampDisplay}${timeTakenDisplay}</div></div><span class="bg-emerald-100 text-emerald-800 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ml-2">✔ DONE</span></div>${previewHtml}</div>`;
         } else if (isLocked) {
-            uiHtml = `<div class="bg-slate-800/20 border border-slate-800 rounded-xl p-4 flex justify-between items-center grayscale opacity-50"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-600 text-[9px] font-mono tracking-widest bg-slate-900 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
+            uiHtml = `<div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
         } else if (isActive) {
             let inputHtml = '';
             if (stageNum === 1) { 
-                inputHtml = `<button onclick="generateTallyCSV('${order.orderId}')" class="w-full mt-4 mb-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all active:scale-95 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Sales Order for Tally (CSV)</button><p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div><div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button></div><button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Confirm Check & Execute</button>`;
+                inputHtml = `<button onclick="generateTallyCSV('${order.orderId}')" class="w-full mt-4 mb-2 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black py-3.5 rounded-xl shadow-xs transition-all active:scale-95 text-sm flex items-center justify-center gap-2 border border-amber-500"><span>📊</span> Export Sales Order for Tally (CSV)</button><p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Balance Check Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div><div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div><div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-800 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-rose-600 hidden px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100">Clear Files</button></div><button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Confirm Check & Execute</button>`;
             } else if (stageNum === 6) { 
-                inputHtml += `<div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner"><p class="text-[10px] text-slate-400 mb-3 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-base">🚚</span> Logistics Tracking Engine</p><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">1. Who took the order?</label><select id="runnerSelect" class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" onchange="if(this.value==='Others'){document.getElementById('runnerOther').classList.remove('hidden')}else{document.getElementById('runnerOther').classList.add('hidden')}"><option value="" disabled selected>Select Delivery Person...</option><option value="Vishal Gunjal">Vishal Gunjal</option><option value="Preetam Bogawat">Preetam Bogawat</option><option value="Raghav Korekar">Raghav Korekar</option><option value="Yash Barlota">Yash Barlota</option><option value="Rickshaw wala">Rickshaw wala</option><option value="Others">Others (Type Below)</option></select><input type="text" id="runnerOther" placeholder="Enter person's name..." class="hidden w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-4 font-bold text-sm"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">2. Which Transport?</label><select id="transportSelect" class="w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-3 font-bold text-sm focus:border-indigo-400" onchange="if(this.value==='Others'){document.getElementById('transportOther').classList.remove('hidden')}else{document.getElementById('transportOther').classList.add('hidden')}">
+                inputHtml += `<div class="bg-slate-50 border border-slate-200 p-4 rounded-xl mt-4 mb-4"><p class="text-xs text-slate-700 mb-3 uppercase font-black tracking-wider flex items-center gap-2"><span class="text-blue-600 text-base">🚚</span> Logistics Tracking Engine</p><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">1. Who took the order?</label><select id="runnerSelect" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 outline-none mb-3 font-bold text-sm focus:border-blue-500 shadow-2xs" onchange="if(this.value==='Others'){document.getElementById('runnerOther').classList.remove('hidden')}else{document.getElementById('runnerOther').classList.add('hidden')}"><option value="" disabled selected>Select Delivery Person...</option><option value="Vishal Gunjal">Vishal Gunjal</option><option value="Preetam Bogawat">Preetam Bogawat</option><option value="Raghav Korekar">Raghav Korekar</option><option value="Yash Barlota">Yash Barlota</option><option value="Rickshaw wala">Rickshaw wala</option><option value="Others">Others (Type Below)</option></select><input type="text" id="runnerOther" placeholder="Enter person's name..." class="hidden w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 outline-none mb-4 font-bold text-sm shadow-2xs"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">2. Which Transport?</label><select id="transportSelect" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 outline-none mb-3 font-bold text-sm focus:border-blue-500 shadow-2xs" onchange="if(this.value==='Others'){document.getElementById('transportOther').classList.remove('hidden')}else{document.getElementById('transportOther').classList.add('hidden')}">
                     <option value="" disabled selected>Select Transport Partner...</option>
                     <option value="Local">Local</option>
                     <option value="Delhivery">Delhivery</option>
@@ -885,7 +888,7 @@ function openModal(orderId) {
                     <option value="SV Logistics">SV Logistics</option>
                     <option value="Shree Anjani">Shree Anjani</option>
                     <option value="Others">Others (Type Below)</option>
-                </select><input type="text" id="transportOther" placeholder="Enter transport name..." class="hidden w-full bg-[#131C31] border border-indigo-500/50 rounded-lg p-2.5 text-white outline-none mb-4 font-bold text-sm"><button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Allocate Logistics & Proceed</button></div>`;
+                </select><input type="text" id="transportOther" placeholder="Enter transport name..." class="hidden w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 outline-none mb-4 font-bold text-sm shadow-2xs"><button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Allocate Logistics & Proceed</button></div>`;
             } else if (stageNum === 2 || stageNum === 7) { 
                 let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
                 let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
@@ -940,13 +943,13 @@ function openModal(orderId) {
                 inputHtml += `<div class="mt-4 mb-4"><p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 1: Communication</p><a href="${waUrl}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 mb-3">Send WhatsApp Message</a><label class="flex items-center gap-3 cursor-pointer bg-pink-500/10 border border-pink-500/30 p-3 rounded-xl hover:bg-pink-500/20 transition-colors"><input type="checkbox" id="noResponse_${stageNum}" class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-500 cursor-pointer shrink-0"><span class="text-[11px] text-pink-400 font-black uppercase tracking-widest text-wrap-custom">Dealer Didn't Respond / Ignore</span></label></div>`;
                 
                 if (stageNum === 7 && isCod) { 
-                    inputHtml += `<div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4"><p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2"><span class="text-indigo-400">🎤</span> Upload Call Recording (Mandatory for COD)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})"><div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear</button></div></div>`;
+                    inputHtml += `<div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/30 mb-4"><p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-2"><span class="text-indigo-400">🎤</span> Upload Call Recording (Mandatory for COD)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})"><div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div><div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-800 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-rose-600 hidden px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100">Clear</button></div></div>`;
                 }
                 
-                inputHtml += `<p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 2: Submit</p><button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Mark as Completed</button>`;
+                inputHtml += `<p class="text-[10px] text-slate-400 mb-2 uppercase tracking-widest">Step 2: Submit</p><button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Mark as Completed</button>`;
             } else {
                 if (stageNum === 3) { 
-                    inputHtml += `<div class="bg-[#0B1121] border border-slate-700 p-4 rounded-xl mt-4 mb-4 shadow-inner"><p class="text-sm text-slate-300 mb-4 uppercase font-black tracking-widest flex items-center gap-2"><span class="text-indigo-400 text-xl">☑</span> Confirm Available Stock</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto hide-scrollbar p-2">`;
+                    inputHtml += `<div class="bg-slate-50 border border-slate-200 p-4 rounded-xl mt-4 mb-4"><p class="text-xs text-slate-700 mb-3 uppercase font-black tracking-wider flex items-center gap-2"><span class="text-blue-600 text-lg">☑</span> Confirm Available Stock</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto hide-scrollbar p-2">`;
  let stockItems = (order.items || []).filter(item => {
                         let n = (item.name || '').trim();
                         return !n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE|Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i);
@@ -954,7 +957,7 @@ function openModal(orderId) {
                     if (stockItems.length === 0) stockItems = order.items || [];
                     stockItems.forEach((item, idx) => {
                         let imgTag = item.image ? `<img src="${item.image}" class="w-16 h-16 object-contain rounded-lg bg-white p-1 shrink-0 shadow-sm border border-slate-600">` : `<div class="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-500 shrink-0 font-mono border border-slate-700">No Img</div>`;
-                        inputHtml += `<div class="flex flex-col bg-[#1E293B] p-4 rounded-xl border-2 border-slate-700 hover:border-indigo-500 transition-all shadow-md"><div class="flex items-start gap-4"><input type="checkbox" id="chk_item_${idx}" checked class="w-6 h-6 rounded border-slate-600 bg-slate-800 text-indigo-500 mt-1 cursor-pointer shrink-0">${imgTag}<div class="flex-1 min-w-0"><h4 class="text-base font-black text-white leading-tight break-words">${item.name}</h4><div class="mt-4 flex items-center justify-between bg-[#0B1121] p-2 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Process Qty:</span><input type="number" id="qty_item_${idx}" value="${item.qty}" max="${item.qty}" min="0" class="w-16 bg-[#131C31] text-indigo-400 text-lg font-black p-1.5 rounded-lg border border-indigo-500/30 text-center outline-none focus:border-indigo-400"></div></div></div></div>`;
+                        inputHtml += `<div class="flex flex-col bg-white p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-all shadow-xs"><div class="flex items-start gap-4"><input type="checkbox" id="chk_item_${idx}" checked class="w-6 h-6 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-1 cursor-pointer shrink-0">${imgTag}<div class="flex-1 min-w-0"><h4 class="text-sm font-black text-slate-900 leading-snug break-words">${item.name}</h4><div class="mt-3 flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Process Qty:</span><input type="number" id="qty_item_${idx}" value="${item.qty}" max="${item.qty}" min="0" class="w-20 bg-white text-blue-700 text-base font-black p-1.5 rounded-lg border border-slate-300 text-center outline-none focus:border-blue-500"></div></div></div></div>`;
                     });
                     inputHtml += `</div><p class="text-[10px] text-orange-400 mt-4 font-bold leading-tight bg-orange-900/10 p-3 rounded-lg border border-orange-500/20 text-center uppercase tracking-widest">* Unchecked items or reduced quantities automatically create a new SPLIT-ORDER.</p></div>`;
                 }
@@ -962,29 +965,29 @@ function openModal(orderId) {
                 if (stageNum === 9) { 
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">`;
                 } else {
-                    inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-inner">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div>`;
+                    inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div>`;
                     
                     // ==========================================
                     // NEW: AI VERIFY INVOICE BUTTON (Stage 4 Invoiced Only)
                     // ==========================================
                     if (stageNum === 4) {
-                        inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-[#0B1121] hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/50 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
+                        inputHtml += `<button onclick="openAiScanner('${order.orderId}')" class="w-full mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 border-dashed font-black py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2">🤖 Verify Bill via AI (Auto Scan)</button>`;
                     }
                 }
                 
-                inputHtml += `<div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-[#0B1121] p-2 rounded-lg border border-slate-700"></div><div class="flex items-center justify-between mt-2 bg-emerald-900/10 rounded px-2 border border-emerald-500/10 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-400 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-pink-400 hidden px-2 py-1 bg-pink-900/30 rounded border border-pink-500/30">Clear Files</button></div>`;
+                inputHtml += `<div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div><div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-800 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-rose-600 hidden px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100">Clear Files</button></div>`;
 
                 if (stageNum === 9) { 
                     inputHtml += `<div class="mt-4"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Customer Rating</label><input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white outline-none font-bold text-lg text-center shadow-inner"></div>`;
                 }
                 
-                inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 text-lg">Execute & Proceed</button>`;
+                inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Execute & Proceed</button>`;
             }
             
             if (needsShare) {
                 uiHtml = `<div class="bg-orange-900/10 border-2 border-orange-500/30 rounded-xl p-5 relative overflow-hidden mt-4"><div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div><div class="flex justify-between items-center mb-2"><span class="text-white font-black text-lg text-opacity-50">${stageNum}. ${displayStageName}</span><span class="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase">🔒 LOCKED</span></div><p class="text-xs text-orange-400 font-bold mt-3">⚠️ Action Required: Upar scroll karein aur agla step unlock karne ke liye flashing green "Share to Group" button daba kar update share karein.</p></div>`;
             } else {
-                uiHtml = `<div class="bg-[#131C31] border-2 border-indigo-500 rounded-xl p-5 shadow-[0_0_30px_rgba(79,70,229,0.15)] relative overflow-hidden transform scale-[1.02]"><div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 shadow-[0_0_15px_#4f46e5]"></div><div class="flex justify-between items-center mb-2"><span class="text-white font-black text-lg">${stageNum}. ${displayStageName}</span><span class="bg-indigo-500 text-white text-[9px] font-black px-2 py-1 rounded animate-pulse tracking-widest uppercase">ACTION REQUIRED</span></div><div id="actionArea_${stageNum}">${inputHtml}</div><p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p></div>`;
+                uiHtml = `<div class="bg-white border-2 border-blue-600 rounded-2xl p-5 shadow-lg relative overflow-hidden"><div class="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div><div class="flex justify-between items-center mb-3"><span class="text-slate-900 font-black text-lg">${stageNum}. ${displayStageName}</span><span class="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">ACTION REQUIRED</span></div><div id="actionArea_${stageNum}">${inputHtml}</div><p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p></div>`;
             }
         }
         stagesListHtml += uiHtml;
@@ -1010,7 +1013,7 @@ async function handleFileSelection(inputElement, stageNum) {
 
     if (statusLabel) {
         statusLabel.innerText = "⏳ Processing photo...";
-        statusLabel.className = "text-[10px] font-black text-amber-400 py-2 animate-pulse";
+        statusLabel.className = "text-[10px] font-black text-amber-800 py-2 animate-pulse";
         statusLabel.classList.remove('hidden');
     }
     if (container) container.classList.remove('hidden');
@@ -1060,7 +1063,7 @@ async function handleFileSelection(inputElement, stageNum) {
     if (queuedFiles.length > 0) {
         if (statusLabel) {
             statusLabel.innerText = `✓ ${queuedFiles.length} File(s) Ready`;
-            statusLabel.className = "text-[10px] font-black text-emerald-400 py-2";
+            statusLabel.className = "text-[10px] font-black text-emerald-800 py-2";
             statusLabel.classList.remove('hidden');
         }
         if (clearBtn) clearBtn.classList.remove('hidden');
