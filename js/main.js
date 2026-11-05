@@ -60,13 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     document.getElementById('loginError').innerText = "SSO Failed: " + (data.message || "Invalid Access");
                     document.getElementById('loginError').classList.remove('hidden');
-                    btn.innerText = "INITIALIZE SYSTEM";
+                    btn.innerText = "LOGIN TO DASHBOARD";
                 }
             })
             .catch(err => {
                 document.getElementById('loginError').innerText = "Network error during SSO login. Please login manually.";
                 document.getElementById('loginError').classList.remove('hidden');
-                btn.innerText = "INITIALIZE SYSTEM";
+                btn.innerText = "LOGIN TO DASHBOARD";
             });
         }
     }
@@ -181,14 +181,14 @@ function performSearch() {
     resultsDiv.innerHTML = matches.map(o => {
         let badge = o.isVIP ? `<span class="bg-red-500 text-white text-[9px] px-1 rounded animate-pulse ml-2">VIP</span>` : "";
         return `
-        <div onclick="closeSearch(); openModal('${o.orderId}')" class="p-3 border-b border-slate-800 hover:bg-slate-800 cursor-pointer flex justify-between items-center transition-colors rounded-lg mb-1">
+        <div onclick="closeSearch(); openModal('${o.orderId}')" class="p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors rounded-xl mb-1">
             <div>
-                <div class="font-black text-white text-sm flex items-center">${o.orderId} ${badge}</div>
-                <div class="text-xs text-indigo-400 font-bold">${o.shopName}</div>
+                <div class="font-black text-slate-900 text-sm flex items-center">${o.orderId} ${badge}</div>
+                <div class="text-xs text-blue-600 font-bold">${o.shopName}</div>
             </div>
             <div class="text-right">
-                <div class="text-[10px] bg-indigo-900/50 border border-indigo-500/30 px-2 py-1 rounded text-indigo-300 font-black mb-1">Stage ${o.completedStages}/9</div>
-                <div class="text-[9px] text-emerald-400 font-black uppercase">${o.paymentMode}</div>
+                <div class="text-[10px] bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg text-blue-700 font-black mb-1">Stage ${o.completedStages}/9</div>
+                <div class="text-[9px] text-emerald-700 font-black uppercase">${o.paymentMode}</div>
             </div>
         </div>`;
     }).join('');
@@ -229,12 +229,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         } else { 
             error.innerText = data.message || "Invalid Employee ID or Password."; 
             error.classList.remove('hidden'); 
-            btn.innerText = "INITIALIZE SYSTEM"; 
+            btn.innerText = "LOGIN TO DASHBOARD"; 
         }
     } catch (err) { 
         error.innerText = err.message || "Network Error."; 
         error.classList.remove('hidden'); 
-        btn.innerText = "INITIALIZE SYSTEM"; 
+        btn.innerText = "LOGIN TO DASHBOARD"; 
     }
 });
 
