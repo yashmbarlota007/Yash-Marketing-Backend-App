@@ -14,6 +14,14 @@
         {
           "key": "Expires",
           "value": "0"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://yash-marketing-master-app.vercel.app https://*.vercel.app;"
         }
       ]
     }
