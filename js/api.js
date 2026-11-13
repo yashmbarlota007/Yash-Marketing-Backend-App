@@ -359,6 +359,16 @@ async function submitStage(stageNum) {
         payload.actionText = `Runner: ${runner} | Transport: ${transport}`;
     }
     
+    if (stageNum === 8) {
+        let collector = document.getElementById('stage8CollectorName')?.value;
+        let isDealerBoxVisible = document.getElementById('stage8DealerBox') && !document.getElementById('stage8DealerBox').classList.contains('hidden');
+        if (isDealerBoxVisible && collector && collector.trim()) {
+            payload.staffName = `Dealer Self-Pickup: ${collector.trim()}`;
+            payload.actionText = `🏢 Dealer Self-Pickup: ${collector.trim()} (Office Counter Handover)`;
+            payload.comment = `🏢 Dealer Self-Pickup: ${collector.trim()} (Office Counter Handover)`;
+        }
+    }
+    
     let fileRequired = !(payload.isNoResponse || stageNum === 9 || stageNum === 6 || stageNum === 2 || (stageNum === 7 && !isCod));
     if (fileRequired && queuedFiles.length === 0) { 
         alert(stageNum === 7 && isCod ? "For COD Orders, Call Recording is MANDATORY." : "A file proof (Screenshot/Photo) is mandatory."); 
