@@ -1,4 +1,4 @@
-// ==========================================
+﻿// ==========================================
 // DEALER COMMENTS LIVE SYNC SYSTEM (FALLBACK & CACHE)
 // ==========================================
 window._dealerCommentsCache = window._dealerCommentsCache || {};
@@ -348,6 +348,8 @@ async function submitStage(stageNum) {
         
         let runner = runnerVal === "Others" ? document.getElementById('runnerOther')?.value : runnerVal;
         let transport = transportVal === "Others" ? document.getElementById('transportOther')?.value : transportVal;
+        let dealerPerson = document.getElementById('dealerPersonName')?.value;
+        if (dealerPerson && dealerPerson.trim()) runner = runner + ' - ' + dealerPerson.trim();
         
         if (!runner || !transport) { 
             alert("Accountability requires data!"); 
@@ -599,6 +601,5 @@ async function verifyInvoiceWithAI(orderId, base64Image) {
         throw new Error("Failed to connect to AI server. Please try again.");
     }
 }
-
 
 
