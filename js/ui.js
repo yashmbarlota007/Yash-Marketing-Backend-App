@@ -556,6 +556,10 @@ function renderPipeline() {
                 let mU = text.match(/https:\/\/drive\.google\.com[^\s,|]+/i);
                 if (mU) handoverUrl = mU[0].trim();
             }
+            if (!handoverUrl && order.stageUrls && order.stageUrls[7]) {
+                let mU8 = String(order.stageUrls[7]).match(/https:\/\/drive\.google\.com[^\s,|]+/i);
+                if (mU8) handoverUrl = mU8[0].trim();
+            }
             if (runnerName) {
                 let isSelf = runnerName.toLowerCase().includes("dealer") || runnerName.toLowerCase().includes("pickup");
                 let badgeBg = isSelf ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-purple-50 border-purple-200 text-purple-900";
@@ -1003,6 +1007,21 @@ function openModal(orderId) {
                 if (stageNum === 9) { 
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">`;
                 } else {
+                    if (stageNum === 8) {
+                        inputHtml += `
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl mt-3 mb-3">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1.5">Delivery Handover Mode:</label>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <button type="button" id="stage8BtnStaff" onclick="window.selectStage8Handover && window.selectStage8Handover('staff')" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-black text-xs flex items-center justify-center gap-1 shadow-2xs">🚚 Staff / Courier</button>
+                                <button type="button" id="stage8BtnDealer" onclick="window.selectStage8Handover && window.selectStage8Handover('dealer')" class="py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1">🏢 Dealer Khud Aaya</button>
+                            </div>
+                            <div id="stage8DealerBox" class="hidden bg-amber-50 border border-amber-300 p-2.5 rounded-lg space-y-1.5">
+                                <label class="text-[10px] font-black text-amber-800 uppercase tracking-wider block">Kaun aaya hai stock lene? (Dealer/Person Name):</label>
+                                <input type="text" id="stage8CollectorName" placeholder="e.g. Rahul Patil - Owner / Driver" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs font-bold text-slate-900 outline-none">
+                                <p class="text-[9px] text-amber-700 font-bold flex items-center gap-1"><span>📸</span> Niche "Live Camera" se Dealer ka photo lein taki pakka proof rahe kisne stock receive kiya.</p>
+                            </div>
+                        </div>`;
+                    }
                     inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-1.5 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">⚡</span> Upload Proof (Required)</p><p class="text-[9px] text-orange-400 mb-3 italic tracking-widest">Tip: Use "Multi Gallery" if app freezes on Live Camera.</p><div class="flex gap-2 w-full"><label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label><label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, ${stageNum})"></label></div>`;
                     
                     // ==========================================
