@@ -802,7 +802,24 @@ function openModal(orderId) {
     let lastCompletedStage = order.completedStages;
     const stagesRequiringShare = [1, 3, 4, 5, 8]; 
     
-    if (stagesRequiringShare.includes(lastCompletedStage) && localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') { 
+    // Check if the previous stage actually produced shareable files/proof links
+    let lastCompletedUrlData = "";
+    if (lastCompletedStage > 0 && order.stageUrls && order.stageUrls[lastCompletedStage - 1]) {
+        let rawLastData = String(order.stageUrls[lastCompletedStage - 1]);
+        if (rawLastData.includes("http")) {
+            let temp = rawLastData.replace(/\|\|\s*STAFF:\s*.+/, '').replace(/\|\|\s*TIME:\s*\d+/, '').trim();
+            if (temp.includes("||")) {
+                let parts = temp.split("||");
+                if (parts[0].includes("http")) lastCompletedUrlData = parts[0].trim();
+                else if (parts.length > 1 && parts[1].includes("http")) lastCompletedUrlData = parts[1].trim();
+            } else {
+                if (temp.includes("http")) lastCompletedUrlData = temp.trim();
+            }
+        }
+    }
+    let lastStageHasFiles = Boolean(lastCompletedUrlData && lastCompletedUrlData.includes("http"));
+
+    if (lastStageHasFiles && stagesRequiringShare.includes(lastCompletedStage) && localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') { 
         needsShare = true;
     }
     
@@ -1005,7 +1022,7 @@ function openModal(orderId) {
                 }
 
                 if (stageNum === 9) { 
-                    inputHtml += `<p class="text-[10px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-indigo-400">🎤</span> Record Audio / Call (Optional)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-indigo-600 file:text-white bg-[#0B1121] p-1.5 rounded-xl border border-slate-700 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">`;
+                    inputHtml += `<p class="text-[10px] font-black text-slate-500 mt-4 mb-2 uppercase tracking-widest flex items-center gap-2"><span class="text-blue-600">🎤</span> Record Audio / Call (Optional)</p><input type="file" accept="audio/*" class="w-full text-xs text-slate-700 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer" onchange="handleFileSelection(this, ${stageNum})">`;
                 } else {
                     if (stageNum === 8) {
                         inputHtml += `
@@ -1035,14 +1052,33 @@ function openModal(orderId) {
                 inputHtml += `<div id="previewBox_${stageNum}" class="flex flex-wrap gap-2 mt-3 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div><div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="fileStatusContainer_${stageNum}"><p id="fileStatusText_${stageNum}" class="text-[10px] font-black text-emerald-800 py-2 hidden"></p><button id="clearFilesBtn_${stageNum}" onclick="clearQueuedFiles(${stageNum})" class="text-[10px] font-bold text-rose-600 hidden px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100">Clear Files</button></div>`;
 
                 if (stageNum === 9) { 
-                    inputHtml += `<div class="mt-4"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Customer Rating</label><input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-[#0B1121] border border-slate-700 rounded-xl p-3 text-white outline-none font-bold text-lg text-center shadow-inner"></div>`;
+                    inputHtml += `<div class="mt-4"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Customer Rating</label><input type="number" id="ratingInput" min="1" max="5" placeholder="Enter Score (1-5)" class="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 rounded-xl p-3 text-slate-900 outline-none font-black text-xl text-center shadow-inner"></div>`;
                 }
                 
                 inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Execute & Proceed</button>`;
             }
             
             if (needsShare) {
-                uiHtml = `<div class="bg-orange-900/10 border-2 border-orange-500/30 rounded-xl p-5 relative overflow-hidden mt-4"><div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div><div class="flex justify-between items-center mb-2"><span class="text-white font-black text-lg text-opacity-50">${stageNum}. ${displayStageName}</span><span class="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded tracking-widest uppercase">🔒 LOCKED</span></div><p class="text-xs text-orange-400 font-bold mt-3">⚠️ Action Required: Upar scroll karein aur agla step unlock karne ke liye flashing green "Share to Group" button daba kar update share karein.</p></div>`;
+                let safeUrlData = (lastCompletedUrlData || "").replace(/'/g, "\\'");
+                uiHtml = `
+                <div class="bg-amber-50 border-2 border-amber-400 rounded-2xl p-5 relative overflow-hidden mt-4 shadow-sm">
+                    <div class="absolute top-0 left-0 w-2 h-full bg-amber-500"></div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-800 font-black text-base">${stageNum}. ${displayStageName}</span>
+                        <span class="bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full tracking-wider uppercase shadow-xs">🔒 WAITING FOR SHARE</span>
+                    </div>
+                    <p class="text-xs text-amber-900 font-bold mt-2 leading-relaxed">
+                        ⚠️ <b>Action Required:</b> Step ${lastCompletedStage} (${STAGE_NAMES[lastCompletedStage - 1]}) ka proof WhatsApp group me share karein taki agla step unlock ho sake.
+                    </p>
+                    <div class="mt-4 flex flex-col gap-2">
+                        <button onclick="shareToGroup(${lastCompletedStage}, '${safeUrlData}')" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-xs uppercase tracking-wider">
+                            <span>📤</span> Share Step ${lastCompletedStage} to WhatsApp Group
+                        </button>
+                        <button onclick="unlockStageShare('${order.orderId}', ${lastCompletedStage})" class="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-4 rounded-xl border border-slate-300 transition-all text-xs flex items-center justify-center gap-1.5 shadow-2xs">
+                            <span>⚡</span> Already Shared / Unlock Step ${stageNum}
+                        </button>
+                    </div>
+                </div>`;
             } else {
                 uiHtml = `<div class="bg-white border-2 border-blue-600 rounded-2xl p-5 shadow-lg relative overflow-hidden"><div class="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div><div class="flex justify-between items-center mb-3"><span class="text-slate-900 font-black text-lg">${stageNum}. ${displayStageName}</span><span class="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">ACTION REQUIRED</span></div><div id="actionArea_${stageNum}">${inputHtml}</div><p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p></div>`;
             }
@@ -1157,6 +1193,17 @@ function clearQueuedFiles(stageNum) {
         document.getElementById(`previewBox_${stageNum}`).classList.add('hidden'); 
     }
 }
+
+window.unlockStageShare = function(orderId, stageNum) {
+    try {
+        localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
+    } catch(e) {
+        console.warn("Storage warning:", e);
+    }
+    if (typeof openModal === 'function') {
+        openModal(orderId);
+    }
+};
 
 window.shareToGroup = function(stageNum, fileUrlsString) {
     const orderId = currentActiveOrder.orderId; 
