@@ -5,6 +5,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbyXHJaFTSkjwu6C8ze4czs2Q42NQsgzjW814j8OLA7ztMXTW-nqmh2gkpjebmdSW4YJjA/exec";
 
 // Trimmed to 9 Stages for Max Efficiency in Order Processing
+// 7 Stages for In-Office Order Processing (Stages 8 & 9 shifted to Delivery & Payment App)
 const STAGE_NAMES = [
     "Balance Check", 
     "WhatsApp 1 (Confirmation)", 
@@ -12,9 +13,7 @@ const STAGE_NAMES = [
     "Invoiced", 
     "Dispatched", 
     "Logistics Allocation", 
-    "Delivery Comms (Call/WA)", 
-    "Delivered", 
-    "Final Call (Rating)"
+    "Delivery Comms (Out-for-delivery)"
 ];
 
 // Global Application Data Store
