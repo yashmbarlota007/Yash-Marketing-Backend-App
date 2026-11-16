@@ -34,16 +34,16 @@ function renderMdoDashboard() {
     let staffScores = {}; 
     let cityStats = {};
     let brandStats = {}; 
-    let stageStuck = Array(9).fill(0);
+    let stageStuck = Array(STAGE_NAMES.length).fill(0);
     const nowTime = new Date().getTime();
 
     filteredData.forEach(o => {
         totalOrderValue += (o.totalValue || 0);
 
-        if (o.completedStages >= 9 || o.isFullyCompleted) {
+        if (o.completedStages >= STAGE_NAMES.length || o.isFullyCompleted) {
             totalCompleted++;
         } else { 
-            if (o.completedStages < 9) {
+            if (o.completedStages < STAGE_NAMES.length) {
                 stageStuck[o.completedStages]++; 
             }
             if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
@@ -353,13 +353,13 @@ function renderPipeline() {
     
     // Separate pending and completed orders
     let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= 9);
+    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= STAGE_NAMES.length);
     
-    let stageCounts = Array(9).fill(0); 
+    let stageCounts = Array(STAGE_NAMES.length).fill(0); 
     let shopPendingCount = {};
     
     pendingOrders.forEach(o => { 
-        if (o.completedStages < 9) {
+        if (o.completedStages < STAGE_NAMES.length) {
             stageCounts[o.completedStages]++; 
         }
         if (o.completedStages < 3) { 
@@ -468,11 +468,11 @@ function renderPipeline() {
             return; 
         }
 
-        const progress = (order.completedStages / 9) * 100; 
+        const progress = (Math.min(order.completedStages, STAGE_NAMES.length) / STAGE_NAMES.length) * 100; 
         let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         let nextStepName = "Fully Completed";
         
-        if (order.completedStages < 9) {
+        if (order.completedStages < STAGE_NAMES.length) {
             if (order.completedStages === 6) {
                 nextStepName = isCod ? "Call 2" : " 2";
             } else {
@@ -616,7 +616,7 @@ function renderPipeline() {
                         <span class="text-xs font-extrabold ${activeStageFilter === 'completed' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200'} px-2.5 py-1 rounded-lg truncate max-w-[60%] border">${nextStepName}</span>
                     </div>
                     <div class="flex justify-between text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">
-                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${order.completedStages}/9</span>
+                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${Math.min(order.completedStages, STAGE_NAMES.length)}/${STAGE_NAMES.length}</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
                         <div class="${activeStageFilter === 'completed' ? 'bg-emerald-500' : 'bg-blue-600'} h-2 rounded-full relative" style="width: ${progress}%"></div>
@@ -854,14 +854,14 @@ function openModal(orderId) {
         needsShare = true;
     }
     
-    for (let i = 0; i < 9; i++) { 
+    for (let i = 0; i < STAGE_NAMES.length; i++) { 
         const stageNum = i + 1; 
         const isCompleted = i < order.completedStages; 
         const isActive = i === order.completedStages; 
         const isLocked = i > order.completedStages;
         let displayStageName = STAGE_NAMES[i]; 
         
-        if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : " 2 (Out-for-delivery)";
+        if (stageNum === 7) displayStageName = isCod ? "Call 2 (Out-for-delivery)" : "WhatsApp 2 (Out-for-delivery)";
         
         let uiHtml = '';
         
@@ -1115,6 +1115,15 @@ function openModal(orderId) {
             }
         }
         stagesListHtml += uiHtml;
+    }
+    if (order.completedStages >= STAGE_NAMES.length) {
+        stagesListHtml += `
+            <div class="mt-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 text-center shadow-xs">
+                <div class="w-10 h-10 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg mb-2 shadow-xs">✓</div>
+                <h4 class="text-sm font-black text-emerald-950">Office Stages Complete (7/7)</h4>
+                <p class="text-xs text-emerald-800 mt-1 font-semibold">Order is ready for Delivery & Handover. Remaining Step 8 (Delivered) and Step 9 (Final Call) are handled in the <b>Delivered & Pay</b> app.</p>
+            </div>
+        `;
     }
     stagesListHtml += '</div>'; 
     container.innerHTML += stagesListHtml;
@@ -1829,7 +1838,7 @@ function renderTvOrderCards(pendingOrders) {
                                     PENDING TASK:
                                 </span>
                                 <span class="text-white font-extrabold uppercase bg-indigo-950/90 px-2 py-0.5 rounded-lg border border-indigo-400/30">
-                                    ${stageLabel} (Step ${stageNum + 1}/9)
+                                    ${stageLabel} (Step ${stageNum + 1}/${STAGE_NAMES.length})
                                 </span>
                             </div>
                             <span class="text-indigo-300 font-mono text-[11px] font-bold">
@@ -1870,7 +1879,7 @@ function renderTvOrderCards(pendingOrders) {
                     </div>
 
                     <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
-                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, ((stageNum + 1) / 9) * 100)}%;"></div>
+                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, ((stageNum + 1) / STAGE_NAMES.length) * 100)}%;"></div>
                     </div>
                 </div>
             </div>
