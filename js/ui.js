@@ -34,16 +34,16 @@ function renderMdoDashboard() {
     let staffScores = {}; 
     let cityStats = {};
     let brandStats = {}; 
-    let stageStuck = Array(7).fill(0);
+    let stageStuck = Array(9).fill(0);
     const nowTime = new Date().getTime();
 
     filteredData.forEach(o => {
         totalOrderValue += (o.totalValue || 0);
 
-        if (o.completedStages >= 7 || o.isFullyCompleted) {
+        if (o.completedStages >= 9 || o.isFullyCompleted) {
             totalCompleted++;
         } else { 
-            if (o.completedStages < 7) {
+            if (o.completedStages < 9) {
                 stageStuck[o.completedStages]++; 
             }
             if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
@@ -353,13 +353,13 @@ function renderPipeline() {
     
     // Separate pending and completed orders
     let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= 7);
+    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= 9);
     
-    let stageCounts = Array(7).fill(0); 
+    let stageCounts = Array(9).fill(0); 
     let shopPendingCount = {};
     
     pendingOrders.forEach(o => { 
-        if (o.completedStages < 7) {
+        if (o.completedStages < 9) {
             stageCounts[o.completedStages]++; 
         }
         if (o.completedStages < 3) { 
@@ -401,8 +401,6 @@ function renderPipeline() {
         
         if (idx === 6) { 
             filterName = "Delivery Comms";
-        } else if (idx === 7) {
-            filterName = "To Deliver";
         }
         
         filterHtml += `
@@ -470,15 +468,13 @@ function renderPipeline() {
             return; 
         }
 
-        const progress = (Math.min(order.completedStages, 7) / 7) * 100; 
+        const progress = (order.completedStages / 9) * 100; 
         let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         let nextStepName = "Fully Completed";
         
         if (order.completedStages < 9) {
             if (order.completedStages === 6) {
                 nextStepName = isCod ? "Call 2" : " 2";
-            } else if (order.completedStages === 7) {
-                nextStepName = "🚚 Deliver Order";
             } else {
                 nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
             }
@@ -547,46 +543,43 @@ function renderPipeline() {
         }
         
         let logInfo = "";
-        let runnerName = "";
-        let transportName = "";
-        let handoverUrl = "";
-        if (order.stageUrls) {
-            if (order.stageUrls[5]) {
+        if (order.completedStages >= 5 || (order.stageUrls && order.stageUrls[5])) {
+            let runnerName = "";
+            let transportName = "";
+            let handoverUrl = "";
+            if (order.stageUrls && order.stageUrls[5]) {
                 let text = String(order.stageUrls[5]);
                 let mR = text.match(/Runner:\s*([^||\n]+)/i);
                 if (mR) runnerName = mR[1].trim();
                 let mT = text.match(/Transport:\s*([^||\n]+)/i);
                 if (mT) transportName = mT[1].trim();
-                let mU = text.match(/https?:\/\/[^\s|,]+/i);
+                let mU = text.match(/https:\/\/drive\.google\.com[^\s,|]+/i);
                 if (mU) handoverUrl = mU[0].trim();
             }
-            if (order.stageUrls[7]) {
-                let text8 = String(order.stageUrls[7]);
-                let mU8 = text8.match(/https?:\/\/[^\s|,]+/i);
+            if (!handoverUrl && order.stageUrls && order.stageUrls[7]) {
+                let mU8 = String(order.stageUrls[7]).match(/https:\/\/drive\.google\.com[^\s,|]+/i);
                 if (mU8) handoverUrl = mU8[0].trim();
-                let mR8 = text8.match(/Dealer Self-Pickup:\s*([^||\n]+)/i);
-                if (mR8 && !runnerName) runnerName = "Dealer Self-Pickup: " + mR8[1].trim();
             }
-        }
-        if (runnerName || handoverUrl) {
-            let isSelf = runnerName.toLowerCase().includes("dealer") || runnerName.toLowerCase().includes("pickup");
-            let badgeBg = isSelf ? "bg-amber-50 border-amber-300 text-amber-900" : "bg-purple-50 border-purple-200 text-purple-900";
-            let icon = isSelf ? "🏢" : "🚚";
-            let title = isSelf ? "Dealer Self-Pickup:" : "Dispatch / Runner:";
-            let photoBtn = handoverUrl ? `<a href="${handoverUrl}" target="_blank" onclick="event.stopPropagation()" class="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-[10px] font-black text-blue-700 hover:bg-blue-50 flex items-center gap-1 shadow-2xs shrink-0">📸 Proof Photo</a>` : "";
-            logInfo = `
-                <div class="mb-2.5 p-2.5 rounded-xl border ${badgeBg} flex items-center justify-between gap-2 text-xs shadow-2xs">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="text-base shrink-0">${icon}</span>
-                        <div class="truncate">
-                            <span class="text-[9px] uppercase font-black text-slate-500 block leading-none mb-0.5">${title}</span>
-                            <span class="font-black text-slate-900">${runnerName || 'Counter Handover'}</span>
-                            ${transportName ? `<span class="text-[10px] font-bold text-slate-600 ml-1">(${transportName})</span>` : ''}
+            if (runnerName) {
+                let isSelf = runnerName.toLowerCase().includes("dealer") || runnerName.toLowerCase().includes("pickup");
+                let badgeBg = isSelf ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-purple-50 border-purple-200 text-purple-900";
+                let icon = isSelf ? "🏢" : "🚪";
+                let title = isSelf ? "Dealer Self-Pickup:" : "Office Se Bahar Le Gaya:";
+                let photoBtn = handoverUrl ? `<a href="${handoverUrl}" target="_blank" onclick="event.stopPropagation()" class="px-2 py-0.5 bg-white border border-slate-300 rounded text-[9px] font-black text-blue-700 hover:bg-blue-100 flex items-center gap-1 shadow-2xs shrink-0">📸 Proof Photo</a>` : "";
+                logInfo = `
+                    <div class="mt-2.5 p-2 rounded-xl border ${badgeBg} flex items-center justify-between gap-1.5 text-xs">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="text-sm shrink-0">${icon}</span>
+                            <div class="truncate">
+                                <span class="text-[9px] uppercase font-extrabold text-slate-500 block leading-none mb-0.5">${title}</span>
+                                <span class="font-black text-slate-900">${runnerName}</span>
+                                ${transportName ? `<span class="text-[10px] font-bold text-slate-600 ml-1">(${transportName})</span>` : ''}
+                            </div>
                         </div>
+                        ${photoBtn}
                     </div>
-                    ${photoBtn}
-                </div>
-            `;
+                `;
+            }
         }
         const fullCardHtml = `
             <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-xs hover:shadow-lg hover:border-blue-500 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-200 bg-emerald-50/20' : ''}">
@@ -610,19 +603,20 @@ function renderPipeline() {
                         ${tatBadge}${slaBadge}
                     </div>
                     <div class="mt-2 flex flex-wrap gap-2 items-center">
-                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${isCod ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}">${order.paymentMode || 'N/A'}</span>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${isCod ? 'bg-orange-50 text-orange-700 border-orange-200' : (order.paymentMode && order.paymentMode.toUpperCase().includes('UPI')) ? 'bg-purple-50 text-purple-800 border-purple-200 font-black' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}">${order.paymentMode || 'N/A'}</span>
                         <span class="text-sm font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">₹${order.totalValue || '0'}</span>
                         <span class="text-xs font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200">Qty: ${orderItemsCount}</span>
+                        ${(order.paymentMode && order.paymentMode.toUpperCase().includes('UPI')) ? `<button type="button" onclick="event.stopPropagation(); window.showUpiScreenshotModal('${order.orderId}')" class="text-[10px] font-black text-purple-700 bg-purple-100/70 hover:bg-purple-200 border border-purple-300 px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition-all active:scale-95"><span>📸</span> UPI Slip</button>` : ''}
                     </div>
                 </div>
                 <div>
-                    ${logInfo}
                     <div class="bg-slate-50 p-2.5 rounded-xl mb-3 border border-slate-200/80 flex justify-between items-center group-hover:border-blue-200 transition-colors">
+                    ${logInfo}
                         <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Next Action:</span>
                         <span class="text-xs font-extrabold ${activeStageFilter === 'completed' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200'} px-2.5 py-1 rounded-lg truncate max-w-[60%] border">${nextStepName}</span>
                     </div>
                     <div class="flex justify-between text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">
-                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${Math.min(order.completedStages, 7)}/7</span>
+                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${order.completedStages}/9</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
                         <div class="${activeStageFilter === 'completed' ? 'bg-emerald-500' : 'bg-blue-600'} h-2 rounded-full relative" style="width: ${progress}%"></div>
@@ -684,9 +678,10 @@ function openModal(orderId) {
     }
 
     let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD'); 
+    let isUpi = order.paymentMode && order.paymentMode.toUpperCase().includes('UPI'); 
     let payBadge = document.getElementById('modalPaymentMode'); 
     payBadge.innerText = order.paymentMode || 'N/A';
-    payBadge.className = isCod ? `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-50 text-orange-700 border-orange-200` : `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-50 text-emerald-700 border-emerald-200`;
+    payBadge.className = isCod ? `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-orange-50 text-orange-700 border-orange-200` : isUpi ? `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-purple-50 text-purple-800 border-purple-300` : `text-[10px] px-2 py-1 rounded font-black tracking-widest uppercase border bg-emerald-50 text-emerald-700 border-emerald-200`;
     
     document.getElementById('modalTotalValue').innerText = `Amount: ₹${order.totalValue || '0'}`;
     
@@ -738,70 +733,36 @@ function openModal(orderId) {
         `;
     }
 
-    // Dedicated Delivery Proof Card at the top of Modal if photo uploaded
-    let topDeliveryProofUrl = "";
-    let topDeliveryCollector = "";
-    if (order.stageUrls) {
-        if (order.stageUrls[7]) {
-            let u8 = String(order.stageUrls[7]).match(/https?:\/\/[^\s|,]+/i);
-            if (u8) topDeliveryProofUrl = u8[0];
-            let c8 = String(order.stageUrls[7]).match(/Dealer Self-Pickup:\s*([^||\n]+)/i);
-            if (c8) topDeliveryCollector = c8[1].trim();
-        }
-        if (!topDeliveryProofUrl && order.stageUrls[5]) {
-            let u5 = String(order.stageUrls[5]).match(/https?:\/\/[^\s|,]+/i);
-            if (u5) topDeliveryProofUrl = u5[0];
-            let r5 = String(order.stageUrls[5]).match(/Runner:\s*([^||\n]+)/i);
-            if (r5) topDeliveryCollector = r5[1].trim();
-        }
-    }
-    if (topDeliveryProofUrl) {
-        let fId = (topDeliveryProofUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || topDeliveryProofUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || [])[1];
-        let thumbUrl = fId ? `https://drive.google.com/thumbnail?id=${fId}&sz=w800` : topDeliveryProofUrl;
+    // 3. UPI Payment Verification Box (Clean White Theme)
+    if (isUpi) {
         extraSectionsHtml += `
-            <div class="mb-5 bg-emerald-50/90 border-2 border-emerald-400 rounded-2xl p-4 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-black text-emerald-950 flex items-center gap-2">
-                        <span class="text-lg">📸</span> DELIVERY / HANDOVER PROOF PHOTO:
-                    </span>
-                    <span class="bg-emerald-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">VERIFIED PROOF</span>
-                </div>
-                ${topDeliveryCollector ? `<p class="text-xs font-bold text-emerald-900 mb-2">👤 Received By: <span class="bg-white px-2 py-0.5 rounded border border-emerald-200">${topDeliveryCollector}</span></p>` : ''}
-                <div class="rounded-xl overflow-hidden border border-emerald-300 bg-white p-2">
-                    <a href="${topDeliveryProofUrl}" target="_blank" class="block relative group">
-                        <img src="${thumbUrl}" alt="Delivery Proof" class="w-full max-h-64 object-contain mx-auto rounded-lg" onerror="this.onerror=null; this.src='${topDeliveryProofUrl}';">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                            <span class="bg-white text-slate-900 text-xs font-black px-3.5 py-2 rounded-full shadow-md">🔍 Click to Enlarge (Original Drive)</span>
+            <div id="modalUpiSection" class="mb-5 bg-gradient-to-r from-purple-50/90 via-indigo-50/70 to-purple-50/90 border-2 border-purple-300 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">💳</span>
+                        <div>
+                            <h4 class="text-xs font-black text-purple-950 uppercase tracking-wider">UPI Payment Verification</h4>
+                            <p class="text-[10px] text-purple-700 font-bold">Dealer ne UPI payment mode choose kiya hai. Bank account me payment verify karein:</p>
                         </div>
-                    </a>
-                    <a href="${topDeliveryProofUrl}" target="_blank" class="mt-2.5 w-full py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-black flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 transition">
-                        <span>↗</span> Open Full Photo Proof in Google Drive
-                    </a>
+                    </div>
+                    <span class="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">UPI ORDER</span>
                 </div>
-            </div>
-        `;
-    }
-
-    
-    if (order.completedStages >= 7) {
-        extraSectionsHtml += `
-            <div class="mb-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 shadow-xs text-center">
-                <div class="flex items-center justify-center gap-2 text-emerald-900 font-black text-sm">
-                    <span class="text-base">✔</span> Office Processing Completed (7/7 Stages Done)
-                </div>
-                <p class="text-xs text-emerald-700 mt-1 font-semibold">
-                    Order dispatch ho chuka hai. Delivery aur Final Call (Steps 8 & 9) Naye Delivery App me execute honge.
-                </p>
-                <div class="mt-2.5 flex items-center justify-center gap-2">
-                    <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-emerald-300 text-emerald-800 font-bold">
-                        Out for Delivery / Handed to Courier
-                    </span>
+                <div id="modalUpiScreenshotContainer" class="bg-white p-3.5 rounded-xl border border-purple-200 shadow-2xs">
+                    <div class="flex items-center justify-center py-4 text-purple-700 font-bold text-xs gap-2">
+                        <div class="inline-block animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
+                        <span>Payment screenshot verify ho raha hai...</span>
+                    </div>
                 </div>
             </div>
         `;
     }
 
     container.innerHTML = extraSectionsHtml;
+
+    // Load UPI screenshot asynchronously into modal
+    if (isUpi && typeof window.loadUpiScreenshotIntoModal === 'function') {
+        window.loadUpiScreenshotIntoModal(order);
+    }
 
     // Asynchronously fetch missing dealer comment if not yet in cache
     if (!dealerComment && typeof fetchMissingDealerComment === 'function' && order.phone) {
@@ -893,7 +854,7 @@ function openModal(orderId) {
         needsShare = true;
     }
     
-    for (let i = 0; i < STAGE_NAMES.length; i++) { 
+    for (let i = 0; i < 9; i++) { 
         const stageNum = i + 1; 
         const isCompleted = i < order.completedStages; 
         const isActive = i === order.completedStages; 
@@ -1868,7 +1829,7 @@ function renderTvOrderCards(pendingOrders) {
                                     PENDING TASK:
                                 </span>
                                 <span class="text-white font-extrabold uppercase bg-indigo-950/90 px-2 py-0.5 rounded-lg border border-indigo-400/30">
-                                    ${stageLabel} (Step ${Math.min(stageNum + 1, 7)}/7)
+                                    ${stageLabel} (Step ${stageNum + 1}/9)
                                 </span>
                             </div>
                             <span class="text-indigo-300 font-mono text-[11px] font-bold">
@@ -1909,7 +1870,7 @@ function renderTvOrderCards(pendingOrders) {
                     </div>
 
                     <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
-                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, (Math.min(stageNum + 1, 7) / 7) * 100)}%;"></div>
+                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, ((stageNum + 1) / 9) * 100)}%;"></div>
                     </div>
                 </div>
             </div>
@@ -1922,6 +1883,138 @@ function renderTvOrderCards(pendingOrders) {
 
 // Alias for backwards compatibility
 window.renderTvDisplayScreen = renderTvKdsBoard;
+// ==========================================
+// UPI PAYMENT SCREENSHOT VIEWER & LIGHTBOX
+// ==========================================
+window.loadUpiScreenshotIntoModal = async function(order) {
+    const box = document.getElementById('modalUpiScreenshotContainer');
+    if (!box) return;
 
-// Direct toggle for Stage 8 Delivery when previously locked
-// Delivery stage handled via Delivered & Pay app
+    let sUrl = (typeof window.fetchOrderScreenshot === 'function') 
+        ? await window.fetchOrderScreenshot(order.orderId) 
+        : (order.screenshotUrl || '');
+
+    if (!currentActiveOrder || currentActiveOrder.orderId !== order.orderId) return;
+
+    if (sUrl && sUrl.includes('http')) {
+        let driveMatch = sUrl.match(/\/d\/(.*?)\//) || sUrl.match(/id=([a-zA-Z0-9_-]+)/);
+        let driveId = driveMatch ? driveMatch[1] : '';
+        let thumbUrl = driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000` : sUrl;
+
+        box.innerHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-emerald-800 text-xs font-black">
+                    <span class="flex items-center gap-1.5"><span>✅</span> Screenshot Uploaded by Dealer</span>
+                    <span>Total: ₹${order.totalValue || '0'}</span>
+                </div>
+                <div class="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 cursor-pointer shadow-xs max-h-72 flex items-center justify-center" onclick="window.showUpiScreenshotModal('${order.orderId}')">
+                    <img src="${thumbUrl}" alt="UPI Payment Screenshot" class="w-full max-h-72 object-contain bg-white">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <span class="bg-purple-600 text-white font-black text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-1.5">
+                            <span>🔍</span> Click for Fullscreen Zoom
+                        </span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="window.showUpiScreenshotModal('${order.orderId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-black py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95">
+                        <span>🔍</span> Full Screen View
+                    </button>
+                    <a href="${sUrl}" target="_blank" class="bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all text-center">
+                        <span>↗</span> Open in Drive
+                    </a>
+                </div>
+                <div class="p-2.5 bg-purple-50 rounded-lg border border-purple-100 text-[10px] text-purple-900 font-bold">
+                    💡 <b>Verification Checklist:</b> Step 1 (Balance Check) confirm karne se pehle screenshot ka <b>UTR / Ref No.</b> apne Bank Statement me verify karein.
+                </div>
+            </div>
+        `;
+    } else {
+        let cleanPhone = (order.phone || "").toString().replace(/\D/g, '');
+        if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+        let waText = encodeURIComponent(`Namaste ${order.shopName},\n\nAapka order ${order.orderId} (Rakam: ₹${order.totalValue}) prapt hua hai. Kripya iska UPI Payment Screenshot yahan WhatsApp par share karein taki hum dispatch process aage bada sakein.\n\n- Yash Marketing`);
+        let waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${waText}`;
+
+        box.innerHTML = `
+            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2.5">
+                <div class="flex items-start gap-2">
+                    <span class="text-base text-amber-600">⚠️</span>
+                    <div class="text-xs font-bold text-amber-900">
+                        <p class="font-extrabold text-amber-950">Payment Screenshot Upload Nahi Mila</p>
+                        <p class="text-[10px] text-amber-800 font-medium mt-0.5">Dealer ne screenshot upload nahi kiya tha ya network drop hua tha. Dealer se direct WhatsApp par screenshot mangwayein:</p>
+                    </div>
+                </div>
+                <div class="pt-1">
+                    <a href="${waUrl}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 text-center">
+                        <span>📲</span> WhatsApp pe Dealer se Screenshot Mangein
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+};
+
+window.showUpiScreenshotModal = async function(orderId) {
+    let order = (window.appData && window.appData.orders) ? window.appData.orders[orderId] : (window.currentActiveOrder && window.currentActiveOrder.orderId === orderId ? window.currentActiveOrder : null);
+    if (!order) return;
+
+    let sUrl = (typeof window.fetchOrderScreenshot === 'function') 
+        ? await window.fetchOrderScreenshot(orderId) 
+        : (order.screenshotUrl || '');
+
+    if (!sUrl || !sUrl.includes('http')) {
+        let cleanPhone = (order.phone || "").toString().replace(/\D/g, '');
+        if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+        let waText = encodeURIComponent(`Namaste ${order.shopName},\n\nAapka order ${order.orderId} (Rakam: ₹${order.totalValue}) ka UPI Payment Screenshot bhejiye.\n\n- Yash Marketing`);
+        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${waText}`, '_blank');
+        return;
+    }
+
+    let driveMatch = sUrl.match(/\/d\/(.*?)\//) || sUrl.match(/id=([a-zA-Z0-9_-]+)/);
+    let driveId = driveMatch ? driveMatch[1] : '';
+    let fullImgUrl = driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600` : sUrl;
+
+    let modal = document.getElementById('upiScreenshotLightbox');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'upiScreenshotLightbox';
+        document.body.appendChild(modal);
+    }
+
+    modal.className = 'fixed inset-0 z-[99999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-3 animate-fade-in';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+            <!-- Header -->
+            <div class="p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">💳</span>
+                    <div>
+                        <h3 class="text-xs font-black uppercase tracking-wider">${order.shopName}</h3>
+                        <p class="text-[10px] text-purple-300 font-mono">${order.orderId} | ₹${order.totalValue || '0'}</p>
+                    </div>
+                </div>
+                <button onclick="window.closeUpiScreenshotModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center text-sm transition-colors">✕</button>
+            </div>
+            <!-- Image Area -->
+            <div class="flex-1 overflow-auto p-3 bg-slate-100 flex items-center justify-center min-h-[300px]">
+                <img src="${fullImgUrl}" alt="UPI Slip" class="max-w-full max-h-[65vh] object-contain rounded-lg shadow border border-slate-300 bg-white">
+            </div>
+            <!-- Footer Controls -->
+            <div class="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+                <a href="${sUrl}" target="_blank" class="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl border border-slate-300 flex items-center gap-1.5 transition-all">
+                    <span>↗</span> Open in Google Drive
+                </a>
+                <button onclick="window.closeUpiScreenshotModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-black text-xs px-5 py-2 rounded-xl shadow-xs transition-all active:scale-95">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    `;
+    modal.onclick = function(e) {
+        if (e.target === modal) window.closeUpiScreenshotModal();
+    };
+};
+
+window.closeUpiScreenshotModal = function() {
+    let modal = document.getElementById('upiScreenshotLightbox');
+    if (modal) modal.remove();
+};
