@@ -980,52 +980,7 @@ function openModal(orderId) {
             
             uiHtml = `<div class="bg-white border border-emerald-200 rounded-2xl p-4 hover:border-emerald-300 transition shadow-xs"><div class="flex justify-between items-start"><div><span class="text-emerald-700 text-sm font-black block mb-1.5">${stageNum}. ${displayStageName}</span><div class="flex items-center gap-2 flex-wrap">${timestampDisplay}${timeTakenDisplay}</div></div><span class="bg-emerald-100 text-emerald-800 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ml-2">✔ DONE</span></div>${previewHtml}</div>`;
         } else if (isLocked) {
-            if (stageNum === 8) {
-                // STAGE 8 DELIVERED: Allow direct selection and execution even if previous stages are locked!
-                uiHtml = `
-                <div class="bg-white border-2 border-emerald-500 rounded-2xl p-4 shadow-sm relative overflow-hidden transition-all">
-                    <div class="flex justify-between items-center mb-1.5">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black">8</span>
-                            <span class="text-slate-900 font-black text-sm">8. Delivered</span>
-                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Selectable</span>
-                        </div>
-                        <button type="button" onclick="toggleDirectStage8('${order.orderId}')" id="btnToggleDirectStage8_${order.orderId}" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5">
-                            <span>📦</span> ⚡ Select / Mark Delivered
-                        </button>
-                    </div>
-                    <p class="text-[11px] text-slate-500 font-medium">Dealer stock lene aaya hai ya delivery complete karni hai toh direct yahan click karke photo upload karein.</p>
-                    <div id="directStage8Box_${order.orderId}" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-3">
-                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1.5">Delivery Handover Mode:</label>
-                            <div class="grid grid-cols-2 gap-2 mb-2">
-                                <button type="button" id="stage8BtnStaff" onclick="window.selectStage8Handover && window.selectStage8Handover('staff')" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center gap-1 shadow-2xs">🚚 Staff / Courier</button>
-                                <button type="button" id="stage8BtnDealer" onclick="window.selectStage8Handover && window.selectStage8Handover('dealer')" class="py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1">🏢 Dealer Khud Aaya</button>
-                            </div>
-                            <div id="stage8DealerBox" class="hidden bg-amber-50 border border-amber-300 p-2.5 rounded-lg space-y-1.5">
-                                <label class="text-[10px] font-black text-amber-800 uppercase tracking-wider block">Kaun aaya hai stock lene? (Dealer/Person Name):</label>
-                                <input type="text" id="stage8CollectorName" placeholder="e.g. Rahul Patil - Owner / Driver" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs font-bold text-slate-900 outline-none shadow-2xs">
-                                <p class="text-[9px] text-amber-700 font-bold flex items-center gap-1"><span>📸</span> Niche "Live Camera" se Dealer ka photo lein taki pakka proof rahe kisne stock receive kiya.</p>
-                            </div>
-                        </div>
-                        <p class="text-[10px] font-black text-slate-500 mt-2 mb-1 uppercase tracking-widest flex items-center gap-1.5"><span class="text-emerald-600 text-sm">📸</span> Upload Delivery Proof Photo (Required)</p>
-                        <div class="flex gap-2 w-full">
-                            <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-emerald-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, 8)"></label>
-                            <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, 8)"></label>
-                        </div>
-                        <div id="previewBox_8" class="flex flex-wrap gap-2 mt-2 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div>
-                        <div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="fileStatusContainer_8">
-                            <p id="fileStatusText_8" class="text-[10px] font-black text-emerald-800 py-1 hidden"></p>
-                            <button id="clearFilesBtn_8" onclick="clearQueuedFiles(8)" class="text-[10px] font-bold text-rose-600 hidden px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100">Clear</button>
-                        </div>
-                        <button id="submitBtn_8" onclick="submitStage(8)" class="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl shadow-md transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
-                            <span>✔</span> Confirm & Complete Delivery
-                        </button>
-                    </div>
-                </div>`;
-            } else {
-                uiHtml = `<div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
-            }
+            uiHtml = `<div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
         } else if (isActive) {
             let inputHtml = '';
             if (stageNum === 1) { 
@@ -1950,15 +1905,4 @@ function renderTvOrderCards(pendingOrders) {
 window.renderTvDisplayScreen = renderTvKdsBoard;
 
 // Direct toggle for Stage 8 Delivery when previously locked
-window.toggleDirectStage8 = function(orderId) {
-    const box = document.getElementById('directStage8Box_' + orderId);
-    const btn = document.getElementById('btnToggleDirectStage8_' + orderId);
-    if (!box) return;
-    if (box.classList.contains('hidden')) {
-        box.classList.remove('hidden');
-        if (btn) btn.innerHTML = '<span>✕</span> Close Form';
-    } else {
-        box.classList.add('hidden');
-        if (btn) btn.innerHTML = '<span>📦</span> ⚡ Select / Mark Delivered';
-    }
-};
+// Delivery stage handled via Delivered & Pay app
