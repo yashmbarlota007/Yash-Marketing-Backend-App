@@ -401,6 +401,8 @@ function renderPipeline() {
         
         if (idx === 6) { 
             filterName = "Delivery Comms";
+        } else if (idx === 7) {
+            filterName = "To Deliver";
         }
         
         filterHtml += `
@@ -475,6 +477,8 @@ function renderPipeline() {
         if (order.completedStages < 9) {
             if (order.completedStages === 6) {
                 nextStepName = isCod ? "Call 2" : " 2";
+            } else if (order.completedStages === 7) {
+                nextStepName = "🚚 Deliver Order";
             } else {
                 nextStepName = STAGE_NAMES[order.completedStages].split(' (')[0];
             }
@@ -543,43 +547,46 @@ function renderPipeline() {
         }
         
         let logInfo = "";
-        if (order.completedStages >= 5 || (order.stageUrls && order.stageUrls[5])) {
-            let runnerName = "";
-            let transportName = "";
-            let handoverUrl = "";
-            if (order.stageUrls && order.stageUrls[5]) {
+        let runnerName = "";
+        let transportName = "";
+        let handoverUrl = "";
+        if (order.stageUrls) {
+            if (order.stageUrls[5]) {
                 let text = String(order.stageUrls[5]);
                 let mR = text.match(/Runner:\s*([^||\n]+)/i);
                 if (mR) runnerName = mR[1].trim();
                 let mT = text.match(/Transport:\s*([^||\n]+)/i);
                 if (mT) transportName = mT[1].trim();
-                let mU = text.match(/https:\/\/drive\.google\.com[^\s,|]+/i);
+                let mU = text.match(/https?:\/\/[^\s|,]+/i);
                 if (mU) handoverUrl = mU[0].trim();
             }
-            if (!handoverUrl && order.stageUrls && order.stageUrls[7]) {
-                let mU8 = String(order.stageUrls[7]).match(/https:\/\/drive\.google\.com[^\s,|]+/i);
+            if (order.stageUrls[7]) {
+                let text8 = String(order.stageUrls[7]);
+                let mU8 = text8.match(/https?:\/\/[^\s|,]+/i);
                 if (mU8) handoverUrl = mU8[0].trim();
+                let mR8 = text8.match(/Dealer Self-Pickup:\s*([^||\n]+)/i);
+                if (mR8 && !runnerName) runnerName = "Dealer Self-Pickup: " + mR8[1].trim();
             }
-            if (runnerName) {
-                let isSelf = runnerName.toLowerCase().includes("dealer") || runnerName.toLowerCase().includes("pickup");
-                let badgeBg = isSelf ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-purple-50 border-purple-200 text-purple-900";
-                let icon = isSelf ? "🏢" : "🚪";
-                let title = isSelf ? "Dealer Self-Pickup:" : "Office Se Bahar Le Gaya:";
-                let photoBtn = handoverUrl ? `<a href="${handoverUrl}" target="_blank" onclick="event.stopPropagation()" class="px-2 py-0.5 bg-white border border-slate-300 rounded text-[9px] font-black text-blue-700 hover:bg-blue-100 flex items-center gap-1 shadow-2xs shrink-0">📸 Proof Photo</a>` : "";
-                logInfo = `
-                    <div class="mt-2.5 p-2 rounded-xl border ${badgeBg} flex items-center justify-between gap-1.5 text-xs">
-                        <div class="flex items-center gap-1.5 min-w-0">
-                            <span class="text-sm shrink-0">${icon}</span>
-                            <div class="truncate">
-                                <span class="text-[9px] uppercase font-extrabold text-slate-500 block leading-none mb-0.5">${title}</span>
-                                <span class="font-black text-slate-900">${runnerName}</span>
-                                ${transportName ? `<span class="text-[10px] font-bold text-slate-600 ml-1">(${transportName})</span>` : ''}
-                            </div>
+        }
+        if (runnerName || handoverUrl) {
+            let isSelf = runnerName.toLowerCase().includes("dealer") || runnerName.toLowerCase().includes("pickup");
+            let badgeBg = isSelf ? "bg-amber-50 border-amber-300 text-amber-900" : "bg-purple-50 border-purple-200 text-purple-900";
+            let icon = isSelf ? "🏢" : "🚚";
+            let title = isSelf ? "Dealer Self-Pickup:" : "Dispatch / Runner:";
+            let photoBtn = handoverUrl ? `<a href="${handoverUrl}" target="_blank" onclick="event.stopPropagation()" class="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-[10px] font-black text-blue-700 hover:bg-blue-50 flex items-center gap-1 shadow-2xs shrink-0">📸 Proof Photo</a>` : "";
+            logInfo = `
+                <div class="mb-2.5 p-2.5 rounded-xl border ${badgeBg} flex items-center justify-between gap-2 text-xs shadow-2xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-base shrink-0">${icon}</span>
+                        <div class="truncate">
+                            <span class="text-[9px] uppercase font-black text-slate-500 block leading-none mb-0.5">${title}</span>
+                            <span class="font-black text-slate-900">${runnerName || 'Counter Handover'}</span>
+                            ${transportName ? `<span class="text-[10px] font-bold text-slate-600 ml-1">(${transportName})</span>` : ''}
                         </div>
-                        ${photoBtn}
                     </div>
-                `;
-            }
+                    ${photoBtn}
+                </div>
+            `;
         }
         const fullCardHtml = `
             <div id="${cardId}" data-state-hash="${orderStateHash}" ${clickAction} class="${vipClass} rounded-2xl p-4 shadow-xs hover:shadow-lg hover:border-blue-500 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden group hover-card ${cursorStyle} border ${activeStageFilter === 'completed' ? 'border-emerald-200 bg-emerald-50/20' : ''}">
@@ -609,8 +616,8 @@ function renderPipeline() {
                     </div>
                 </div>
                 <div>
-                    <div class="bg-slate-50 p-2.5 rounded-xl mb-3 border border-slate-200/80 flex justify-between items-center group-hover:border-blue-200 transition-colors">
                     ${logInfo}
+                    <div class="bg-slate-50 p-2.5 rounded-xl mb-3 border border-slate-200/80 flex justify-between items-center group-hover:border-blue-200 transition-colors">
                         <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Next Action:</span>
                         <span class="text-xs font-extrabold ${activeStageFilter === 'completed' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200'} px-2.5 py-1 rounded-lg truncate max-w-[60%] border">${nextStepName}</span>
                     </div>
@@ -726,6 +733,50 @@ function openModal(orderId) {
                 </span>
                 <div class="flex flex-wrap gap-2">
                     ${discounts.map(d => `<span class="text-xs font-bold bg-white border border-indigo-200 text-indigo-800 px-3 py-1.5 rounded-xl shadow-2xs">${d.name}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Dedicated Delivery Proof Card at the top of Modal if photo uploaded
+    let topDeliveryProofUrl = "";
+    let topDeliveryCollector = "";
+    if (order.stageUrls) {
+        if (order.stageUrls[7]) {
+            let u8 = String(order.stageUrls[7]).match(/https?:\/\/[^\s|,]+/i);
+            if (u8) topDeliveryProofUrl = u8[0];
+            let c8 = String(order.stageUrls[7]).match(/Dealer Self-Pickup:\s*([^||\n]+)/i);
+            if (c8) topDeliveryCollector = c8[1].trim();
+        }
+        if (!topDeliveryProofUrl && order.stageUrls[5]) {
+            let u5 = String(order.stageUrls[5]).match(/https?:\/\/[^\s|,]+/i);
+            if (u5) topDeliveryProofUrl = u5[0];
+            let r5 = String(order.stageUrls[5]).match(/Runner:\s*([^||\n]+)/i);
+            if (r5) topDeliveryCollector = r5[1].trim();
+        }
+    }
+    if (topDeliveryProofUrl) {
+        let fId = (topDeliveryProofUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || topDeliveryProofUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || [])[1];
+        let thumbUrl = fId ? `https://drive.google.com/thumbnail?id=${fId}&sz=w800` : topDeliveryProofUrl;
+        extraSectionsHtml += `
+            <div class="mb-5 bg-emerald-50/90 border-2 border-emerald-400 rounded-2xl p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-black text-emerald-950 flex items-center gap-2">
+                        <span class="text-lg">📸</span> DELIVERY / HANDOVER PROOF PHOTO:
+                    </span>
+                    <span class="bg-emerald-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">VERIFIED PROOF</span>
+                </div>
+                ${topDeliveryCollector ? `<p class="text-xs font-bold text-emerald-900 mb-2">👤 Received By: <span class="bg-white px-2 py-0.5 rounded border border-emerald-200">${topDeliveryCollector}</span></p>` : ''}
+                <div class="rounded-xl overflow-hidden border border-emerald-300 bg-white p-2">
+                    <a href="${topDeliveryProofUrl}" target="_blank" class="block relative group">
+                        <img src="${thumbUrl}" alt="Delivery Proof" class="w-full max-h-64 object-contain mx-auto rounded-lg" onerror="this.onerror=null; this.src='${topDeliveryProofUrl}';">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                            <span class="bg-white text-slate-900 text-xs font-black px-3.5 py-2 rounded-full shadow-md">🔍 Click to Enlarge (Original Drive)</span>
+                        </div>
+                    </a>
+                    <a href="${topDeliveryProofUrl}" target="_blank" class="mt-2.5 w-full py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-black flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 transition">
+                        <span>↗</span> Open Full Photo Proof in Google Drive
+                    </a>
                 </div>
             </div>
         `;
@@ -929,7 +980,52 @@ function openModal(orderId) {
             
             uiHtml = `<div class="bg-white border border-emerald-200 rounded-2xl p-4 hover:border-emerald-300 transition shadow-xs"><div class="flex justify-between items-start"><div><span class="text-emerald-700 text-sm font-black block mb-1.5">${stageNum}. ${displayStageName}</span><div class="flex items-center gap-2 flex-wrap">${timestampDisplay}${timeTakenDisplay}</div></div><span class="bg-emerald-100 text-emerald-800 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ml-2">✔ DONE</span></div>${previewHtml}</div>`;
         } else if (isLocked) {
-            uiHtml = `<div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
+            if (stageNum === 8) {
+                // STAGE 8 DELIVERED: Allow direct selection and execution even if previous stages are locked!
+                uiHtml = `
+                <div class="bg-white border-2 border-emerald-500 rounded-2xl p-4 shadow-sm relative overflow-hidden transition-all">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black">8</span>
+                            <span class="text-slate-900 font-black text-sm">8. Delivered</span>
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Selectable</span>
+                        </div>
+                        <button type="button" onclick="toggleDirectStage8('${order.orderId}')" id="btnToggleDirectStage8_${order.orderId}" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5">
+                            <span>📦</span> ⚡ Select / Mark Delivered
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-medium">Dealer stock lene aaya hai ya delivery complete karni hai toh direct yahan click karke photo upload karein.</p>
+                    <div id="directStage8Box_${order.orderId}" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-3">
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1.5">Delivery Handover Mode:</label>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <button type="button" id="stage8BtnStaff" onclick="window.selectStage8Handover && window.selectStage8Handover('staff')" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center gap-1 shadow-2xs">🚚 Staff / Courier</button>
+                                <button type="button" id="stage8BtnDealer" onclick="window.selectStage8Handover && window.selectStage8Handover('dealer')" class="py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1">🏢 Dealer Khud Aaya</button>
+                            </div>
+                            <div id="stage8DealerBox" class="hidden bg-amber-50 border border-amber-300 p-2.5 rounded-lg space-y-1.5">
+                                <label class="text-[10px] font-black text-amber-800 uppercase tracking-wider block">Kaun aaya hai stock lene? (Dealer/Person Name):</label>
+                                <input type="text" id="stage8CollectorName" placeholder="e.g. Rahul Patil - Owner / Driver" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs font-bold text-slate-900 outline-none shadow-2xs">
+                                <p class="text-[9px] text-amber-700 font-bold flex items-center gap-1"><span>📸</span> Niche "Live Camera" se Dealer ka photo lein taki pakka proof rahe kisne stock receive kiya.</p>
+                            </div>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-500 mt-2 mb-1 uppercase tracking-widest flex items-center gap-1.5"><span class="text-emerald-600 text-sm">📸</span> Upload Delivery Proof Photo (Required)</p>
+                        <div class="flex gap-2 w-full">
+                            <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-emerald-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">📸 Live Camera<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelection(this, 8)"></label>
+                            <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">🖼️ Multi Gallery<input type="file" accept="image/*" multiple class="hidden" onchange="handleFileSelection(this, 8)"></label>
+                        </div>
+                        <div id="previewBox_8" class="flex flex-wrap gap-2 mt-2 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div>
+                        <div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="fileStatusContainer_8">
+                            <p id="fileStatusText_8" class="text-[10px] font-black text-emerald-800 py-1 hidden"></p>
+                            <button id="clearFilesBtn_8" onclick="clearQueuedFiles(8)" class="text-[10px] font-bold text-rose-600 hidden px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100">Clear</button>
+                        </div>
+                        <button id="submitBtn_8" onclick="submitStage(8)" class="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl shadow-md transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
+                            <span>✔</span> Confirm & Complete Delivery
+                        </button>
+                    </div>
+                </div>`;
+            } else {
+                uiHtml = `<div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60"><span class="text-slate-500 text-sm font-bold">${stageNum}. ${displayStageName}</span><span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">🔒 LOCKED</span></div>`;
+            }
         } else if (isActive) {
             let inputHtml = '';
             if (stageNum === 1) { 
@@ -1852,3 +1948,17 @@ function renderTvOrderCards(pendingOrders) {
 
 // Alias for backwards compatibility
 window.renderTvDisplayScreen = renderTvKdsBoard;
+
+// Direct toggle for Stage 8 Delivery when previously locked
+window.toggleDirectStage8 = function(orderId) {
+    const box = document.getElementById('directStage8Box_' + orderId);
+    const btn = document.getElementById('btnToggleDirectStage8_' + orderId);
+    if (!box) return;
+    if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        if (btn) btn.innerHTML = '<span>✕</span> Close Form';
+    } else {
+        box.classList.add('hidden');
+        if (btn) btn.innerHTML = '<span>📦</span> ⚡ Select / Mark Delivered';
+    }
+};
