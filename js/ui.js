@@ -34,16 +34,16 @@ function renderMdoDashboard() {
     let staffScores = {}; 
     let cityStats = {};
     let brandStats = {}; 
-    let stageStuck = Array(9).fill(0);
+    let stageStuck = Array(7).fill(0);
     const nowTime = new Date().getTime();
 
     filteredData.forEach(o => {
         totalOrderValue += (o.totalValue || 0);
 
-        if (o.completedStages >= 9 || o.isFullyCompleted) {
+        if (o.completedStages >= 7 || o.isFullyCompleted) {
             totalCompleted++;
         } else { 
-            if (o.completedStages < 9) {
+            if (o.completedStages < 7) {
                 stageStuck[o.completedStages]++; 
             }
             if ((nowTime - parseCustomDate(o.date).getTime()) > (48 * 60 * 60 * 1000)) {
@@ -353,13 +353,13 @@ function renderPipeline() {
     
     // Separate pending and completed orders
     let pendingOrders = filteredData.filter(o => !o.isFullyCompleted);
-    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= 9);
+    let completedOrders = filteredData.filter(o => o.isFullyCompleted || o.completedStages >= 7);
     
-    let stageCounts = Array(9).fill(0); 
+    let stageCounts = Array(7).fill(0); 
     let shopPendingCount = {};
     
     pendingOrders.forEach(o => { 
-        if (o.completedStages < 9) {
+        if (o.completedStages < 7) {
             stageCounts[o.completedStages]++; 
         }
         if (o.completedStages < 3) { 
@@ -470,7 +470,7 @@ function renderPipeline() {
             return; 
         }
 
-        const progress = (order.completedStages / 9) * 100; 
+        const progress = (Math.min(order.completedStages, 7) / 7) * 100; 
         let isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         let nextStepName = "Fully Completed";
         
@@ -622,7 +622,7 @@ function renderPipeline() {
                         <span class="text-xs font-extrabold ${activeStageFilter === 'completed' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200'} px-2.5 py-1 rounded-lg truncate max-w-[60%] border">${nextStepName}</span>
                     </div>
                     <div class="flex justify-between text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">
-                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${order.completedStages}/9</span>
+                        <span>Pipeline Progress</span><span class="${activeStageFilter === 'completed' ? 'text-emerald-600' : 'text-blue-600'} font-extrabold">${Math.min(order.completedStages, 7)}/7</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
                         <div class="${activeStageFilter === 'completed' ? 'bg-emerald-500' : 'bg-blue-600'} h-2 rounded-full relative" style="width: ${progress}%"></div>
@@ -782,6 +782,25 @@ function openModal(orderId) {
         `;
     }
 
+    
+    if (order.completedStages >= 7) {
+        extraSectionsHtml += `
+            <div class="mb-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 shadow-xs text-center">
+                <div class="flex items-center justify-center gap-2 text-emerald-900 font-black text-sm">
+                    <span class="text-base">✔</span> Office Processing Completed (7/7 Stages Done)
+                </div>
+                <p class="text-xs text-emerald-700 mt-1 font-semibold">
+                    Order dispatch ho chuka hai. Delivery aur Final Call (Steps 8 & 9) Naye Delivery App me execute honge.
+                </p>
+                <div class="mt-2.5 flex items-center justify-center gap-2">
+                    <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-emerald-300 text-emerald-800 font-bold">
+                        Out for Delivery / Handed to Courier
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
     container.innerHTML = extraSectionsHtml;
 
     // Asynchronously fetch missing dealer comment if not yet in cache
@@ -874,7 +893,7 @@ function openModal(orderId) {
         needsShare = true;
     }
     
-    for (let i = 0; i < 9; i++) { 
+    for (let i = 0; i < STAGE_NAMES.length; i++) { 
         const stageNum = i + 1; 
         const isCompleted = i < order.completedStages; 
         const isActive = i === order.completedStages; 
@@ -1849,7 +1868,7 @@ function renderTvOrderCards(pendingOrders) {
                                     PENDING TASK:
                                 </span>
                                 <span class="text-white font-extrabold uppercase bg-indigo-950/90 px-2 py-0.5 rounded-lg border border-indigo-400/30">
-                                    ${stageLabel} (Step ${stageNum + 1}/9)
+                                    ${stageLabel} (Step ${Math.min(stageNum + 1, 7)}/7)
                                 </span>
                             </div>
                             <span class="text-indigo-300 font-mono text-[11px] font-bold">
@@ -1890,7 +1909,7 @@ function renderTvOrderCards(pendingOrders) {
                     </div>
 
                     <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
-                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, ((stageNum + 1) / 9) * 100)}%;"></div>
+                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-500" style="width: ${Math.max(10, (Math.min(stageNum + 1, 7) / 7) * 100)}%;"></div>
                     </div>
                 </div>
             </div>
