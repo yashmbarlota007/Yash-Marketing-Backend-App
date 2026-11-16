@@ -228,7 +228,7 @@ async function fetchOrders(isSilent = false) {
                 const activeNeedingComments = incoming.filter(o => 
                     !o.dealerComment && 
                     o.phone && 
-                    (o.completedStages < 9 || (typeof getOrderRelativeDateBadge === 'function' && getOrderRelativeDateBadge(o.date).isToday)) && 
+                    (o.completedStages < 7 || (typeof getOrderRelativeDateBadge === 'function' && getOrderRelativeDateBadge(o.date).isToday)) && 
                     window._dealerCommentsCache[o.orderId] === undefined
                 );
                 const phonesToQuery = [...new Set(activeNeedingComments.map(o => String(o.phone).trim()))];
