@@ -187,7 +187,7 @@ function performSearch() {
                 <div class="text-xs text-blue-600 font-bold">${o.shopName}</div>
             </div>
             <div class="text-right">
-                <div class="text-[10px] bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg text-blue-700 font-black mb-1">Stage ${o.completedStages}/9</div>
+                <div class="text-[10px] bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg text-blue-700 font-black mb-1">Stage ${Math.min(o.completedStages, 7)}/7</div>
                 <div class="text-[9px] text-emerald-700 font-black uppercase">${o.paymentMode}</div>
             </div>
         </div>`;
