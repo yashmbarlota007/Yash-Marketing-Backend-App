@@ -18,12 +18,22 @@ async function fetchMissingDealerComment(order) {
         });
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
+            window._orderScreenshotsCache = window._orderScreenshotsCache || {};
             json.data.forEach(dOrder => {
-                if (dOrder && dOrder.orderId && dOrder.items) {
-                    const m = String(dOrder.items).match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
-                    if (m) {
-                        const clean = m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim();
-                        window._dealerCommentsCache[dOrder.orderId] = clean;
+                if (dOrder && dOrder.orderId) {
+                    if (dOrder.items) {
+                        const m = String(dOrder.items).match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
+                        if (m) {
+                            const clean = m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim();
+                            window._dealerCommentsCache[dOrder.orderId] = clean;
+                        }
+                    }
+                    const sUrl = dOrder.PaymentScreenshot || dOrder.screenshotUrl || (dOrder.POD && dOrder.POD.includes('http') ? dOrder.POD : '');
+                    if (sUrl && sUrl.includes('http')) {
+                        window._orderScreenshotsCache[dOrder.orderId] = sUrl;
+                        if (window.appData && window.appData.orders && window.appData.orders[dOrder.orderId]) {
+                            window.appData.orders[dOrder.orderId].screenshotUrl = sUrl;
+                        }
                     }
                 }
             });
@@ -228,7 +238,7 @@ async function fetchOrders(isSilent = false) {
                 const activeNeedingComments = incoming.filter(o => 
                     !o.dealerComment && 
                     o.phone && 
-                    (o.completedStages < 7 || (typeof getOrderRelativeDateBadge === 'function' && getOrderRelativeDateBadge(o.date).isToday)) && 
+                    (o.completedStages < 9 || (typeof getOrderRelativeDateBadge === 'function' && getOrderRelativeDateBadge(o.date).isToday)) && 
                     window._dealerCommentsCache[o.orderId] === undefined
                 );
                 const phonesToQuery = [...new Set(activeNeedingComments.map(o => String(o.phone).trim()))];
@@ -613,3 +623,21 @@ async function verifyInvoiceWithAI(orderId, base64Image) {
 }
 
 
+
+window._orderScreenshotsCache = window._orderScreenshotsCache || {};
+
+window.fetchOrderScreenshot = async function(orderId) {
+    if (window._orderScreenshotsCache && window._orderScreenshotsCache[orderId]) {
+        return window._orderScreenshotsCache[orderId];
+    }
+    const order = (window.appData && window.appData.orders) ? window.appData.orders[orderId] : (window.currentActiveOrder && window.currentActiveOrder.orderId === orderId ? window.currentActiveOrder : null);
+    if (!order) return "";
+    if (order.screenshotUrl && order.screenshotUrl.includes('http')) {
+        window._orderScreenshotsCache[orderId] = order.screenshotUrl;
+        return order.screenshotUrl;
+    }
+    if (typeof fetchMissingDealerComment === 'function') {
+        await fetchMissingDealerComment(order);
+    }
+    return (window._orderScreenshotsCache && window._orderScreenshotsCache[orderId]) || (order.screenshotUrl && order.screenshotUrl.includes('http') ? order.screenshotUrl : "");
+};
