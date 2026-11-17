@@ -850,9 +850,8 @@ function openModal(orderId) {
     }
     let lastStageHasFiles = Boolean(lastCompletedUrlData && lastCompletedUrlData.includes("http"));
 
-    if (lastStageHasFiles && stagesRequiringShare.includes(lastCompletedStage) && localStorage.getItem('shared_' + order.orderId + '_' + lastCompletedStage) !== 'true') { 
-        needsShare = true;
-    }
+    // Always allow staff to proceed: active stage is never locked by share requirement
+    needsShare = false;
     
     for (let i = 0; i < STAGE_NAMES.length; i++) { 
         const stageNum = i + 1; 
@@ -952,9 +951,9 @@ function openModal(orderId) {
 
             if (hasFiles && stagesRequiringShare.includes(stageNum)) {
                 let isShared = localStorage.getItem('shared_' + order.orderId + '_' + stageNum) === 'true';
-                let btnClass = isShared ? "bg-[#128C7E]/40 text-white border-[#128C7E]/50" : "bg-[#25D366] text-white border-[#25D366] animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(37,211,102,0.5)]";
-                let btnText = isShared ? "✓ Shared to WhatsApp" : "📤 Share to Group (MANDATORY)";
-                previewHtml += `<button onclick="shareToGroup(${stageNum}, '${urlData}')" class="mt-2 w-full ${btnClass} text-[10px] font-black py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border"><span>${isShared ? '✓' : '📤'}</span> ${btnText}</button>`;
+                let btnClass = isShared ? "bg-[#128C7E]/40 text-white border-[#128C7E]/50" : "bg-[#25D366] hover:bg-[#128C7E] text-white border-[#25D366] shadow-sm";
+                let btnText = isShared ? "✓ Shared to WhatsApp" : "📤 Share Update to Group";
+                previewHtml += `<button id="shareBtn_${order.orderId}_${stageNum}" onclick="shareToGroup(${stageNum}, '${urlData}')" class="mt-2 w-full ${btnClass} text-[10px] font-black py-2.5 rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border"><span>${isShared ? '✓' : '📤'}</span> ${btnText}</button>`;
             }
             previewHtml += `</div>`;
             
@@ -980,7 +979,7 @@ function openModal(orderId) {
                     <option value="Others">Others (Type Below)</option>
                 </select><input type="text" id="transportOther" placeholder="Enter transport name..." class="hidden w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 outline-none mb-4 font-bold text-sm shadow-2xs"><button onclick="submitStage(${stageNum})" id="submitBtn_${stageNum}" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Allocate Logistics & Proceed</button></div>`;
             } else if (stageNum === 2 || stageNum === 7) { 
-                let msgTemplate = stageNum === 2 ? window.appSettings.waMsgStage3 : (isCod ? window.appSettings.waMsgStage7COD : window.appSettings.waMsgStage7Prepaid);
+                let msgTemplate = (stageNum === 2 ? (window.appSettings && window.appSettings.waMsgStage3) : (isCod ? (window.appSettings && window.appSettings.waMsgStage7COD) : (window.appSettings && window.appSettings.waMsgStage7Prepaid))) || "Dear {{shop}}, update for order {{orderId}} ({{paymentMode}} - Rs. {{amount}}).";
                 let finalMsg = msgTemplate.replace(/{{shop}}/g, order.shopName).replace(/{{orderId}}/g, order.orderId).replace(/{{paymentMode}}/g, order.paymentMode).replace(/{{amount}}/g, order.totalValue);
                 
                 if (stageNum === 7 && order.stageUrls) {
@@ -1089,30 +1088,8 @@ function openModal(orderId) {
                 inputHtml += `<button id="submitBtn_${stageNum}" onclick="submitStage(${stageNum})" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-95 text-base">Execute & Proceed</button>`;
             }
             
-            if (needsShare) {
-                let safeUrlData = (lastCompletedUrlData || "").replace(/'/g, "\\'");
-                uiHtml = `
-                <div class="bg-amber-50 border-2 border-amber-400 rounded-2xl p-5 relative overflow-hidden mt-4 shadow-sm">
-                    <div class="absolute top-0 left-0 w-2 h-full bg-amber-500"></div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-slate-800 font-black text-base">${stageNum}. ${displayStageName}</span>
-                        <span class="bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full tracking-wider uppercase shadow-xs">🔒 WAITING FOR SHARE</span>
-                    </div>
-                    <p class="text-xs text-amber-900 font-bold mt-2 leading-relaxed">
-                        ⚠️ <b>Action Required:</b> Step ${lastCompletedStage} (${STAGE_NAMES[lastCompletedStage - 1]}) ka proof WhatsApp group me share karein taki agla step unlock ho sake.
-                    </p>
-                    <div class="mt-4 flex flex-col gap-2">
-                        <button onclick="shareToGroup(${lastCompletedStage}, '${safeUrlData}')" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-xs uppercase tracking-wider">
-                            <span>📤</span> Share Step ${lastCompletedStage} to WhatsApp Group
-                        </button>
-                        <button onclick="unlockStageShare('${order.orderId}', ${lastCompletedStage})" class="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-4 rounded-xl border border-slate-300 transition-all text-xs flex items-center justify-center gap-1.5 shadow-2xs">
-                            <span>⚡</span> Already Shared / Unlock Step ${stageNum}
-                        </button>
-                    </div>
-                </div>`;
-            } else {
-                uiHtml = `<div class="bg-white border-2 border-blue-600 rounded-2xl p-5 shadow-lg relative overflow-hidden"><div class="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div><div class="flex justify-between items-center mb-3"><span class="text-slate-900 font-black text-lg">${stageNum}. ${displayStageName}</span><span class="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">ACTION REQUIRED</span></div><div id="actionArea_${stageNum}">${inputHtml}</div><p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p></div>`;
-            }
+            // Active stage is ALWAYS interactive and never blocked
+            uiHtml = `<div class="bg-white border-2 border-blue-600 rounded-2xl p-5 shadow-lg relative overflow-hidden"><div class="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div><div class="flex justify-between items-center mb-3"><span class="text-slate-900 font-black text-lg">${stageNum}. ${displayStageName}</span><span class="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">ACTION REQUIRED</span></div><div id="actionArea_${stageNum}">${inputHtml}</div><p id="status_${stageNum}" class="text-xs font-bold mt-3 hidden text-center"></p></div>`;
         }
         stagesListHtml += uiHtml;
     }
@@ -1246,17 +1223,26 @@ window.unlockStageShare = function(orderId, stageNum) {
 };
 
 window.shareToGroup = function(stageNum, fileUrlsString) {
+    if (!currentActiveOrder) return;
     const orderId = currentActiveOrder.orderId; 
     const shop = currentActiveOrder.shopName; 
-    const stageName = STAGE_NAMES[stageNum - 1]; 
+    const stageName = (typeof STAGE_NAMES !== 'undefined' && STAGE_NAMES[stageNum - 1]) ? STAGE_NAMES[stageNum - 1] : ('Stage ' + stageNum); 
     
-    let links = fileUrlsString.split(',').map(u => makeDirectDriveLink(u.trim())).join('\n');
+    let links = (fileUrlsString || "").split(',').map(u => (typeof makeDirectDriveLink === 'function') ? makeDirectDriveLink(u.trim()) : u.trim()).join('\n');
     let msg = `*Order Update Alert*\n\n*Order ID:* ${orderId}\n*Dealer:* ${shop}\n*Stage Update:* ${stageName}\n\n*Attached Files/Proof:*\n${links}`;
     
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     
-    localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
-    setTimeout(() => { openModal(orderId); }, 1000);
+    try {
+        localStorage.setItem('shared_' + orderId + '_' + stageNum, 'true');
+    } catch(e) {}
+    
+    // In-place button update without modal reload/flash
+    const shareBtn = document.getElementById('shareBtn_' + orderId + '_' + stageNum);
+    if (shareBtn) {
+        shareBtn.className = "mt-2 w-full bg-[#128C7E]/40 text-white border-[#128C7E]/50 text-[10px] font-black py-2.5 rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-2 uppercase tracking-widest border";
+        shareBtn.innerHTML = "<span>✓</span> ✓ Shared to WhatsApp";
+    }
 }
 
 function generateEODReport() {
