@@ -53,7 +53,7 @@ async function gasRequest(payloadObj, retries = 2) {
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
             const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-            const timeoutId = controller ? setTimeout(() => controller.abort(), 28000) : null;
+            const timeoutId = controller ? setTimeout(() => controller.abort(), 45000) : null;
             
             const fetchOptions = {
                 method: 'POST',
@@ -77,8 +77,8 @@ async function gasRequest(payloadObj, retries = 2) {
             lastError = networkErr;
             console.warn(`gasRequest attempt ${attempt + 1}/${retries + 1} notice:`, networkErr.message || networkErr);
             if (attempt < retries) {
-                // Short wait before retry (1.2s, 2.4s) to overcome mobile network/DNS blips
-                await new Promise(r => setTimeout(r, (attempt + 1) * 1200));
+                // Short wait before retry (1.5s, 3s) to overcome mobile network/DNS blips
+                await new Promise(r => setTimeout(r, (attempt + 1) * 1500));
             }
         }
     }
@@ -88,9 +88,27 @@ async function gasRequest(payloadObj, retries = 2) {
 async function fetchOrders(isSilent = false) {
     const grid = document.getElementById('orderGrid');
     
-    // Safety check in case grid element doesn't exist yet
-    if (grid && !isSilent && window.appData.rawArray.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-20 text-center" id="empty-state"><div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div><p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">Syncing with Mainframe...</p></div>`;
+    // Instant cache hydration on initial boot: never let staff see blank screen or wait 20s
+    if (grid && !isSilent && (!window.appData.rawArray || window.appData.rawArray.length === 0)) {
+        try {
+            const cachedRaw = localStorage.getItem('ym_orders_cache_v1');
+            if (cachedRaw) {
+                const cachedParsed = JSON.parse(cachedRaw);
+                if (cachedParsed && Array.isArray(cachedParsed.data) && cachedParsed.data.length > 0) {
+                    console.log("⚡ [CACHE] Pre-loading " + cachedParsed.data.length + " orders from local storage for 0ms boot");
+                    window.appData.rawArray = cachedParsed.data;
+                    cachedParsed.data.forEach(o => { if (o && o.orderId) window.appData.orders[o.orderId] = o; });
+                    if (cachedParsed.settings) window.appSettings = cachedParsed.settings;
+                    if (typeof applyDateFilter === 'function') applyDateFilter();
+                }
+            }
+        } catch(cErr) {
+            console.warn("Local storage cache load notice:", cErr);
+        }
+
+        if (!window.appData.rawArray || window.appData.rawArray.length === 0) {
+            grid.innerHTML = `<div class="col-span-full py-20 text-center" id="empty-state"><div class="inline-block animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div><p class="text-indigo-400 font-bold tracking-widest uppercase text-sm">Syncing with Mainframe...</p></div>`;
+        }
     }
     
     try {
@@ -232,6 +250,17 @@ async function fetchOrders(isSilent = false) {
             });
 
             window.appData.rawArray = incoming;
+
+            // Save dataset snapshot to localStorage so next boot is 0ms instant
+            try {
+                localStorage.setItem('ym_orders_cache_v1', JSON.stringify({
+                    data: incoming,
+                    settings: response.settings || window.appSettings || {},
+                    timestamp: Date.now()
+                }));
+            } catch(cacheSaveErr) {
+                console.warn("Storage quota notice:", cacheSaveErr);
+            }
 
             // Background prefetch missing dealer comments for active/recent orders
             try {
@@ -526,6 +555,11 @@ async function submitStage(stageNum) {
                 showNotification("SPLIT ORDER CREATED", `New ID: ${data.splitOrderId}`); 
             }
             
+            // Automatically record as shared so staff never faces duplicate share prompts
+            try {
+                localStorage.setItem('shared_' + currentActiveOrder.orderId + '_' + stageNum, 'true');
+            } catch(shareErr) {}
+
             showNotification("STAGE ADVANCED", `Stage ${stageNum} (${STAGE_NAMES[stageNum - 1] || 'Completed'}) completed!`);
 
             // ====================================================
