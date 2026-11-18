@@ -1097,8 +1097,8 @@ function openModal(orderId) {
         stagesListHtml += `
             <div class="mt-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 text-center shadow-xs">
                 <div class="w-10 h-10 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg mb-2 shadow-xs">✓</div>
-                <h4 class="text-sm font-black text-emerald-950">Office Stages Complete (7/7)</h4>
-                <p class="text-xs text-emerald-800 mt-1 font-semibold">Order is ready for Delivery & Handover. Remaining Step 8 (Delivered) and Step 9 (Final Call) are handled in the <b>Delivered & Pay</b> app.</p>
+                <h4 class="text-sm font-black text-emerald-950">In-Office Packing Complete (5/5)</h4>
+                <p class="text-xs text-emerald-800 mt-1 font-semibold">Order office dispatch ke liye ready hai! Remaining <b>Step 6 (Logistics)</b>, <b>Step 7 (WhatsApp Comms)</b>, <b>Step 8 (Delivered)</b> aur <b>Step 9 (Final Call)</b> ab <b>Delivery & Payment App</b> me process honge.</p>
             </div>
         `;
     }
