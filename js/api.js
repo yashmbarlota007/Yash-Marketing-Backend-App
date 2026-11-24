@@ -24,7 +24,7 @@ async function fetchMissingDealerComment(order) {
                     if (dOrder.items) {
                         const m = String(dOrder.items).match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
                         if (m) {
-                            const clean = m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim();
+                            const clean = m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI|Daily|COD|Cash)/)[0].trim();
                             window._dealerCommentsCache[dOrder.orderId] = clean;
                         }
                     }
@@ -198,7 +198,7 @@ async function fetchOrders(isSilent = false) {
                     let n = (it.name || it.productName || "").trim();
                     let m = n.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
                     if (m) {
-                        c = m[1] ? m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim() : n;
+                        c = m[1] ? m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI|Daily|COD|Cash)/)[0].trim() : n;
                     }
                 });
                 if (c) {
