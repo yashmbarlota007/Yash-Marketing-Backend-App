@@ -698,6 +698,14 @@ function openModal(orderId) {
         if (name.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE)/i)) {
             // Handled via getOrderDealerComment
         } else if (name.match(/(?:Discount|APPLIED:|Rewards Unlocked|FREE ITEM)/i)) {
+            let pMode = String(order.paymentMode || "").toUpperCase();
+            if (pMode.includes("DAILY") && name.match(/UPI Discount/i)) {
+                name = name.replace(/UPI Discount/i, "Daily Collection Discount");
+                item.name = name;
+            } else if (pMode.includes("COD") && name.match(/UPI Discount/i)) {
+                name = name.replace(/UPI Discount/i, "COD Cash Discount");
+                item.name = name;
+            }
             discounts.push(item);
         } else {
             physicalProducts.push(item);
@@ -1617,7 +1625,7 @@ function getOrderDealerComment(order) {
         let name = (it.name || it.productName || "").trim();
         let m = name.match(/(?:DEALER NOTE|DEALER COMMENT|REMARK|NOTE):\s*([\s\S]*)/i);
         if (m) {
-            comment = m[1] ? m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI)/)[0].trim() : name;
+            comment = m[1] ? m[1].split(/\s*\|\s*(?:🎁|ℹ️|🎯|🔥|Bulk|UPI|Daily|COD|Cash)/)[0].trim() : name;
         }
     });
     if (comment && window._dealerCommentsCache) {
