@@ -4,13 +4,17 @@
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyXHJaFTSkjwu6C8ze4czs2Q42NQsgzjW814j8OLA7ztMXTW-nqmh2gkpjebmdSW4YJjA/exec";
 
-// 5 Stages for In-Office Order Processing (Stages 6 to 9 shifted to Delivery & Payment App)
+// 9 Complete Operational Stages for Yash Marketing Order Pipeline
 const STAGE_NAMES = [
     "Balance Check", 
     "WhatsApp 1 (Confirmation)", 
     "Processed (Stock)", 
     "Invoiced", 
-    "Dispatched"
+    "Dispatched", 
+    "Logistics Allocation", 
+    "Delivery Comms (Call/WA)", 
+    "Delivered", 
+    "Final Call (Rating)"
 ];
 
 // Global Application Data Store
