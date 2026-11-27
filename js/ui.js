@@ -1105,8 +1105,8 @@ function openModal(orderId) {
         stagesListHtml += `
             <div class="mt-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 text-center shadow-xs">
                 <div class="w-10 h-10 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg mb-2 shadow-xs">✓</div>
-                <h4 class="text-sm font-black text-emerald-950">In-Office Packing Complete (5/5)</h4>
-                <p class="text-xs text-emerald-800 mt-1 font-semibold">Order office dispatch ke liye ready hai! Remaining <b>Step 6 (Logistics)</b>, <b>Step 7 (WhatsApp Comms)</b>, <b>Step 8 (Delivered)</b> aur <b>Step 9 (Final Call)</b> ab <b>Delivery & Payment App</b> me process honge.</p>
+                <h4 class="text-sm font-black text-emerald-950">All 9 Stages Complete (9/9)</h4>
+                <p class="text-xs text-emerald-800 mt-1 font-semibold">Order is fully processed, invoiced, dispatched, delivered, and verified with customer rating!</p>
             </div>
         `;
     }
@@ -2020,4 +2020,21 @@ window.showUpiScreenshotModal = async function(orderId) {
 window.closeUpiScreenshotModal = function() {
     let modal = document.getElementById('upiScreenshotLightbox');
     if (modal) modal.remove();
+};
+
+window.selectStage8Handover = function(mode) {
+    const btnStaff = document.getElementById('stage8BtnStaff');
+    const btnDealer = document.getElementById('stage8BtnDealer');
+    const dealerBox = document.getElementById('stage8DealerBox');
+    if (!btnStaff || !btnDealer) return;
+
+    if (mode === 'dealer') {
+        btnDealer.className = "py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-black text-xs flex items-center justify-center gap-1 shadow-2xs";
+        btnStaff.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1";
+        if (dealerBox) dealerBox.classList.remove('hidden');
+    } else {
+        btnStaff.className = "py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-black text-xs flex items-center justify-center gap-1 shadow-2xs";
+        btnDealer.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1";
+        if (dealerBox) dealerBox.classList.add('hidden');
+    }
 };
